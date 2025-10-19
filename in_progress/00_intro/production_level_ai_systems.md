@@ -2,10 +2,10 @@
 
 ---
 
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.0  
-Birth: 19.10.2025  
-Modified: 18.10.2025
+Owner: Vadim Rudakov, lefthand67@gmail.com
+Version: 0.1.0
+Birth: 19.10.2025
+Modified: 19.10.2025
 
 ---
 
@@ -84,13 +84,13 @@ Without observability, your system can silently drift into failure mode for week
 Non-determinism, not model size, is the Achilles’ heel of all LLM-based systems. Small LLMs simply amplify it.
 
 **Manifestations**
-- Context window overflow → memory loss and contradictions  
-- Stochastic output variance → inconsistent behavior under identical conditions  
-- Syntax failures → malformed JSON or partial responses  
+- Context window overflow → memory loss and contradictions
+- Stochastic output variance → inconsistent behavior under identical conditions
+- Syntax failures → malformed JSON or partial responses
 
 **Engineering Response**
-1. **Externalize all control logic**: Force structure using schemas.  
-2. **Add self-correction mechanisms**: Delegate format repair to non-conversational correction agents.  
+1. **Externalize all control logic**: Force structure using schemas.
+2. **Add self-correction mechanisms**: Delegate format repair to non-conversational correction agents.
 3. **Version everything**: Inputs, prompts, and output formats.
 
 Treat every inference as a non-deterministic experiment — your system must enforce determinism around it.
@@ -119,8 +119,8 @@ LLM → Data Integrity Gateway → Validation → Correction → Storage
 
 ### Explicit Warning: Latency and Cost Overhead
 
-The self-correction loop adds measurable latency (100–400 ms per iteration) and increases compute cost.  
-In high-throughput systems, this can introduce timing bottlenecks.  
+The self-correction loop adds measurable latency (100–400 ms per iteration) and increases compute cost.
+In high-throughput systems, this can introduce timing bottlenecks.
 Mitigate through batching, async validation, or lazy persistence strategies—but **never skip validation** for performance reasons.
 
 ### Example Implementation (Simplified)
@@ -147,7 +147,7 @@ def data_integrity_gateway(output, schema_model):
 
 ### Prompt and Model Versioning
 
-Every model configuration, schema, and prompt must be **versioned and traceable**.  
+Every model configuration, schema, and prompt must be **versioned and traceable**.
 Version mismatches between prompts and validators are a common source of silent corruption.
 
 **Recommended Practices**
@@ -162,11 +162,11 @@ A team using mixed prompt versions across staging and production environments ob
 
 ### Schema Evolution Debt
 
-Updating schemas (e.g., `Learning_Plan_V1 → V2`) without migration tooling breaks stored data. 
+Updating schemas (e.g., `Learning_Plan_V1 → V2`) without migration tooling breaks stored data.
 
 Backward compatibility isn’t optional—design migration logic early.
 
-**Schema Evolution Debt** occurs when you modify the structure of your system’s data contracts (for example, updating `Learning_Plan_V1` to `Learning_Plan_V2`) without putting in place proper **migration and compatibility mechanisms**.  
+**Schema Evolution Debt** occurs when you modify the structure of your system’s data contracts (for example, updating `Learning_Plan_V1` to `Learning_Plan_V2`) without putting in place proper **migration and compatibility mechanisms**.
 
 In production systems, schema changes don’t just affect code — they affect everything that already depends on those schemas: databases, stored user data, RAG documents, and other agents expecting the old structure. When these stored objects no longer conform to the current schema, failures appear silently or catastrophically.
 
@@ -192,25 +192,25 @@ Without migration logic, all previously saved `V1` plans will fail validation un
 
 #### How to Prevent Schema Evolution Debt
 
-1. **Version Your Schemas Explicitly**  
+1. **Version Your Schemas Explicitly**
 - Always embed a version identifier (`schema_version`) in every validated document. This enables backward-compatible reads.
-2. **Build Migration Utilities**  
+2. **Build Migration Utilities**
 - Implement lightweight transformation scripts or services that automatically upgrade records from older schemas to the latest version.
-3. **Maintain Compatibility Layers**  
+3. **Maintain Compatibility Layers**
 - Support old schemas for a defined period, translating them on read instead of forcing immediate migration.
-4. **Validate on Load**  
+4. **Validate on Load**
 - When reading historical data, check schema version and trigger migration if needed before proceeding.
-5. **Automate Testing for Schema Regression**  
+5. **Automate Testing for Schema Regression**
 - Include regression tests that verify that older data can still be read and transformed after each schema update.
 
 #### Practical Tools
 
-- **Python:** `pydantic` models with versioned BaseModel subclasses, or `datamodel-codegen` for version scaffolding  
-- **Node.js:** `zod` schemas with discriminated unions for backward compatibility  
+- **Python:** `pydantic` models with versioned BaseModel subclasses, or `datamodel-codegen` for version scaffolding
+- **Node.js:** `zod` schemas with discriminated unions for backward compatibility
 - **Database Layer:** Alembic (SQL), Liquibase, or custom migration scripts for NoSQL systems
 
-In short:  
-**Schema Evolution Debt = Breaking Change Debt in Data Form.**  
+In short:
+**Schema Evolution Debt = Breaking Change Debt in Data Form.**
 Treat schemas like public APIs. Once deployed in production, they must evolve through **managed migrations**, not **breaking rewrites**.
 
 ### Silent Failure and Missing Alerts
@@ -221,27 +221,27 @@ In a production-level AI system, **silently ignoring or discarding failed correc
 
 #### Why Silent Failures Are Extremely Harmful
 
-- **Invisible Data Corruption**  
+- **Invisible Data Corruption**
   The system continues operating with corrupted or incomplete data, which can degrade user experience gradually without obvious errors.
-  
-- **Delayed Detection**  
+
+- **Delayed Detection**
   By the time an engineer or operator realizes something is wrong, fixing the corruption can be costly, complex, and error-prone.
-  
-- **Trust Damage**  
+
+- **Trust Damage**
   Users may lose trust in the system because of unexplainable behavior or inconsistency, even though the failure mode is invisible.
 
 #### Best Practices to Avoid Silent Failure
 
-1. **Flag All Correction Failures Explicitly**  
+1. **Flag All Correction Failures Explicitly**
    Every time an automated JSON correction or schema validation fails beyond recovery, the event must be logged with full details (raw output, attempted corrections, timestamps).
 
-2. **Persist Failure Records**  
+2. **Persist Failure Records**
    Store these failure events in durable logs or databases to enable retrospective analysis and auditing.
 
-3. **Integrate Alerting Pipelines**  
+3. **Integrate Alerting Pipelines**
    Connect your failure logs to alerting systems such as **Sentry**, **Prometheus Alertmanager**, or **PagerDuty** to ensure engineers are notified immediately.
 
-4. **Automate Incident Response**  
+4. **Automate Incident Response**
    Establish automated workflows for triaging and escalating failures. For example, raise a ticket or rollback affected components until manual review.
 
 #### Real-World Example
@@ -275,9 +275,9 @@ Track validation and correction failures, schema upgrades, and system uptime. Vi
 ## Key Lessons
 
 The critical journey from toy to production AI system requires that you:
-- Externalize all logic and state.  
-- Validate every model output.  
-- Observe and trace every decision.  
+- Externalize all logic and state.
+- Validate every model output.
+- Observe and trace every decision.
 - Version absolutely everything.
 
 Engineering discipline — not model sophistication — delivers reliability.

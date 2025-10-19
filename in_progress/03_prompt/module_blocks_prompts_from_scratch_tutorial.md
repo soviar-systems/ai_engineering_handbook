@@ -2,9 +2,9 @@
 
 -----
 
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.0  
-Birth: 2025-11-23  
+Owner: Vadim Rudakov, lefthand67@gmail.com
+Version: 0.1.0
+Birth: 2025-11-23
 Modified: 2025-12-05
 
 -----
@@ -80,7 +80,6 @@ def load(file):
 
 system = load("prompts/system/system_guide_v1.json")["content"]
 user = load("prompts/user/ask_about_prompts_v1.json")["template"]
-
 final_prompt = f"{system}\n\n{user}"
 print(final_prompt)
 ```
