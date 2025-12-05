@@ -3,13 +3,15 @@
 -----
 
 Owner: Vadim Rudakov, lefthand67@gmail.com
-Version: 0.4.0
+Version: 0.6.0
 Birth: 2025-11-29
-Last Modified: 2025-12-04
+Last Modified: 2025-12-15
 
 -----
 
-This handbook sets **MANDATORY** conventions for branching and committing. Adherence ensures professional-grade traceability, enables automated MLOps gates, generates accurate changelogs, and streamlines architectural reviews.
+This handbook establishes mandatory, professional-grade conventions for Git branching and committing. Adherence to these standards is essential for achieving traceability, enabling automated MLOps gates, ensuring accurate changelogs, and streamlining architectural reviews.
+
+The workflow is enforced through a Three-Tier Naming Structure and a strict Conventional Commits policy, culminating in an Atomic Commit merge strategy.
 
 ## 1. Three-Tier Naming Structure
 
@@ -103,7 +105,68 @@ ArchTag:TECHDEBT-PAYMENT
 Reduced cyclomatic complexity from 15 to 8, improving maintainability.
 ```
 
-## 4. The Guiding Principle: Atomic Commits
+```mermaid
+---
+config:
+  layout: dagre
+  theme: redux
+---
+flowchart TB
+    A["Commit w/ Tag"] --> B["ArchTag:"]
+    B -- PERF-OPTIMIZATION --> C["Perf Tests"]
+    B -- REFACTOR-MIGRATION --> D["Architect Review"]
+    B -- DEPRECATION-PLANNED --> E["API Docs Update"]
+    B -- TECHDEBT-PAYMENT --> F["Debt Score Δ"]
+    C --> G["Changelog Section"]
+    D --> G
+    E --> G
+    F --> G
+```
+
+-----
+
+## 4. 🚨 Mandatory Procedure: Handling `WIP:` Commits
+
+A `WIP:` type is useful only if its temporary nature is strictly enforced. Allowing `WIP:` commits to pollute the final, merged history defeats the purpose of Conventional Commits and introduces unnecessary noise and technical debt.
+
+The `WIP:` commit type is strictly for **personal backup and context switching** on feature branches. It **MUST NOT** be present in the final commit history of any main branch (e.g., `main`, `develop`).
+
+### A. **The Enforcement Gate: Interactive Rebase**
+
+Before opening a Pull Request (PR), all $\text{WIP:}$ commits **MUST** be consolidated (squashed) into one or more **atomic commits** using a valid semantic type ($\text{feat:}$, $\text{fix:}$, etc.).
+
+1.  **Start Interactive Rebase:** Execute `git rebase -i <target-branch>` (e.g., `git rebase -i develop`).
+2.  **Edit Commit List:** Change the action for every $\text{WIP:}$ commit from `pick` to **`squash` ($\text{s}$)** or **`fixup` ($\text{f}$)**.
+3.  **Finalize Message:** Ensure the final, consolidated commit message is a single, valid, semantic commit title and body.
+
+### B. **PR System Guardrails (Hard Gates)**
+
+  * **CI/CD Block:** The CI/CD pipeline is configured to automatically **fail a Pull Request** if any commit in the branch's history contains the prefix $\text{WIP:}$. This is a **hard technical gate**.
+  * **Mandatory Merge Strategy:** The repository is configured to **enforce "Squash and Merge"** for all feature branches into mainline branches. This guarantees that the final history is composed of single, clean, semantic commits.
+
+The most effective enforcement mechanism is at the code review and merge gate.
+
+| Policy | Implementation | Rationale |
+| :--- | :--- | :--- |
+| **PR Status Check** | Configure your CI/CD system (e.g., GitHub Actions, GitLab CI, Azure DevOps Pipelines) to run a script that **fails the build** if any commit in the PR history (prior to merge) contains the regex pattern `^WIP:` in its title. | This is a **hard gate**. It prevents developer oversight from reaching the main codebase, forcing the immediate correction of the branch history. |
+| **Reviewer Responsibility** | Peer reviewers are explicitly tasked with a **quick history audit**. The reviewer must verbally confirm that the history is clean and semantic before approving the PR. | Provides a human layer of quality control, ensuring the final commit message correctly reflects the change's semantic intent and is well-written. |
+| **Enforce Squash Merge** | Set the default merge strategy on your repository to **"Squash and Merge"** or **"Rebase and Merge"**. | This ensures that the final commit object added to the target branch is a single, clean commit, overriding potentially messy individual commits from the feature branch. (Note: "Rebase and Merge" still brings individual commits but makes the history linear; "Squash and Merge" is the cleaner option for enforcing a single semantic message.) |
+
+### C. **Guidance: When to Use `WIP:` vs. Standard Commit Types**
+
+New engineers must understand the difference to avoid misusing `WIP:`.
+
+| Scenario | Recommended Type | Rationale |
+| :--- | :--- | :--- |
+| **Saving work** at the end of the day or switching machines. | `WIP: short summary of current state` | Work is incomplete, not ready for review, and exists purely for personal continuity. Must be squashed later. |
+| **Completing a logical unit** of work (e.g., finishing the utility function signature, adding a new test). | `test: add unit test for X service` or `refactor: extract Z function from module A` | The change is coherent, stable, and useful, even if the overall feature is unfinished. It improves branch history readability *before* the final squash. |
+| **Fixing a minor bug** discovered while working on a feature. | `fix: prevent divide by zero in function Y` | This is a small, atomic fix that is technically correct and may be valuable on its own. It can be squashed later or kept as a separate atomic commit. |
+
+**Key Takeaway:** If the commit is stable, complete, and describes an atomic, logical change that could stand on its own in the history, use a standard type. If the code is broken, half-finished, or purely a checkpoint, use `WIP:`.
+
+-----
+
+## 5. 🧠 The Guiding Principle: Atomic Commits
 
 The goal of every feature branch's final history is **logical atomicity**. An **Atomic Commit** is a self-contained, complete, and logically isolated unit of work.
 
@@ -130,58 +193,62 @@ This disciplined approach ensures that your contributions are professionally str
 
 ## 5. Merge Strategy: Atomic Change Submission
 
-All changes merged into mainline branches (`main`, `develop`, etc.) **MUST** be integrated as a **single, atomic commit**. This is not a Git convenience—it is a **fundamental engineering discipline** used in scaled production environments (Google, Meta, Microsoft) to ensure **reviewability, revertability, and traceability**.
+All changes merged into mainline branches (`main`, `develop`, etc.) **MUST** be integrated as a **single, atomic, logical unit**. This is a **fundamental engineering discipline** used in scaled production environments (Google, Meta, Microsoft) to ensure **reviewability, revertability, and traceability**.
 
 ### A. The BigTech Standard: One Change, One Commit
 
 In professional code review systems:
-- A Pull Request (PR) or Change List (CL) represents **one logical modification** to the system.
-- Intermediate development steps (e.g., test scaffolding, incremental refactors) are **development artifacts**, not production history.
-  - Preserving them in `main` adds **noise without operational value** and **dilutes accountability**.
-  
-> **Key Principle**:  
+* A Pull Request (PR) or Change List (CL) represents **one logical modification** to the system.
+* Intermediate development steps (e.g., test scaffolding, incremental refactors) are **development artifacts**, not production history.
+    * Preserving them in `main` adds **noise without operational value** and **dilutes accountability**.
+
+
+> **Key Principle**:
 > *“If it can’t be reviewed, reverted, or reasoned about as a single unit, it’s not production-ready.”*
 
-> Read more: 
->   - "Small CLs" https://google.github.io/eng-practices/review/developer/small-cls.html
->   - "Writing good CL descriptions" https://google.github.io/eng-practices/review/developer/cl-descriptions.html
->   - "Submitting patches: the essential guide to getting your code into the kernel" https://docs.kernel.org/process/submitting-patches.html
+### B. Implementation: Enforced "Squash and Merge" (Default)
 
-### B. Implementation: Enforced "Squash and Merge"
-
-- **All PRs must be merged using "Squash and Merge"**.
+- **Unless otherwise specified in 5.D, all PRs must be merged using "Squash and Merge"**.
 - The **final commit message** must be:
-  - A valid **Conventional Commit** (`feat:`, `fix:`, etc.),
-  - **≤50 characters** in title,
-  - Include a **body** containing:
-    - Architectural rationale (with `ArchTag` if required),
-    - `BREAKING CHANGE:` footer if applicable,
-    - Link to ticket or design document.
+    - A valid **Conventional Commit** (`feat:`, `fix:`, etc.),
+    - **≤50 characters** in title,
+    - Include a **body** containing:
+        - Architectural rationale (with `ArchTag` if required),
+        - `BREAKING CHANGE:` footer if applicable,
+        - Link to ticket or design document.
 
-> **Why not "Rebase and Merge"?**  
-> While linear, it preserves intermediate commits that **were never reviewed as independent units**. In BigTech, **only the integrated state is production-grade**—everything else is draft .
-
-> Read more:
->   - "Merge strategies and squash merge" https://learn.microsoft.com/en-us/azure/devops/repos/git/merging-with-squash
+> **Why not "Rebase and Merge"?**
+> While linear, it preserves intermediate development commits that **were never reviewed as independent units**. In BigTech, **only the integrated state is production-grade**—everything else is a draft.
 
 ### C. Debugging Without `git bisect` Granularity
 
-Fine-grained bisect is **not the primary debugging tool** in production systems. Instead, rely on:
+Fine-grained bisect on noisy history is **not the primary debugging tool** in production systems. Instead, rely on:
 - **Structured logging** (with trace IDs),
 - **Metrics and alerting** (e.g., latency, error rates),
 - **Atomic revert** (if a change breaks, revert the **entire unit**—not part of it).
 
 If a change is **too large to debug or revert safely**, it **violates atomicity** and should have been split **before submission**.
 
+### D. Advanced Strategy: The Stacked Diff Exception
+
+The **Stacked Diff** workflow is permitted as an **advanced implementation** of Atomic Change Submission, enabling high velocity and rapid peer review. This methodology involves breaking a large feature into a **series of small, dependent, atomic CLs** (Change Lists or Diffs) .
+
+1.  **Scope:** The entire feature remains **one logical change** to the system.
+2.  **Integration Method:** The default **Squash and Merge** is overridden. The stack is integrated using a specialized tool (e.g., Sapling, Graphite) that executes an atomic **Rebase and Merge** or **Fast-Forward Merge** for each sequential diff.
+3.  **Strict Condition:** This exception is **only** permitted if:
+    * The work is managed through an approved Stacked Diff platform.
+    * **Every single commit in the stack** must be independently reviewed, CI-verified, and comply with all Tier 1, 2, and 3 policies.
+4.  **Benefit:** The resulting mainline history is linear, atomic, and preserves the clean narrative of the feature's development, thus **restoring the utility of $\text{git bisect}$** for diagnostics.
+
 ### Enforcement
 
 | Guardrail | Implementation |
-|----------|----------------|
-| **CI/CD Block** | PRs with >1 commit **fail pre-merge check** (unless exempted for large migrations). |
+|:---|:---|
+| **CI/CD Block (Default)** | PRs with >1 commit **fail pre-merge check** (unless approved for Stacked Diff or large migrations). |
 | **Reviewer Gate** | Reviewers **reject PRs** that are not logically atomic (e.g., mix refactor + feature). |
-| **Merge Policy** | Repository settings **enforce "Squash and Merge"** as the only allowed method. |
+| **Merge Policy** | Repository settings **enforce "Squash and Merge"** as the only allowed method, **unless using an approved Stacked Diff tool**. |
 
-> **Exception**: PRs tagged with `ArchTag:REFACTOR-MIGRATION` may use **"Rebase and Merge"** **only if** approved by an Architect and **each commit is independently CI-verified**.
+> **Exception**: PRs tagged with `ArchTag:REFACTOR-MIGRATION` may use **"Rebase and Merge"** **only if** approved by an Architect and **each commit is independently CI-verified**. Stacked Diffs are the preferred method for such large-scale changes.
 
 ## 6. Quick Reference, Enforcement, and Pitfalls
 
@@ -207,59 +274,3 @@ If a change is **too large to debug or revert safely**, it **violates atomicity*
 | Forgetting the **Ticket ID** in the branch name. | No automatic issue linking; traceability loss. | Use templates; set branch protection rules. |
 | Commit titles exceeding **50 characters**. | Poor changelog readability; automation tools truncate. | Use pre-commit hooks to check length. |
 | Invalid or missing **ArchTag** on required commit types. | **CI BLOCK** (Failure to pass the Architectural Review Gate). | Check the tag list and ensure it's the first line in the commit body. |
-
------
-
-## Appendix A: Detailed ArchTag Commit Examples
-
-These examples illustrate the correct structure for commits that require Tier 3 architectural justification, using the `ArchTag:TAG-NAME` format.
-
-### 1. ArchTag: `DEPRECATION-PLANNED`
-
-*Goal: Remove a function slated for sunsetting.*
-
-```
-feat: remove legacy user analytics module
-
-ArchTag:DEPRECATION-PLANNED
-This module has been replaced by the new Kafka-based logging system (see JIRA-255).
-All calls to `legacy_analytics_log()` have been removed from the frontend service.
-
-BREAKING CHANGE: The `legacy_analytics_log()` function and its HTTP endpoint /api/v1/log are no longer available.
-```
-
-### 2. ArchTag: `TECHDEBT-PAYMENT`
-
-*Goal: Restructure code to improve maintainability and adherence to modern Python standards.*
-
-```
-refactor: standardize all model config loading via Pydantic
-
-ArchTag:TECHDEBT-PAYMENT
-Replaced outdated dict-based config parsing with Pydantic schemas across 12 files.
-This significantly reduces validation error handling boilerplate and improves type safety.
-```
-
-### 3. ArchTag: `REFACTOR-MIGRATION`
-
-*Goal: Implement a fundamental shift in how the system handles a core component.*
-
-```
-refactor: migrate database connection pool to SQLAlchemy 2.0 async
-
-ArchTag:REFACTOR-MIGRATION
-Upgraded the core data layer to use the new asyncio ORM style.
-This is a breaking change and requires updating all repository methods to use `await`.
-```
-
-### 4. ArchTag: `PERF-OPTIMIZATION`
-
-*Goal: Optimize a slow loop, requiring proof of performance gain.*
-
-```
-perf: optimize feature extraction by replacing list with numpy array
-
-ArchTag:PERF-OPTIMIZATION
-Profiling showed the bottleneck was array conversion in the main loop.
-Benchmark results show a 22% reduction in latency for large inputs (1000+ features).
-```
