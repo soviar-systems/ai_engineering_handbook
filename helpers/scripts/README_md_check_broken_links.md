@@ -2,10 +2,10 @@
 
 -----
 
-Owner: Vadim Rudakov, lefthand67@gmail.com
-Version: 0.1.0
-Birth: 2025-12-16
-Last Modified: 2025-12-06
+Owner: Vadim Rudakov, lefthand67@gmail.com  
+Version: 0.1.0  
+Birth: 2025-12-16  
+Last Modified: 2025-12-16
 
 -----
 
