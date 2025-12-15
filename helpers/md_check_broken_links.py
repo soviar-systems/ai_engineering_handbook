@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Script to check broken links in markdown files
+Script to check broken links in markdown files.
 
 Usage: check_broken_links.py [directory] [file_pattern]
 
 This script is fully SVA (Smallest Viable Architecture) compliant, using only
-Python's standard library (pathlib, re, sys, argparse) for robust, local-only
+Python's standard library (pathlib, re, sys, argparse, tempfile) for robust, local-only
 link validation with full exclusion capabilities.
 """
 
 import argparse
-import os
+# import os  <-- REMOVED: No longer needed
 import re
 import sys
 import tempfile
@@ -61,17 +61,16 @@ Default pattern: *.md""",
         default=[".aider.chat.history.md"],
         help="Specific file names to exclude from the check (e.g., README.md LICENSE.md)",
     )
-    # Argument for Verbose Mode (FIXED: Default must be a string 'False' for nargs=? handling)
+    # Argument for Verbose Mode
     parser.add_argument(
         "--verbose",
-        action="store_true",  # Use action='store_true' for clean boolean flag handling
+        action="store_true",
         default=False,
         help="Enable verbose mode for more output information.",
     )
     args = parser.parse_args()
 
     # 2. Setup and Directory Check
-    # Verbose is now a clean boolean
     verbose = args.verbose
     # Resolve the search_dir once and use it as the absolute reference point
     search_dir = Path(args.directory).resolve()
@@ -142,12 +141,20 @@ def resolve_target_path(link_path_str: str, source_file: Path) -> Path:
     """Handle relative paths and absolute paths (relative to project root)."""
     link_path = Path(link_path_str)
 
-    # Check if the link path starts with a separator (e.g., '/')
-    if str(link_path).startswith(os.path.sep):
+    # Pathlib way to check for a root path link: Path('/').is_absolute() returns True
+    # If the path starts with a separator (e.g., /path/to/file)
+    if link_path.is_absolute():
         # Treat as absolute link relative to the project root (CWD where main() started).
         project_root = Path(".").resolve()
-        # Remove leading separator and join with project root
-        return project_root / str(link_path).lstrip(os.path.sep)
+
+        # We need to strip the leading separator. Pathlib's string representation is OS specific.
+        # We assume the link uses the forward slash as the separator standard in Markdown.
+        # Path.is_absolute() is sufficient for logic, string manipulation is for sanitization.
+        path_str_cleaned = str(link_path).lstrip(
+            "/"
+        )  # Use '/' as the canonical Markdown separator
+
+        return project_root / path_str_cleaned
     else:
         # Relative path from source file's directory
         return source_file.parent / link_path
@@ -194,7 +201,7 @@ def process_markdown_file(
     except ValueError:
         relative_path = file
 
-    # FIX: Only print this file info when verbose is TRUE
+    # Only print this file info when verbose is TRUE
     if verbose:
         print(f"Checking file: {relative_path}")
 
@@ -215,6 +222,20 @@ def process_markdown_file(
         if not link_path:
             continue
 
+        # WRC 1.01 FIX: Skip paths that look like internal fragments or simple variables (e.g., 'args')
+        # We cannot use os.path.sep. Instead, we check for both canonical (/) and Windows (\)
+        # path separators used in links, and ensure it contains a dot (e.g., file extension)
+        # to confirm it's a file path we should check.
+        if (
+            "/" not in link_path  # Check for common Unix/Markdown separator
+            and "\\" not in link_path  # Check for common Windows separator
+            and "."
+            not in link_path  # Ensure it's not a file extension like .md or .png
+        ):
+            if verbose:
+                print(f"  SKIP Internal Fragment/Variable: {link}")
+            continue
+
         target_file = resolve_target_path(link_path, file)
 
         # 3. Existence Check (WRC 1.00)
@@ -225,7 +246,14 @@ def process_markdown_file(
                 )
             broken_links_found = True
         elif verbose:
-            print(f"  OK: {link} -> {target_file.relative_to(root_dir)}")
+            # Robust relative path reporting for targets
+            try:
+                target_relative_path = target_file.relative_to(root_dir)
+            except ValueError:
+                # If target is outside the root_dir (e.g., absolute link pointing outside)
+                target_relative_path = target_file
+
+            print(f"  OK: {link} -> {target_relative_path}")
 
     return broken_links_found
 
@@ -270,25 +298,35 @@ def find_markdown_files(
 
 def report_results(temp_file: Path, broken_links_found: bool) -> None:
     """Report results and exit with appropriate code."""
+
     if broken_links_found:
-        with open(temp_file, "r", encoding="utf-8") as f:
-            file_content = f.read()
+        # --- Logic for BROKEN LINKS ---
+
+        # 1. Open and read the entire content of the temp file ONCE
+        report_content = ""
+        try:
+            with open(temp_file, "r", encoding="utf-8") as f:
+                report_content = f.read()
+        except FileNotFoundError:
+            print("Error: Temporary report file not found.", file=sys.stderr)
+            sys.exit(1)
+
+        # 2. Count broken links from the content
+        count = 0
+        for line in report_content.splitlines():
+            if "BROKEN LINK" in line:
+                count += 1
+
+        # 3. Print the summary and the full content
+        print(f"\n❌ {count} Broken links found:")
+        print(report_content, end="")
+
+        sys.exit(1)  # Exit with error code
 
     else:
+        # --- Logic for NO BROKEN LINKS ---
         print("\n✅ All links are valid!")
-        sys.exit(0)
-
-    # count broken links
-    count = 0
-    for line in file_content.splitlines():
-        if "BROKEN LINK" in line:
-            count += 1
-
-    # print report
-    print(f"\n❌ {count} Broken links found:")
-    print(file_content, end="")
-
-    sys.exit(1)
+        sys.exit(0)  # Exit with success code
 
 
 if __name__ == "__main__":
