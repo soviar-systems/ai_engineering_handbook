@@ -3,9 +3,9 @@
 -----
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.0  
+Version: 0.2.1  
 Birth: 2025-12-07  
-Last Modified: 2025-12-14
+Last Modified: 2025-12-16
 
 -----
 
@@ -20,8 +20,6 @@ The legacy approach to Requirements Engineering (RE) is broken. Time wasted in l
 **The Critical Failure of POC-First Review**
 
 A **Proof of Concept (POC)** is an evaluation of **functional feasibility** only. It is ***not*** a reliable criterion for production. By delaying human review until the POC is built, we risk committing to an architecture that is unviable for scaling, insecure, or too expensive.
-
-> Fixing architectural debt discovered post-POC can be $100 \text{x}$ more expensive than fixing it at the design stage. See discussion: [The IBM Systems Science Institute](https://gist.github.com/Morendil/ebfa32d10528af04e2ccb8995e3cb4a7)
 
 **The Core Solution: The Gated Velocity Pipeline**
 
@@ -254,7 +252,7 @@ See [Apendices](https://www.google.com/search?q=./appendices_for_requirements_en
 
 ## Appendix A. Figure 1: The Gated Velocity Pipeline
 
-![](../images/gated_velocity_pipeline.md)
+![](../images/gated_velocity_pipeline.png)
 
 ## Appendix B. Glossary of Terms
 

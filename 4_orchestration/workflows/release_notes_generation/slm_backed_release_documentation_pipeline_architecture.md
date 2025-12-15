@@ -3,9 +3,9 @@
 -----
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.0  
+Version: 0.1.1  
 Birth: 2025-12-01  
-Last Modified: 2025-12-05
+Last Modified: 2025-12-16
 
 -----
 
@@ -29,7 +29,7 @@ This document is mandatory for all MLOps Engineers, Architects, and Senior Devel
 
 ## 2. The Staged Documentation Flow and Dependency
 
-Our process is defined by **three distinct, independent stages**. The architecture's robustness is entirely predicated on the strict enforcement of the **Conventional Commit Standard** (defined in the *[Production Git Workflow: Standards](./production_git_workflow_standards.md)* handbook).
+Our process is defined by **three distinct, independent stages**. The architecture's robustness is entirely predicated on the strict enforcement of the **Conventional Commit Standard** (defined in the *[Production Git Workflow: Standards](../../../mlops/git_workflows/production_git_workflow_standards.md)* handbook).
 
 ### 2.1 The Architectural Flow Diagram
 
@@ -191,5 +191,5 @@ We use lightweight tools to parse the structured **Conventional Commits** first,
 
 ## Appendix A. AI-Assisted Documentation Flow
 
-![AI-Assisted Documentation Flow](./images/ai_assisted_doc_flow_1.png)
+![AI-Assisted Documentation Flow](../images/ai_assisted_doc_flow_1.png)
 

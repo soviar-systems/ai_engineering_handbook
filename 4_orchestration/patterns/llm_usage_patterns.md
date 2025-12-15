@@ -1,14 +1,14 @@
 # LLM Usage Patterns: Chats, Workflows, and Agents in AI
 
 See also: 
-- [Choosing Model Size for Chats, Workflows, and Agents: Model Size, Reasoning, and Optimization](./2_model/selection/choosing_model_size.md)
+- [Choosing Model Size for Chats, Workflows, and Agents: Model Size, Reasoning, and Optimization](../../2_model/selection/choosing_model_size.md)
 
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.1  
-Birth: 19.10.2025  
-Modified: 15.11.2025
+Version: 0.1.2  
+Birth: 2025-10-19  
+Last Modified: 2025-12-16
 
 ---
 

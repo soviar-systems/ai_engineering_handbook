@@ -3,9 +3,9 @@
 -----
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.1  
+Version: 0.1.2  
 Birth: 2025-12-02  
-Last Modified: 2025-12-06
+Last Modified: 2025-12-16
 
 -----
 
@@ -13,7 +13,7 @@ Last Modified: 2025-12-06
 
 This report documents the architectural failure observed during the deployment of the **Small Language Model (SLM)** (1B-3B parameter class) for the highly frequent and highly constrained task of generating structured Conventional Commit messages (Pipeline **Stage 1**).
 
-> See [Production Git Workflow Standards](./git_production_workflow_standards.md)
+> See [Production Git Workflow Standards](../../../mlops/git_workflows/production_git_workflow_standards.md)
 
 The underlying architectural decision to use the SLM was based on achieving efficiency at the edge. However, subsequent analysis revealed a critical mismatch between the **task requirement (100% deterministic, low-context output)** and the **model's capability (non-deterministic synthesis)**.
 
@@ -24,13 +24,13 @@ The underlying architectural decision to use the SLM was based on achieving effi
 | **Root Cause** | **Low Instruction Fidelity and Synthesis Limitation** in small (1B-3B) SLMs. The model could not maintain complex, simultaneous constraints (parsing raw diff, applying multiple rules, generating structured JSON) while conserving VRAM. | **Architectural** |
 | **Mandated Solution** | **Replace the LLM** in Stage 1 with a **Deterministic CLI Tool** (`gitlint`) to enforce the format. Limit the SLM role to the final, high-context Stage 3 transformation. | **MANDATORY** |
 
-> See [Tools: Commit & Changelog Tooling for Release Pipelines](./tools_commit_and_changelog_tooling_for_release_pipelines.md)
+> See [Tools: Commit & Changelog Tooling for Release Pipelines](../../../mlops/git_workflows/commit_changelog_tooling.md)
 
 ## 2. Introduction: Failure of a High-Frequency SLM Application
 
 Our testing confirmed that **Small Language Models (1B-3B) are not suitable for mandatory, high-frequency, structured parsing and generation tasks in a production MLOps pipeline.** Their inherent low **Instruction Fidelity** and difficulty maintaining complex, simultaneous constraints (e.g., 50-character limit, imperative mood, conditional ArchTag insertion) leads to non-deterministic, unreliable output.
 
-* **Result:** The SLM-generated commit messages failed to pass mandatory CI/CD gates, leading to a direct violation of the **[Production Git Workflow: Standards](./production_git_workflow_standards.md)**.
+* **Result:** The SLM-generated commit messages failed to pass mandatory CI/CD gates, leading to a direct violation of the **[Production Git Workflow: Standards](../../../mlops/git_workflows/production_git_workflow_standards.md)**.
 * **Action:** We are immediately retiring the SLM from **Stage 1** of the pipeline. The function will be replaced by a deterministic, non-LLM CLI tool to enforce compliance via an interactive workflow.
 
 This report reinforces the architectural principle that **LLMs must only be applied to generative, low-constraint transformation tasks, not deterministic parsing or rule-based enforcement.**
