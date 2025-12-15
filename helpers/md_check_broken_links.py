@@ -271,15 +271,25 @@ def find_markdown_files(
 def report_results(temp_file: Path, broken_links_found: bool) -> None:
     """Report results and exit with appropriate code."""
     if broken_links_found:
-        print("\n❌ Broken links found:")
         with open(temp_file, "r", encoding="utf-8") as f:
-            print(f.read(), end="")
-        sys.exit(1)
+            file_content = f.read()
+
     else:
         print("\n✅ All links are valid!")
         sys.exit(0)
 
+    # count broken links
+    count = 0
+    for line in file_content.splitlines():
+        if "BROKEN LINK" in line:
+            count += 1
+
+    # print report
+    print(f"\n❌ {count} Broken links found:")
+    print(file_content, end="")
+
+    sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
-
