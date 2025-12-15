@@ -3,9 +3,9 @@
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 1.0.1  
+Version: 1.0.2  
 Birth: 2025-11-20  
-Modified: 2025-12-06
+Modified: 2025-12-16
 
 ---
 
@@ -114,4 +114,4 @@ Start today. Run a small profiling experiment on an everyday tensor operation on
 | [**NVIDIA CUDA C++ Programming Guide**](https://docs.nvidia.com/cuda/cuda-c-programming-guide) | The definitive technical reference for language features and optimization strategies. |
 | [**NVIDIA Nsight Compute Tutorials**](https://developer.nvidia.com/tools-tutorial) | Hands-on guides for profiling and debugging. |
 | **Stanford [CS107 - Programming Paradigms](https://see.stanford.edu/Course/CS107), [CS106B - Programming Abstractions**](https://see.stanford.edu/Course/CS106B) | Essential systems-level and OS foundations. | 
-| [**FreeCodeCamp CUDA Course**](freecodecamp.org/news/learn-cuda-programming/) | A great way to start hands-on GPU programming. |  |
+| [**FreeCodeCamp CUDA Course**](https://freecodecamp.org/news/learn-cuda-programming/) | A great way to start hands-on GPU programming. |  |
