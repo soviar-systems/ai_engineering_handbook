@@ -1,0 +1,16 @@
+# myst-website on nginx for traefik
+http:
+  routers:
+    myst_pod_router:
+    rule: "Host(`book.soviar.ru`)"
+    entryPoints:
+      - websecure
+    service: myst_pod_service
+    tls:
+      certResolver: myresolver
+
+  services:
+    myst_pod_service:
+      loadBalancer:
+        servers:
+          - url: "http://book.soviar.ru:<port_number>"

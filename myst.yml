@@ -1,0 +1,14 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  id: 77c215c5-b64c-4c5a-8400-de30e7ddd3a7
+  title: AI Engineering Book from SovIAR
+  # description:
+  # keywords: []
+  # authors: []
+  github: https://github.com/lefthand67/ai_engineering_handbook
+site:
+  template: book-theme
+  # options:
+  #   favicon: favicon.ico
+  #   logo: site_logo.png
