@@ -1,4 +1,19 @@
+# README: MystMD Website Deployment Instruction
+
+-----
+
+Owner: Vadim Rudakov, lefthand67@gmail.com  
+Version: 0.1.0  
+Birth: 2025-12-17  
+Modified: 2025-12-18
+
+-----
+
 This guide outlines how to set up an automated documentation pipeline using **MyST Markdown**, **GitHub Actions**, **Podman**, and **Traefik**.
+
+> It is supposed that you have already:
+> - configured the server with rootless Podman and the traefik service (in container),
+> - created a Git repository with .md or .ipynb files.
 
 ---
 
