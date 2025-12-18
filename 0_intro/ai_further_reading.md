@@ -3,16 +3,29 @@
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.0  
-Birth: 01.10.2025  
-Modified: 09.11.2025
+Version: 0.3.0  
+Birth: 2025-10-01  
+Modified: 2025-12-18
 
 ---
 
-## Building LLMs
+## Language Models
+
+### Building LMs
 
 1. [Machine Learning Systems. Principles and Practices of Engineering Artificially Intelligent Systems](https://www.mlsysbook.ai/) - Harvard
 1. [The Smol Training Playbook: The Secrets to Building World-Class LLMs](https://huggingface.co/spaces/HuggingFaceTB/smol-training-playbook) - HuggingFace
+
+### Small Language Models (SLMs)
+
+1. [Small Language Models are the Future of Agentic AI](https://arxiv.org/abs/2506.02153) [last revised 15 Sep 2025]
+
+## Tools
+
+1. [CrewAI](https://github.com/crewAIInc/crewAI) - github repo
+1. [DSPy: Declarative Self-Improving Language Programs](https://github.com/stanfordnlp/dspy)
+1. [MLflow + DVC docs](https://mlflow.org/)
+1. [AI pair programming in your terminal](https://aider.chat/)
 
 ## Promt Engineering
 
@@ -28,10 +41,12 @@ Modified: 09.11.2025
 ### Methods
 
 1. [Chain-of-Verification Reduces Hallucination in Large Language Models](https://arxiv.org/abs/2309.11495) - arxiv 20 Sep 2023
+1. [Beyond Free-Form Text: How Constrained Decoding is Reshaping Structured Generation in LLMs](https://medium.com/@brijeshrn/beyond-free-form-text-how-constrained-decoding-is-reshaping-structured-generation-in-llms-5f7a38bef259) [Sep 7, 2025]
 1. [Structured model outputs](https://platform.openai.com/docs/guides/structured-outputs)
 
 ## Requirements Engineering
 
+1. [AI for Requirements Engineering: Industry Adoption and Practitioner Perspectives](https://arxiv.org/html/2511.01324v3) [Submitted on 05 Nov 2025]
 1. [Large Language Models (LLMs) for Requirements Engineering (RE): A Systematic Literature Review](https://arxiv.org/abs/2509.11446) [Submitted on 14 Sep 2025]
 1. [Exploring the Use of LLMs for Requirements Specification in an IT Consulting Company](https://arxiv.org/abs/2507.19113) [Submitted on 25 Jul 2025]
 1. [Evaluating Large Language Models for the Automated Generation of Software Requirements](https://link.springer.com/chapter/10.1007/978-981-96-8892-0_37?fromPaywallRec=true) First Online: 12 July 2025
@@ -60,9 +75,3 @@ Modified: 09.11.2025
 1. [Checkmarx — LLM Security Guide](https://checkmarx.com/learn/breaking-down-the-owasp-top-10-for-llm-applications/)
 1. [Confident AI — LLM Security Best Practices](https://www.confident-ai.com/blog/the-comprehensive-guide-to-llm-security)
 1. [Prompt Injection Attacks](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) - OWASP
-
-## Tools
-
-1. [CrewAI](https://github.com/crewAIInc/crewAI) - github repo
-1. [DSPy: Declarative Self-Improving Language Programs](https://github.com/stanfordnlp/dspy)
-1. [MLflow + DVC docs](https://mlflow.org/)
