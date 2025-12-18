@@ -3,7 +3,7 @@
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.3.0  
+Version: 0.3.1  
 Birth: 2025-10-01  
 Modified: 2025-12-18
 
@@ -40,7 +40,7 @@ Modified: 2025-12-18
 
 ### Methods
 
-1. [Chain-of-Verification Reduces Hallucination in Large Language Models](https://arxiv.org/abs/2309.11495) - arxiv 20 Sep 2023
+1. [Chain-of-Verification Reduces Hallucination in Large Language Models](https://arxiv.org/abs/2309.11495) [arxiv 20 Sep 2023]
 1. [Beyond Free-Form Text: How Constrained Decoding is Reshaping Structured Generation in LLMs](https://medium.com/@brijeshrn/beyond-free-form-text-how-constrained-decoding-is-reshaping-structured-generation-in-llms-5f7a38bef259) [Sep 7, 2025]
 1. [Structured model outputs](https://platform.openai.com/docs/guides/structured-outputs)
 
@@ -49,14 +49,14 @@ Modified: 2025-12-18
 1. [AI for Requirements Engineering: Industry Adoption and Practitioner Perspectives](https://arxiv.org/html/2511.01324v3) [Submitted on 05 Nov 2025]
 1. [Large Language Models (LLMs) for Requirements Engineering (RE): A Systematic Literature Review](https://arxiv.org/abs/2509.11446) [Submitted on 14 Sep 2025]
 1. [Exploring the Use of LLMs for Requirements Specification in an IT Consulting Company](https://arxiv.org/abs/2507.19113) [Submitted on 25 Jul 2025]
-1. [Evaluating Large Language Models for the Automated Generation of Software Requirements](https://link.springer.com/chapter/10.1007/978-981-96-8892-0_37?fromPaywallRec=true) First Online: 12 July 2025
-1. [Towards Conversational Requirements Engineering: Detecting Defects in Requirements Using Large Language Models](https://link.springer.com/chapter/10.1007/978-3-031-85316-6_2?fromPaywallRec=true) First Online: 03 July 2025
+1. [Evaluating Large Language Models for the Automated Generation of Software Requirements](https://link.springer.com/chapter/10.1007/978-981-96-8892-0_37) [First Online: 12 July 2025]
+1. [Towards Conversational Requirements Engineering: Detecting Defects in Requirements Using Large Language Models](https://link.springer.com/chapter/10.1007/978-3-031-85316-6_2) [First Online: 03 July 2025]
 1. [LLMREI: Automating Requirements Elicitation Interviews with LLMs](https://arxiv.org/abs/2507.02564) [Submitted on 3 Jul 2025]
-1. [Using Large Language Models to Develop Requirements Elicitation Skills](https://arxiv.org/html/2503.07800v2) 09 Apr 2025
-1. [Research directions for using LLM in software requirement engineering: a systematic review](https://www.frontiersin.org/journals/computer-science/articles/10.3389/fcomp.2025.1519437/full) 21 March 2025
-1. [Large Language Model for Requirements Engineering: A Systematic Literature Review](https://www.researchgate.net/publication/386905816_Large_Language_Model_for_Requirements_Engineering_A_Systematic_Literature_Review) December 2024
-1. [Challenges in applying large language models to requirements engineering tasks](https://www.cambridge.org/core/journals/design-science/article/challenges-in-applying-large-language-models-to-requirements-engineering-tasks/1FC7666F0A0B4E7091D2D4B2D46321B5) 18 September 2024
-1. [The Return of Formal Requirements Engineering in the Era of Large Language Models](https://link.springer.com/chapter/10.1007/978-3-031-57327-9_22?fromPaywallRec=true) 30 March 2024
+1. [Using Large Language Models to Develop Requirements Elicitation Skills](https://arxiv.org/html/2503.07800v2) [09 Apr 2025]
+1. [Research directions for using LLM in software requirement engineering: a systematic review](https://www.frontiersin.org/journals/computer-science/articles/10.3389/fcomp.2025.1519437/full) [21 March 2025]
+1. [Large Language Model for Requirements Engineering: A Systematic Literature Review](https://www.researchgate.net/publication/386905816_Large_Language_Model_for_Requirements_Engineering_A_Systematic_Literature_Review) [December 2024]
+1. [Challenges in applying large language models to requirements engineering tasks](https://www.cambridge.org/core/journals/design-science/article/challenges-in-applying-large-language-models-to-requirements-engineering-tasks/1FC7666F0A0B4E7091D2D4B2D46321B5) [18 September 2024]
+1. [The Return of Formal Requirements Engineering in the Era of Large Language Models](https://link.springer.com/chapter/10.1007/978-3-031-57327-9_22) [30 March 2024]
 
 ### Business Analysis - Requirements Gathering
 
@@ -67,7 +67,7 @@ Modified: 2025-12-18
 
 ### Learning
 
-1. [Using Large Language Models to Develop Requirements Elicitation Skills](https://arxiv.org/html/2503.07800v2) 09 Apr 2025
+1. [Using Large Language Models to Develop Requirements Elicitation Skills](https://arxiv.org/html/2503.07800v2) [09 Apr 2025]
 
 ## Security
 
