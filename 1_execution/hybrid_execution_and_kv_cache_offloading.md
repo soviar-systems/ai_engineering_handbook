@@ -4,8 +4,8 @@
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
 Version: 0.7.0  
-Birth: 23.11.2025  
-Modified: 24.11.2025
+Birth: 2025-11-23  
+Modified: 2025-11-24
 
 -----
 

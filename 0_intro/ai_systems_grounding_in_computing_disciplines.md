@@ -2,9 +2,9 @@
 
 -----
 
-Owner: Vadim Rudakov, lefthand67@gmail.com
-Version: 0.2.1
-Birth: 2025-12-05
+Owner: Vadim Rudakov, lefthand67@gmail.com  
+Version: 0.2.1  
+Birth: 2025-12-05  
 Last Modified: 2025-12-06
 
 -----
