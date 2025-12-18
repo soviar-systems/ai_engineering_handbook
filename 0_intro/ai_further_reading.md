@@ -14,7 +14,7 @@ Modified: 2025-12-18
 ### Building LMs
 
 1. [Machine Learning Systems. Principles and Practices of Engineering Artificially Intelligent Systems](https://www.mlsysbook.ai/) - Harvard
-1. [The Smol Training Playbook: The Secrets to Building World-Class LLMs](https://huggingface.co/spaces/HuggingFaceTB/smol-training-playbook) - HuggingFace
+1. [The Smol Training Playbook: The Secrets to Building World-Class LLMs](https://huggingface.co/spaces/HuggingFaceTB/smol-training-playbook) [HuggingFace]
 
 ### Small Language Models (SLMs)
 
@@ -22,7 +22,7 @@ Modified: 2025-12-18
 
 ## Tools
 
-1. [CrewAI](https://github.com/crewAIInc/crewAI) - github repo
+1. [CrewAI](https://github.com/crewAIInc/crewAI) [github repo]
 1. [DSPy: Declarative Self-Improving Language Programs](https://github.com/stanfordnlp/dspy)
 1. [MLflow + DVC docs](https://mlflow.org/)
 1. [AI pair programming in your terminal](https://aider.chat/)
@@ -31,11 +31,11 @@ Modified: 2025-12-18
 
 ### General
 
-1. [Prompt Engineering Guide](https://www.promptingguide.ai/) - OpenAI
+1. [Prompt Engineering Guide](https://www.promptingguide.ai/) [OpenAI]
 1. [Prompt-Engineering-Guide](https://github.com/dair-ai/Prompt-Engineering-Guide)
-1. [DAIR.AI Courses](https://dair-ai.thinkific.com/pages/courses) - OpenAI NOT FREE
-1. [OpenAI Cookbook](https://cookbook.openai.com/) - OpenAI
-1. [claude-cookbooks](https://github.com/anthropics/claude-cookbooks) - github repo
+1. [DAIR.AI Courses](https://dair-ai.thinkific.com/pages/courses) [OpenAI NOT FREE]
+1. [OpenAI Cookbook](https://cookbook.openai.com/) [OpenAI]
+1. [claude-cookbooks](https://github.com/anthropics/claude-cookbooks) [github repo]
 1. [15 AI Prompts To Improve Your Requirements Gathering Process](https://www.eltegra.ai/blog/15-ai-prompts-requirements-gathering-business-analysis)
 
 ### Methods
@@ -60,10 +60,10 @@ Modified: 2025-12-18
 
 ### Business Analysis - Requirements Gathering
 
-1. [5 AI Tools for Business Analysts for Better Requirements Management](https://copilot4devops.com/5-ai-tools-for-requirements-management/) - copilot4devops
-1. [The Coming AI Revolution In Requirements Gathering](https://www.forbes.com/councils/forbestechcouncil/2025/09/12/building-a-north-american-ev-charging-standard-the-moment-of-truth/) - forbes
-1. [13 Best Prompt Engineering Tools to Boost Your AI Workflows](https://www.openxcell.com/blog/prompt-engineering-tools/) - openxcell
-1. [Top 10 AI Tools for Requirements Gathering Success in 2025](https://clickup.com/blog/ai-tools-for-requirements-gathering/) - clickup
+1. [5 AI Tools for Business Analysts for Better Requirements Management](https://copilot4devops.com/5-ai-tools-for-requirements-management/) [copilot4devops]
+1. [The Coming AI Revolution In Requirements Gathering](https://www.forbes.com/councils/forbestechcouncil/2025/09/12/building-a-north-american-ev-charging-standard-the-moment-of-truth/) [forbes]
+1. [13 Best Prompt Engineering Tools to Boost Your AI Workflows](https://www.openxcell.com/blog/prompt-engineering-tools/) [openxcell]
+1. [Top 10 AI Tools for Requirements Gathering Success in 2025](https://clickup.com/blog/ai-tools-for-requirements-gathering/) [clickup]
 
 ### Learning
 
@@ -74,4 +74,4 @@ Modified: 2025-12-18
 1. [OWASP Top-10 for LLMs (2025)](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
 1. [Checkmarx — LLM Security Guide](https://checkmarx.com/learn/breaking-down-the-owasp-top-10-for-llm-applications/)
 1. [Confident AI — LLM Security Best Practices](https://www.confident-ai.com/blog/the-comprehensive-guide-to-llm-security)
-1. [Prompt Injection Attacks](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) - OWASP
+1. [Prompt Injection Attacks](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) [OWASP]
