@@ -1,10 +1,18 @@
+-----
+
+Version: 0.1.0 (previous versions were not audited)  
+Birth: 2025-10-19  
+Modified: 2025-12-20
+
+-----
+
 # About
 
-This repository provides a **systematized, AI-engineered knowledge base** for building production-grade AI systems using **Small Language Models (SLMs)**. All content is **generated, validated, and versioned through a controlled LLM workflow**—treated as code, not prose.
+This repository provides a **systematized, AI-engineered knowledge base** for building production-grade AI systems using **Small Language Models (SLMs)**. All content is **generated, validated, and versioned through a controlled Language Model (LM) workflow**—treated as code, not prose.
 
 > **Mission**: Enable MLOps engineers and AI architects to construct **reliable, maintainable, and auditable** AI infrastructure by treating documentation as executable, testable artifacts.
 
-This is not a prompt repository. It addresses the **full stack** required to deploy and sustain LLM-powered systems: execution, model, prompt, orchestration, context, and security layers.
+This is not a prompt repository. It addresses the **full stack** required to deploy and sustain LM-powered systems: execution, model, prompt, orchestration, context, and security layers.
 
 ---
 
@@ -13,7 +21,7 @@ This is not a prompt repository. It addresses the **full stack** required to dep
 This is a **practitioner-focused engineering repository**, not academic literature. Therefore:
 
 - **No bibliographic references** are included.
-- **Provenance is encoded** in system prompts (e.g., `slm_system_consultant.json`), which capture reasoning patterns used during generation. These prompts are open for inspection and serve as traceable “concept lineage” artifacts.
+- **Provenance is encoded** in system prompts (e.g., [`slm_system_consultant.json`](./helpers/ai_consultants/slm_system_consultant.json)), which capture reasoning patterns used during generation. These prompts are open for inspection and serve as traceable “concept lineage” artifacts.
 - **I do not claim originality of ideas**—only of the **generation methodology**, **validation protocol**, and **structural design**.
 
 > I am the architect of the knowledge-generation system. The ideas flow from public technical discourse; the synthesis, cross-validation, and organization are my engineered contribution.
@@ -33,7 +41,7 @@ Content is organized around the six layers of LLM systems:
 1. **Context Management**: Vector stores, hybrid retrieval, indexing strategies  
 1. **Security & Quality**: Bias detection, access control, validation templates  (spread across all other layers)
 
-All materials are **LLM-generated**, then **cross-validated by multiple models**, and deeply **reviewed before promotion** from draft to final by me. The production of one handbook may take tens of manual and AI-backed iterations before I am ready to put it into the main branch, but I understand it can still have problems, so feel free to leave issues. 
+All materials are **LM-generated**, then **cross-validated by multiple models**, and deeply **reviewed before promotion** from draft to final by me. The production of one handbook may take tens of manual and AI-backed iterations before I am ready to put it into the main branch, but I understand it can still have problems, so feel free to leave issues. 
 
 ---
 
@@ -44,18 +52,24 @@ ai-systems-engineering/
 ├── 0_intro/               # Foundational principles & communication styles
 ├── 1_execution/          # Execution strategies and hardware-aware tuning
 ├── 2_model/              # Model lifecycle: selection, security, embedding
-├── 3_prompts/            # Prompt modularity, templates, and management
-├── 4_orchestration/      # Workflow engines, chaining, RAG patterns
-├── 5_context/            # Retrieval, vector DBs, knowledge grounding
+├── 3_infrastructure            # Prompt modularity, templates, and management
+├── 4_orchestration/      # Workflow engines, chaining
+├── 5_context/            # Retrieval, vector DBs
+├── helpers/
+│   ├── ai_consultants/     # System prompts for AI-generated content
+│   ├── scripts/            # Utility scripts for various tasks
+│   └── website/            # Configuration files for the repo's website
 ├── mlops/                # Versioning, CI/CD, deployment guardrails
-└── tools/                # Tooling stack: local LLM runners, validators
+└── tools/                # Tooling stack: local LM runners, validators
 ```
+
+`pr` directory is the collection of the informational telegram posts. These posts should not be considered as authoritative or comprehensive documentation.
 
 ---
 
 ## Generation Workflow
 
-All content follows a **reproducible LLM pipeline**, mirroring software CI/CD:
+All content follows a **reproducible LM pipeline**, mirroring software CI/CD:
 
 1. **Idea elaboration**: `slm_system_consultant.json` explores and stress-tests concepts  
 2. **Draft generation**: `handbook_consultant.json` produces articles, diagrams, and code  
@@ -64,6 +78,26 @@ All content follows a **reproducible LLM pipeline**, mirroring software CI/CD:
 5. **Human review**: Final sanity check before promotion to published directories  
 
 > In this paradigm: **prompts = source code**, **articles = build artifacts**, **reviews = QA gates**.
+
+```mermaid
+graph TD
+A[Start] --> B[Idea elaboration: slm_system_consultant.json]
+B --> C[Draft generation: handbook_consultant.json]
+C --> D[Cross-validation by multiple models]
+D --> E[Version control]
+E --> F[Human review]
+F --> G[Promotion to published directories]
+G --> H[End]
+
+style A fill:#f96,stroke:#333,stroke-width:4px
+style B fill:#fff,stroke:#333,stroke-width:2px
+style C fill:#fff,stroke:#333,stroke-width:2px
+style D fill:#fff,stroke:#333,stroke-width:2px
+style E fill:#fff,stroke:#333,stroke-width:2px
+style F fill:#fff,stroke:#333,stroke-width:2px
+style G fill:#fff,stroke:#333,stroke-width:2px
+style H fill:#f96,stroke:#333,stroke-width:4px
+```
 
 ---
 
@@ -83,7 +117,7 @@ Feedback is welcome via issues or PRs. All contributions will undergo the same v
 
 ## Related Work
 
-- [**llm_from_scratch_practice**](https://github.com/lefthand67/llm_from_scratch_practice): Companion repo where I build a ~100M-parameter LLM from first principles—guided by an LLM mentor.
+- [**llm_from_scratch_practice**](https://github.com/lefthand67/llm_from_scratch_practice): Companion repo where I build a ~100M-parameter SLM from first principles—guided by a Large LM mentor.
 
 ---
 
