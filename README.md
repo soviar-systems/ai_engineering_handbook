@@ -40,14 +40,18 @@ All materials are **LLM-generated**, then **cross-validated by multiple models**
 ## Repository Structure
 
 ```text
-ai-systems-engineering/
-├── 0_intro/               # Foundational principles & communication styles
+ai_engineering_handbook/
+├── .github/workflows/    # CI/CD and validation pipelines
+├── 0_intro/              # Foundational principles & communication styles
 ├── 1_execution/          # Execution strategies and hardware-aware tuning
 ├── 2_model/              # Model lifecycle: selection, security, embedding
 ├── 3_prompts/            # Prompt modularity, templates, and management
 ├── 4_orchestration/      # Workflow engines, chaining, RAG patterns
 ├── 5_context/            # Retrieval, vector DBs, knowledge grounding
+├── helpers/              # Shared utilities and support modules
 ├── mlops/                # Versioning, CI/CD, deployment guardrails
+├── pr/                   # Pull request templates / workflows
+├── security/             # Security, validation, and quality controls
 └── tools/                # Tooling stack: local LLM runners, validators
 ```
 
