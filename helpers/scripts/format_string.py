@@ -15,7 +15,15 @@ def main():
 def format_string(input_string):
     # Remove colons, double quotes, and replace spaces with underscores
     formatted_string = (
-        input_string.replace(":", "").replace('"', "").replace(" ", "_").lower()
+        input_string.lower()
+        .replace("the ", "")
+        .replace(":", "")
+        .replace('"', "")
+        .replace(" ", "_")
+        .replace("(", "")
+        .replace(")", "")
+        .replace(".", "_")
+        .replace("-", "_")
     )
     return formatted_string
 
