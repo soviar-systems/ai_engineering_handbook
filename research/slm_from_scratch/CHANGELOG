@@ -1,0 +1,15 @@
+**Date:** 2025-11-25
+- Started a new mentor.
+    - Updated `mentor_llm_from_scratch.json` with new metadata, core mission, mentor profile, interaction flow, response architecture, additional context, and user state management.
+- Added `.aider*` to `.gitignore`.
+- Created new notebook `01_foundational_neurons_and_backprop/01_foundations.ipynb` with foundational neuron and backpropagation content.
+- Renamed `01_tokenizer/` to `02_tokenizer/`.
+- Updated `README.md` with a new learning plan, goals, and practical skills.
+- Moved older notebooks to the new directory `old/`.
+
+**Date:** 2025-11-26
+- Updated `01_foundational_neurons_and_backprop/01_foundations.ipynb` with enhanced mathematical notation and added exercises for scalar neuron backpropagation.
+    - Added Exercise 2.1: Scalar Neuron Backpropagation.
+    - Added Exercise 2.2: Implement the scalar neuron (Steps 1–2) in NumPy.
+- Corrected the implementation of the hyperbolic tangent function in `01_foundational_neurons_and_backprop/01_foundations.ipynb` to use `np.tanh(z)` for numerical stability.
+- Updated `mentor_llm_from_scratch.json` with changes to the state update mode triggers.
