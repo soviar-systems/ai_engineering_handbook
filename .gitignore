@@ -281,3 +281,8 @@ rendered/
 
 # MyST build outputs
 _build
+
+.webui_secret_key
+
+draft*
+diff
