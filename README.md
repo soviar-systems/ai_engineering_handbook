@@ -1,8 +1,8 @@
 -----
 
-Version: 0.1.0 (previous versions were not audited)  
-Birth: 2025-10-19  
-Modified: 2025-12-20
+Version: 0.2.0
+Birth: 2025-10-19
+Modified: 2025-12-21
 
 -----
 
@@ -26,7 +26,7 @@ This is a **practitioner-focused engineering repository**, not academic literatu
 
 > I am the architect of the knowledge-generation system. The ideas flow from public technical discourse; the synthesis, cross-validation, and organization are my engineered contribution.
 
-The repository is licensed under **GPLv3** because its core assets—**directory structure, system prompts, validation rules, and generation pipelines**—are **software artifacts**, not static documents. This enforces the *documentation-as-code* principle.
+The repository is licensed under **GPLv3** for its core assets—**directory structure, system prompts, validation rules, and generation pipelines**—which are **software artifacts**, not static documents. This enforces the *documentation-as-code* principle. The article content is licensed under **CC-BY-SA 4.0**.
 
 ---
 
@@ -34,14 +34,14 @@ The repository is licensed under **GPLv3** because its core assets—**directory
 
 Content is organized around the six layers of LLM systems:
 
-1. **Execution & Optimization**: CPU/GPU hybrid pipelines, memory (VRAM/RAM) management, NVIDIA tuning  
-1. **Model Development**: SLM selection, tokenization, embedding, security hardening  
-1. **Prompt Engineering**: Modular design, XML schemas, template lifecycle  
-1. **Orchestration**: RAG, workflow chaining, structured output control  
-1. **Context Management**: Vector stores, hybrid retrieval, indexing strategies  
-1. **Security & Quality**: Bias detection, access control, validation templates  (spread across all other layers)
+1. **Execution & Optimization**: CPU/GPU hybrid pipelines, memory (VRAM/RAM) management, NVIDIA tuning
+2. **Model Development**: SLM selection, tokenization, embedding, security hardening
+3. **Prompt Engineering**: Modular design, XML schemas, template lifecycle
+4. **Orchestration**: RAG, workflow chaining, structured output control
+5. **Context Management**: Vector stores, hybrid retrieval, indexing strategies
+6. **Security & Quality**: Bias detection, access control, validation templates  (spread across all other layers)
 
-All materials are **LM-generated**, then **cross-validated by multiple models**, and deeply **reviewed before promotion** from draft to final by me. The production of one handbook may take tens of manual and AI-backed iterations before I am ready to put it into the main branch, but I understand it can still have problems, so feel free to leave issues. 
+All materials are **LM-generated**, then **cross-validated by multiple models**, and deeply **reviewed before promotion** from draft to final by me. The production of one handbook may take tens of manual and AI-backed iterations before I am ready to put it into the main branch, but I understand it can still have problems, so feel free to leave issues.
 
 ---
 
@@ -60,8 +60,25 @@ ai-systems-engineering/
 │   ├── scripts/            # Utility scripts for various tasks
 │   └── website/            # Configuration files for the repo's website
 ├── mlops/                # Versioning, CI/CD, deployment guardrails
+├── research/
+│   └── slm_from_scratch/  # Research and development of Small Language Models
 └── tools/                # Tooling stack: local LM runners, validators
 ```
+
+### Research & Foundations (`/research`)
+
+While the core layers of this repository focus on the **systemic orchestration** of AI, the `research/` directory is dedicated to the **first principles** of Small Language Models. We treat the transition from a single neuron to a production-grade Transformer not as a "black box," but as a verifiable engineering stack.
+
+In this repository, "Research" is not academic—it is **forensic**. By building the model from scratch:
+1. **Security is Hardened**: We understand exactly how data flows through the weights, making it easier to identify points of failure for prompt injection or data leakage.
+2. **Optimization is Precise**: Hardware-aware tuning (Layer 1) is more effective when you understand the computational graph of the model (Research Layer).
+3. **Validation is Absolute**: We use manual gradient checks in research to ensure that our automated validation protocols in the MLOps layer are mathematically sound.
+
+#### SLM From Scratch
+
+The primary initiative within this directory is the **bottom-up construction of SLM architectures**. This phase-based research ensures that every higher-level optimization (like KV-caching or Quantization) is grounded in a deep understanding of the underlying calculus.
+
+### Public Relations directory
 
 `pr` directory is the collection of the informational telegram posts. These posts should not be considered as authoritative or comprehensive documentation.
 
@@ -69,15 +86,15 @@ ai-systems-engineering/
 
 ## Generation Workflow
 
-All content follows a **reproducible LM pipeline**, mirroring software CI/CD:
+All content follows a reproducible LM pipeline, mirroring software CI/CD:
 
-1. **Idea elaboration**: `slm_system_consultant.json` explores and stress-tests concepts  
-2. **Draft generation**: `handbook_consultant.json` produces articles, diagrams, and code  
-3. **Cross-validation**: Multiple models critique and refine outputs  
-4. **Version control**: Every file is tracked, diffed, and tested like source code  
-5. **Human review**: Final sanity check before promotion to published directories  
+1. **Idea elaboration:** [slm_system_consultant.json]() explores and stress-tests concepts
+1. **Draft generation**: handbook_consultant.json produces articles, diagrams, and code
+1. **Cross-validation:** Multiple models critique and refine outputs
+1. **Version control:** Every file is tracked, diffed, and tested like source code
+1. **Human review: **Final sanity check before promotion to published directories
 
-> In this paradigm: **prompts = source code**, **articles = build artifacts**, **reviews = QA gates**.
+> In this paradigm: prompts = source code, articles = build artifacts, reviews = QA gates.
 
 ```mermaid
 graph TD
@@ -103,22 +120,11 @@ style H fill:#f96,stroke:#333,stroke-width:4px
 
 ## Motivation
 
-My final goal is to build AI solutions that I can maintain as ordinary software, like a calculator. This goal - if achievable - can be achieved only with the strong methodology behind it. MLOps, Devsecops, models fine-tuning, context management, and so on. You can easily prototype almost anything with the little help from AI, but the question is whether you can build a reliable, production level system. 
+My final goal is to build AI solutions that I can maintain as ordinary software, like a calculator. This goal - if achievable - can be achieved only with the strong methodology behind it. MLOps, Devsecops, models fine-tuning, context management, and so on. You can easily prototype almost anything
+with the little help from AI, but the question is whether you can build a reliable, production level system.
 
-Every problem documented here is one I’ve confronted while developing **local SLM stacks under resource constraints**. Since I learn by doing—and my primary collaborator is the AI itself—I share this repository publicly to:
+Every problem documented here is one I’ve confronted while developing local SLM stacks under resource constraints. Since I learn by doing—and my primary collaborator is the AI itself—I share this repository publicly to:
 
-- Invite **technical critique** on my understanding of AI systems  
-- Offer a **methodologically consistent** alternative to ad-hoc prompt hacking  
-- Demonstrate that **documentation can be engineered**, not just written  
-
-Feedback is welcome via issues or PRs. All contributions will undergo the same validation pipeline.
-
----
-
-## Related Work
-
-- [**llm_from_scratch_practice**](https://github.com/lefthand67/llm_from_scratch_practice): Companion repo where I build a ~100M-parameter SLM from first principles—guided by a Large LM mentor.
-
----
-
-*Salute!*
+- Invite technical critique on my understanding of AI systems
+- Offer a methodologically consistent alternative to ad-hoc prompt hacking
+- Demonstrate that documentation can be engineered, not just written
