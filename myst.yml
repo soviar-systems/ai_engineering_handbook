@@ -2,13 +2,21 @@
 version: 1
 project:
   id: 77c215c5-b64c-4c5a-8400-de30e7ddd3a7
-  title: AI Engineering Book from SovIAR
-  # description:
+  title: AI Engineering Book
+  description: AI-engineered knowledge base
   # keywords: []
   # authors: []
   github: https://github.com/lefthand67/ai_engineering_handbook
+  exclude:
+    - pr/*
+    - research/slm_from_scratch/old/*
 site:
   template: book-theme
+  title: AI Engineering Book from SovIAR
+  options:
+    logo: pr/Gemini_Generated_Image_ai_systems_engineer_small.png
+    logo_text: Brought by SovIAR
+    favicon: pr/Gemini_Generated_Image_ai_systems_engineer_small.png
   # options:
   #   favicon: favicon.ico
   #   logo: site_logo.png
