@@ -88,7 +88,7 @@ The primary initiative within this directory is the **bottom-up construction of 
 
 All content follows a reproducible LM pipeline, mirroring software CI/CD:
 
-1. **Idea elaboration:** [slm_system_consultant.json]() explores and stress-tests concepts
+1. **Idea elaboration:** [slm_system_consultant.json](./helpers/ai_consultants/slm_system_consultant.json) explores and stress-tests concepts
 1. **Draft generation**: handbook_consultant.json produces articles, diagrams, and code
 1. **Cross-validation:** Multiple models critique and refine outputs
 1. **Version control:** Every file is tracked, diffed, and tested like source code
