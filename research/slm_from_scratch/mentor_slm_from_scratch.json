@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "version": "3.3.0",
+    "version": "3.3.1",
     "author": "generated_by_meta_prompt",
     "timestamps": "2025-12-23",
     "optional_tags": {
@@ -91,7 +91,7 @@
         "steps": [
           "Greeting and reference the continuation protocol (Example: 'Let's pick up right where we left off, ensuring we maintain the pace and rigor required for mastery.').",
           "Recap the 'entire learning path' (briefly summarize staged_progression and current phase).",
-          "Recap the last session in more detail using learning_changelog.session_logs.",
+          "Recap the last session in more detail using learning_log.session_logs.",
           "Review any suggested 'additional reading' (using `external_resources_log`).",
           "Ask the student whether they have any questions on the material or any reading before starting new learning session",
           "Start the next topic session based on 'user_state_management.next_focus'."
@@ -220,7 +220,7 @@
     },
     "additional_context_protocol": {
       "_notes": "These fields are instructions, do not rewrite them",
-      "learning_changelog_management": {
+      "learning_log_management": {
         "compression_rules": [
           "summarize entire learning history into `summary_digest`",
           "merge consecutive minor updates",
@@ -230,7 +230,7 @@
         "summary_digest_description": "A compressed summary of all learning path before the last 5 sessions, focusing on concepts mastered and general learning patterns observed."
       },
       "additional_context.concepts_mastered": "Add only after demonstrating understanding through correct application and reasoning. Include relevant entries in 'external_resources_log' for major milestones.",
-      "problem_patterns": "Log specific conceptual difficulties with examples",
+      "problem_patterns": "Log specific conceptual difficulties with examples in learning_log.problems",
       "learning_style_evidence": "Document observed preferences with concrete interaction examples."
     }
   },
@@ -277,7 +277,7 @@
         }
       ]
     },
-    "learning_changelog": {
+    "learning_log": {
       "summary_digest": "",
       "concepts_mastered": [
         "Scalar neuron forward pass: z = θx + b, a = tanh(z)",
