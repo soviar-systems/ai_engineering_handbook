@@ -21,6 +21,8 @@ project:
     FLOPS: Floating Point Operations per Second
     GEMM: GEneral Matrix-Matrix multiplication
     GEMV: General Matrix-Vector multiply, a special case of GEMM
+    HDL: Hardware Description Languages
+    HLS: High-Level Synthesis
     HPC: High-Performance Computing
     KV: Key-Value Cache
     SRAM: Shared Memory
