@@ -23,6 +23,8 @@ Last Modified: 2025-12-27
 
 This article defines **GEMM** as the foundational standard for HPC and Deep Learning. It contrasts GEMM’s high arithmetic intensity with memory-bound operations like GEMV, explaining how **tiling** and **Tensor Cores** optimize throughput. It highlights the crucial distinction between **Interface, API, and ABI** to ensure software portability. Finally, it maps GEMM to AI architectures, noting its role in Transformers and the efficiency of libraries like cuBLAS.
 
+> INFO: *The handbook is optimized for environments supporting Mermaid.js diagrams. For static export, rasterized versions are available in Appendix A.*
+
 ## 1. The Algebra Building Blocks
 
 In High-Performance Computing (**HPC**), we use the **GEMM, General Matrix-Matrix Multiplication** routine defined by the **BLAS (Basic Linear Algebra Subprograms)** standard.
@@ -31,12 +33,14 @@ In High-Performance Computing (**HPC**), we use the **GEMM, General Matrix-Matri
 
 In linear algebra and deep learning, a **dot product** (GEMV, General Matrix-Vector multiply) is an operation between two vectors of the same dimension, resulting in a single scalar:
 
-```{math}a \cdot b = \sum_{i=1}^{n} a_i b_i```
+```{math}
+a \cdot b = \sum_{i=1}^{n} a_i b_i
+```
 
 When we speak of **matrix multiplication** {math}`C = AB`, we are indeed performing "pairwise dot products" between the **rows** of {math}`A`and the **columns** of {math}`B`. 
 
 ```{attention}
-It is critical to distinguish this from the **Hadamard Product** {math}`A \odot B`, which is an element-wise multiplication between two matrices of the identical shape {math}`A \odot B`.
+It is critical to distinguish this from the **Hadamard Product** {math}`A \odot B`, which is an element-wise multiplication between two matrices of the identical shape.
 ```
 
 ```python
@@ -68,24 +72,24 @@ C = \alpha \cdot A \cdot B + \beta \cdot C
 where:
 - {math}`A \in \mathbb{R}^{m \times k}`, {math}`B \in \mathbb{R}^{k \times n}`, {math}`C \in \mathbb{R}^{m \times n}`
 - {math}`\alpha, \beta` are scalar coefficients
-    -{math}`\alpha`(Alpha): Scales the product of the matrices,
-    - {math}`\beta`(Beta): Scales the existing values in {math}`C`(the "accumulator"),
+    -{math}`\alpha` (Alpha): Scales the product of the matrices,
+    - {math}`\beta` (Beta): Scales the existing values in {math}`C` (the "accumulator"),
     - This is why it’s perfect for ResNets—if {math}`\beta=1`, you are essentially performing {math}`C_{new} = AB + C_{old}`, which is the definition of a skip connection.
-    - In Deep Learning, we often set {math}`\alpha=1`and {math}`\beta=1`to facilitate "residual" or "skip" connections)
+    - In Deep Learning, we often set {math}`\alpha=1` and {math}`\beta=1` to facilitate "residual" or "skip" connections).
 
-The operation computes all **pairwise dot products** between rows of matrices {math}`A` and columns of {math}`B`
+The operation computes all **pairwise dot products** between rows of matrices {math}`A` and columns of {math}`B`.
 
 Essentially, **pairwise dot products** is a way of describing the "all-vs-all" calculation that happens during matrix multiplication.
 
 While a single dot product tells you the relationship between two specific vectors, pairwise dot products tell you the relationship between **every possible pair of vectors** from two different sets.
 
-In the context of the GEMM formula {math}`C = A \cdot B`, think of matrix {math}`A`as a stack of horizontal rows and matrix {math}`B`as a collection of vertical columns.
+In the context of the GEMM formula {math}`C = A \cdot B`, think of matrix {math}`A` as a stack of horizontal rows and matrix {math}`B` as a collection of vertical columns.
 
-1. **The Inputs:** Matrix {math}`A`has {math}`m`rows, and Matrix {math}`B`has {math}`n`columns.
-2. **The Matching:** To find a specific value in the resulting matrix {math}`C`, you take one row from {math}`A`and "dot" it with one column from {math}`B`.
-3. **The "Pairwise" Result:** Because you repeat this for every row combined with every column, you end up with {math}`m \times n`individual dot products.
+1. **The Inputs:** Matrix {math}`A` has {math}`m` rows, and Matrix {math}`B` has {math}`n` columns.
+2. **The Matching:** To find a specific value in the resulting matrix {math}`C`, you take one row from {math}`A` and "dot" it with one column from {math}`B`.
+3. **The "Pairwise" Result:** Because you repeat this for every row combined with every column, you end up with {math}`m \times n` individual dot products.
 
-If Matrix {math}`A`contains vectors {math}`\{a_1, a_2\}`and Matrix {math}`B`contains vectors {math}`\{b_1, b_2\}`, the **pairwise dot products** are:
+If Matrix {math}`A` contains vectors {math}`\{a_1, a_2\}` and Matrix {math}`B` contains vectors {math}`\{b_1, b_2\}`, the **pairwise dot products** are:
 
 ```{math}
 C = 
@@ -138,7 +142,7 @@ GEMM repeatedly reuses matrix tiles that reside in registers and on‑chip cache
 
 ### Hardware Implementation: Tensor Cores & Tiling
 
-Modern AI hardware is built specifically to accelerate GEMM using specialized circuits called **Tensor Cores**. These circuits perform a {math}`4 \times 4 \times 4`matrix-multiplication-accumulation in a single clock cycle.
+Modern AI hardware is built specifically to accelerate GEMM using specialized circuits called **Tensor Cores**. These circuits perform a {math}`4 \times 4 \times 4` matrix-multiplication-accumulation in a single clock cycle.
 
 * **Mixed Precision:** To maximize throughput, Tensor Cores typically use **FP16** or **BF16** for input data but perform accumulation in **FP32** to prevent the loss of numerical precision.
 * **Tiling & SRAM:** Large matrices cannot fit into the GPU's fastest memory at once. Engineers use "Tiling" to break matrices into small blocks (e.g., {math}`128 \times 128` that fit perfectly into the **SRAM** (Shared Memory) of the GPU, minimizing trips to the slower global memory.
@@ -419,7 +423,7 @@ gemm_op({m, n, k},      // Problem dimensions
 
 In frameworks like **PyTorch**, your high-level code maps directly to these kernels:
 1.  **Linear Layers:** `nn.Linear(in, out)` compiles to a **GEMM** operation under the hood.
-2.  **Transformers:** The Self-Attention mechanism uses **three GEMM operations** {math}`Q, K, V` per attention head. The complexity is {math}`O(N^2 \cdot d`, where {math}`N`is sequence length and {math}`d`is embedding dimension.
+2.  **Transformers:** The Self-Attention mechanism uses **three GEMM operations** {math}`Q, K, V` per attention head. The complexity is {math}`O(N^2 \cdot d`, where {math}`N` is sequence length and {math}`d` is embedding dimension.
 3.  **Batched Operations:** We use **Batched GEMM** to process multiple sequences or attention heads in parallel, maximizing hardware utilization.
 
 ### Pitfalls and technical debt
@@ -434,3 +438,7 @@ Understanding GEMM lets you:
 - Predict VRAM bandwidth requirements (bytes moved = {math}`m \cdot k + k \cdot n + m \cdot n`)
 - Diagnose compute-bound vs memory-bound kernels
 - Justify architectural choices (e.g., why grouped-query attention reduces GEMM overhead)
+
+## Appendix A. BLAS Hardware Implementation Graph
+
+![](1_execution/images/blas_hardware_implementation.png)
