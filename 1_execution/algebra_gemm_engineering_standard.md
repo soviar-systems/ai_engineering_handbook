@@ -441,4 +441,4 @@ Understanding GEMM lets you:
 
 ## Appendix A. BLAS Hardware Implementation Graph
 
-![](1_execution/images/blas_hardware_implementation.png)
+![](/1_execution/images/blas_hardware_implementation.png)
