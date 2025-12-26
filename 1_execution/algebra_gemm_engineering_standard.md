@@ -1,15 +1,3 @@
----
-abbreviations:
-  ABI: Application Binary Interface
-  API: Application Programming Interface
-  BLAS: Basic Linear Algebra Subprograms
-  FLOPS: Floating Point Operations per Second
-  GEMM: GEneral Matrix-Matrix multiplication
-  GEMV: General Matrix-Vector multiply, a special case of GEMM
-  HPC: High-Performance Computing
-  SRAM: Shared Memory
-  WMMA: Warp-level matrix operations
----
 # GEMM: The Engineering Standard
 
 ---
@@ -344,7 +332,7 @@ Different hardware vendors optimize GEMM uniquely:
 
 :::{tip} Vocabulary 
 
-**Warp-level operations (WMMA)** is a programming model where 32 threads (a **warp**) collaborate to perform matrix operations. 
+**Warp-level operations (WMMA)** is a programming model where 32 threads (a **warp**) collaborate to perform matrix operations. See also "The Core Challenge: Speaking the GPU’s Language" in ["NVIDIA GPU Optimization: Accelerating AI with CUDA, Nsight, and Systems Thinking"](/1_execution/optimization_nvidia_gpu_cuda_nsight_and_systems_thinking.md).
 
 WMMA instructions allow a warp to compute a small matrix-multiply-accumulate (e.g., `16×16×16`) in registers without explicit shared memory coordination, enabling direct Tensor Core utilization.
 :::
