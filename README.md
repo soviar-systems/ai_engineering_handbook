@@ -1,8 +1,8 @@
 -----
 
-Version: 0.2.0
+Version: 0.2.1
 Birth: 2025-10-19
-Modified: 2025-12-21
+Modified: 2025-12-27
 
 -----
 
@@ -13,6 +13,8 @@ This repository provides a **systematized, AI-engineered knowledge base** for bu
 > **Mission**: Enable MLOps engineers and AI architects to construct **reliable, maintainable, and auditable** AI infrastructure by treating documentation as executable, testable artifacts.
 
 This is not a prompt repository. It addresses the **full stack** required to deploy and sustain LM-powered systems: execution, model, prompt, orchestration, context, and security layers.
+
+> NOTE! The .ipynb files and some .md files use [myst](https://mystmd.org/) syntax. GitHub does not render this syntax (hope, yet), do not consider such snippets as bugs.
 
 ---
 
