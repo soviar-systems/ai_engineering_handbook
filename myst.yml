@@ -10,6 +10,16 @@ project:
   exclude:
     - pr/*
     - research/slm_from_scratch/old/*
+  contributors:
+    - id: vadim_rudakov
+      name: Vadim Rudakov
+      email: lefthand67@gmail.com
+      github: https://github.com/lefthand67
+      affiliations:
+        - id: org_a
+  affiliations:
+    - id: soviar
+      name: SovIAR
 site:
   template: book-theme
   title: AI Engineering Book from SovIAR
