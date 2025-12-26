@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'pr'
+      - 'research/slm_from_scratch/old/*'
+      - 'RELEASE_NOTES'
 
 jobs:
   deploy:
@@ -30,5 +34,5 @@ jobs:
           REMOTE_HOST: ${{ secrets.SERVER_IP }}
           REMOTE_USER: ${{ secrets.SERVER_USER }}
           REMOTE_PORT: ${{ secrets.SERVER_SSH_PORT }}
-          TARGET: "/home/containers/website/html" 
+          TARGET: "/home/containers/website/html"
 

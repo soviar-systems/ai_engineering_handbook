@@ -10,6 +10,7 @@ project:
   exclude:
     - pr/*
     - research/slm_from_scratch/old/*
+    - RELEASE_NOTES.md
   contributors:
     - id: vadim_rudakov
       name: Vadim Rudakov
