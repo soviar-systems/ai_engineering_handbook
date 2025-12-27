@@ -4,10 +4,10 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'in_progress/'
-      - 'pr/'
-      - 'research/slm_from_scratch/old/'
-      - 'RELEASE_NOTES'
+      - 'in_progress/*'
+      - 'pr/*'
+      - 'research/slm_from_scratch/old/*'
+      - 'RELEASE_NOTES.md'
 
 jobs:
   deploy:
