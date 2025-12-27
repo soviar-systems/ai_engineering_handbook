@@ -2,9 +2,9 @@
 
 ---
 
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.3.1  
-Birth: 17.11.2025  
+Owner: Vadim Rudakov, lefthand67@gmail.com
+Version: 0.3.1
+Birth: 17.11.2025
 Modified: 19.11.2025
 
 ---
@@ -44,7 +44,7 @@ Now let's configure the CLI agent. [Read documentation](https://aider.chat/docs/
     # Use uv to install the Aider CLI tool
     uv tool install aider-chat
     ```
-    
+
     or more traditional way:
     ```bash
     pipx install aider-chat
@@ -59,12 +59,12 @@ Now let's configure the CLI agent. [Read documentation](https://aider.chat/docs/
     aider --model ollama_chat/qwen2.5-coder:14B
     ```
     This will launch the Aider chat interface, allowing you to ask it to change files in the current repository. When Aider makes changes, Vim will detect the file modification and prompt you to reload the buffer.
-    
-    > You can also run aider in an experimental web browser form: 
+
+    > You can also run aider in an experimental web browser form:
     > ```bash
     > # install aider for browser
     > uv tool install aider-chat[browser]
-    > 
+    >
     > # launch aider
     > aider --gui --model ollama_chat/qwen2.5-coder:14B
     > ```
@@ -106,7 +106,7 @@ To prevent potential errors upon startup, define the `g:ollama_debug` variable, 
 let g:ollama_debug = 0
 ```
 
-> - E121: Undefined variable: g:ollama_debug, and 
+> - E121: Undefined variable: g:ollama_debug, and
 > - E116: Invalid arguments for function ollama#logger#PythonLogLevel(g:ollama_debug).
 
 ### 4.3 Configure Key Mappings
@@ -195,7 +195,7 @@ The key to the Vim AI workflow is knowing when to use the plugin and when to use
 3.  **Prompt:** A prompt appears. Type your instruction, e.g., `"Rewrite this function to use list comprehension for performance."` Press `<CR>' (`Enter`).
 4.  **Diff Review:** The plugin opens a split with the AI's proposed changes, allowing you to use `vimdiff` commands to accept or reject line-by-line.
 
-## 5.2 Terminal Task (Aider): Multi-File Feature Implementation
+### 5.2 Terminal Task (Aider): Multi-File Feature Implementation
 
 1.  **Open Terminal:** Use a terminal split in Vim or switch to a terminal (e.g., in tmux/Konsole).
 2.  **Run Aider:** Start the agent: `aider --model ollama_chat/qwen2.5-coder:3b`.
