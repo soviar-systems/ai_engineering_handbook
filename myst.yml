@@ -8,6 +8,7 @@ project:
   # authors: []
   github: https://github.com/lefthand67/ai_engineering_handbook
   exclude:
+    - in_progress/*
     - pr/*
     - research/slm_from_scratch/old/*
     - RELEASE_NOTES.md

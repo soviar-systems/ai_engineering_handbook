@@ -4,8 +4,9 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'pr'
-      - 'research/slm_from_scratch/old/*'
+      - 'in_progress/'
+      - 'pr/'
+      - 'research/slm_from_scratch/old/'
       - 'RELEASE_NOTES'
 
 jobs:
