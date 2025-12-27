@@ -47,6 +47,12 @@ nbdime config-git --enable --global
 
 Now, a standard `git diff` will output a clean, readable notebook summary instead of raw JSON.
 
+You can always see the nbdime configuration like this:
+
+```bash
+nbdime --config
+```
+
 ## 4. How to Use `nbdiff`
 
 ### Common CLI Commands
@@ -76,22 +82,16 @@ If you are working on a research paper or documentation, you likely want to hide
 
 ### Create a "Clean" Alias
 
-Add a "clean" version of nbdiff to your `~/.bashrc` or `~/.zshrc`:
+Add a "clean" version of nbdiff to your `~/.bashrc` :
 
 ```bash
 # Add the alias
-echo 'alias nbdiff-clean="nbdiff --ignore-metadata --ignore-outputs"' >> ~/.bashrc
+echo 'alias nbclean="nbdiff --ignore-metadata --ignore-outputs"' >> ~/.bashrc
 # Refresh your shell
 source ~/.bashrc
 ```
 
-Now, running `nbdiff-clean` will hide all image data and execution numbers, showing only the code and markdown changes.
-
-Or, if you want to integrate this behaviour to git, create a git alias:
-
-```bash
-git config --global alias.nbclean "nbdiff --ignore-metadata --ignore-outputs"
-```
+Now, running `nbclean` will hide all image data and execution numbers, showing only the code and markdown changes.
 
 :::{caution} Be aware!
 :class: dropdown
@@ -101,11 +101,67 @@ Sometimes the output *is* the point of the commit (e.g., a final loss curve or a
 Also, if you ignore metadata during a merge, you might accidentally overwrite important kernel specifications required to run the notebook on another machine.
 :::
 
+### Configure "No-Noise" Git Defaults
+
+To ensure your Git history remains clean and your diffs focus only on code changes, configure `nbdime` to ignore noise globally.
+
+Run these commands to tell the Git driver to skip metadata and outputs:
+
+```bash
+git config --global diff.jupyternotebook.command "git-nbdiffdriver diff --ignore-metadata --ignore-outputs"
+```
+
+To verify your settings are active, run:
+
+```bash
+nbdime --config
+```
+
+> [!NOTE]
+> This configuration effectively makes `git diff` behave like your `nbclean` alias by default.
+
+### Why it is not a good idea to use ignore flags for daily work
+
+While integrating `--ignore-metadata` and `--ignore-outputs` into your global Git configuration significantly cleans up your workflow, there are several "blind spots" and technical risks you should include in your handbook.
+
+#### 1. The "False Clean" Security Risk
+
+When you ignore metadata/outputs in `git diff`, you are only changing what you **see** in the terminal or browser. You are **not** cleaning the file itself.
+
+* **The Problem:** You might run a `git diff`, see "No changes," and assume the file is clean. However, the file may still contain 50MB of binary plots or sensitive data in the outputs.
+* **The Result:** You accidentally push massive files or private data to GitHub because your "glasses" (the diff tool) were programmed to ignore them.
+
+#### 2. Loss of "Result Provenance"
+
+In many data science contexts, the **output is the evidence**.
+
+* **The Problem:** If a colleague changes a hyperparameter and the accuracy drops, an "ignore-outputs" diff will only show the code change. It won't show the resulting drop in the metric or the broken visualization.
+* **The Risk:** You might approve a Pull Request that technically "works" but produces incorrect or degraded results because you suppressed the output diff.
+
+#### 3. Merge Conflict "Shadows"
+
+Merging is more dangerous than diffing with these flags.
+
+* **The Problem:** If two people change the kernel metadata (e.g., one uses Python 3.9 and another 3.10), Git will flag a conflict.
+* **The Risk:** Since your diff tool ignores these fields, `git diff` might show "No differences," but Git will refuse to merge. You'll be stuck in a "phantom conflict" where your tools say everything is fine, but the repository is locked.
+
+#### 4. Broken Interactive Workflows (`git add -p`)
+
+If you use interactive staging (`git add -p` or `git add -e`), Git expects a "dumb" line-by-line diff.
+
+* **The Problem:** External drivers like `git-nbdiffdriver` often struggle with Git's interactive patch mode.
+* **The Result:** You may find that you can no longer stage specific "hunks" of a notebook; it becomes an "all or nothing" commit.
+
+:::{important}
+Use the alias `nbclean` for daily work, but not to make it the global mandatory driver unless you also use a pre-commit hook like `nbstripout`. Combining them ensures that what you see (clean code) matches what you store (clean files).
+:::
+
 ## Summary Reference
 
 | Task | Command |
 | --- | --- |
 | **Install** | `uv tool install nbdime` |
+| **List configuration** | `nbdime --config` |
 | **Simple Diff** | `nbdiff old.ipynb new.ipynb` |
 | **Visual/Web Diff** | `nbdiff-web <hash> HEAD <file>` |
 | **Ignore Noise** | `nbdiff --ignore-metadata --ignore-outputs` |
