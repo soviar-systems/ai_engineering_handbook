@@ -1,5 +1,57 @@
 # Release Notes
 
+## release v1.4.0
+
+### Summary of Changes
+
+This release significantly expands the **1_execution** and **4_orchestration** layers with deep-dives into high-performance computing standards (GEMM) and advanced MLOps architectural patterns. It also introduces a formal grounding of AI disciplines in alignment with ACM/IEEE curricula. A new GitHub Actions deployment workflow has been implemented to automate documentation builds using MyST.
+
+### New Features and Articles Added
+
+#### Foundation and Grounding
+
+* **Directory**: `0_intro`
+* **Articles**:
+  *  `ai_systems_grounding_in_computing_disciplines.md`: Maps the AI lifecycle to global computing curricula standards.
+  *  `ai_systems_grounding_in_computing_disciplines_diagram.png`: Visual representation of AI as a convergent layer of engineering and science.
+
+#### Execution Layer (HPC Standards)
+
+* **Directory**: `1_execution`
+* **Articles**:
+  *  `algebra_gemm_engineering_standard.md`: 
+    * Defines GEMM as the foundational standard for Deep Learning and HPC.
+    * Includes detailed analysis of arithmetic intensity, tiling, and hardware-specific optimizations like Tensor Cores.
+
+#### Orchestration and MLOps Workflows
+
+* **Directory**: `4_orchestration/workflows`
+* **Articles**:
+  * `slm_backed_release_documentation_pipeline_architecture.md`: Describes modular processing and generation blocks for automated documentation.
+  * `post-mortem_slm_non-determinism_in_commit_generation.md`: A critical analysis of why Small Language Models (1B-3B) struggle with high-frequency structured tasks in production.
+  * `requirements_engineering_in_the_ai_era_the_gated_velocity.md`: Introduces the "Gated Velocity" pipeline for AI-assisted requirement flows.
+
+#### Infrastructure and Tooling
+
+* **Deployment**: Added `.github/workflows/deploy.yml` to automate MyST HTML builds and RSYNC deployment to production servers.
+* **Scripts**: Added `md_check_broken_links.py` to maintain documentation integrity across the repository.
+
+### Articles Moved or Renamed
+
+To align with the new thematic structure, several files were reorganized:
+
+| Original Path | New Path |
+| --- | --- |
+| `tools/vim/ai_tools_in_vim.md` | `tools/ai_agents/ai_tools_in_vim.md` |
+| `tools/vim/handout_aider.md` | `tools/ai_agents/handout_aider.md` |
+| `tools/python314_parallelism_game_changer.md` | `tools/languages/python314_parallelism_game_changer.md` |
+
+### Improvements to Existing Content
+
+* **ai_further_reading.md**: Updated with new sections for Small Language Models (SLMs) and modern agentic tools like CrewAI and Aider.
+* **README.md**: Updated tree structure to reflect new specialized subdirectories in `tools/` and `4_orchestration/`.
+* **Security Documentation**: Enhanced sections on OWASP Top-10 for LLMs and prompt injection mitigation.
+
 ## release v1.3.0
 
 ### Summary of Changes
@@ -8,11 +60,13 @@ This release introduces several new articles and directories to enhance the docu
 ### New Features and Articles Added
 
 #### MLOps Workflows
+
 - **Directory**: `mlops/workflows`
 - **Articles**:
   - `git_three_major_workflows.md`: Provides a detailed comparison of three major Git workflows: Integration Manager, Gitflow, and GitHub Flow.
 
 #### AI Tools for Vim
+
 - **Directory**: `tools/vim`
 - **Articles**:
   - `ai_tools_in_vim.md`: Describes how to set up Vim for AI-driven tasks using plugins like `gergap/vim-ollama` and CLI tools like Aider.
@@ -35,7 +89,6 @@ This release introduces several new articles and directories to enhance the docu
 
 #### CHANGELOG
 - **New Release Entry**: Added an entry for release 1.3.0 detailing the new articles, moved articles, and directory additions.
-
 
 ## release v1.2.0
 
