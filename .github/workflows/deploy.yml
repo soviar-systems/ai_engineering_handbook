@@ -16,6 +16,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # >>> NEW: Enforce Notebook Sync Integrity <<<
+      - name: Verify Notebook Synchronization
+        run: |
+          pip install "jupytext==1.16.0"
+          # Only check notebooks that exist
+          if find . -name '*.ipynb' -print -quit | grep -q .; then
+            jupytext --check --sync **/*.ipynb
+          else
+            echo "No notebooks found. Skipping sync check."
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -36,4 +47,3 @@ jobs:
           REMOTE_USER: ${{ secrets.SERVER_USER }}
           REMOTE_PORT: ${{ secrets.SERVER_SSH_PORT }}
           TARGET: "/home/containers/website/html"
-
