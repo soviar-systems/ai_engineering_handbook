@@ -29,16 +29,21 @@ def format_string(input_string):
     # Replace & with and
     formatted_string = formatted_string.replace("&", "and")
 
-    # Remove parentheses
-    formatted_string = formatted_string.replace("(", "").replace(")", "")
-
-    # Remove or replace special symbols
     # List of special symbols to remove
     special_symbols_to_remove = [
-        r"\bthe\b",
+        "the ",
+        "(",
+        ")",
+        "# ",
+        "#",
+        "`",
+        "~",
+        "$",
+        "%",
+        "@",
     ]
-    remove_pattern = "|".join(map(re.escape, special_symbols_to_remove))
-    formatted_string = re.sub(rf"\s*({remove_pattern})\s*", "", formatted_string)
+    for s in special_symbols_to_remove:
+        formatted_string = formatted_string.replace(s, "")
 
     # List of special symbols to replace with "_"
     special_symbols_to_replace = [
@@ -64,6 +69,13 @@ def format_string(input_string):
 
     # Replace spaces with underscores for URL safety
     formatted_string = formatted_string.replace(" ", "_")
+
+    # Truncate the string if it exceeds 50 characters
+    if len(formatted_string) > 50:
+        formatted_string = formatted_string[:50]
+
+    if formatted_string[-1] == "_":
+        formatted_string = formatted_string[:-1]
 
     return formatted_string
 
