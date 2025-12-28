@@ -172,7 +172,7 @@ repos:
 
 +++
 
-### Activate
+### Activate pre-commit hook
 
 +++
 
@@ -186,6 +186,66 @@ Expected output is:
 ```
 pre-commit installed at .git/hooks/pre-commit
 ```
+
++++
+
+### Why the automated approach is the correct behavior
+
++++
+
+This approach represents the "gold standard" for a synchronized documentation workflow.
+
+Now, when you make a commit and the files are different, the hook will sync them:
+
+```bash
+$ git commit "refactor: Rename ai_ready_jupyter_docs_workflow"
+[WARNING] Unstaged files detected.
+[INFO] Stashing unstaged files to /home/user/.cache/pre-commit/patch1766949203-63949.
+Jupytext Sync (Auto-Fix).................................................Passed
+[INFO] Restored changes from /home/user/.cache/pre-commit/patch1766949203-63949.
+[feature/blas-article 75936bc] refactor: Rename ai_ready_jupyter_docs_workflow
+Date: Sun Dec 28 23:59:38 2025 +0500
+2 files changed, 405 insertions(+)
+create mode 100644 tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
+create mode 100644 tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
+```
+
+Your output shows that the automation did exactly what was required to keep your environment healthy without interrupting your work.
+
+* **Safety via Stashing**: The `pre-commit` tool stashed your unstaged changes to ensure the hook ran against a clean state.
+* **Successful Sync**: "Jupytext Sync (Auto-Fix).....Passed" indicates that the hook successfully reconciled the `.ipynb` and `.md` files before the commit was finalized.
+* **Unified Commit**: Note the line `2 files changed`. Even if Aider (or you) only specifically targeted one file, the hook ensured that **both** the execution state (`.ipynb`) and the semantic source (`.md`) were committed together.
+* **Zero Manual Intervention**: This is the key to "Aider-readiness." The automation resolved the metadata inconsistencies that blocked you previously.
+
+**Breakdown of the Result**
+
+| Metric | Result | Justification |
+| --- | --- | --- |
+| **Consistency** | **High** | The `.md` and `.ipynb` are guaranteed to be identical at this commit hash. |
+| **Auditability** | **High** | Your Git history now contains clean Markdown diffs for code review. |
+| **AI Utility** | **High** | Aider can continue to auto-commit because the "Sync Guard" is now a "Sync Helper". |
+
++++
+
+### Final Verification
+
++++
+
+To see exactly what the automation did "under the hood," you can run:
+
+```bash
+$ git show --name-only
+commit 75936bcdfa29b3d195e4063308ec541466d91030 (HEAD -> feature/test)
+Author: Vadim Rudakov <lefthand67@gmail.com>
+Date:   Sun Dec 28 23:59:38 2025 +0500
+
+refactor: Rename ai_ready_jupyter_docs_workflow
+
+tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
+tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
+```
+
+You will see that both files were included in the commit `75936bcd`. This confirms that your "Source of Truth" (`.md`) is perfectly mirrored in your "Execution Artifact" (`.ipynb`).
 
 +++
 
@@ -261,20 +321,45 @@ Binary files a/research/slm_from_scratch/01_foundational_neurons_and_backprop/01
 
 To prevent out-of-sync pushes from bypassing local hooks, add this check to your CI pipeline (e.g., GitHub Actions).
 
-File: `.github/workflows/verify-docs.yml`. Run the check **only on changed notebooks**:
+File: `.github/workflows/verify-docs.yml`:
 
 ```yaml
-- name: Get changed notebooks
-id: nb-changed
-run: |
-  echo "notebooks=$(git diff --name-only HEAD^ HEAD | grep '\.ipynb$' | tr '\n' ' ')" >> $GITHUB_OUTPUT
-
+# 1. INTEGRITY CHECK (Runs on every branch)
 - name: Verify Notebook Synchronization
-if: steps.nb-changed.outputs.notebooks != ''
 run: |
-  pip install "jupytext==1.16.0"
-  jupytext --check --sync ${{ steps.nb-changed.outputs.notebooks }}
+  pip install "jupytext==1.18.1"
+  # Find all notebooks and ensure they match their paired Markdown
+  if find . -type f -name "*.ipynb" ! -path "*/.*" ! -path "*/venv/*" ! -path "*/.venv/*" -print -quit | grep -q .; then
+    jupytext --check --sync **/*.ipynb
+  else
+    echo "No notebooks found. Skipping."
+  fi
 ```
+
+:::{caution} Caution: Version drift
+:class: dropdown
+:open: false
+Make sure your local Jupytext version (`/pyproject.toml`) and the CI version (`1.18.1`) stay matched to avoid tiny metadata format differences that could trigger false negatives.
+:::
+
+This provides:
+
+1. **Immediate Feedback for Aider:** When you are in a feature branch, Aider will often auto-commit. If it fails to sync properly, GitHub will notify you immediately. You can fix the sync drift on the spot before the branch history gets too messy.
+2. **No "Double" Maintenance:** Since you are solo, you don't need separate "CI" and "CD" files. This single file acts as both your quality gatekeeper and your delivery driver.
+3. **The `if` Guard:** By using `if: github.ref == 'refs/heads/main'`, you effectively "turn off" the expensive and destructive steps (Building and Rsyncing to production) when you are just experimenting in a side branch.
+
++++
+
+### How to handle a failure on a branch
+
++++
+
+If a branch push turns **Red** in GitHub:
+
+1. Stay on your branch.
+2. Run your local fix: `uv run jupytext --sync tools/path/to/notebook.ipynb`.
+3. Commit and push again.
+4. The Red "X" will turn into a Green "Checkmark," signaling that your branch is "Safe for Main."
 
 +++
 

@@ -1,43 +1,46 @@
 name: build-and-deploy
 on:
   push:
-    branches:
-      - main
+    # Trigger on any branch push
+    branches: ["**"]
     paths-ignore:
-      - 'in_progress/*'
-      - 'pr/*'
-      - 'research/slm_from_scratch/old/*'
+      - 'in_progress/**'
+      - 'research/slm_from_scratch/old/**'
       - 'RELEASE_NOTES.md'
 
 jobs:
-  deploy:
+  validate-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # >>> NEW: Enforce Notebook Sync Integrity <<<
+      # 1. INTEGRITY CHECK (Runs on every branch)
       - name: Verify Notebook Synchronization
         run: |
           pip install "jupytext==1.16.0"
-          # Only check notebooks that exist
-          if find . -name '*.ipynb' -print -quit | grep -q .; then
+          # Find all notebooks and ensure they match their paired Markdown
+          if find . -type f -name "*.ipynb" ! -path "*/.*" ! -path "*/venv/*" ! -path "*/.venv/*" -print -quit | grep -q .; then
             jupytext --check --sync **/*.ipynb
           else
-            echo "No notebooks found. Skipping sync check."
+            echo "No notebooks found. Skipping."
           fi
 
+      # 2. DEPLOYMENT STEPS (Only runs on Main)
       - name: Setup Node.js
+        if: github.ref == 'refs/heads/main'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install MyST and Build
+        if: github.ref == 'refs/heads/main'
         run: |
           npm install -g mystmd
           myst build --html
 
       - name: Deploy to Server via RSYNC
+        if: github.ref == 'refs/heads/main'
         uses: easingthemes/ssh-deploy@main
         with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
