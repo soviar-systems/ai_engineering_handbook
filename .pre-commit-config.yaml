@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: jupytext-sync
+        name: Jupytext Sync (Auto-Fix)
+        entry: uv run jupytext --sync
+        language: system
+        files: \.(ipynb|md)$
+        pass_filenames: true

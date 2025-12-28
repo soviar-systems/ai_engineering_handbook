@@ -1,0 +1,6 @@
+# Documentation/Logic: Primary Source for Diffs
+*.md diff=markdown
+
+# Execution/Output Artifact: Suppress in Diffs & PR UIs
+*.ipynb linguist-generated=true
+*.ipynb -diff

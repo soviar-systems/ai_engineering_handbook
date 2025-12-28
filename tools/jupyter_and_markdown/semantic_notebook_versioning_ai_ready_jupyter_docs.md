@@ -19,15 +19,15 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.0  
+Version: 0.2.0  
 Birth: 2025-12-28  
-Last Modified: 2025-12-28
+Last Modified: 2025-12-29
 
 ---
 
 +++
 
-## Purpose
+## **Purpose**
 
 +++
 
@@ -66,10 +66,6 @@ The configuration described in this instruction was tested in this environment:
 
 ```{code-cell}
 grep -i 'pretty' /etc/os-release
-```
-
-```{code-cell}
-~/venv/jupyter/bin/jupyter-lab -V
 ```
 
 ```{code-cell}
@@ -122,13 +118,9 @@ Pair with myst md
 > 
 > -- [Documentation](https://github.com/mwouts/jupytext/blob/main/docs/using-pre-commit.md)
 
-The standard [`jupytext` hook](https://github.com/mwouts/jupytext/blob/main/docs/using-pre-commit.md) is designed to be **safe rather than aggressive**. When it detects that *both* the `.ipynb` and the `.md` have changed (or are both staged), it stops and asks you to choose a side to avoid accidentally overwriting your work.
+We use a local `pre-commit` hook that leverages our existing `uv` environment, not falling into stupid traps of the official solution. 
 
-For Aider, the **Markdown file** is always the intended source of truth. To achieve full automation where **Aider** can perform auto-commits without being blocked, you must use the **active fix** pre-commit strategy which updates the files and continues.
-
-Add a **local hook** that explicitly prioritizes the Markdown file if a conflict is detected.
-
-`.pre-commit-config.yaml`:
+Create a `.pre-commit-config.yaml` in your repository root to automate file synchronization.
 
 ```yaml
 repos:
@@ -142,33 +134,21 @@ repos:
         pass_filenames: true
 ```
 
-* **Why this works for Aider:**
+**Why we use a `local` hook instead of the official one**
 
-Since Aider modifies the `.md` file, its timestamp will be newer. This local hook runs via `uv` (using your established environment) and forces the `.ipynb` to match the `.md` before the commit finishes.
+* **Environment Parity:** By setting `language: system` and using `uv run`, the hook uses your exact project virtual environment. This ensures it reads your `pyproject.toml` correctly and uses the same YAML formatting as your local editor.
+* **Avoiding the "Stash Trap":** Standard hooks run in isolated environments and can "hallucinate" formatting differences (like `kernelspec` indentation) that don't actually exist on your disk.
+* **Zero Dependency Management:** You don't need to manually add `toml` or other dependencies to the hook because they are already managed by `uv sync` in your primary environment.
 
-1. **Aider** writes to `notebook.md` and runs `git commit`.
-2. **Pre-commit** interrupts and runs `jupytext --sync`.
-3. **Jupytext** sees `notebook.md` is newer, so it updates the JSON in `notebook.ipynb`.
-4. **Git** includes both the `.md` and the updated `.ipynb` in the final commit automatically.
+**Expected Behavior**
 
-+++
+* **The Gatekeeper:** When you run `git commit`, the hook will check if your `.md` and `.ipynb` files are perfectly aligned.
+* **Auto-Fix:** If they are out of sync, the hook will attempt to synchronize them using the most recently modified file as the source of truth.
+* **Validation:** If the files were inconsistent, the commit will fail, allowing you to `git add` the newly synchronized files and try again.
 
-:::{seealso} Standard pre-commit-hook
-:class: dropdown
-:open: false
-The default hook identifies the problem but doesn't "stage" the fixed file back into your commit. It is safer but it breaks the automation, i.e. aider will not be able to make auto-commits when editing markdown files, so implement it instead of the proposed method if you are really sure you will resolve conflicts manually.
+**Aider Integration Hint**
 
-Create a `.pre-commit-config.yaml` in your repository root to automate file synchronization.
-```yaml
-repos:
-  - repo: https://github.com/mwouts/jupytext
-    rev: v1.18.1
-    hooks:
-      - id: jupytext
-        args: [--sync]
-        description: "Synchronizes .ipynb and .md from the most recently modified source."
-```
-:::
+For users of the `aider` AI assistant, this hook is critical. When Aider modifies a `.md` file, this hook ensures the `.ipynb` execution artifact is updated before the commit is finalized, maintaining repository integrity automatically.
 
 +++
 
@@ -189,63 +169,71 @@ pre-commit installed at .git/hooks/pre-commit
 
 +++
 
-### Why the automated approach is the correct behavior
+### Why no automation fix?
 
 +++
 
-This approach represents the "gold standard" for a synchronized documentation workflow.
+Most developers treat `pre-commit` as a "fix-it" tool, but it was architected as a "gatekeeper."
 
-Now, when you make a commit and the files are different, the hook will sync them:
+The most standard, non-workaround way to handle Jupytext in a professional project is to treat it as a **Linter/Validator**.
+
+In this workflow, you don't ask Git to "magically" fix your files during a commit. Instead, you use `pre-commit` to ensure you didn't forget to sync. This respects Git's design, avoids the "stash trap," and ensures your commit history is explicit and clean.
+
+:::{tip} The Tool's Philosophy
+It wants you to explicitly acknowledge every change you commit.
+:::
+
+**Aider Friendly**
+
+The default hook identifies the problem but doesn't "stage" the fixed file back into your commit. Aider is great at following rules. If the hook fails, aider will see the error message and automatically run the sync command to fix itself.
+
++++
+
+### Pre-commit work real example
+
++++
+
+Let's change the md file, add it to index without its ipynb pair, and try to commit. We get this:
 
 ```bash
-$ git commit "refactor: Rename ai_ready_jupyter_docs_workflow"
+$ git commit -m "WIP: test pre-commit hook on md file"
 [WARNING] Unstaged files detected.
-[INFO] Stashing unstaged files to /home/user/.cache/pre-commit/patch1766949203-63949.
-Jupytext Sync (Auto-Fix).................................................Passed
-[INFO] Restored changes from /home/user/.cache/pre-commit/patch1766949203-63949.
-[feature/blas-article 75936bc] refactor: Rename ai_ready_jupyter_docs_workflow
-Date: Sun Dec 28 23:59:38 2025 +0500
-2 files changed, 405 insertions(+)
-create mode 100644 tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
-create mode 100644 tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
+[INFO] Stashing unstaged files to /home/user/.cache/pre-commit/patch1766964037-81260.
+Jupytext Sync (Auto-Fix).................................................Failed
+- hook id: jupytext-sync
+- files were modified by this hook
+
+[jupytext] Reading tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md in format md
+[jupytext] Loading tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
+[jupytext] Unchanged tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
+[jupytext] Updating tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
+
+[INFO] Restored changes from /home/user/.cache/pre-commit/patch1766964037-81260.
 ```
 
-Your output shows that the automation did exactly what was required to keep your environment healthy without interrupting your work.
+This failure is actually the "Sync Guard" working exactly as intended. The hook acts as a **gatekeeper**, ensuring you explicitly resolve the inconsistency before the files are permanently recorded in Git history.
 
-* **Safety via Stashing**: The `pre-commit` tool stashed your unstaged changes to ensure the hook ran against a clean state.
-* **Successful Sync**: "Jupytext Sync (Auto-Fix).....Passed" indicates that the hook successfully reconciled the `.ipynb` and `.md` files before the commit was finalized.
-* **Unified Commit**: Note the line `2 files changed`. Even if Aider (or you) only specifically targeted one file, the hook ensured that **both** the execution state (`.ipynb`) and the semantic source (`.md`) were committed together.
-* **Zero Manual Intervention**: This is the key to "Aider-readiness." The automation resolved the metadata inconsistencies that blocked you previously.
+**The Final Resolution**
 
-**Breakdown of the Result**
+To clear this error and complete your commit, follow these steps:
 
-| Metric | Result | Justification |
-| --- | --- | --- |
-| **Consistency** | **High** | The `.md` and `.ipynb` are guaranteed to be identical at this commit hash. |
-| **Auditability** | **High** | Your Git history now contains clean Markdown diffs for code review. |
-| **AI Utility** | **High** | Aider can continue to auto-commit because the "Sync Guard" is now a "Sync Helper". |
+1. **Re-stage the files** now that they are perfectly aligned:
+    ```bash
+    $ git add tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
+    ```
 
-+++
+3. **Commit again**:
+    ```bash
+    $ git commit -m "WIP: test pre-commit hook on md file"
+    [WARNING] Unstaged files detected.
+    [INFO] Stashing unstaged files to /home/user/.cache/pre-commit/patch1766964182-81431.
+    Jupytext Sync (Auto-Fix).................................................Passed
+    [INFO] Restored changes from /home/user/.cache/pre-commit/patch1766964182-81431.
+    [feature/blas-article ddcad31] WIP: test pre-commit hook on md file
+    2 files changed, 35 insertions(+), 65 deletions(-)
+    ```
 
-### Final Verification
-
-+++
-
-To see exactly what the automation did "under the hood," you can run:
-
-```bash
-$ git show --name-only
-commit 75936bcdfa29b3d195e4063308ec541466d91030 (HEAD -> feature/test)
-Author: Vadim Rudakov <lefthand67@gmail.com>
-Date:   Sun Dec 28 23:59:38 2025 +0500
-
-refactor: Rename ai_ready_jupyter_docs_workflow
-
-tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
-tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
-```
-
-You will see that both files were included in the commit `75936bcd`. This confirms that your "Source of Truth" (`.md`) is perfectly mirrored in your "Execution Artifact" (`.ipynb`).
+Your commit was successful, and the "Gatekeeper" has officially cleared your changes.
 
 +++
 
@@ -324,16 +312,26 @@ To prevent out-of-sync pushes from bypassing local hooks, add this check to your
 File: `.github/workflows/verify-docs.yml`:
 
 ```yaml
-# 1. INTEGRITY CHECK (Runs on every branch)
-- name: Verify Notebook Synchronization
-run: |
-  pip install "jupytext==1.18.1"
-  # Find all notebooks and ensure they match their paired Markdown
-  if find . -type f -name "*.ipynb" ! -path "*/.*" ! -path "*/venv/*" ! -path "*/.venv/*" -print -quit | grep -q .; then
-    jupytext --check --sync **/*.ipynb
-  else
-    echo "No notebooks found. Skipping."
-  fi
+      # --- 1. INTEGRITY CHECK (Enforced on all branches) ---
+      - name: Verify Notebook Synchronization
+        run: |
+          pip install "jupytext==1.18.1"
+
+          # Find all notebooks excluding hidden and venv dirs
+          NOTEBOOKS=$(find . -type f -name "*.ipynb" \
+            ! -path "*/.*" \
+            ! -path "*/venv/*" \
+            ! -path "*/.venv/*")
+
+          if [ -n "$NOTEBOOKS" ]; then
+            echo "Checking synchronization for: $NOTEBOOKS"
+            # --test is the professional standard for CI:
+            # It fails with a non-zero exit code if the .ipynb and .md are
+            # out of sync.
+            jupytext --test --sync $NOTEBOOKS
+          else
+            echo "No active notebooks found. Skipping."
+          fi
 ```
 
 :::{caution} Caution: Version drift
@@ -348,6 +346,10 @@ This provides:
 2. **No "Double" Maintenance:** Since you are solo, you don't need separate "CI" and "CD" files. This single file acts as both your quality gatekeeper and your delivery driver.
 3. **The `if` Guard:** By using `if: github.ref == 'refs/heads/main'`, you effectively "turn off" the expensive and destructive steps (Building and Rsyncing to production) when you are just experimenting in a side branch.
 
+:::{important} The "Aider" Connection
+If you keep this Action in place, Aider (or any other AI tool) will be forced to play by the rules. If Aider makes a mistake and only edits the Markdown, the CI will fail, providing a clear signal that a `jupytext --sync` is required.
+:::
+
 +++
 
 ### How to handle a failure on a branch
@@ -357,35 +359,32 @@ This provides:
 If a branch push turns **Red** in GitHub:
 
 1. Stay on your branch.
-2. Run your local fix: `uv run jupytext --sync tools/path/to/notebook.ipynb`.
-3. Commit and push again.
-4. The Red "X" will turn into a Green "Checkmark," signaling that your branch is "Safe for Main."
+1. Run your local fix: `uv run jupytext --sync tools/path/to/notebook.ipynb`.
+1. Re-stage both files: `git add path/to/notebook.ipynb path/to/notebook.md`.
+1. Commit and push again.
+1. The Red "X" will turn into a Green "Checkmark," signaling that your branch is "Safe for Main."
 
 +++
 
 ### Why Pre-commit Alone Is Not Sufficient
 
-#### 1. Pre-commit hooks can be bypassed
-- `git commit --no-verify` skips all pre-commit hooks.
-- New or rushed engineers may disable hooks temporarily.
-- Automated scripts or IDE-based commits (e.g., VS Code Git UI) sometimes skip hooks if not properly configured.
++++
+
+1. Pre-commit hooks can be bypassed
+    - `git commit --no-verify` skips all pre-commit hooks.
+    - New or rushed engineers may disable hooks temporarily.
+    - Automated scripts or IDE-based commits (e.g., VS Code Git UI) sometimes skip hooks if not properly configured.
 
 > 🔒 **CI is the only enforcement point you can’t opt out of.**
 
-#### 2. Merge conflicts break sync silently
-- During a merge or rebase, `.ipynb` and `.md` may diverge **without any local edit**.
-- Pre-commit only runs on *new commits*, not on *incoming changes* from `git pull` or PR merges.
-- Only CI (or a dedicated merge check) can catch this **post-merge drift**.
+2. Merge conflicts break sync silently
+    - During a merge or rebase, `.ipynb` and `.md` may diverge **without any local edit**.
+    - Pre-commit only runs on *new commits*, not on *incoming changes* from `git pull` or PR merges.
+    - Only CI (or a dedicated merge check) can catch this **post-merge drift**.
 
-#### 3. Team heterogeneity
-- Not all contributors may run `pre-commit install` (e.g., external collaborators, CI-generated commits).
-- A CI gate ensures **uniform enforcement**, regardless of local setup.
-
-#### Best Practice Alignment
-
-- **GitOps Principle**: *“Trust, but verify.”* Pre-commit is trust; CI is verification.
-- **MLOps Standard**: Leading projects (e.g., Jupyter Book, MLflow, Hugging Face examples) **combine pre-commit + CI validation** for notebook workflows.
-- **ISO 29148**: Ensures *verifiability* of documentation artifacts — a CI check provides **independent traceability**.
+3. Team heterogeneity
+    - Not all contributors may run `pre-commit install` (e.g., external collaborators, CI-generated commits).
+    - A CI gate ensures **uniform enforcement**, regardless of local setup.
 
 +++
 
@@ -433,16 +432,62 @@ Here is exactly what happens when you decide to commit your changes.
 
 +++
 
-### Why this is "AI-Ready"
+### AI-Assisted Workflow (e.g., Aider)
 
 +++
 
 If you are using an AI coding assistant like **Aider**, your workflow looks like this:
 
-1. **AI Edit:** You tell Aider: *"Change the plotting colors in my_notebook.md to blue."*
-2. **Aider saves the `.md`:** Aider only sees and edits the clean Markdown file.
-3. **Git Sync:** When you go to commit, the **Sync Guard** (pre-commit) sees that the `.md` is newer than the `.ipynb`. It automatically pushes the AI's changes into the JSON of the `.ipynb`.
-4. **Result:** Your notebook is now updated with the AI's code without you ever opening the JSON or manually syncing.
+1. **AI Edit:** You tell Aider: *"Change the plotting colors in my_notebook.**md** to blue."*
+
+1. **Aider saves the `.md`:** Aider modifies the clean Markdown file and usually attempts to commit.
+
+1. **The Sync Check:**
+    * **If you have the Jupytext plugin active:** Your local editor will likely sync the `.ipynb` immediately.
+    * **If not:** The **Sync Guard** (pre-commit) will stop the commit and warn you that the files are out of alignment.
+
+1. **Manual Alignment (The "Standard" Way):**
+    If the commit is rejected, simply run:
+    ```bash
+    uv run jupytext --sync my_notebook.md
+    git add my_notebook.ipynb
+    git commit
+    ```
+
+1. **Result:** Your repository remains high-integrity. The AI’s logic is captured in the `.md` for easy review, and the `.ipynb` is updated and ready for execution.
+
+:::{tip} Pro-Tip for Aider Users
+:class: dropdown
+:class: false
+To make this even smoother, you can add a "hint" to your `.aider.conf.yml` or your system prompt:
+
+> *"After editing any .md file, always run 'jupytext --sync <file>' to ensure the paired notebook is updated."*
+
+To make this seamless, we can use Aider's `scripts` or `lint` functionality. By adding this to your configuration, Aider will treat a desynced notebook as a "linting error" and fix it automatically before it even attempts to commit.
+
+**The `.aider.conf.yml` Snippet**
+
+Place `.aider.conf.yml` file in your project root. This configuration tells Aider to run the sync command whenever it modifies a file that has a notebook pair.
+
+```yaml
+# .aider.conf.yml
+
+# Run Jupytext sync as a 'lint' step after Aider makes changes
+lint-cmds:
+  - md: uv run jupytext --sync
+  - ipynb: uv run jupytext --sync
+
+# This ensures Aider only commits once the files are perfectly aligned
+auto-lint: true
+```
+
+The workflow is now fully hands-off:
+
+1. **AI Edit:** You tell Aider: *"Update the loss function in foundations.md."*
+2. **Auto-Sync:** Aider finishes the edit. Because of our `lint-cmds` config, Aider automatically runs `jupytext --sync` behind the scenes.
+3. **Atomic Commit:** Aider sees that both the `.md` and the `.ipynb` have changed. It stages **both** and commits them together.
+4. **Sync Guard Approval:** The pre-commit hook runs, sees that the files are already perfectly in sync, and allows the commit to pass instantly.
+:::
 
 +++
 
@@ -458,30 +503,25 @@ When you push to GitHub, the workflow pays off for the **Reviewer**:
 
 +++
 
-### Summary
-
-+++
-
-| File | Commit? | Why? |
-| --- | --- | --- |
-| **`.ipynb`** | **Yes** | Stores your execution results, plots, and metadata for other developers to run. |
-| **`.md`** | **Yes** | Acts as the "Source of Truth" for Git diffs, Code Reviews, and AI assistants. |
-
-| Task | Action | Result |
-| --- | --- | --- |
-| **Development** | Edit and execute `.ipynb` as usual. | Jupytext updates `.md` on save. |
-| **Code Review** | Review the `.md` file in the PR. | Clean, semantic, line-based diffs. |
-| **AI Assistance** | Feed the `.md` file to `aider`. | Token-efficient input; zero JSON noise. |
-| **Onboarding** | Read `.md` files in the repository. | Instant understanding without a kernel. |
-
-+++
-
 ### Semantic Notebook Versioning &  **Critical Maintenance Notes**
 
 +++
 
 * **Conflict Resolution**: If a merge conflict occurs, resolve it within the `.md` file. The pre-commit hook will then propagate those changes back to the `.ipynb`.
 * **Sync Logic**: The `--sync` flag updates both files based on the **most recent timestamp**. Ensure your system clock is accurate when working across distributed environments.
+
++++
+
+## **Final Setup Checklist**
+
++++
+
+To wrap up this entire "Engineering Foundation" phase, ensure these four files are in your root:
+
+1. **`.pre-commit-config.yaml`**: With the official Jupytext hook.
+2. **`.github/workflows/build-and-deploy.yml`**: With the `--test --sync` integrity check.
+3. **`pyproject.toml`** (or `jupytext.toml`): With `formats = "ipynb,md:myst"`.
+4. **`.aider.conf.yml`**: With the `lint-cmds` sync automation.
 
 +++
 
