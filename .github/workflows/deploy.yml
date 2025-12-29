@@ -5,8 +5,8 @@ on:
     # Universal trigger for team validation
     branches: ["**"]
     paths-ignore:
-      - 'in_progress/**'
-      - 'research/slm_from_scratch/old/**'
+      - 'in_progress/*'
+      - 'research/slm_from_scratch/old/*'
       - 'RELEASE_NOTES.md'
   # Allows you to trigger the build manually from the Actions tab
   workflow_dispatch:
@@ -22,32 +22,30 @@ jobs:
           fetch-depth: 0
 
       # --- 1. INTEGRITY CHECK (Enforced on all branches) ---
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - name: Install uv (Python package manager)
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Restore project environment using uv.lock
+        run: uv sync --frozen
 
       - name: Verify Notebook Synchronization
         run: |
-          pip install "jupytext==1.18.1"
-
           # Find all notebooks excluding hidden and venv dirs
           NOTEBOOKS=$(find . -type f -name "*.ipynb" \
             ! -path "*/.*" \
             ! -path "*/venv/*" \
-            ! -path "*/.venv/*" \
-            ! -path "in_progress/*" \
-            ! -path "research/slm_from_scratch/old/*")
+            ! -path "*/.venv/*")
 
           if [ -n "$NOTEBOOKS" ]; then
             echo "Checking synchronization for: $NOTEBOOKS"
-            # --test is the professional standard for CI:
-            # It fails with a non-zero exit code if the .ipynb and .md are
-            # out of sync.
-            jupytext --test --sync $NOTEBOOKS
+            # Uses project-locked Jupytext and deps → bit-for-bit reproducible
+            ~/.cargo/bin/uv run jupytext --test --to md $NOTEBOOKS
           else
             echo "No active notebooks found. Skipping."
           fi
+
 
       # --- 2. DEPLOYMENT STEPS (Only runs on Main) ---
       - name: Setup Node.js
