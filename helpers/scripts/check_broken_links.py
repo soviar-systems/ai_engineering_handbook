@@ -10,7 +10,6 @@ link validation with full exclusion capabilities.
 """
 
 import argparse
-# import os  <-- REMOVED: No longer needed
 import re
 import sys
 import tempfile
@@ -51,7 +50,7 @@ Default pattern: *.md""",
     parser.add_argument(
         "--exclude-dirs",
         nargs="*",
-        default=["in_progress", "pr"],
+        default=["in_progress", "pr", ".venv"],  # Add '.venv' here
         help="Directory names to exclude from the check (e.g., in_progress drafts temp)",
     )
     # Argument for File Exclusion
@@ -89,7 +88,10 @@ Default pattern: *.md""",
     try:
         # Find markdown files, passing all lists
         files = find_markdown_files(
-            search_dir, args.file_pattern, exclude_dir_paths, args.exclude_files
+            search_dir,
+            args.file_pattern,
+            exclude_dir_paths,
+            args.exclude_files,
         )
 
         if not files:
@@ -264,7 +266,7 @@ def find_markdown_files(
     exclude_dir_paths: List[Path],
     exclude_file_names: List[str],
 ) -> List[Path]:
-    """Get list of markdown files, excluding those in specified directories or matching specified file names."""
+    """Get list of markdown files, excluding those in specified directories and files."""
     all_files = list(search_dir.rglob(file_pattern))
 
     if not exclude_dir_paths and not exclude_file_names:
@@ -283,11 +285,8 @@ def find_markdown_files(
                 is_excluded = True
                 break
 
-        if is_excluded:
-            continue
-
         # Check 2: File Name Exclusion
-        if resolved_file.name in exclude_file_names:
+        if not is_excluded and file.name in exclude_file_names:
             is_excluded = True
 
         if not is_excluded:

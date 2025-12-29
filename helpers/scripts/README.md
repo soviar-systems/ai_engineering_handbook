@@ -2,9 +2,9 @@
 
 -----
 
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.0  
-Birth: 2025-12-20  
+Owner: Vadim Rudakov, lefthand67@gmail.com
+Version: 0.1.0
+Birth: 2025-12-20
 Last Modified: 2025-12-20
 
 -----
@@ -67,11 +67,11 @@ Replace `script_name.py` with the actual name of your script and `[arguments]` w
 
 ## Script-Specific Instructions
 
-### 1. `md_check_broken_links.py`
+### 1. `check_broken_links.py`
 
 **Purpose**: This script performs fast, local-only validation of relative file links (Markdown, image, etc.) within a directory and its subdirectories. It is built using the **Smallest Viable Architecture (SVA)** principle, relying exclusively on Python's standard library (`pathlib`, `re`, `sys`, `argparse`, `tempfile`) for maximum portability and zero external dependencies.
 
-This tool is designed to serve as a high-quality diagnostic step in **AI Agent workflows** (like `aider` or custom SLMs), providing clear, parsable feedback to automate documentation maintenance. 
+This tool is designed to serve as a high-quality diagnostic step in **AI Agent workflows** (like `aider` or custom SLMs), providing clear, parsable feedback to automate documentation maintenance.
 
 **Features:**
 
@@ -84,7 +84,7 @@ This tool is designed to serve as a high-quality diagnostic step in **AI Agent w
 #### Usage
 
 ```bash
-md_check_broken_links.py [directory] [file_pattern] [options]
+check_broken_links.py [directory] [file_pattern] [options]
 ```
 
 - **Required Arguments (Optional when using defaults)**:
@@ -101,25 +101,25 @@ md_check_broken_links.py [directory] [file_pattern] [options]
 1. Check all `*.md` files in the current directory and subdirectories:
 
     ```bash
-    md_check_broken_links.py
+    check_broken_links.py
     ```
 
 1. Check all `*.txt` files recursively from the `./docs` directory:
 
     ```bash
-    md_check_broken_links.py ./docs "*.txt"
+    check_broken_links.py ./docs "*.txt"
     ```
-    
+
 1. Usr verbose mode:
 
     ```bash
-    md_check_broken_links.py --verbose
+    check_broken_links.py --verbose
     ```
-    
+
 1. Use exclusions:
 
     ```bash
-    md_check_broken_links.py --exclude-dirs drafts temp --exclude-files README.md
+    check_broken_links.py --exclude-dirs drafts temp --exclude-files README.md
     ```
 
 ### 2. `format_string.py`
