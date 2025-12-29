@@ -32,20 +32,13 @@ jobs:
 
       - name: Verify Notebook Synchronization
         run: |
-          # Find all notebooks excluding hidden and venv dirs
-          NOTEBOOKS=$(find . -type f -name "*.ipynb" \
-            ! -path "*/.*" \
-            ! -path "*/venv/*" \
-            ! -path "*/.venv/*")
-
-          if [ -n "$NOTEBOOKS" ]; then
-            echo "Checking synchronization for: $NOTEBOOKS"
-            # Uses project-locked Jupytext and deps → bit-for-bit reproducible
-            ~/.cargo/bin/uv run jupytext --test --to md $NOTEBOOKS
-          else
-            echo "No active notebooks found. Skipping."
-          fi
-
+          # Only validate notebooks with a .md pair (your source of truth)
+          for md in **/*.md; do
+            if [[ -f "${md%.md}.ipynb" ]]; then
+              echo "Testing: $md"
+              uv run jupytext --to ipynb --test "$md"
+            fi
+          done
 
       # --- 2. DEPLOYMENT STEPS (Only runs on Main) ---
       - name: Setup Node.js
