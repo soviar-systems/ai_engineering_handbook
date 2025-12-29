@@ -546,9 +546,9 @@ Place `.aider.conf.yml` file in your project root. This configuration tells Aide
 # .aider.conf.yml
 
 # Run Jupytext sync as a 'lint' step after Aider makes changes
-lint-cmds:
-  - md: uv run jupytext --sync
-  - ipynb: uv run jupytext --sync
+lint-cmd:
+  - "md: uv run jupytext --sync"
+  - "ipynb: uv run jupytext --sync"
 
 # This ensures Aider only commits once the files are perfectly aligned
 auto-lint: true
