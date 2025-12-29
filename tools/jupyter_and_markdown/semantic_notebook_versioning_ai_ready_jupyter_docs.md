@@ -19,7 +19,7 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.3.0  
+Version: 0.3.1  
 Birth: 2025-12-28  
 Last Modified: 2025-12-29
 
@@ -27,7 +27,11 @@ Last Modified: 2025-12-29
 
 +++
 
-## **Purpose**
+## **Introduction**
+
++++
+
+### Purpose
 
 +++
 
@@ -38,6 +42,28 @@ It is supposed that you have already configured your environment for this reposi
 
 * **Why:** The central JupyterLab server keeps your workspace stable. Even if a specific project's dependencies break, your "IDE" remains functional.
 :::
+
++++
+
+### Substantiation of the Approach
+
++++
+
+This workflow is engineered to satisfy **industrial-grade MLOps criteria** under the constraints of Small Language Model (SLM) development environments (1B–14B parameters, CPU/RAM-limited, GitOps-native). It adheres to the **Simplest Viable Architecture (SVA)** principle.
+
+The proposed methodology—semantic notebook versioning via **Jupytext paired `.md`/`.ipynb` artifacts**, enforced by 
+- pre-commit sync guards, 
+- `.gitattributes` diff suppression, and 
+- CI integrity validation**
+
+is classified as **Production-Ready** because it:  
+
+- ✅ **Runs fully on CPU/local stack** (uv, JupyterLab, Jupytext CLI)  
+- ✅ **Introduces zero vendor lock-in** (open formats: MyST Markdown, standard Jupyter)  
+- ✅ **Integrates into GitOps/CI pipelines** (pre-commit + GitHub Actions)  
+- ✅ **Produces version-controllable, LLM-efficient inputs** (clean `.md` for aider/SLMs)  
+
+All components are **traceable to ISO/IEC/IEEE 29148** requirements for *unambiguous, verifiable, and maintainable specification artifacts*, and comply with **SWEBOK Quality-2.1** (verifiability of development artifacts). It is a **minimal, auditable, and enforceable workflow** for AI engineering teams operating at the edge.
 
 +++
 
@@ -145,15 +171,19 @@ Since Aider modifies the `.md` file, its timestamp will be newer. This local hoo
 1. **Jupytext** sees `notebook.md` is newer, so it updates the JSON in `notebook.ipynb`.
 1. **Git** includes both the `.md` and the updated `.ipynb` in the final commit automatically.
 
-:::{seealso} Standard pre-commit-hook
++++
+
+:::{seealso} Standard Pre-Commit-Hook Problem
 :class: dropdown
 :open: false
-The default hook identifies the problem but doesn't "stage" the fixed file back into your commit. It is safer but it breaks the automation.
+The official `jupytext` hook from their GitHub repository often fails because it runs in an isolated environment that ignores your local settings and can "hallucinate" formatting differences (like `kernelspec` indentation) that don't actually exist on your disk failing to pass the commit. The conflict becomes unresolvable. Reasons for this behavior are:
 
-Another negative side effect of using the local hook: 
+* **Environment Isolation:** It creates a fresh environment that doesn't "see" your `pyproject.toml` or `uv` environment.
+* **Metadata Sensitivity:** It is often too strict with Jupyter UI state (like `jp-MarkdownHeadingCollapsed`), leading to failed commits for non-code changes.
+* **The Stalemate:** If timestamps match exactly, the official hook may skip syncing, whereas the **Local Hook** (using `uv run`) forces parity using your project-specific logic.
 
-* **Avoiding the "Stash Trap":** Standard hooks run in isolated environments and can "hallucinate" formatting differences (like `kernelspec` indentation) that don't actually exist on your disk.
- 
+The default pre-commit hook is this:
+
 ```yaml
 repos:
   - repo: https://github.com/mwouts/jupytext
@@ -165,15 +195,19 @@ repos:
 ```
 :::
 
++++
+
 **Expected Behavior**
 
 * **The Gatekeeper:** When you run `git commit`, the hook will check if your `.md` and `.ipynb` files are perfectly aligned.
 * **Auto-Fix:** If they are out of sync, the hook will attempt to synchronize them using the most recently modified file as the source of truth.
 * **Validation:** If the files were inconsistent, the commit will fail, allowing you to `git add` the newly synchronized files and try again.
 
-**Aider Integration Hint**
-
+:::{hint} Aider Integration Hint
+:class: dropdown
+:class: false
 For users of the `aider` AI assistant, this hook is critical. When Aider modifies a `.md` file, this hook ensures the `.ipynb` execution artifact is updated before the commit is finalized, maintaining repository integrity automatically.
+:::
 
 +++
 
@@ -269,6 +303,10 @@ You will see that both files were included in the commit. This confirms that you
 
 +++
 
+### .gitattributes configuration
+
++++
+
 Configure Git to treat the `.md` file as the primary source of truth for code reviews and LLM ingestion, while de-emphasizing the bulky `.ipynb` JSON.
 
 File: `.gitattributes`:
@@ -302,7 +340,7 @@ By using these `.gitattributes`, you are telling Git to **ignore the noise** and
 
 +++
 
-### Real-World Example: "The Data Science Team Review"
+### Real-World Example: The Data Science Team Review
 
 +++
 
@@ -341,6 +379,11 @@ File: `.github/workflows/verify-docs.yml`:
 
 ```yaml
       # --- 1. INTEGRITY CHECK (Enforced on all branches) ---
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Verify Notebook Synchronization
         run: |
           pip install "jupytext==1.18.1"
@@ -349,14 +392,16 @@ File: `.github/workflows/verify-docs.yml`:
           NOTEBOOKS=$(find . -type f -name "*.ipynb" \
             ! -path "*/.*" \
             ! -path "*/venv/*" \
-            ! -path "*/.venv/*")
+            ! -path "*/.venv/*" \
+            ! -path "*/pr/*" \
+            ! -path "*/old/*")
 
           if [ -n "$NOTEBOOKS" ]; then
             echo "Checking synchronization for: $NOTEBOOKS"
             # --test is the professional standard for CI:
             # It fails with a non-zero exit code if the .ipynb and .md are
             # out of sync.
-            jupytext --test --sync $NOTEBOOKS
+            jupytext --test --to md $NOTEBOOKS
           else
             echo "No active notebooks found. Skipping."
           fi
