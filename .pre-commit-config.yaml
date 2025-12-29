@@ -3,7 +3,48 @@ repos:
     hooks:
       - id: jupytext-sync
         name: Jupytext Sync (Auto-Fix)
-        entry: uv run jupytext --sync
+        entry: |
+          bash -c '
+            # Get staged files matching .md or .ipynb
+            staged_notebooks=$(git diff --cached --name-only --diff-filter=AM | grep -E "\.(md|ipynb)$")
+            if [ -z "$staged_notebooks" ]; then
+              exit 0  # No notebook files staged → skip
+            fi
+            uv run jupytext --sync $staged_notebooks
+          '
         language: system
-        files: \.(ipynb|md)$
-        pass_filenames: true
+        pass_filenames: false
+        files: \.(md|ipynb)$
+        stages: [pre-commit]
+
+      - id: require-paired-staging
+        name: Require paired .md/.ipynb staging
+        entry: |
+          bash -c '
+            # Get staged .md and .ipynb files
+            staged_md=$(git diff --cached --name-only --diff-filter=AM | grep "\.md$")
+            staged_ipynb=$(git diff --cached --name-only --diff-filter=AM | grep "\.ipynb$")
+
+            # Check .md → .ipynb
+            for md in $staged_md; do
+              ipynb="${md%.md}.ipynb"
+              if ! echo "$staged_ipynb" | grep -q "^$ipynb$"; then
+                echo "ERROR: $md is staged, but its pair $ipynb is not."
+                echo "Run: git add $ipynb"
+                exit 1
+              fi
+            done
+
+            # Check .ipynb → .md
+            for ipynb in $staged_ipynb; do
+              md="${ipynb%.ipynb}.md"
+              if ! echo "$staged_md" | grep -q "^$md$"; then
+                echo "ERROR: $ipynb is staged, but its pair $md is not."
+                echo "Run: git add $md"
+                exit 1
+              fi
+            done
+          '
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

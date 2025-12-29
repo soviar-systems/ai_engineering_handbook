@@ -1,5 +1,9 @@
 # .aider.conf.yml
 
+auto-commits: false
+read:
+  - aider.CONVENTIONS
+
 # Run Jupytext sync as a 'lint' step after Aider makes changes
 lint-cmd:
   - "md: uv run jupytext --sync"
