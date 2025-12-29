@@ -8,10 +8,13 @@ project:
   # authors: []
   github: https://github.com/lefthand67/ai_engineering_handbook
   exclude:
-    - in_progress/*
-    - pr/*
-    - research/slm_from_scratch/old/*
-    - RELEASE_NOTES.md
+    - "in_progress/*"
+    - "pr/*"
+    - "research/slm_from_scratch/old/*"
+    - "RELEASE_NOTES.md"
+    # exclude paired md files
+    - "research/**/*.md"
+    - "tools/**/*.md"
   abbreviations:
     ABI: Application Binary Interface
     AI: Artificial Intelligence
