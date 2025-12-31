@@ -6,11 +6,24 @@ repos:
         entry: |
           bash -c '
             # Get staged files matching .md or .ipynb
-            staged_notebooks=$(git diff --cached --name-only --diff-filter=AM | grep -E "\.(md|ipynb)$")
-            if [ -z "$staged_notebooks" ]; then
+            staged_notebooks=()
+            while IFS= read -r -d '' file; do
+                staged_notebooks+=("${file}")
+            done < <(git diff --cached --name-only --diff-filter=AMR --null | grep -E -z "\.(md|ipynb)$")
+            if [ ${#staged_notebooks[@]} -eq 0 ]; then
               exit 0  # No notebook files staged → skip
             fi
-            uv run jupytext --sync $staged_notebooks
+            # Sync and re-stage
+            for file in "${staged_notebooks[@]}"; do
+                if ! uv run jupytext --sync "${file}"; then
+                    echo "Error: Failed to sync ${file}" >&2
+                    exit 1
+                fi
+                if ! git add "${file}"; then
+                    echo "Error: Failed to add ${file}" >&2
+                    exit 1
+                fi
+            done
           '
         language: system
         pass_filenames: false
@@ -21,29 +34,31 @@ repos:
         name: Require paired .md/.ipynb staging
         entry: |
           bash -c '
+            # analyze this part ai
             # Get staged .md and .ipynb files
-            staged_md=$(git diff --cached --name-only --diff-filter=AM | grep "\.md$")
-            staged_ipynb=$(git diff --cached --name-only --diff-filter=AM | grep "\.ipynb$")
+            staged_md=( $(git diff --cached --name-only --diff-filter=AMR | grep "\.md$") )
+            staged_ipynb=( $(git diff --cached --name-only --diff-filter=AMR | grep "\.ipynb$") )
 
             # Check .md → .ipynb
-            for md in $staged_md; do
+            for md in "${staged_md[@]}"; do
               ipynb="${md%.md}.ipynb"
-              if ! echo "$staged_ipynb" | grep -q "^$ipynb$"; then
-                echo "ERROR: $md is staged, but its pair $ipynb is not."
-                echo "Run: git add $ipynb"
+              if [[ ! "${staged_ipynb[@]}" =~ "${ipynb}" ]]; then
+                echo "ERROR: ${md} is staged, but its pair ${ipynb} is not."
+                echo "Run: git add ${ipynb}"
                 exit 1
               fi
             done
 
             # Check .ipynb → .md
-            for ipynb in $staged_ipynb; do
+            for ipynb in "${staged_ipynb[@]}"; do
               md="${ipynb%.ipynb}.md"
-              if ! echo "$staged_md" | grep -q "^$md$"; then
-                echo "ERROR: $ipynb is staged, but its pair $md is not."
-                echo "Run: git add $md"
+              if [[ ! "${staged_md[@]}" =~ "${md}" ]]; then
+                echo "ERROR: ${ipynb} is staged, but its pair ${md} is not."
+                echo "Run: git add ${md}"
                 exit 1
               fi
             done
+            # end analyze this part ai
           '
         language: system
         pass_filenames: false
