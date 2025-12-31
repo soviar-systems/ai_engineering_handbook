@@ -11,7 +11,7 @@ project:
     - "in_progress/*"
     - "pr/*"
     - "research/slm_from_scratch/old/*"
-    - "*.md"
+    - "*/**/*.md"
   abbreviations:
     ABI: Application Binary Interface
     AI: Artificial Intelligence
