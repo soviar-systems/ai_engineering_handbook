@@ -1,11 +1,9 @@
-# .md files
 You are editing a MyST Markdown notebook paired with Jupytext.
 NEVER convert ```{code-cell} blocks to standard ```bash or ```python.
 ALWAYS preserve the exact syntax: ```{code-cell}[optional-kernel].
 NEVER alter, remove, or reformat MyST directive syntax.
 
-# .py files
-ALWAYS prefer Path from pathlib; NEVER use os library.
+ALWAYS prefer Path from pathlib in Python; NEVER use os library.
 
-# any code files
-ALWAYS follow top-down design: main function at the top as the entry point.
+ALWAYS follow top-down design in coding: main function at the top as the entry point.
+ALWAYS analyze provided output first and only then analyze the code logic.
