@@ -1,11 +1,24 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # What to read?
 
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.3.1  
+Version: 0.3.2  
 Birth: 2025-10-01  
-Modified: 2025-12-18
+Modified: 2025-12-31
 
 ---
 

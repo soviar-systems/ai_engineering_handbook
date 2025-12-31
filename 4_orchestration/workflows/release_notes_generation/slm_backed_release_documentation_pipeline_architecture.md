@@ -1,11 +1,24 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # Small LM-Backed Release Documentation Pipeline: Architecture
 
 -----
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.1  
+Version: 0.1.2  
 Birth: 2025-12-01  
-Last Modified: 2025-12-16
+Last Modified: 2025-12-31
 
 -----
 
@@ -192,4 +205,3 @@ We use lightweight tools to parse the structured **Conventional Commits** first,
 ## Appendix A. AI-Assisted Documentation Flow
 
 ![AI-Assisted Documentation Flow](../images/ai_assisted_doc_flow_1.png)
-

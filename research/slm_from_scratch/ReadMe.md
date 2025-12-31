@@ -1,3 +1,16 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 *"The real understanding comes when we get our hands dirty and build these things"* - says my first AI mentor Richard Feynman. 
 
 The goal of this course is a preparation for AI-backend optimization (e.g., CUDA, tensor cores, memory hierarchy tuning).

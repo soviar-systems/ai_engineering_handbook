@@ -11,10 +11,7 @@ project:
     - "in_progress/*"
     - "pr/*"
     - "research/slm_from_scratch/old/*"
-    - "RELEASE_NOTES.md"
-    # exclude paired md files
-    - "research/**/*.md"
-    - "tools/**/*.md"
+    - "*.md"
   abbreviations:
     ABI: Application Binary Interface
     AI: Artificial Intelligence

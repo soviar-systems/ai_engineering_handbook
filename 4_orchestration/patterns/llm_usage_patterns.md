@@ -1,14 +1,27 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # LLM Usage Patterns: Chats, Workflows, and Agents in AI
 
 See also: 
-- [Choosing Model Size for Chats, Workflows, and Agents: Model Size, Reasoning, and Optimization](../../2_model/selection/choosing_model_size.md)
+- [*Choosing Model Size for Chats, Workflows, and Agents: Model Size, Reasoning, and Optimization*](/2_model/selection/choosing_model_size.md)
 
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.2  
+Version: 0.1.3  
 Birth: 2025-10-19  
-Last Modified: 2025-12-16
+Last Modified: 2025-12-31
 
 ---
 

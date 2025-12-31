@@ -1,11 +1,24 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # 📘 Requirements Engineering in the AI Era: The Gated Velocity Handbook
 
 -----
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.1  
+Version: 0.2.2  
 Birth: 2025-12-07  
-Last Modified: 2025-12-16
+Last Modified: 2025-12-31
 
 -----
 

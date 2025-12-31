@@ -1,12 +1,24 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # Post-Mortem: Architectural Flaws in the `nbdiff`-Centric Jupyter Version Control Handbook
 
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Document: nbdiff: "git diff" for Jupyter Notebooks Version Control (v0.3.0, 2025-12-28)
-Reviewer: [slm_system_consultant](/helpers/ai_consultants/slm_system_consultant.json) v0.12.0
-Birth: 2025-12-28  
-Last Modified: 2025-12-28
+Document: nbdiff: "git diff" for Jupyter Notebooks Version Control (v0.3.0, 2025-12-28)  
+Reviewer: [slm_system_consultant](/helpers/ai_consultants/slm_system_consultant.json) v0.12.0  
+2025-12-28  
 
 ---
 

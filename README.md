@@ -1,12 +1,26 @@
------
-
-Version: 0.2.2
-Birth: 2025-10-19
-Modified: 2025-12-27
-
------
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
 
 # About
+
+-----
+
+Version: 0.2.3  
+Birth: 2025-10-19  
+Last Modified: 2025-12-31
+
+-----
+
 
 This repository provides a **systematized, AI-engineered knowledge base** for building production-grade AI systems using **Small Language Models (SLMs)**. All content is **generated, validated, and versioned through a controlled Language Model (LM) workflow**—treated as code, not prose.
 

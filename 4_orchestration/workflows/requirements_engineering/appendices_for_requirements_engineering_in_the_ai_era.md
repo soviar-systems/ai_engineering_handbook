@@ -1,11 +1,24 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # Appendices for "Requirements Engineering in the AI Era"
 
 -----
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.4.0  
+Version: 0.4.1  
 Birth: 2025-12-07  
-Last Modified: 2025-12-14
+Last Modified: 2025-12-31
 
 -----
 

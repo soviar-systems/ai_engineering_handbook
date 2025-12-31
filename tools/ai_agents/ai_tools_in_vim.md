@@ -1,11 +1,24 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # VIM in AI era: Configure vim for AI-driven tasks.
 
 ---
 
-Owner: Vadim Rudakov, lefthand67@gmail.com
-Version: 0.3.1
-Birth: 17.11.2025
-Modified: 19.11.2025
+Owner: Vadim Rudakov, lefthand67@gmail.com  
+Version: 0.3.2  
+Birth: 2025-11-17  
+Modified: 2025-12-31
 
 ---
 

@@ -1,11 +1,24 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # NVIDIA GPU Optimization: Accelerating AI with CUDA, Nsight, and Systems Thinking
 
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 1.0.2  
+Version: 1.0.3  
 Birth: 2025-11-20  
-Modified: 2025-12-16
+Modified: 2025-12-31
 
 ---
 

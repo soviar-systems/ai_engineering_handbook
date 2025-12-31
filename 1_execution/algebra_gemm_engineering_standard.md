@@ -1,11 +1,24 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # GEMM: The Engineering Standard
 
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.0  
+Version: 0.2.1  
 Birth: 2025-12-27  
-Last Modified: 2025-12-28
+Last Modified: 2025-12-31
 
 ---
 

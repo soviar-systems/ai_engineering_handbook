@@ -1,11 +1,24 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # Aider Commands Handout
 
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.1  
-Birth: 18.11.2025  
-Modified: 18.11.2025
+Version: 0.1.2  
+Birth: 2025-11-18  
+Last Modified: 2025-12-31
 
 ---
 

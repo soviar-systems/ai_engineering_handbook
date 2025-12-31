@@ -5,6 +5,10 @@ jupytext:
     format_name: myst
     format_version: 0.13
     jupytext_version: 1.18.1
+kernelspec:
+  name: slm_from_scratch
+  display_name: slm_from_scratch
+  language: python
 ---
 
 ---
