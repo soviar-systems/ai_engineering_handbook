@@ -8,9 +8,11 @@ project:
   # authors: []
   github: https://github.com/lefthand67/ai_engineering_handbook
   exclude:
+    - "RELEASE_NOTES.*"
     - "in_progress/*"
     - "pr/*"
     - "research/slm_from_scratch/old/*"
+    # jupytext pairs md to ipynb
     - "*/**/*.md"
   abbreviations:
     ABI: Application Binary Interface

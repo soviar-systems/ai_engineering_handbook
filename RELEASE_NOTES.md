@@ -1,3 +1,16 @@
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.18.1
+kernelspec:
+  name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+---
+
 # Release Notes
 
 ## release v1.4.0
@@ -19,7 +32,7 @@ This release significantly expands the **1_execution** and **4_orchestration** l
 
 * **Directory**: `1_execution`
 * **Articles**:
-  *  `algebra_gemm_engineering_standard.md`: 
+  *  `algebra_gemm_engineering_standard.md`:
     * Defines GEMM as the foundational standard for Deep Learning and HPC.
     * Includes detailed analysis of arithmetic intensity, tiling, and hardware-specific optimizations like Tensor Cores.
 
