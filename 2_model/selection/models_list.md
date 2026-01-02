@@ -6,18 +6,18 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.18.1
 kernelspec:
-  name: python3
   display_name: Python 3 (ipykernel)
   language: python
+  name: python3
 ---
 
 # Models list
 
 -----
 
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.1  
-Birth: 2025-12-20  
+Owner: Vadim Rudakov, lefthand67@gmail.com
+Version: 0.1.1
+Birth: 2025-12-20
 Last Modified: 2025-12-31
 
 -----
@@ -47,6 +47,11 @@ Last Modified: 2025-12-31
 1. [T5Gemma 2](https://huggingface.co/collections/google/t5gemma-2)
 1. [FunctionGemma](https://huggingface.co/collections/google/functiongemma)
 
-## gpt-oss
+### gpt-oss
+
 1. https://huggingface.co/openai/gpt-oss-20b
 1. https://ollama.com/library/gpt-oss:20b
+
+### unsloth
+
+1. https://huggingface.co/unsloth/MiniMax-M2.1 229B
