@@ -2,7 +2,7 @@
 http:
   routers:
     myst_pod_router:
-    rule: "Host(`book.soviar.ru`)"
+    rule: "Host(`your_website`)"
     entryPoints:
       - websecure
     service: myst_pod_service
@@ -13,4 +13,4 @@ http:
     myst_pod_service:
       loadBalancer:
         servers:
-          - url: "http://book.soviar.ru:<port_number>"
+          - url: "http://your_website:<port_number>"
