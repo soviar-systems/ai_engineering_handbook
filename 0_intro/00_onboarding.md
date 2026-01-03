@@ -47,4 +47,4 @@ Last Modified: 2026-01-03
 
 +++
 
-1. [*"How to host a website (or even many websites) from the git repo ipynb files"*](helpers/website/ReadMe.md)
+1. [*"How to host a website (or even many websites) from the git repo ipynb files"*](/helpers/website/ReadMe.md)

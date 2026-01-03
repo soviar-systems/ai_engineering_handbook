@@ -119,7 +119,7 @@ Your server needs `rsync` installed to receive the files, and the directory stru
 
 Instead of running the pod manually, we will use Podman’s native integration with **systemd**. This ensures your website starts automatically after a reboot and is managed as a background service.
 
-See the K8S YAML manifest example for the given website here: [*play_nginx.yaml*](/helpers/website/play_nginx.yaml)
+See the K8S YAML manifest example for the given website here: [*play_nginx.yaml*](/helpers/website/configs/play_nginx.yaml)
 
 +++
 
