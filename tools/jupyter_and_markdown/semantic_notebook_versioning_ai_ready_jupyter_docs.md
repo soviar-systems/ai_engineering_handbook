@@ -19,9 +19,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.4.0  
+Version: 0.4.2  
 Birth: 2025-12-28  
-Last Modified: 2026-01-03
+Last Modified: 2026-01-04
 
 ---
 
@@ -38,7 +38,7 @@ Last Modified: 2026-01-03
 To enable clean Git diffs, prevent notebook metadata noise, and provide high-fidelity Markdown inputs for SLM/LLM assistants (e.g., Aider) while preserving execution state.
 
 :::{attention}
-It is supposed that you have already configured your environment for this repository with the [*environment configuration scripts*](helpers/scripts/environment_setup_scripts/).
+It is supposed that you have already configured your environment for this repository with the [*environment configuration scripts*](/helpers/scripts/environment_setup_scripts/).
 
 * **Why:** The central JupyterLab server keeps your workspace stable. Even if a specific project's dependencies break, your "IDE" remains functional.
 :::
@@ -73,15 +73,13 @@ All components are **traceable to ISO/IEC/IEEE 29148** requirements for *unambig
 
 1. UV environment: `pyproject.toml`
 1. Aider:
-    - `.aider.conf.yml`
-    - `aider.CONVENTIONS`
+    - `/.aider.conf.yml`
+    - `/aider.CONVENTIONS`
 1. Git:
-    - `.github/workflows/deploy.yml`
-    - `.gitattributes`
-    - `.pre-commit-config.yaml`
-    - custom hooks in `helpers/scripts/hooks/`:
-        - `jupytext-require-paired-staging.sh`
-        - `jupytext-sync-auto-fix.sh`
+    - `/.github/workflows/deploy.yml`
+    - `/.gitattributes`
+    - `/.pre-commit-config.yaml`
+    - custom hook `/helpers/scripts/hooks/sync_and_verify.sh`
 
 :::{important}
 For actual contents of the file inspect the original files in the repo, not the examples here.
@@ -133,15 +131,11 @@ Central JupyterLab server:
 ~/venv/jupyter/bin/jupyter-lab -V
 ```
 
-## **Phase 2: Mandatory Pairing**
+## **Phase 2: Mandatory Pairing: Automate Jupytext Defaulting**
 
 +++
 
 To ensure the LLM assistant can read the semantic content of your work, every engineer must initialize notebook [pairing](https://github.com/mwouts/jupytext/blob/main/docs/paired-notebooks.md).
-
-+++
-
-### Automate Jupytext Defaulting
 
 +++
 
@@ -243,7 +237,7 @@ Binary files a/research/slm_from_scratch/01_foundational_neurons_and_backprop/01
 
 The standard [`jupytext` hook](https://github.com/mwouts/jupytext/blob/main/docs/using-pre-commit.md) is designed to be **safe rather than aggressive**. When it detects that *both* the `.ipynb` and the `.md` have changed (or are both staged), it stops and asks you to choose a side to avoid accidentally overwriting your work.
 
-To automate file synchronization we created a `.pre-commit-config.yaml` in the repository root and two scripts in `helpers/scripts/hooks/` directory:
+To automate file synchronization we created a `.pre-commit-config.yaml` in the repository root and the script in `helpers/scripts/hooks/` directory:
 
 +++
 
@@ -264,7 +258,15 @@ pre-commit installed at .git/hooks/pre-commit
 
 +++
 
-### Hook files example
+### The Sync Guard Custom Hook
+
++++
+
+The workflow employs a specific local script to manage the relationship between `.md` and `.ipynb` files. While standard Jupytext hooks often fail due to environment isolation or metadata sensitivity, this local script use the project's `uv` environment to ensure total consistency.
+
++++
+
+#### Custom Hook Files Examples
 
 +++
 
@@ -275,29 +277,22 @@ pre-commit installed at .git/hooks/pre-commit
 repos:
   - repo: local
     hooks:
-
-      - id: require-paired-staging
-        name: Require paired .md/.ipynb staging
-        entry: ./helpers/scripts/hooks/jupytext-require-paired-staging.sh
+      - id: jupytext-integrity
+        name: Jupytext Sync & Integrity Check
+        entry: ./helpers/scripts/hooks/sync_and_verify.sh
         language: script
-        fail_fast: true
-        pass_filenames: false
         files: \.(md|ipynb)$
-        stages: [pre-commit]
-
-      - id: jupytext-sync
-        name: Jupytext Sync (Auto-Fix)
-        entry: ./helpers/scripts/hooks/jupytext-sync-auto-fix.sh
-        language: script
-        pass_filenames: false
-        files: \.(md|ipynb)$
+        pass_filenames: true
+        require_serial: true
         stages: [pre-commit]
 ```
+
+[*See syntax explanation in the official docs*](https://pre-commit.com/)
 :::
 
 +++
 
-:::{seealso} `helpers/scripts/hooks/jupytext-require-paired-staging.sh` example
+:::{seealso} `/helpers/scripts/hooks/sync_and_verify.sh` example
 :class: dropdown
 :open: false
 ```bash
@@ -305,82 +300,42 @@ repos:
 set -euo pipefail
 
 main() {
-    declare -a staged_md
-    declare -a staged_notebooks
+    local exit_code=0
 
-    # Get staged .md and .ipynb files
-    read -ra staged_md <<< $(git diff --cached --name-only --diff-filter=AMR | \
-        grep "\.md$")
-    read -ra staged_notebooks <<< $(git diff --cached --name-only --diff-filter=AMR | \
-        grep "\.ipynb$")
+    for file in "$@"; do
+        base="${file%.*}"
 
-    # Check .md → .ipynb
-    for md in "${staged_md[@]}"; do
-      ipynb="${md%.md}.ipynb"
-      if [[ ! "${staged_notebooks[*]}" =~ "${ipynb}" ]]; then
-        echo "ERROR: ${md} is staged, but its pair ${ipynb} is not."
-        echo "Run: git add ${ipynb}"
-        exit 1
-      fi
+        # 1. Sync using your project's specific uv environment
+        # This respects your pyproject.toml and local kernelspecs
+        if ! uv run jupytext --sync "$file"; then
+            echo "❌ Jupytext sync failed for $file"
+            exit 1
+        fi
+
+        # 2. Force-add both files.
+        # (Inside pre-commit, this usually only stages files that were already
+        # partly staged, but it's necessary for the next check.)
+        git add "${base}.md" "${base}.ipynb"
+
+        # 3. The Integrity Check
+        # We check the actual Git Index (the --cached files)
+        STAGED_FILES=$(git diff --cached --name-only)
+
+        if ! echo "$STAGED_FILES" | grep -q "${base}.md" || \
+           ! echo "$STAGED_FILES" | grep -q "${base}.ipynb"; then
+            echo
+            echo "⚠️  INCOMPLETE STAGING: ${base}.{md,ipynb} pair is not fully staged."
+            echo "👉 ACTION: Run: git add ${base}.md ${base}.ipynb"
+            exit_code=1
+        fi
     done
 
-    # Check .ipynb → .md
-    for ipynb in "${staged_notebooks[@]}"; do
-      md="${ipynb%.ipynb}.md"
-      if [[ ! "${staged_md[*]}" =~ "${md}" ]]; then
-        echo "ERROR: ${ipynb} is staged, but its pair ${md} is not."
-        echo "Run: git add ${md}"
-        exit 1
-      fi
-    done
-}
-
-
-main "$@"
-```
-:::
-
-+++
-
-:::{seealso} `helpers/scripts/hooks/jupytext-sync-auto-fix.sh` example
-:class: dropdown
-:open: false
-```bash
-#!/bin/bash
-set -euo pipefail
-
-main() {
-    local -a staged_notebooks
-    local base
-
-    # Get staged files matching .md or .ipynb
-    staged_notebooks=( $(git diff --cached --name-only --diff-filter=AMR | grep -E "\.(md|ipynb)$") )
-
-    if [[ ${#staged_notebooks[@]} -eq 0 ]]; then
-      exit 0  # No notebook files staged → skip
+    if [[ $exit_code -eq 0 ]]; then
+        echo "✅ Notebook pairs are synced and staged correctly."
     fi
 
-    # Sync and re-stage
-    for file in "${staged_notebooks[@]}"; do
-      # sync
-      if ! uv run jupytext --sync "${file}"; then
-          echo "Error: Failed to sync ${file}" >&2
-          exit 1
-      fi
-
-      # re-stage
-      base="${file%.*}"
-      if ! git add "${base}.md"; then
-          echo "Error: Failed to add ${base}.md" >&2
-          exit 1
-      fi
-      if ! git add "${base}.ipynb"; then
-          echo "Error: Failed to add ${base}.ipynb" >&2
-          exit 1
-      fi
-    done
+    exit $exit_code
 }
-
 
 main "$@"
 ```
@@ -388,15 +343,44 @@ main "$@"
 
 +++
 
-### Why we use a `local` hook instead of the official one
+#### Understanding the Logic
 
 +++
 
-Since Aider modifies the `.md` file, its timestamp will be newer. This local hook runs via `uv` (using the established environment) and forces the `.ipynb` to match the `.md` before the commit finishes.
+The custom local hook `sync_and_verify.sh` acts as the "enforcement officer" for Semantic Notebook Versioning. It solves the fundamental limitation of `pre-commit`: the framework's automatic stashing of unstaged changes, which "hides" the `.ipynb` file if you only staged the `.md`.
+
+**The Core Logic Flow**
+
+The script operates in three distinct stages for every changed file passed to it:
+
+1. **Environment-Aware Synchronization:** Unlike official hooks that run in isolated containers, this script uses `uv run jupytext --sync`. This ensures Jupytext respects your local `pyproject.toml` settings, project-specific dependencies, and `kernelspec` definitions, preventing "metadata hallucinations" or random indentation shifts.
+2. **The Staging Attempt:** The script explicitly runs `git add` for both the `.md` and `.ipynb` members of the pair. While `pre-commit` prevents hooks from silently adding *new* (i.e. previously unstaged) files to a commit, this step ensures that if both files were already known to the index, they are updated to their latest synced state.
+    :::{attention} No silent staging
+    The hook does not stage files that were not staged before commit started. This is intentional.
+    
+    Read more in [*"Pre-Commit Hooks and Staging: Instruction for Developers"*](/tools/git/pre_commit_hooks_and_staging_instruction_for_devel.md)
+    :::
+4. **The Integrity Check (The "Gatekeeper"):** This is the most critical step. The script inspects the actual **Git Index** (`git diff --cached`) to verify that both files are staged together.
+* **If the pair is incomplete:** The hook fails and prints a specific `git add` command.
+* **The Result:** You are prevented from pushing a "broken" commit where the Markdown logic and Notebook execution state have diverged.
+
+:::{note} **Why it "Fails" for Aider**  
+Because Aider only edits the `.md` file, the `.ipynb` file remains "unstaged" even after the sync. The hook detects this mismatch and blocks the commit, providing the exact `git add` command needed to include the execution state. This prevents "logic-only" commits that leave the notebook artifact behind.
+:::
 
 +++
 
-:::{note} Standard Pre-Commit-Hook Problem
+#### Why we use a custom `local` hook instead of the official one
+
++++
+
+* **Aider Compatibility:** Since AI assistants like Aider typically only edit the `.md` file, the **Auto-Fix** hook is required to generate the updated `.ipynb` execution state automatically.
+* **Metadata Protection:** By using `uv run`, the hooks use your specific project dependencies, avoiding the "environment hallucination" (like random indentation changes) common in generic pre-commit hooks.
+* **CI Readiness:** This local logic mirrors the **CI Validation** (Phase 5), ensuring that what works on a developer's machine will also pass the automated "Safety Net" in the cloud.
+
++++
+
+:::{caution} Standard Pre-Commit-Hook Problem
 :class: dropdown
 :open: false
 There is another problem with the  [*official `jupytext` hook*](https://github.com/mwouts/jupytext/blob/main/docs/using-pre-commit.md) from their GitHub repository. 
@@ -422,104 +406,126 @@ repos:
 
 +++
 
-**Expected Behavior**
-
-* **The Gatekeeper:** When you run `git commit`, the hook will check if your `.md` and `.ipynb` files are perfectly aligned.
-* **Auto-Fix:** If they are out of sync, the hook will attempt to synchronize them using the most recently modified file as the source of truth.
-* **Validation:** If the files were inconsistent, the commit will fail, allowing you to `git add` the newly synchronized files and try again.
+### Pre-commit hook work real example
 
 +++
 
-:::{tip} ### Pre-commit work real example
+Here you can see the real example how the hook works:
+
++++
+
+:::{hint} Try to commit only `.md` file
 :class: dropdown
 :open: false
-Let's change the md file, add it to index without its ipynb pair, and try to commit. We get this:
+Let's change the `.md` file in the external editor like vim, add it to index without its `.ipynb` pair, and try to commit.
+
+Edit the file in vim, stage, and check status:
 
 ```bash
 $ git status -s
-M tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
-M tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
+ M tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
+ M tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
 
 $ git add tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
 
-$ git commit
+$ git status -s
+ M tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
+M  tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
+```
+
+Now try to ,ake a commit:
+
+```bash
+$ git commit -m "test"
 [WARNING] Unstaged files detected.
-[INFO] Stashing unstaged files to /home/commi/.cache/pre-commit/patch1767052830-57149.
-Jupytext Sync (Auto-Fix).................................................Failed
-- hook id: jupytext-sync
-- files were modified by this hook
+[INFO] Stashing unstaged files to /home/commi/.cache/pre-commit/patch1767471941-210739.
+Jupytext Sync & Integrity Check..........................................Failed
+- hook id: jupytext-integrity
+- exit code: 1
 
 [jupytext] Reading tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md in format md
 [jupytext] Loading tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
 [jupytext] Unchanged tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
 [jupytext] Updating tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
 
-Require paired .md/.ipynb staging........................................Failed
-- hook id: require-paired-staging
-- exit code: 1
+⚠  INCOMPLETE STAGING: tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.{md,ipynb} pair is not fully staged.
+👉 ACTION: Run: git add tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
 
-ERROR: tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md is staged, but its pair tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb is not.
-Run: git add tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
-
-[INFO] Restored changes from /home/commi/.cache/pre-commit/patch1767052830-57149.
+[INFO] Restored changes from /home/commi/.cache/pre-commit/patch1767471941-210739.
 ```
 
-This shows:
-1. `jupytext-sync` **modified files** (rewrote `.md` to match `.ipynb` timestamp).
-1. Pre-commit
-    - detected unstaged changes
-    - detected no pair  
-    → **failed the hook**
-    
-    → **No commit occurs.** You **must re-stage**:
+Let's stage manually as it is recommended by the hook and commit again:
 
-1. Re-stage one file again and try to commit:
+```bash
+$ git add tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
 
-    ```bash
-    $ git add tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
-    
-    $ git commit
-    [WARNING] Unstaged files detected.
-    [INFO] Stashing unstaged files to /home/commi/.cache/pre-commit/patch1767052863-57238.
-    Jupytext Sync (Auto-Fix).................................................Passed
-    Require paired .md/.ipynb staging........................................Failed
-    - hook id: require-paired-staging
-    - exit code: 1
-    
-    ERROR: tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md is staged, but its pair tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb is not.
-    Run: git add tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
-    
-    [INFO] Restored changes from /home/commi/.cache/pre-commit/patch1767052863-57238.
-    ```
+# or simpler
+$ git add tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.*
 
-1. **Re-stage both files** and commit:
-    ```bash
-    $ git add tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
-    
-    $ git commit -m "WIP: test pre-commit hook on md file"
-    Jupytext Sync (Auto-Fix).................................................Passed
-    Require paired .md/.ipynb staging........................................Passed
-    [fix/34-jupytext-config-examples deb8b34] WIP: test pre-commit hook on md file
-    2 files changed, 95 insertions(+), 33 deletions(-)
-    ```
+$ git status -s
+M  tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
+M  tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
 
-Your commit was successful, and the "Gatekeeper" has officially cleared your changes.
+$ git commit -m "test"
+Jupytext Sync & Integrity Check..........................................Passed
+[tmp 1667790] test
+2 files changed, 74 insertions(+), 137 deletions(-)
+```
 
-To see exactly what the automation did "under the hood," you can run:
+And the last check:
 
 ```bash
 $ git show --name-only
-commit deb8b34f22b8936d8d78173f28d29cd095266692 (HEAD -> fix/34-jupytext-config-examples)
-Author: Vadim Rudakov <lefthand67@gmail.com>
-Date:   Tue Dec 30 04:46:54 2025 +0500
+commit 166779081eef1ee3fde82497edb6b16809db5e95 (HEAD -> tmp)
+Author: author <mail@mail.org>
+Date:   Sun Jan 4 01:33:06 2026 +0500
 
-WIP: test pre-commit hook on md file
+test
 
 tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb
 tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md
 ```
 
-You will see that both files were included in the commit. This confirms that your "Source of Truth" (`.md`) is perfectly mirrored in your "Execution Artifact" (`.ipynb`).
+Both files passed the hook only in pair. Success.
+:::
+
++++
+
+### Troubleshooting
+
++++
+
+:::{important} Script Execution Permissions
+:class: dropdown
+:open: false
+If you encounter a `Permission denied` error when running the commit, it is likely because the hook script lost its executable bit. Fix it by running from the repo's root directory:
+
+```bash
+chmod +x helpers/scripts/hooks/sync_and_verify.sh
+```
+:::
+
+:::{caution} Troubleshooting the "Stash-Restore" Loop
+:class: dropdown
+:open: false
+If `pre-commit` fails, it automatically restores your workspace to the state it was in *before* you typed `git commit`.
+
+**The Symptom:** You see the hook "Pass" or "Fail," but the `.ipynb` file on your disk doesn't seem to have changed.
+**The Reason:** `pre-commit` stashes unstaged changes to ensure a clean run. If the hook fails, the stash is "popped" back, which can overwrite the files Jupytext just synced.
+**The Fix:** Always follow the hook's advice:
+
+1. Run the `git add` command provided in the error message.
+2. Commit again.
+:::
+
+:::{tip} UV Environment Issues
+:class: dropdown
+:open: false
+The hook relies on `uv` being available in your shell path. If the hook fails with `uv: command not found`:
+
+* Ensure you have run `uv sync` in the project root.
+* Check that your virtual environment is active or that `uv` is installed globally.
+* If you are using a GUI Git client (like VS Code or GitKraken), ensure the application was started from a terminal environment where your `PATH` is correctly loaded.
 :::
 
 +++
@@ -678,6 +684,9 @@ Here is exactly what happens when you decide to commit your changes.
 1. **Stage Files for Git:** You go to your terminal or Git UI and add your changes:
     ```bash
     git add my_notebook.ipynb my_notebook.md
+
+    # or just
+    git add my_notebook.*
     ```
 
 1. **The Commit (The Sync Guard):** You run your commit command:
