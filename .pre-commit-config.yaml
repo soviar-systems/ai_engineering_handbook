@@ -1,20 +1,11 @@
 repos:
   - repo: local
     hooks:
-
-      - id: require-paired-staging
-        name: Require paired .md/.ipynb staging
-        entry: ./helpers/scripts/hooks/jupytext-require-paired-staging.sh
+      - id: jupytext-integrity
+        name: Jupytext Sync & Integrity Check
+        entry: ./helpers/scripts/hooks/sync_and_verify.sh
         language: script
-        fail_fast: true
-        pass_filenames: false
         files: \.(md|ipynb)$
-        stages: [pre-commit]
-
-      - id: jupytext-sync
-        name: Jupytext Sync (Auto-Fix)
-        entry: ./helpers/scripts/hooks/jupytext-sync-auto-fix.sh
-        language: script
-        pass_filenames: false
-        files: \.(md|ipynb)$
+        pass_filenames: true
+        require_serial: true
         stages: [pre-commit]
