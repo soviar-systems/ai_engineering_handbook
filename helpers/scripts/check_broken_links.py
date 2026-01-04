@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
-Script to check broken links in files (default: markdown).
+Script to check broken links in files (default: Jupyter files .ipynb).
 
-Usage: check_broken_links.py [directory_or_file] [file_pattern]
+Usage: check_broken_links.py [paths] [pattern]
 
 This script is fully SVA (Smallest Viable Architecture) compliant, using only
 Python's standard library (pathlib, re, sys, argparse, tempfile) for robust, local-only
 link validation with full exclusion capabilities.
 
 By default, it looks for Markdown-style links ([text](link)) in files matching the
-given pattern (default: *.md), but any file type can be scanned.
+given pattern (default: *.ipynb), but any file type can be scanned.
 """
 
 import argparse
 import re
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -30,7 +31,7 @@ class LinkCheckerCLI:
     """Main application orchestrator."""
 
     DEFAULT_EXCLUDE_DIRS = ["in_progress", "pr", ".venv"]
-    DEFAULT_EXCLUDE_FILES = [".aider.chat.history.md"]
+    DEFAULT_EXCLUDE_FILES = [".aider.chat.history.ipynb"]
 
     def __init__(self):
         self.parser = self._create_parser()
@@ -39,22 +40,21 @@ class LinkCheckerCLI:
         parser = argparse.ArgumentParser(
             description="Check for broken Markdown-style links in files (Local Filesystem Only)",
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog="""Example: %(prog)s . "*.md" --exclude-dirs drafts
+            epilog="""Example: %(prog)s . "*.ipynb" --exclude-dirs drafts
 Example: %(prog)s docs "*.rst"
 Default directory: current directory
-Default pattern: *.md""",
+Default pattern: *.ipynb""",
         )
         parser.add_argument(
-            "directory_or_file",
-            nargs="?",
-            default=".",
+            "paths",
+            nargs="*",  # This allows 0 or more files/dirs
+            default=["."],
             help="Directory to search or a single file path (default: current directory)",
         )
         parser.add_argument(
-            "file_pattern",
-            nargs="?",
-            default="*.md",
-            help="File glob pattern to match (default: *.md) - ignored if a single file is specified",
+            "--pattern",
+            default="*.ipynb",
+            help="File glob pattern to match (default: *.ipynb) - ignored if a single file is specified",
         )
         parser.add_argument(
             "--exclude-dirs",
@@ -76,31 +76,66 @@ Default pattern: *.md""",
         )
         return parser
 
+    def get_git_root_dir(self) -> Optional[Path]:
+        try:
+            result = subprocess.run(
+                ["git", "rev-parse", "--show-toplevel"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            return Path(result.stdout.strip()).resolve()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return None
+
     def run(self) -> None:
         args = self.parser.parse_args()
         verbose = args.verbose
-        path_arg = Path(args.directory_or_file).resolve()
-        file_pattern = args.file_pattern
+        pattern = args.pattern
 
-        # Determine files to process
-        if path_arg.is_file():
-            files = [path_arg]
-            effective_pattern = "file"
-            root_dir = path_arg.parent
+        # 🔍 Determine project root: Git root first, then CWD
+        root_dir = self.get_git_root_dir()
+        if root_dir is None:
+            root_dir = Path(".").resolve()
+            if verbose:
+                print(
+                    "Warning: Not in a Git repository. Using current directory as root."
+                )
         else:
-            if not path_arg.exists() or not path_arg.is_dir():
-                print(f"Error: Directory does not exist: {path_arg}", file=sys.stderr)
-                sys.exit(1)
-            root_dir = path_arg
-            file_finder = FileFinder(args.exclude_dirs, args.exclude_files, verbose)
-            files = file_finder.find(root_dir, file_pattern)
-            effective_pattern = file_pattern
+            if verbose:
+                print(f"Using Git root as project root: {root_dir}")
+
+        files = []
+        file_finder = FileFinder(args.exclude_dirs, args.exclude_files, verbose)
+
+        input_paths = args.paths if args.paths else ["."]
+
+        for p in input_paths:
+            # Resolve input path relative to current working directory (not root_dir!)
+            path_obj = Path(p)
+            if path_obj.is_absolute():
+                resolved = path_obj.resolve()
+            else:
+                resolved = (Path.cwd() / path_obj).resolve()
+
+            if resolved.is_file():
+                files.append(resolved)
+            elif resolved.is_dir():
+                files.extend(file_finder.find(resolved, pattern))
+            else:
+                print(f"Warning: Path does not exist: {resolved}", file=sys.stderr)
 
         if not files:
-            print(f"No files matching '{file_pattern}' found!")
+            print(f"No files matching '{pattern}' found!")
             sys.exit(0)
 
-        print(f"Found {len(files)} {effective_pattern} file(s) in {path_arg}")
+        effective_pattern = (
+            "file" if len(files) == 1 and files[0].is_file() else pattern
+        )
+        search_display = input_paths[0] if input_paths != ["."] else "."
+
+        print(f"Found {len(files)} {effective_pattern} file(s) in {search_display}")
 
         link_extractor = LinkExtractor(verbose=verbose)
         link_validator = LinkValidator(root_dir=root_dir, verbose=verbose)
@@ -110,7 +145,6 @@ Default pattern: *.md""",
             delete=False, mode="w", encoding="utf-8"
         ) as tf:
             temp_path = Path(tf.name)
-
             for file in files:
                 if verbose:
                     print(f"\nChecking file: {file}")
@@ -180,7 +214,10 @@ class LinkValidator:
         """Check if target exists or is a dir with index/README."""
         if target_file.exists():
             if target_file.is_dir():
-                index_files = [target_file / "index.md", target_file / "README.md"]
+                index_files = [
+                    target_file / "index.ipynb",
+                    target_file / "README.ipynb",
+                ]
                 return any(p.exists() for p in index_files)
             return True
         return False

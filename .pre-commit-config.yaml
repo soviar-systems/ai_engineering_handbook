@@ -1,6 +1,7 @@
 repos:
   - repo: local
     hooks:
+
       - id: jupytext-integrity
         name: Jupytext Sync & Integrity Check
         entry: ./helpers/scripts/hooks/sync_and_verify.sh
@@ -9,10 +10,11 @@ repos:
         pass_filenames: true
         require_serial: true
         stages: [pre-commit]
+
       - id: check-broken-links
-        name: Check Broken Links in Markdown Files
-        entry: ./helpers/scripts/hooks/check_broken_links_hook.sh
-        language: script
-        files: \.md$
+        name: Check Broken Links in ipynb Files
+        entry: ./helpers/scripts/check_broken_links.py
+        language: python
+        files: \.ipynb$
         pass_filenames: true
         stages: [pre-commit]
