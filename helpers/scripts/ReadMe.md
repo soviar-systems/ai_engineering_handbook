@@ -18,9 +18,9 @@ kernelspec:
 -----
 
 Owner: Vadim Rudakov, lefthand67@gmail.com
-Version: 0.2.0
+Version: 0.2.1
 Birth: 2025-12-20
-Last Modified: 2025-12-30
+Last Modified: 2026-01-05
 
 -----
 
@@ -64,30 +64,14 @@ This approach ensures that all Python scripts in the directory tree are made exe
 
 +++
 
-1. **Locate the Scripts Directory**:
-    - Determine the absolute path of the `helpers/scripts` directory.
-
-    ```bash
-    pwd
-    ```
-
-2. **Edit Your Shell Configuration File**:
-    - Open your shell configuration file (e.g., `.bashrc` or `.bash_profile`) in a text editor.
-
-    ```bash
-    vim ~/.bashrc
-    ```
-
-4. **Add the Scripts Directory to PATH**
-    - Add the following line to the end of your shell configuration file, replacing `/path/to/your/project/helpers/scripts` with the absolute path you obtained in step 1.
-
+1. **Locate the Scripts Directory**: Obtain the absolute path using `pwd`.
+1. **Edit Your Shell Configuration**: Open your `.bashrc` or `.bash_profile`.
+1. **Add to PATH**: Add the following line:
     ```bash
     export PATH=${PATH}:/path/to/your/project/helpers/scripts
     ```
 
-4. **Apply the Changes**:
-    - Reload your shell configuration file to apply the changes.
-
+1. **Apply the Changes**: Reload your shell configuration file to apply the changes.
     ```bash
     source ~/.bashrc
     ```
@@ -122,17 +106,26 @@ Replace `script_name.py` with the actual name of your script and `[arguments]` w
 
 +++
 
-This script performs fast, local-only validation of relative file links (Markdown, image, etc.) within a directory and its subdirectories. It is built using the **Smallest Viable Architecture (SVA)** principle, relying exclusively on Python's standard library (`pathlib`, `re`, `sys`, `argparse`, `tempfile`) for maximum portability and zero external dependencies.
+This script performs fast, local-only validation of relative file links within a directory and its subdirectories. While optimized for Jupyter Notebooks (`.ipynb`), it can scan any Markdown-style links. 
 
-This tool is designed to serve as a high-quality diagnostic step in **AI Agent workflows** (like `aider` or custom SLMs), providing clear, parsable feedback to automate documentation maintenance.
+This tool is designed to serve as a high-quality diagnostic step in CI/CD, providing clear, parsable feedback to automate documentation maintenance.
+
+It adheres to the **Smallest Viable Architecture (SVA)** principle, using only the Python standard library.
+
+:::{hint} **SVA = right tool for the job**
+SVA isn’t about minimal *code* — it’s about **minimal *cognitive and operational overhead***.
+
+- Our users already have Python.
+- They can **edit the script directly** to tweak regex or logic.
+- No build system, no dependencies, no virtual envs needed (you use only stdlib!).
+:::
 
 **Features:**
 
-* **Local-Only Policy:** Excludes external URLs (e.g., `https://` or `domain.com`) from checks, focusing only on local file integrity.
-* **Intelligent Skipping:** Ignores non-file links such as bare word anchors (`[link](args)`) and internal fragments (`[section](#anchor)`).
-* **Path Handling:** Correctly resolves relative paths (`./..`), absolute paths (relative to project root `/`), and handles platform differences transparently (thanks to `pathlib`).
-* **Directory & File Exclusion:** Supports excluding specific directories (e.g., `drafts`) and files (e.g., `README.md`). Users can update default exclusions in the script itself.
-* **Clear Reporting:** Outputs broken links with their source file path and link string, exiting with a non-zero status code on failure, ideal for CI/CD and automation.
+* **Local-Only Policy:** Excludes external `http/https` URLs to focus on local repository integrity.
+* **Git Root Awareness:** Automatically detects the Git project root to resolve absolute paths (e.g., `/docs/image.png`).
+* **Intelligent Skipping:** Ignores internal anchors and fragments that do not contain path separators.
+* **Directory & File Exclusion:** Automatically skips common noise directories like `.venv` and `.ipynb_checkpoints`.
 
 +++
 
@@ -143,17 +136,18 @@ This tool is designed to serve as a high-quality diagnostic step in **AI Agent w
 Synopsis:
 
 ```bash
-check_broken_links.py [directory] [file_pattern] [options]
+check_broken_links.py [paths] [--pattern PATTERN] [options]
 ```
 
-- **Required Arguments (Optional when using defaults)**:
-  - `directory`: The root directory to start the search. Default is `.`.
-  - `file_pattern`: The glob pattern to match Markdown files. Default is `*.md`.
+* **Arguments**:
+* `paths`: The directory or specific file to search. Default is `.`.
+* `--pattern`: The glob pattern to match files. **Default is `*.ipynb**`.
 
-- **Options**:
-  - `--exclude-dirs`: Directory names to exclude from the check (e.g., `drafts temp`). Can list multiple names.
-  - `--exclude-files`: Specific file names to exclude from the check (e.g., `README.md`). Can list multiple names.
-  - `--verbose`: Enable verbose mode for more output information.
+
+* **Options**:
+* `--exclude-dirs`: Directories to skip (default: `in_progress`, `pr`, `.venv`).
+* `--exclude-files`: Specific files to skip (default: `.aider.chat.history.ipynb`).
+* `--verbose`: Shows detailed logs of skipped URLs and valid links.
 
 +++
 
@@ -161,27 +155,13 @@ check_broken_links.py [directory] [file_pattern] [options]
 
 +++
 
-You can update the default exclusions directly in the script. Open `check_broken_links.py` and modify the following lines:
+You can update the default exclusions directly in the `LinkCheckerCLI` class within the script:
 
 ```python
-# Argument for Directory Exclusion
-parser.add_argument(
-    "--exclude-dirs",
-    nargs="*",
-    default=["in_progress", "pr", ".venv"],  # Add '.venv' here
-    help="Directory names to exclude from the check (e.g., in_progress drafts temp)",
-)
-
-# Argument for File Exclusion
-parser.add_argument(
-    "--exclude-files",
-    nargs="*",
-    default=[".aider.chat.history.md"],
-    help="Specific file names to exclude from the check (e.g., README.md LICENSE.md)",
-)
+class LinkCheckerCLI:
+    DEFAULT_EXCLUDE_DIRS = ["in_progress", "pr", ".venv"]
+    DEFAULT_EXCLUDE_FILES = [".aider.chat.history.ipynb"]
 ```
-
-Add or remove directory and file names as needed.
 
 +++
 
@@ -190,26 +170,47 @@ Add or remove directory and file names as needed.
 +++
 
 1. Check all `*.md` files in the current directory and subdirectories:
-    ```bash
-    check_broken_links.py
-    ```
+
+```{code-cell}
+check_broken_links.py
+```
 
 2. Check all `*.txt` files recursively from the `./docs` directory:
-    ```bash
-    check_broken_links.py ./docs "*.txt"
-    ```
 
-3. Use verbose mode:
+```{code-cell}
+check_broken_links.py . --pattern "*.md"
+```
+
+3. Use exclusions (if not updated in the script):
+
+```{code-cell}
+check_broken_links.py --exclude-dirs drafts temp --exclude-files ReadMe.ipynb
+```
+
+4. Check the given file:
+
+```{code-cell}
+cd ../../
+ls
+```
+
+```{code-cell}
+check_broken_links.py 0_intro/00_onboarding.ipynb
+```
+
+4. Use verbose mode:
+
     ```bash
     check_broken_links.py --verbose
     ```
 
-4. Use exclusions (if not updated in the script):
-    ```bash
-    check_broken_links.py --exclude-dirs drafts temp --exclude-files README.md
-    ```
-
 +++
+
+Broken links output looks like this:
+
+```{code-cell}
+check_broken_links.py
+```
 
 ## 2. format_string.py
 
