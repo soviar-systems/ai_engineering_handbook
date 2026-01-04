@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.0  
+Version: 0.1.1  
 Birth: 2026-01-03  
-Last Modified: 2026-01-03
+Last Modified: 2026-01-05
 
 ---
 
@@ -31,7 +31,7 @@ Last Modified: 2026-01-03
 +++
 
 1. (in development) Configure JupyterLab for working with the files in this repo.
-1. [*Setup Jupytext and git hooks*](/tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md)
+1. [*Setup Jupytext and git hooks*](/tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb)
 
 +++
 
@@ -39,7 +39,7 @@ Last Modified: 2026-01-03
 
 +++
 
-1. [*"A Multi-Layered AI System Architecture"*](/0_intro/ai_systems_multilayer_approach.md) to understand the repo structure.
+1. [*"A Multi-Layered AI System Architecture"*](/0_intro/ai_systems_multilayer_approach.ipynb) to understand the repo structure.
 
 +++
 
@@ -47,4 +47,4 @@ Last Modified: 2026-01-03
 
 +++
 
-1. [*"How to host a website (or even many websites) from the git repo ipynb files"*](/helpers/website/ReadMe.md)
+1. [*"How to host a website (or even many websites) from the git repo ipynb files"*](/helpers/website/ReadMe.ipynb)
