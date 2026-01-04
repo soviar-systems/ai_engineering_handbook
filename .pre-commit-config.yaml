@@ -9,3 +9,9 @@ repos:
         pass_filenames: true
         require_serial: true
         stages: [pre-commit]
+      - id: check-broken-links
+        name: Check Broken Links in Markdown Files
+        entry: ./helpers/scripts/hooks/check_broken_links_hook.sh
+        language: script
+        files: \.md$
+        stages: [pre-commit]
