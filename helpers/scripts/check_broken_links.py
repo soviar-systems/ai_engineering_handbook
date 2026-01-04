@@ -2,7 +2,7 @@
 """
 Script to check broken links in markdown files.
 
-Usage: check_broken_links.py [directory] [file_pattern]
+Usage: check_broken_links.py [directory_or_file] [file_pattern]
 
 This script is fully SVA (Smallest Viable Architecture) compliant, using only
 Python's standard library (pathlib, re, sys, argparse, tempfile) for robust, local-only
@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import List
 
 # --- MAIN EXECUTION BLOCK ---
-
 
 def main():
     """
@@ -35,22 +34,22 @@ Default directory: current directory
 Default pattern: *.md""",
     )
     parser.add_argument(
-        "directory",
+        "directory_or_file",
         nargs="?",
         default=".",
-        help="Directory to search (default: current directory)",
+        help="Directory to search or a single file path (default: current directory)",
     )
     parser.add_argument(
         "file_pattern",
         nargs="?",
         default="*.md",
-        help="File pattern to match (default: *.md)",
+        help="File pattern to match (default: *.md) - ignored if a single file is specified",
     )
     # Argument for Directory Exclusion
     parser.add_argument(
         "--exclude-dirs",
         nargs="*",
-        default=["in_progress", "pr", ".venv"],  # Add '.venv' here
+        default=["in_progress", "pr", ".venv"],
         help="Directory names to exclude from the check (e.g., in_progress drafts temp)",
     )
     # Argument for File Exclusion
@@ -71,55 +70,51 @@ Default pattern: *.md""",
 
     # 2. Setup and Directory Check
     verbose = args.verbose
-    # Resolve the search_dir once and use it as the absolute reference point
-    search_dir = Path(args.directory).resolve()
-    if not search_dir.exists() or not search_dir.is_dir():
-        print(f"Error: Directory does not exist: {search_dir}", file=sys.stderr)
-        sys.exit(1)
+    directory_or_file = Path(args.directory_or_file).resolve()
+    file_pattern = args.file_pattern
 
-    # Resolve exclusion list paths relative to the search_dir
-    exclude_dir_paths = [search_dir / d for d in args.exclude_dirs]
+    if directory_or_file.is_file():
+        # If a single file is specified, process only that file
+        files = [directory_or_file]
+    else:
+        # Otherwise, treat it as a directory and find matching files
+        search_dir = directory_or_file
+        if not search_dir.exists() or not search_dir.is_dir():
+            print(f"Error: Directory does not exist: {search_dir}", file=sys.stderr)
+            sys.exit(1)
 
-    # 3. Resource Initialization (Temporary File for Reporting)
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as tf:
-        temp_file = Path(tf.name)
+        # Resolve exclusion list paths relative to the search_dir
+        exclude_dir_paths = [search_dir / d for d in args.exclude_dirs]
 
-    # 4. Core Processing (Wrapped in try/finally for cleanup)
-    try:
-        # Find markdown files, passing all lists
-        files = find_markdown_files(
+        files = find_files(
             search_dir,
-            args.file_pattern,
+            file_pattern,
             exclude_dir_paths,
             args.exclude_files,
         )
 
-        if not files:
-            print("No markdown files found!")
-            if args.directory != "." or args.file_pattern != "*.md":
-                sys.exit(0)
-            return
+    if not files:
+        print(f"No {file_pattern} files found!")
+        if directory_or_file != "." or file_pattern != "*.md":
+            sys.exit(0)
+        return
 
-        print(f"Found {len(files)} markdown files in {search_dir}")
+    print(f"Found {len(files)} {file_pattern} files in {directory_or_file}")
 
+    # Create a temporary file to store broken links
+    with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as temp_file:
         # Process each file, passing the absolute search_dir for correct relative reporting
         broken_links_found = False
         for file in files:
-            # Pass search_dir as the reference for relative reporting
-            if process_markdown_file(file, temp_file, search_dir, verbose=verbose):
+            # Pass directory_or_file as the reference for relative reporting
+            if process_file(file, Path(temp_file.name), directory_or_file, verbose=verbose):
                 broken_links_found = True
 
         # Report results and set exit code
-        report_results(temp_file, broken_links_found)
-
-    finally:
-        # 5. Cleanup
-        if temp_file.exists():
-            temp_file.unlink()
+        report_results(Path(temp_file.name), broken_links_found)
 
 
 # --- HELPER FUNCTIONS ---
-
 
 def is_absolute_url(link: str) -> bool:
     """Check if file is an absolute URL (Policy Violation Check)."""
@@ -189,11 +184,11 @@ def is_valid_target(target_file: Path) -> bool:
     return False
 
 
-def process_markdown_file(
+def process_file(
     file: Path, temp_file: Path, root_dir: Path, verbose: bool = False
 ) -> bool:
     """
-    Process individual markdown file and return True if broken links found.
+    Process individual file and return True if broken links found.
 
     Accepts root_dir for correct relative path reporting.
     """
@@ -260,13 +255,13 @@ def process_markdown_file(
     return broken_links_found
 
 
-def find_markdown_files(
+def find_files(
     search_dir: Path,
     file_pattern: str,
     exclude_dir_paths: List[Path],
     exclude_file_names: List[str],
 ) -> List[Path]:
-    """Get list of markdown files, excluding those in specified directories and files."""
+    """Get list of files, excluding those in specified directories and files."""
     all_files = list(search_dir.rglob(file_pattern))
 
     if not exclude_dir_paths and not exclude_file_names:
@@ -287,6 +282,10 @@ def find_markdown_files(
 
         # Check 2: File Name Exclusion
         if not is_excluded and file.name in exclude_file_names:
+            is_excluded = True
+
+        # Check 3: .ipynb_checkpoints dirs filter
+        if not is_excluded and ".ipynb_checkpoints" in str(resolved_file):
             is_excluded = True
 
         if not is_excluded:
