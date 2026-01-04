@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """
-Script to check broken links in markdown files.
+Script to check broken links in files (default: markdown).
 
 Usage: check_broken_links.py [directory_or_file] [file_pattern]
 
 This script is fully SVA (Smallest Viable Architecture) compliant, using only
 Python's standard library (pathlib, re, sys, argparse, tempfile) for robust, local-only
 link validation with full exclusion capabilities.
+
+By default, it looks for Markdown-style links ([text](link)) in files matching the
+given pattern (default: *.md), but any file type can be scanned.
 """
 
 import argparse
@@ -14,317 +17,278 @@ import re
 import sys
 import tempfile
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
-# --- MAIN EXECUTION BLOCK ---
 
 def main():
-    """
-    Run main function.
+    """Entry point."""
+    app = LinkCheckerCLI()
+    app.run()
 
-    Parses arguments, orchestrates the link checking process, handles file I/O,
-    and reports results. All core logic is executed here.
-    """
-    # 1. Argument Parsing
-    parser = argparse.ArgumentParser(
-        description="Check for broken links in markdown files (Local Filesystem Only)",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""Example: %(prog)s . "*.md" --exclude-dirs drafts --exclude-files LICENSE.md
+
+class LinkCheckerCLI:
+    """Main application orchestrator."""
+
+    DEFAULT_EXCLUDE_DIRS = ["in_progress", "pr", ".venv"]
+    DEFAULT_EXCLUDE_FILES = [".aider.chat.history.md"]
+
+    def __init__(self):
+        self.parser = self._create_parser()
+
+    def _create_parser(self) -> argparse.ArgumentParser:
+        parser = argparse.ArgumentParser(
+            description="Check for broken Markdown-style links in files (Local Filesystem Only)",
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog="""Example: %(prog)s . "*.md" --exclude-dirs drafts
+Example: %(prog)s docs "*.rst"
 Default directory: current directory
 Default pattern: *.md""",
-    )
-    parser.add_argument(
-        "directory_or_file",
-        nargs="?",
-        default=".",
-        help="Directory to search or a single file path (default: current directory)",
-    )
-    parser.add_argument(
-        "file_pattern",
-        nargs="?",
-        default="*.md",
-        help="File pattern to match (default: *.md) - ignored if a single file is specified",
-    )
-    # Argument for Directory Exclusion
-    parser.add_argument(
-        "--exclude-dirs",
-        nargs="*",
-        default=["in_progress", "pr", ".venv"],
-        help="Directory names to exclude from the check (e.g., in_progress drafts temp)",
-    )
-    # Argument for File Exclusion
-    parser.add_argument(
-        "--exclude-files",
-        nargs="*",
-        default=[".aider.chat.history.md"],
-        help="Specific file names to exclude from the check (e.g., README.md LICENSE.md)",
-    )
-    # Argument for Verbose Mode
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Enable verbose mode for more output information.",
-    )
-    args = parser.parse_args()
-
-    # 2. Setup and Directory Check
-    verbose = args.verbose
-    directory_or_file = Path(args.directory_or_file).resolve()
-    file_pattern = args.file_pattern
-
-    if directory_or_file.is_file():
-        # If a single file is specified, process only that file
-        files = [directory_or_file]
-    else:
-        # Otherwise, treat it as a directory and find matching files
-        search_dir = directory_or_file
-        if not search_dir.exists() or not search_dir.is_dir():
-            print(f"Error: Directory does not exist: {search_dir}", file=sys.stderr)
-            sys.exit(1)
-
-        # Resolve exclusion list paths relative to the search_dir
-        exclude_dir_paths = [search_dir / d for d in args.exclude_dirs]
-
-        files = find_files(
-            search_dir,
-            file_pattern,
-            exclude_dir_paths,
-            args.exclude_files,
         )
+        parser.add_argument(
+            "directory_or_file",
+            nargs="?",
+            default=".",
+            help="Directory to search or a single file path (default: current directory)",
+        )
+        parser.add_argument(
+            "file_pattern",
+            nargs="?",
+            default="*.md",
+            help="File glob pattern to match (default: *.md) - ignored if a single file is specified",
+        )
+        parser.add_argument(
+            "--exclude-dirs",
+            nargs="*",
+            default=self.DEFAULT_EXCLUDE_DIRS,
+            help="Directory names to exclude from the check",
+        )
+        parser.add_argument(
+            "--exclude-files",
+            nargs="*",
+            default=self.DEFAULT_EXCLUDE_FILES,
+            help="Specific file names to exclude from the check",
+        )
+        parser.add_argument(
+            "--verbose",
+            action="store_true",
+            default=False,
+            help="Enable verbose mode for more output information.",
+        )
+        return parser
 
-    if not files:
-        print(f"No {file_pattern} files found!")
-        if directory_or_file != "." or file_pattern != "*.md":
+    def run(self) -> None:
+        args = self.parser.parse_args()
+        verbose = args.verbose
+        path_arg = Path(args.directory_or_file).resolve()
+        file_pattern = args.file_pattern
+
+        # Determine files to process
+        if path_arg.is_file():
+            files = [path_arg]
+            effective_pattern = "file"
+            root_dir = path_arg.parent
+        else:
+            if not path_arg.exists() or not path_arg.is_dir():
+                print(f"Error: Directory does not exist: {path_arg}", file=sys.stderr)
+                sys.exit(1)
+            root_dir = path_arg
+            file_finder = FileFinder(args.exclude_dirs, args.exclude_files, verbose)
+            files = file_finder.find(root_dir, file_pattern)
+            effective_pattern = file_pattern
+
+        if not files:
+            print(f"No files matching '{file_pattern}' found!")
             sys.exit(0)
-        return
 
-    print(f"Found {len(files)} {file_pattern} files in {directory_or_file}")
+        print(f"Found {len(files)} {effective_pattern} file(s) in {path_arg}")
 
-    # Create a temporary file to store broken links
-    with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as temp_file:
-        # Process each file, passing the absolute search_dir for correct relative reporting
+        link_extractor = LinkExtractor(verbose=verbose)
+        link_validator = LinkValidator(root_dir=root_dir, verbose=verbose)
         broken_links_found = False
-        for file in files:
-            # Pass directory_or_file as the reference for relative reporting
-            if process_file(file, Path(temp_file.name), directory_or_file, verbose=verbose):
-                broken_links_found = True
 
-        # Report results and set exit code
-        report_results(Path(temp_file.name), broken_links_found)
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode="w", encoding="utf-8"
+        ) as tf:
+            temp_path = Path(tf.name)
 
+            for file in files:
+                if verbose:
+                    print(f"\nChecking file: {file}")
+                links = link_extractor.extract(file)
+                for link in links:
+                    error = link_validator.validate_link(link, file)
+                    if error:
+                        with open(temp_path, "a", encoding="utf-8") as f:
+                            f.write(error)
+                        broken_links_found = True
 
-# --- HELPER FUNCTIONS ---
-
-def is_absolute_url(link: str) -> bool:
-    """Check if file is an absolute URL (Policy Violation Check)."""
-    return bool(re.match(r"^https?://", link))
-
-
-def get_path_from_link(link: str) -> str:
-    """
-    Get path component from link.
-
-    Get path component from link (removing fragment identifier #anchor)
-    AND remove markdown escape characters (e.g., r'\') from link paths.
-    """
-    path_only = link.split("#")[0]
-    # FIX: Remove markdown escape character used for underscores in file names
-    # This prevents 'file\_name.md' from failing resolution.
-    return path_only.replace("\\", "")
+            Reporter.report(temp_path, broken_links_found)
 
 
-def resolve_target_path(link_path_str: str, source_file: Path) -> Path:
-    """Handle relative paths and absolute paths (relative to project root)."""
-    link_path = Path(link_path_str)
+class LinkExtractor:
+    """Extracts Markdown-style links from a given file."""
 
-    # Pathlib way to check for a root path link: Path('/').is_absolute() returns True
-    # If the path starts with a separator (e.g., /path/to/file)
-    if link_path.is_absolute():
-        # Treat as absolute link relative to the project root (CWD where main() started).
-        project_root = Path(".").resolve()
+    def __init__(self, verbose: bool = False):
+        self.verbose = verbose
 
-        # We need to strip the leading separator. Pathlib's string representation is OS specific.
-        # We assume the link uses the forward slash as the separator standard in Markdown.
-        # Path.is_absolute() is sufficient for logic, string manipulation is for sanitization.
-        path_str_cleaned = str(link_path).lstrip(
-            "/"
-        )  # Use '/' as the canonical Markdown separator
-
-        return project_root / path_str_cleaned
-    else:
-        # Relative path from source file's directory
-        return source_file.parent / link_path
-
-
-def extract_links_from_file(file: Path) -> list[str]:
-    """Extract markdown links from file."""
-    try:
-        content = file.read_text(encoding="utf-8")
-        # Match markdown links: [text](link)
-        matches = re.findall(r"\[[^\]]*\]\(([^)]+)\)", content)
-        # Return only the link part (the URL)
-        return [match for match in matches]
-    except UnicodeDecodeError:
-        print(f"Warning: Cannot decode file {file}. Skipping.", file=sys.stderr)
-        return []
-
-
-def is_valid_target(target_file: Path) -> bool:
-    """Check if the target exists OR if it is a directory containing a valid index file."""
-    if target_file.exists():
-        if target_file.is_dir():
-            # Check for implicit index files (e.g., [Doc](/dir/))
-            index_files = [target_file / "index.md", target_file / "README.md"]
-            return any(p.exists() for p in index_files)
-        # It's a file and it exists
-        return True
-
-    # Target file does not exist
-    return False
-
-
-def process_file(
-    file: Path, temp_file: Path, root_dir: Path, verbose: bool = False
-) -> bool:
-    """
-    Process individual file and return True if broken links found.
-
-    Accepts root_dir for correct relative path reporting.
-    """
-    # Report relative to the absolute root_dir passed from main()
-    try:
-        relative_path = file.relative_to(root_dir)
-    except ValueError:
-        relative_path = file
-
-    # Only print this file info when verbose is TRUE
-    if verbose:
-        print(f"Checking file: {relative_path}")
-
-    links = extract_links_from_file(file)
-    broken_links_found = False
-
-    for link in links:
-        # 1. Policy check: Skip external URLs
-        if is_absolute_url(link):
-            if verbose:
-                print(f"  SKIP External URL: {link}")
-            continue
-
-        # 2. Path Resolution
-        link_path = get_path_from_link(link)
-
-        # If the link path is empty (e.g., [Anchor](#anchor)), skip.
-        if not link_path:
-            continue
-
-        # WRC 1.01 FIX: Skip paths that look like internal fragments or simple variables (e.g., 'args')
-        # We cannot use os.path.sep. Instead, we check for both canonical (/) and Windows (\)
-        # path separators used in links, and ensure it contains a dot (e.g., file extension)
-        # to confirm it's a file path we should check.
-        if (
-            "/" not in link_path  # Check for common Unix/Markdown separator
-            and "\\" not in link_path  # Check for common Windows separator
-            and "."
-            not in link_path  # Ensure it's not a file extension like .md or .png
-        ):
-            if verbose:
-                print(f"  SKIP Internal Fragment/Variable: {link}")
-            continue
-
-        target_file = resolve_target_path(link_path, file)
-
-        # 3. Existence Check (WRC 1.00)
-        if not is_valid_target(target_file):
-            with open(temp_file, "a", encoding="utf-8") as f:
-                f.write(
-                    f"BROKEN LINK: File '{relative_path}' contains broken link: {link}\n"
-                )
-            broken_links_found = True
-        elif verbose:
-            # Robust relative path reporting for targets
-            try:
-                target_relative_path = target_file.relative_to(root_dir)
-            except ValueError:
-                # If target is outside the root_dir (e.g., absolute link pointing outside)
-                target_relative_path = target_file
-
-            print(f"  OK: {link} -> {target_relative_path}")
-
-    return broken_links_found
-
-
-def find_files(
-    search_dir: Path,
-    file_pattern: str,
-    exclude_dir_paths: List[Path],
-    exclude_file_names: List[str],
-) -> List[Path]:
-    """Get list of files, excluding those in specified directories and files."""
-    all_files = list(search_dir.rglob(file_pattern))
-
-    if not exclude_dir_paths and not exclude_file_names:
-        return all_files
-
-    filtered_files = []
-
-    for file in all_files:
-        is_excluded = False
-        resolved_file = file.resolve()
-
-        # Check 1: Directory Exclusion
-        for exclude_path in exclude_dir_paths:
-            # Check if the file itself or any of its parents is in the exclusion path
-            if exclude_path in resolved_file.parents or exclude_path == resolved_file:
-                is_excluded = True
-                break
-
-        # Check 2: File Name Exclusion
-        if not is_excluded and file.name in exclude_file_names:
-            is_excluded = True
-
-        # Check 3: .ipynb_checkpoints dirs filter
-        if not is_excluded and ".ipynb_checkpoints" in str(resolved_file):
-            is_excluded = True
-
-        if not is_excluded:
-            filtered_files.append(file)
-
-    return filtered_files
-
-
-def report_results(temp_file: Path, broken_links_found: bool) -> None:
-    """Report results and exit with appropriate code."""
-
-    if broken_links_found:
-        # --- Logic for BROKEN LINKS ---
-
-        # 1. Open and read the entire content of the temp file ONCE
-        report_content = ""
+    def extract(self, file: Path) -> List[str]:
+        """Extract all Markdown links from the file."""
         try:
-            with open(temp_file, "r", encoding="utf-8") as f:
-                report_content = f.read()
-        except FileNotFoundError:
-            print("Error: Temporary report file not found.", file=sys.stderr)
+            content = file.read_text(encoding="utf-8")
+            matches = re.findall(r"\[[^\]]*\]\(([^)]+)\)", content)
+
+            if self.verbose:
+                if matches:
+                    print(f"  Links found in {file}: {matches}")
+                else:
+                    print(f"  No links found for {file}")
+
+            return matches
+        except UnicodeDecodeError:
+            print(f"Warning: Cannot decode file {file}. Skipping.", file=sys.stderr)
+            return []
+
+
+class LinkValidator:
+    """Validates whether a link points to a valid local target."""
+
+    def __init__(self, root_dir: Path, verbose: bool = False):
+        self.root_dir = root_dir.resolve()
+        self.verbose = verbose
+
+    def is_absolute_url(self, link: str) -> bool:
+        """Check if link is an absolute HTTP/HTTPS URL."""
+        return bool(re.match(r"^https?://", link))
+
+    def get_path_from_link(self, link: str) -> str:
+        """Remove fragment and escape characters from link."""
+        path_only = link.split("#")[0]
+        return path_only.replace("\\", "")
+
+    def resolve_target_path(self, link_path_str: str, source_file: Path) -> Path:
+        """Resolve relative or absolute (project-root-relative) paths."""
+        link_path = Path(link_path_str)
+
+        if link_path.is_absolute():
+            # Treat as absolute from project root (strip leading /)
+            path_str_cleaned = str(link_path).lstrip("/")
+            return self.root_dir / path_str_cleaned
+        else:
+            return source_file.parent / link_path
+
+    def is_valid_target(self, target_file: Path) -> bool:
+        """Check if target exists or is a dir with index/README."""
+        if target_file.exists():
+            if target_file.is_dir():
+                index_files = [target_file / "index.md", target_file / "README.md"]
+                return any(p.exists() for p in index_files)
+            return True
+        return False
+
+    def validate_link(self, link: str, source_file: Path) -> Optional[str]:
+        """
+        Validate a single link.
+        Returns error message if broken, None if valid/skipped.
+        """
+        if self.is_absolute_url(link):
+            if self.verbose:
+                print(f"  SKIP External URL: {link}")
+            return None
+
+        link_path = self.get_path_from_link(link)
+        if not link_path:
+            return None
+
+        # Skip internal fragments without path separators or dots
+        if "/" not in link_path and "\\" not in link_path and "." not in link_path:
+            if self.verbose:
+                print(f"  SKIP Internal Fragment/Variable: {link}")
+            return None
+
+        target_file = self.resolve_target_path(link_path, source_file)
+
+        if not self.is_valid_target(target_file):
+            try:
+                rel_source = source_file.relative_to(self.root_dir)
+            except ValueError:
+                rel_source = source_file
+            return f"BROKEN LINK: File '{rel_source}' contains broken link: {link}\n"
+        elif self.verbose:
+            try:
+                rel_target = target_file.relative_to(self.root_dir)
+            except ValueError:
+                rel_target = target_file
+            print(f"  OK: {link} -> {rel_target}")
+
+        return None
+
+
+class FileFinder:
+    """Finds files matching a pattern while respecting exclusion rules."""
+
+    def __init__(
+        self,
+        exclude_dirs: List[str],
+        exclude_files: List[str],
+        verbose: bool = False,
+    ):
+        self.exclude_dirs = exclude_dirs
+        self.exclude_files = exclude_files
+        self.verbose = verbose
+
+    def find(self, search_dir: Path, pattern: str) -> List[Path]:
+        """Return list of matching files, excluding specified dirs/files."""
+        all_files = list(search_dir.rglob(pattern))
+        filtered_files = []
+
+        for file in all_files:
+            resolved_file = file.resolve()
+
+            # Exclude by directory
+            excluded = False
+            for excl_dir in self.exclude_dirs:
+                exclude_path = search_dir / excl_dir
+                if (
+                    exclude_path in resolved_file.parents
+                    or exclude_path == resolved_file
+                ):
+                    excluded = True
+                    break
+
+            if not excluded and file.name in self.exclude_files:
+                excluded = True
+
+            if not excluded and ".ipynb_checkpoints" in str(resolved_file):
+                excluded = True
+
+            if not excluded:
+                filtered_files.append(file)
+
+        return filtered_files
+
+
+class Reporter:
+    """Handles result reporting and exit behavior."""
+
+    @staticmethod
+    def report(temp_file: Path, broken_links_found: bool) -> None:
+        if broken_links_found:
+            try:
+                with open(temp_file, "r", encoding="utf-8") as f:
+                    report_content = f.read()
+            except FileNotFoundError:
+                print("Error: Temporary report file not found.", file=sys.stderr)
+                sys.exit(1)
+
+            count = sum(
+                1 for line in report_content.splitlines() if "BROKEN LINK" in line
+            )
+            print(f"\n❌ {count} Broken links found:")
+            print(report_content, end="")
             sys.exit(1)
-
-        # 2. Count broken links from the content
-        count = 0
-        for line in report_content.splitlines():
-            if "BROKEN LINK" in line:
-                count += 1
-
-        # 3. Print the summary and the full content
-        print(f"\n❌ {count} Broken links found:")
-        print(report_content, end="")
-
-        sys.exit(1)  # Exit with error code
-
-    else:
-        # --- Logic for NO BROKEN LINKS ---
-        print("\n✅ All links are valid!")
-        sys.exit(0)  # Exit with success code
+        else:
+            print("\n✅ All links are valid!")
+            sys.exit(0)
 
 
 if __name__ == "__main__":
