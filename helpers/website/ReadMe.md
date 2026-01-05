@@ -17,10 +17,10 @@ kernelspec:
 
 -----
 
-Owner: Vadim Rudakov, lefthand67@gmail.com
-Version: 0.3.0
-Birth: 2025-12-17
-Modified: 2026-01-05
+Owner: Vadim Rudakov, lefthand67@gmail.com  
+Version: 0.3.1  
+Birth: 2025-12-17  
+Modified: 2026-01-06
 
 -----
 
@@ -482,7 +482,7 @@ http:
 
 +++
 
-## Appendix A: Configuration Files
+## **Appendix A: Configuration Files**
 
 +++
 
@@ -496,7 +496,7 @@ Other files are active repo files, so you should inspect them directly in the re
 
 +++
 
-## Appendix B: Multi-Site Configuration (Single Pod)
+## **Appendix B: Multi-Site Configuration (Single Pod)**
 
 +++
 
