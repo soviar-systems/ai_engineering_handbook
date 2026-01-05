@@ -6,6 +6,10 @@ main() {
 
     for file in "$@"; do
         base="${file%.*}"
+        if [[ "${base}" =~ "pr/tg_channel" ]]; then
+            echo "✅ ${base}.md is not under jupytext workflow"
+            exit 0
+        fi
 
         # 1. Sync using your project's specific uv environment
         # This respects your pyproject.toml and local kernelspecs
