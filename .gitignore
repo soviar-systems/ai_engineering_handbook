@@ -256,7 +256,7 @@ layers*/
 
 # My temporary files
 *~.*~
-test*
+test*.json
 todo
 
 # vim tmp files

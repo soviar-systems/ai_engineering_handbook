@@ -4,8 +4,8 @@ repos:
 
       - id: jupytext-integrity
         name: Jupytext Sync & Integrity Check
-        entry: ./helpers/scripts/hooks/sync_and_verify.sh
-        language: script
+        entry: ./helpers/scripts/hooks/sync_and_verify.py
+        language: python
         files: \.(md|ipynb)$
         pass_filenames: true
         require_serial: true
