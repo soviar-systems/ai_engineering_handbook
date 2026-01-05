@@ -47,6 +47,8 @@ def format_string(input_string):
 
     # List of special symbols to replace with "_"
     special_symbols_to_replace = [
+        '"',
+        "'",
         ".",
         ",",
         ";",
