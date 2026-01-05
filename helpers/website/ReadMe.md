@@ -18,9 +18,9 @@ kernelspec:
 -----
 
 Owner: Vadim Rudakov, lefthand67@gmail.com
-Version: 0.2.0
+Version: 0.3.0
 Birth: 2025-12-17
-Modified: 2026-01-03
+Modified: 2026-01-05
 
 -----
 
@@ -60,7 +60,11 @@ The list of files used for configuration:
 
 +++
 
-## Step 1: Initialize MyST Locally
+## **1. Local Repo Configuration**
+
++++
+
+### 1.1 Initialize MyST Locally
 
 +++
 
@@ -73,7 +77,58 @@ Before the automation can work, your repository needs to be recognized as a MyST
 
 +++
 
-## Step 2: Configure GitHub Secrets
+### 1.2 Edit 'myst.yml'
+
++++
+
+This file is an entry point for rendering your repo to html. Here you can:
+- set the project's and site's title,
+- set the link to the github project,
+- set logo and favicon,
+- **exclude some repo's paths** for rendering.
+
++++
+
+:::{tip} `myst.yml` example
+:class: dropdown
+:open: false
+```yaml
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  id: <any_id>
+  title: <your_project_title>
+  description: <your_website_description>
+  # keywords: []
+  # authors: []
+  github: <link_to_github>
+  exclude:
+    - "RELEASE_NOTES.*"
+    - "in_progress/*"
+    - "pr/*"
+    # jupytext pairs md to ipynb
+    - "*/**/*.md"
+site:
+  template: book-theme
+  title: <your_site_title>
+  options:
+    logo: /path/to/logo.png
+    logo_text: <test_for_logo>
+    favicon: /path/to/favicon.png
+```
+:::
+
++++
+
+As you can see, we exclude all `.md` files from rendering because we use [*jupytext ipynb-md pairing*](/tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb).
+
++++
+
+## **2. Github Side Preparation**
+
++++
+
+### 2.1 Configure GitHub Secrets
 
 +++
 
@@ -88,7 +143,103 @@ To allow GitHub to deploy files to your server, you must store your credentials 
 
 +++
 
-## Step 3: Prepare the Server Environment
+### 2.2 Enable the GitHub Action
+
++++
+
+Your workflow file (`.github/workflows/deploy.yml`) automates the "Build and Sync" process.
+
+1. Push your changes to the `main` branch.
+2. Navigate to the **Actions** tab on GitHub to monitor the progress.
+3. The workflow will:
+    * Install `mystmd`.
+    * Build the Markdown into static HTML.
+    * Use `rsync` over the custom SSH port to move the HTML into `/home/server-user/website/html`.
+
++++
+
+:::{tip} ### `.github/workflows/deploy.yml` example
+:class: dropdown
+:open: false
+```yaml
+name: build-and-deploy
+
+on:
+  push:
+    # Universal trigger for team validation
+    branches: ["**"]
+    paths-ignore:
+      - 'in_progress/*'
+      - 'research/slm_from_scratch/old/*'
+      - 'RELEASE_NOTES.md'
+  # Allows you to trigger the build manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          # Fetches all history so jupytext can compare timestamps if needed
+          fetch-depth: 0
+
+      # --- 1. INTEGRITY CHECK (Enforced on all branches) ---
+      - name: Install uv (Python package manager)
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Restore project environment using uv.lock
+        run: uv sync --frozen
+
+      - name: Verify Notebook Synchronization
+        run: |
+          # Only validate notebooks with a .md pair (your source of truth)
+          for md in **/*.md; do
+            if [[ -f "${md%.md}.ipynb" ]]; then
+              echo "Testing: $md"
+              uv run jupytext --to ipynb --test "$md"
+            fi
+          done
+
+      # --- 2. DEPLOYMENT STEPS (Only runs on Main) ---
+      - name: Setup Node.js
+        if: github.ref == 'refs/heads/main'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install MyST and Build
+        if: github.ref == 'refs/heads/main'
+        run: |
+          npm install -g mystmd
+          myst build --html
+
+      - name: Deploy to Server via RSYNC
+        if: github.ref == 'refs/heads/main'
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          # -v (verbose) and -i (itemize-changes) provide good logs in
+          # GitHub Actions
+          ARGS: "-rlgoDzvc -i --delete"
+          SOURCE: "_build/html/"
+          REMOTE_HOST: ${{ secrets.SERVER_IP }}
+          REMOTE_USER: ${{ secrets.SERVER_USER }}
+          REMOTE_PORT: ${{ secrets.SERVER_SSH_PORT }}
+          TARGET: "/home/containers/website/book/html"
+```
+:::
+
++++
+
+## **3. Server Side Configuration**
+
++++
+
+### 3.1 Prepare the Server Environment
 
 +++
 
@@ -105,7 +256,12 @@ Your server needs `rsync` installed to receive the files, and the directory stru
 
 1. **Set Permissions:** Ensure your SSH user owns the directory:
     ```bash
-    sudo chown -R $USER:$USER /home/server-user/website
+    ls -l /home/server-user/website
+    ```
+
+    Set correct permissions if needed using:
+    ```bash
+    chown -R server-user:server-user /home/server-user/website
     ```
 
 1. **Place Config:**
@@ -113,7 +269,39 @@ Your server needs `rsync` installed to receive the files, and the directory stru
 
 +++
 
-## Step 4: Deploy the Podman Pod as a Systemd Service
+:::{tip} ### `nginx.conf` example
+:class: dropdown
+:open: false
+```
+server {
+    listen 80;
+    server_name localhost;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Corrected location block to prevent redirection cycles
+    location / {
+        # 1. Try serving the requested path as a file.
+        # 2. Try serving the requested path with an index.html appended (e.g., /docs/ -> /docs/index.html)
+        # 3. If neither is found, return a 404 (this stops the infinite loop)
+        try_files $uri $uri/ =404;
+    }
+
+    # Cache control for production assets
+    location ~* \.(css|js|gif|jpe?g|png|svg|json)$ {
+        expires 1y;
+        log_not_found off;
+        access_log off;
+        add_header Cache-Control "public";
+    }
+}
+```
+:::
+
++++
+
+### 3.2 Deploy the Podman Pod as a Systemd Service
 
 +++
 
@@ -123,21 +311,72 @@ See the K8S YAML manifest example for the given website here: [*play_nginx.yaml*
 
 +++
 
-### 4.1 Generate the Systemd Escape Path
+:::{tip} ### `play_nginx.yaml` example
+:class: dropdown
+:open: false
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myst-docs-pod
+  labels:
+    app: myst-docs
+spec:
+  volumes:
+    # Volume for the static HTML files (built by MyST)
+    - name: myst-html-storage
+      hostPath:
+        path: /home/<your_user>/website/html
+        type: Directory
+    # Volume for custom nginx.conf
+    - name: nginx-config
+      hostPath:
+        path: /home/<your_user>/website/nginx.conf
+        type: File
+    - name: localtime
+      hostPath:
+        path: /etc/localtime
+        type: File
+  containers:
+    - name: myst-nginx-container
+      image: docker.io/library/nginx:1.29.4
+      ports:
+        - containerPort: 80
+          hostPort: <your_port>
+          name: http
+      volumeMounts:
+        # Mount the MyST build output to the Nginx web root
+        - mountPath: /usr/share/nginx/html
+          name: myst-html-storage
+          readOnly: true
+        # Overwrite the default Nginx config with your custom one
+        - mountPath: /etc/nginx/conf.d/default.conf
+          name: nginx-config
+          readOnly: true
+        - mountPath: /etc/localtime
+          name: localtime
+          readOnly: true
+  restartPolicy: Always
+```
+:::
+
++++
+
+#### Generate the Systemd Escape Path
 
 +++
 
 Systemd requires a specifically formatted "escaped" path to reference the Kubernetes manifest file. Generate this by running:
 
 ```bash
-systemd-escape /home/server-user/website/play_nging.yaml
+systemd-escape /home/server-user/website/play_nginx.yaml
 ```
 
-*Copy the output of this command (e.g., `home-server-user-website-play-nginx.yaml`).*
+Copy the output of this command (e.g., `home-server-user-website-play-nginx.yaml`).
 
 +++
 
-### 4.2 Configure the Environment Variable
+#### Configure the Environment Variable
 
 +++
 
@@ -160,7 +399,7 @@ To make service management easier, we will store the service name in your `.bash
 
 +++
 
-### 4.3 Enable and Start the Service
+#### Enable and Start the Service
 
 +++
 
@@ -179,7 +418,7 @@ systemctl --user start $MYST_WEBSITE_SERVICE
 
 +++
 
-### 4.4 Verify the Deployment
+#### Verify the Deployment
 
 +++
 
@@ -192,7 +431,7 @@ systemctl --user status $MYST_WEBSITE_SERVICE
 +++
 
 (traefik-configuration)=
-## Step 5: Configure Traefik Routing
+### 3.3 Configure Traefik Routing
 
 +++
 
@@ -205,6 +444,11 @@ Traefik acts as the entry point, handling SSL/TLS and routing traffic from your 
     ```
 2. Ensure the `loadBalancer` URL points to the `hostPort` defined in your pod manifest (e.g., `http://<your-website>:8080`).
 
++++
+
+:::{tip} ### `website_traefik.yml` example
+:class: dropdown
+:open: false
 ```yaml
 # myst-website on nginx for traefik
 http:
@@ -223,25 +467,11 @@ http:
         servers:
           - url: "http://your_website:<port_number>"
 ```
+:::
 
 +++
 
-## Step 6: Enable the GitHub Action
-
-+++
-
-Your workflow file (`.github/workflows/deploy.yml`) automates the "Build and Sync" process.
-
-1. Push your changes to the `main` branch.
-2. Navigate to the **Actions** tab on GitHub to monitor the progress.
-3. The workflow will:
-* Install `mystmd`.
-* Build the Markdown into static HTML.
-* Use `rsync` over the custom SSH port to move the HTML into `/home/server-user/website/html`.
-
-+++
-
-## Troubleshooting Checklist
+## **Troubleshooting Checklist**
 
 +++
 
@@ -256,7 +486,11 @@ Your workflow file (`.github/workflows/deploy.yml`) automates the "Build and Syn
 
 +++
 
-See attached files for `nginx.conf`, Traefik YAML, and the Kubernetes/Podman manifest in `configs`.
+See attached files for `nginx.conf`, Traefik YAML, and the Kubernetes/Podman manifest in `helpers/website/configs/`.
+
+```{code-cell} ipython3
+ls configs
+```
 
 Other files are active repo files, so you should inspect them directly in the repo.
 
@@ -272,7 +506,7 @@ Each website's files can be maintained in different git repos, you will need to 
 
 +++
 
-### B.1 Recommended File Tree on Server
+### B.1 Recommended File Tree on the Server
 
 +++
 
@@ -298,7 +532,12 @@ $ tree --dirsfirst -L 2 ~/website/
 
 To serve multiple repositories, the Nginx configuration is updated with independent `server` blocks, each listening on a unique internal port. Each block points to a specific directory (`root`) where the respective site's HTML is mounted.
 
-```nginx
++++
+
+:::{tip} ### `nginx.conf` multi-site example
+:class: dropdown
+:open: false
+```yaml
 # Website A (Primary Site)
 server {
     listen 80;
@@ -341,6 +580,7 @@ server {
 ```
 
 Note that the `root` paths must be different so they don't serve the same files.
+:::
 
 +++
 
@@ -350,6 +590,11 @@ Note that the `root` paths must be different so they don't serve the same files.
 
 The Pod manifest is updated to define multiple `hostPath` volumes—one for each git repository's build output—and to expose unique `hostPort` values for external access.
 
++++
+
+:::{tip} ### `play_nginx.yaml` multi-site example
+:class: dropdown
+:open: false
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -396,6 +641,9 @@ spec:
           name: site-b-storage
           readOnly: true
 ```
+:::
+
++++
 
 When using this specific multi-site configuration in a single Pod, you must pay attention to how the 
 - **Host Paths**, 
@@ -441,6 +689,11 @@ Remember to create an additional dynamic file for routing the new website throug
 
 and all the occurences of the first website naming in router, services, etc. naming. No additional information for this file needed.
 
++++
+
+:::{tip} ### `website_b_traefik.yml` example
+:class: dropdown
+:open: false
 ```yaml
 # Traefik routing for the second MyST website (Website B)
 http:
@@ -462,6 +715,7 @@ http:
           # Points to the hostPort defined for Site B (8081)
           - url: "http://<your-server-ip>:8081"
 ```
+:::
 
 +++
 
