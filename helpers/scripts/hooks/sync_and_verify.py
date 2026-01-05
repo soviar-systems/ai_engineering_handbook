@@ -28,13 +28,20 @@ class GitInterface:
 
 
 class NotebookPairProcessor:
+    # Add new patterns here as needed
+    EXCLUDED_PATHS = [
+        "pr/tg_channel",
+        "architecture/",
+    ]
+
     def __init__(self, filepath: Path, git: GitInterface):
         self.filepath = filepath
         self.git = git
         self.base = filepath.with_suffix("")
 
     def should_skip(self) -> bool:
-        return "pr/tg_channel" in str(self.base)
+        base_str = str(self.base)
+        return any(pattern in base_str for pattern in self.EXCLUDED_PATHS)
 
     def process(self) -> bool:
         if self.should_skip():
