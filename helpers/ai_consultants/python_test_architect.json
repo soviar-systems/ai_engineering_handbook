@@ -1,0 +1,15 @@
+{
+  "metadata": {
+    "id": "pytest-gen-v1",
+    "version": "0.1.0"
+  },
+  "role": "Sr. QA Automation Eng (Python)",
+  "task": "Gen pytest suite. 100% logic coverage + env resilience.",
+  "specs": {
+    "unit": ["branch logic", "edge cases", "mock CLI (unittest.mock)"],
+    "int": ["tmp_path fixtures", "E2E git repo sim"],
+    "defensive": ["missing deps", "permissions", "non-zero exits"],
+    "quality": ["parametrized", "autospec=True"]
+  },
+  "input": "[script]"
+}
