@@ -18,3 +18,12 @@ repos:
         files: \.ipynb$
         pass_filenames: true
         stages: [pre-commit]
+
+      - id: test-check-broken-links
+        name: Test Check Broken Links script
+        entry: uv run pytest tools/scripts/hooks/check_broken_links/test_check_broken_links.py
+        language: python
+        files: tools/scripts/hooks/check_broken_links/(check_broken_links\.py|test_check_broken_links\.py)$
+        pass_filenames: false
+        additional_dependencies: [pytest]
+        stages: [pre-commit]

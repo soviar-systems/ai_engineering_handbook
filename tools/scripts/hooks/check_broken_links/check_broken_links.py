@@ -30,8 +30,8 @@ def main():
 class LinkCheckerCLI:
     """Main application orchestrator."""
 
-    DEFAULT_EXCLUDE_DIRS = ["in_progress", "pr", ".venv"]
-    DEFAULT_EXCLUDE_FILES = []
+    DEFAULT_EXCLUDE_DIRS = ["in_progress", ".venv"]
+    DEFAULT_EXCLUDE_FILES = [".aider.chat.history.md"]
 
     def __init__(self):
         self.parser = self._create_parser()

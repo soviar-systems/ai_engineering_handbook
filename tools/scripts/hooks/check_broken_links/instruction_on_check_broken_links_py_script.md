@@ -79,8 +79,8 @@ You can update the default exclusions directly in the `LinkCheckerCLI` class wit
 
 ```python
 class LinkCheckerCLI:
-    DEFAULT_EXCLUDE_DIRS = ["in_progress", "pr", ".venv"]
-    DEFAULT_EXCLUDE_FILES = []
+    DEFAULT_EXCLUDE_DIRS = ["in_progress", ".venv"]
+    DEFAULT_EXCLUDE_FILES = [".aider.chat.history.md"]
 ```
 
 +++
