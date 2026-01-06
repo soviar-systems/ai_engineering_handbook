@@ -17,7 +17,7 @@ kernelspec:
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
 Document: nbdiff: "git diff" for Jupyter Notebooks Version Control (v0.3.0, 2025-12-28)  
-Reviewer: [slm_system_consultant](/helpers/ai_consultants/slm_system_consultant.json) v0.12.0  
+Reviewer: [slm_system_consultant](/tools/prompt_helpers/slm_system_consultant.json) v0.12.0  
 2025-12-28  
 
 ---

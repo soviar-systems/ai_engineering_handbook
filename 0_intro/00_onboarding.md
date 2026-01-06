@@ -31,7 +31,7 @@ Last Modified: 2026-01-05
 +++
 
 1. (in development) Configure JupyterLab for working with the files in this repo.
-1. [*Setup Jupytext and git hooks*](/tools/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb)
+1. [*Setup Jupytext and git hooks*](/tools/docs/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb)
 
 +++
 
@@ -47,4 +47,4 @@ Last Modified: 2026-01-05
 
 +++
 
-1. [*"How to host a website (or even many websites) from the git repo ipynb files"*](/helpers/website/ReadMe.ipynb)
+1. [*"How to host a website (or even many websites) from the git repo ipynb files"*](/tools/docs/website/mystmd_website_deployment_instruction.ipynb)

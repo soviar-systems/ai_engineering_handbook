@@ -37,7 +37,7 @@ This is not a prompt repository. It addresses the **full stack** required to dep
 This is a **practitioner-focused engineering repository**, not academic literature. Therefore:
 
 - **No bibliographic references** are included.
-- **Provenance is encoded** in system prompts (e.g., [`slm_system_consultant.json`](./helpers/ai_consultants/slm_system_consultant.json)), which capture reasoning patterns used during generation. These prompts are open for inspection and serve as traceable “concept lineage” artifacts.
+- **Provenance is encoded** in system prompts (e.g., [`slm_system_consultant.json`](/tools/prompt_helpers/slm_system_consultant.json)), which capture reasoning patterns used during generation. These prompts are open for inspection and serve as traceable “concept lineage” artifacts.
 - **I do not claim originality of ideas**—only of the **generation methodology**, **validation protocol**, and **structural design**.
 
 > I am the architect of the knowledge-generation system. The ideas flow from public technical discourse; the synthesis, cross-validation, and organization are my engineered contribution.
@@ -108,8 +108,8 @@ The primary initiative within this directory is the **bottom-up construction of 
 
 All content follows a reproducible LM pipeline, mirroring software CI/CD:
 
-1. **Idea elaboration:** [slm_system_consultant.json](/helpers/ai_consultants/slm_system_consultant.json) explores and stress-tests concepts
-2. **Draft generation**: [handbook_consultant.json](/helpers/ai_consultants/handbook_consultant.json) produces articles, diagrams, and code
+1. **Idea elaboration:** [slm_system_consultant.json](/tools/prompt_helpers/slm_system_consultant.json) explores and stress-tests concepts
+2. **Draft generation**: [handbook_consultant.json](/tools/prompt_helpers/handbook_consultant.json) produces articles, diagrams, and code
 3. **Cross-validation:** Multiple models critique and refine outputs
 4. **Version control:** Every file is tracked, diffed, and tested like source code
 5. **Human review:** Final sanity check before promotion to published directories

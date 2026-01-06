@@ -38,7 +38,7 @@ Last Modified: 2026-01-04
 To enable clean Git diffs, prevent notebook metadata noise, and provide high-fidelity Markdown inputs for SLM/LLM assistants (e.g., Aider) while preserving execution state.
 
 :::{attention}
-It is supposed that you have already configured your environment for this repository with the [*environment configuration scripts*](/helpers/scripts/environment_setup_scripts/).
+It is supposed that you have already configured the central JupyterLab server (configuration scripts are in progress phase).
 
 * **Why:** The central JupyterLab server keeps your workspace stable. Even if a specific project's dependencies break, your "IDE" remains functional.
 :::
@@ -358,7 +358,7 @@ The script operates in three distinct stages for every changed file passed to it
     :::{attention} No silent staging
     The hook does not stage files that were not staged before commit started. This is intentional.
     
-    Read more in [*"Pre-Commit Hooks and Staging: Instruction for Developers"*](/tools/git/pre_commit_hooks_and_staging_instruction_for_devel.md)
+    Read more in [*"Pre-Commit Hooks and Staging: Instruction for Developers"*](/tools/docs/git/pre_commit_hooks_and_staging_instruction_for_devel.md)
     :::
 4. **The Integrity Check (The "Gatekeeper"):** This is the most critical step. The script inspects the actual **Git Index** (`git diff --cached`) to verify that both files are staged together.
 * **If the pair is incomplete:** The hook fails and prints a specific `git add` command.
