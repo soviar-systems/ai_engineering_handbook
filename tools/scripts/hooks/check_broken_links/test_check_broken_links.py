@@ -2,9 +2,10 @@
 import subprocess
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
-from check_broken_links import FileFinder, LinkExtractor, LinkValidator
+from check_broken_links import FileFinder, LinkCheckerCLI, LinkExtractor, LinkValidator
 
 
 @pytest.fixture
@@ -324,3 +325,105 @@ def test_nested_directory_without_index_fails(tmp_path):
     )
     assert result.returncode == 1  # should fail
     assert "docs/" in result.stdout
+
+
+# ---- UI/Logic: Ensuring "1 file" is displayed correctly for single-file inputs. -------
+
+
+def test_single_file_output_formatting(tmp_path, capsys):
+    """
+    Combines logic tests to verify that exactly one file argument
+    results in the correct '1 file' display string.
+
+    UI/Logic: Ensuring "1 file" is displayed correctly for
+    single-file inputs.
+    """
+    # Setup: Create a dummy file
+    test_file = tmp_path / "target_file.ipynb"
+    test_file.write_text("[link](valid.ipynb)", encoding="utf-8")
+
+    # Mocking environment and CLI arguments
+    with (
+        patch.object(LinkCheckerCLI, "get_git_root_dir", return_value=tmp_path),
+        patch("check_broken_links.Reporter.report"),
+        patch("sys.argv", ["check_broken_links.py", str(test_file)]),
+    ):
+        app = LinkCheckerCLI()
+        app.run()
+
+        captured = capsys.readouterr()
+
+        # This one assertion covers the specific ternary logic in the script:
+        # effective_pattern = "file" if len(files) == 1 and files[0].is_file() else pattern
+        expected_line = f"Found 1 file file(s) in {test_file}"
+        assert expected_line in captured.out
+
+
+def test_detect_broken_link_in_single_file(tmp_path, capsys):
+    """
+    Negative test: Verifies that the extraction and validation
+    engine correctly identifies a missing local file.
+
+    Functional/Negative: Ensuring broken links are actually detected.
+    """
+    source_file = tmp_path / "source.ipynb"
+    source_file.write_text("Check this: [broken](missing.ipynb)", encoding="utf-8")
+
+    with (
+        patch.object(LinkCheckerCLI, "get_git_root_dir", return_value=tmp_path),
+        patch("sys.argv", ["check_broken_links.py", str(source_file)]),
+        pytest.raises(SystemExit) as excinfo,
+    ):
+        app = LinkCheckerCLI()
+        app.run()
+
+    captured = capsys.readouterr()
+
+    # Verify functional failure (exit code 1) and error reporting
+    assert excinfo.value.code == 1
+    assert "❌ 1 Broken links found:" in captured.out
+    assert (
+        "BROKEN LINK: File 'source.ipynb' contains broken link: missing.ipynb"
+        in captured.out
+    )
+
+
+# -----Infrastructure: Ensuring the script correctly identifies (or safely ignores) the Git repository environment.----------
+
+
+def test_get_git_root_dir_success():
+    """
+    Test that get_git_root_dir correctly parses the output of
+    'git rev-parse --show-toplevel'.
+    """
+    app = LinkCheckerCLI()
+    mock_path = "/mock/project/root"
+
+    # Mock subprocess.run to simulate a successful git command
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(stdout=f"{mock_path}\n", returncode=0)
+
+        root = app.get_git_root_dir()
+
+        # Verify the command called was correct
+        mock_run.assert_called_once_with(
+            ["git", "rev-parse", "--show-toplevel"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        assert root == Path(mock_path)
+
+
+def test_get_git_root_dir_failure():
+    """
+    Test that get_git_root_dir returns None when git is not
+    available or the directory is not a git repo.
+    """
+    app = LinkCheckerCLI()
+
+    # Simulate a subprocess error (e.g., git command not found)
+    with patch("subprocess.run", side_effect=FileNotFoundError):
+        root = app.get_git_root_dir()
+        assert root is None

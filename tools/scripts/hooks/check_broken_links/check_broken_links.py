@@ -31,7 +31,7 @@ class LinkCheckerCLI:
     """Main application orchestrator."""
 
     DEFAULT_EXCLUDE_DIRS = ["in_progress", "pr", ".venv"]
-    DEFAULT_EXCLUDE_FILES = [".aider.chat.history.ipynb"]
+    DEFAULT_EXCLUDE_FILES = []
 
     def __init__(self):
         self.parser = self._create_parser()

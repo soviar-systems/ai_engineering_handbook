@@ -4,7 +4,7 @@ repos:
 
       - id: jupytext-integrity
         name: Jupytext Sync & Integrity Check
-        entry: ./tools/scripts/hooks/sync_and_verify.py
+        entry: ./tools/scripts/hooks/sync_and_verify/sync_and_verify.py
         language: python
         files: \.(md|ipynb)$
         pass_filenames: true
@@ -13,7 +13,7 @@ repos:
 
       - id: check-broken-links
         name: Check Broken Links in ipynb Files
-        entry: ./tools/scripts/check_broken_links.py
+        entry: ./tools/scripts/hooks/check_broken_links/check_broken_links.py
         language: python
         files: \.ipynb$
         pass_filenames: true
