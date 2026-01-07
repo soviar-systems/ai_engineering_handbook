@@ -28,6 +28,9 @@ project:
     HLS: High-Level Synthesis
     HPC: High-Performance Computing
     KV: Key-Value Cache
+    LLM: Large Language Model
+    LM: Language Model
+    SLM: Small Language Model
     SRAM: Shared Memory
     TPU: Tensor Processing Unit
     WMMA: Warp-level matrix operations
@@ -49,6 +52,3 @@ site:
     logo_text: Brought by SovIAR
     favicon: pr/Gemini_Generated_Image_ai_systems_engineer_small.png
     analytics_google: G-MB8TS19TGL
-  # options:
-  #   favicon: favicon.ico
-  #   logo: site_logo.png
