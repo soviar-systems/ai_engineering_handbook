@@ -15,23 +15,34 @@ def main(argv: Optional[List[str]] = None):
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # --- Sync Subcommand ---
-    sync_parser = subparsers.add_parser("sync", help="Sync or Verify Jupytext pairs.")
-    sync_parser.add_argument(
-        "--check",
-        action="store_true",
-        help="CI Mode: Verify integrity without modifying files.",
+    # --- Jupytext Sync Subcommand ---
+    jupytext_sync_parser = subparsers.add_parser(
+        "jupytext-sync", help="Sync or Verify Jupytext pairs."
     )
-    sync_parser.add_argument(
+    jupytext_sync_parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Run jupytext --test to verify content synchronization.",
+    )
+    jupytext_sync_parser.add_argument(
         "paths",
         nargs="*",
         default=["."],
         help="Files or directories to process (default: root).",
     )
 
-    # --- Links Subcommand ---
+    # --- Jupytext Verify Pair Subcommand (Add this section) ---
+    # Used by pre-commit to check Git staging/index states
+    jupytext_verify_pair_parser = subparsers.add_parser(
+        "jupytext-verify-pair", help="Verify Jupytext pair integrity."
+    )
+    jupytext_verify_pair_parser.add_argument(
+        "paths", nargs="*", default=["."], help="Files to verify."
+    )
+
+    # --- Check Broken Markdown Links Subcommand ---
     links_parser = subparsers.add_parser(
-        "links", help="Check for broken Markdown links."
+        "check-broken-links", help="Check for broken Markdown links."
     )
     links_parser.add_argument(
         "paths",
@@ -45,15 +56,15 @@ def main(argv: Optional[List[str]] = None):
     # Routing Logic
     success = False
 
-    if args.command == "sync":
-        if args.check:
-            # CI Mode: Verify
-            success = jupytext_verify_pair.run(args.paths)
-        else:
-            # Local Mode: Fix/Sync
-            success = jupytext_sync.run(args.paths)
+    if args.command == "jupytext-sync":
+        # if --test is passed, run 'test' mode
+        # If not passed, run 'sync' (fix) mode
+        success = jupytext_sync.run(args.paths, test_only=args.test)
 
-    elif args.command == "links":
+    elif args.command == "jupytext-verify-pair":
+        success = jupytext_verify_pair.run(args.paths)
+
+    elif args.command == "check-broken-links":
         success = check_broken_links.run(args.paths)
 
     # Exit Code Propagation

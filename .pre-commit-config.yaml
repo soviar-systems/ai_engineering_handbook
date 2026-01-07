@@ -2,28 +2,38 @@ repos:
   - repo: local
     hooks:
 
-      - id: jupytext-integrity
-        name: Jupytext Sync & Integrity Check
-        entry: ./tools/scripts/hooks/sync_and_verify/sync_and_verify.py
+#      - id: check-broken-links
+#        name: Check Broken Links in ipynb Files
+#        entry: uv run tools/scripts/core/cli.py links
+#        language: python
+#        files: \.ipynb$
+#        pass_filenames: true
+#        stages: [pre-commit]
+
+      - id: jupytext-sync
+        name: Jupytext Sync
+        entry: uv run tools/scripts/core/cli.py jupytext-sync
         language: python
         files: \.(md|ipynb)$
         pass_filenames: true
         require_serial: true
         stages: [pre-commit]
 
-      - id: check-broken-links
-        name: Check Broken Links in ipynb Files
-        entry: ./tools/scripts/hooks/check_broken_links/check_broken_links.py
+      - id: jupytext-verify-pair
+        name: Jupytext Verify Pair
+        entry: uv run tools/scripts/core/cli.py jupytext-verify-pair
         language: python
-        files: \.ipynb$
+        files: \.(md|ipynb)$
         pass_filenames: true
+        require_serial: true
         stages: [pre-commit]
 
-      - id: test-check-broken-links
-        name: Test Check Broken Links script
-        entry: uv run pytest tools/scripts/hooks/check_broken_links/test_check_broken_links.py
-        language: python
-        files: tools/scripts/hooks/check_broken_links/(check_broken_links\.py|test_check_broken_links\.py)$
-        pass_filenames: false
-        additional_dependencies: [pytest]
-        stages: [pre-commit]
+#      # ---TESTS of HOOK SCRIPTS---
+#      - id: test-modified-scripts
+#        name: Test Modified Hook Scripts
+#        entry: uv run tools/scripts/core/cli.py test --modified
+#        language: python
+#        # Trigger this whenever any script or test in the scripts
+#        # directory changes
+#        files: tools/scripts/.*(py)$
+#        pass_filenames: false

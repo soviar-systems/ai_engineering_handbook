@@ -13,3 +13,7 @@ dependencies = [
 
 [tool.jupytext]
 formats = "ipynb,md:myst"
+
+[tool.coverage.run]
+source = ["tools"]
+parallel = true

@@ -66,11 +66,11 @@
         "ml": "numpy, pandas, matplotlib, scikit-learn, PyTorch/Tensorflow",
         "deep_learning": "CV/LLMs from scratch",
         "ai": "advanced prompt engineering",
-        "devops": "advanced GNU/Linux, git, podman",
+        "devops": "Bash, git, pre-commit, podman, GitHub actions",
         "db": "PostgreSQL",
         "ai_tooling": "aider, ollama, HuggingFace, Python",
         "documentation": [
-          "JupyterLab>=4", "MyST", "mystmd", "LaTex", "Markdown", "jupytext"
+          "JupyterLab>=4", "MyST", "LaTex", "Markdown", "jupytext"
         ]
       }
     }

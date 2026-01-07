@@ -4,8 +4,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from tools.scripts.configs.paths import EXCLUDED_DIRS, is_ignored
+
 # Standardized import assuming execution from project root via 'uv run pytest'
 from tools.scripts.lib.git_service.git_service import GitService
+
 
 class TestGitService:
     # --- 1. Root Discovery Success ---
@@ -40,11 +43,11 @@ class TestGitService:
         with patch.object(GitService, "__init__", return_value=None):
             gs = GitService()
             gs.root_dir = Path("/mock/repo")
-            
+
             # Case: File is tracked
             mock_run.return_value = MagicMock(returncode=0)
             assert gs.is_in_index(Path("test.ipynb")) is True
-            
+
             # Case: File is untracked
             mock_run.return_value = MagicMock(returncode=1)
             assert gs.is_in_index(Path("untracked.txt")) is False
@@ -52,7 +55,7 @@ class TestGitService:
     # --- 5. Staging Logic & Error Mapping (Hardened) ---
     @patch("subprocess.run", autospec=True)
     def test_has_unstaged_changes_logic(self, mock_run):
-        """Verify explicit mapping of exit codes: 0=clean, 1=dirty, 128=error."""
+        """Verify explicit mapping of exit codes: 0=clean, 1=dirty, 128=ignore."""
         with patch.object(GitService, "__init__", return_value=None):
             gs = GitService()
             gs.root_dir = Path("/mock/repo")
@@ -65,8 +68,12 @@ class TestGitService:
             mock_run.return_value = MagicMock(returncode=1)
             assert gs.has_unstaged_changes(Path("f.py")) is True
 
-            # Case: Critical Git Error (128) - Grounded DevOps fix
+            # Case: Ambiguous/Missing from tree (128) - Now returns False
             mock_run.return_value = MagicMock(returncode=128, stderr="fatal error")
+            assert gs.has_unstaged_changes(Path("f.py")) is False
+
+            # Case: Actual Critical Error (e.g., 129)
+            mock_run.return_value = MagicMock(returncode=129, stderr="critical")
             with pytest.raises(RuntimeError, match="Git diff failed"):
                 gs.has_unstaged_changes(Path("f.py"))
 
@@ -81,9 +88,9 @@ class TestGitService:
             gs = GitService()
             gs.root_dir = Path("/mock/repo")
             path_with_spaces = Path("my docs/note book.ipynb")
-            
+
             result = gs.run_cmd(["git", "status", str(path_with_spaces)])
-            
+
             assert result.stdout == "output"
             assert result.stderr == "error_msg"
             # Verify the path with spaces was passed correctly to the shell
@@ -97,8 +104,19 @@ class TestGitService:
         with patch.object(GitService, "__init__", return_value=None):
             gs = GitService()
             gs.root_dir = Path("/mock/repo")
-            
+
             result = gs.run_cmd(["git", "status"])
             # Should return a simulated CompletedProcess with 127 (command not found)
             assert result.returncode == 127
             assert "Executable not found" in result.stderr
+
+    def test_config_import_integrity(self):
+        """Verify GitService-related components correctly import path configurations."""
+
+        # Verify standard exclusions are present
+        assert ".git" in EXCLUDED_DIRS
+        assert ".venv" in EXCLUDED_DIRS
+
+        # Test logic on sample paths
+        assert is_ignored("node_modules/test.js") is True
+        assert is_ignored("src/analysis.ipynb") is False
