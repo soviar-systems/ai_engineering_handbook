@@ -8,9 +8,10 @@ on:
   pull_request:
     paths:
       - 'tools/scripts/hooks/check_broken_links/check_broken_links.py'
+      - 'tools/scripts/hooks/check_broken_links/test_check_broken_links.py'
 
 jobs:
-  test:
+  test-check-broken-links:
     runs-on: ubuntu-latest
 
     steps:

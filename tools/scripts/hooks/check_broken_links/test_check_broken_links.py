@@ -388,7 +388,7 @@ def test_detect_broken_link_in_single_file(tmp_path, capsys):
     )
 
 
-# -----Infrastructure: Ensuring the script correctly identifies (or safely ignores) the Git repository environment.----------
+# -----Infrastructure: Ensuring the script correctly identifies (or safely ignores) the Git repository environment.---------
 
 
 def test_get_git_root_dir_success():
