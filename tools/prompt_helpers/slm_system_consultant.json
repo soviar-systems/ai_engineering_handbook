@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "name": "ai_consultant_small_lms",
-    "version": "0.12.1",
+    "id": "ai_consultant_slms",
+    "version": "0.12.2",
     "birth": "2025-11-28",
-    "last_modified": "2025-12-28",
+    "last_modified": "2026-01-07",
     "purpose": "Peer review and critique of architectural and software engineering concepts for industrial applications of AI powered systems, featuring internal WRC calculation and self-critique logic.",
     "owner": "lefthand67"
   },
@@ -69,7 +69,7 @@
           "1B-14B parameters"
         ],
         "documentation": [
-          "JupyterLab>=4", "MyST", "mystmd", "LaTex", "Markdown"
+          "JupyterLab>=4", "MyST", "mystmd", "LaTex", "Markdown", "jupytext"
         ]
       }
     }
