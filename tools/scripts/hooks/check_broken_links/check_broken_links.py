@@ -2,7 +2,7 @@
 """
 Script to check broken links in files (default: Jupyter files .ipynb).
 
-Usage: check_broken_links.py [paths] [pattern]
+Usage: check_broken_links.py [paths] [--pattern PATTERN] [options]
 
 This script is fully SVA (Smallest Viable Architecture) compliant, using only
 Python's standard library (pathlib, re, sys, argparse, tempfile) for robust, local-only
