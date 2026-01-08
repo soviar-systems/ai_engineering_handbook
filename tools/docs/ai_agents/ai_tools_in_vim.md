@@ -13,20 +13,28 @@ kernelspec:
 
 # VIM in AI era: Configure vim for AI-driven tasks.
 
++++
+
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.3.2  
+Version: 0.3.3  
 Birth: 2025-11-17  
-Modified: 2025-12-31
+Modified: 2026-01-08
 
 ---
+
++++
 
 The best way to set up Vim for the AI era is by adopting a hybrid strategy: use a **Vim plugin** for rapid, in-buffer tasks (like completion and single-file edits) and a **CLI tool** for agentic, multi-file refactoring that leverages the power and stability of the terminal.
 
 This guide focuses on integrating **Ollama** as your local model host with the **`gergap/vim-ollama`** plugin and the **`Aider`** CLI tool.
 
++++
+
 ## 1. Optimized AI Tooling Strategy
+
++++
 
 | Tool | Type | Core Function | Best For | VS Code Analog |
 | :--- | :--- | :--- | :--- | :--- |
@@ -36,7 +44,11 @@ This guide focuses on integrating **Ollama** as your local model host with the *
 
 > It is highly advised not to use `llama.vim` and `vim-ollama` simultaneously if you enable FIM in both. The reason is that both plugins aggressively try to intercept the same keystrokes and display logic for inline completion, leading to unpredictable behavior and resource conflicts. If you must use `llama.vim` for its optimized FIM, ensure you explicitly disable FIM completion within your `vim-ollama` configuration (`llama.vim` configuration is not covered in this handbook).
 
++++
+
 ## 2. Setting Up the Foundation: Ollama
+
++++
 
 Install ollama and pull models:
 
@@ -48,7 +60,11 @@ Install ollama and pull models:
     ollama pull gemma3n:e4b        # good for chat
     ```
 
++++
+
 ## 3. Setting Up Aider
+
++++
 
 Now let's configure the CLI agent. [Read documentation](https://aider.chat/docs/) for more details.
 
@@ -82,11 +98,19 @@ Now let's configure the CLI agent. [Read documentation](https://aider.chat/docs/
     > aider --gui --model ollama_chat/qwen2.5-coder:14B
     > ```
 
++++
+
 ## 4. Configuring `gergap/vim-ollama`
+
++++
 
 This plugin provides the essential in-editor AI functionality for code completion, refactoring, and general chat.
 
++++
+
 ### 4.1 Plugin Installation (using `vim-plug`)
+
++++
 
 Add the following to your `~/.vimrc`:
 
@@ -107,7 +131,11 @@ After installation, run in VIM:
 
 General settings like context lines or model selection should be placed in this dedicated file.
 
++++
+
 ### 4.2 Initial Plugin Settings
+
++++
 
 To prevent potential errors upon startup, define the `g:ollama_debug` variable, which handles the plugin's internal logging level, to any integer value.
 
@@ -122,11 +150,19 @@ let g:ollama_debug = 0
 > - E121: Undefined variable: g:ollama_debug, and
 > - E116: Invalid arguments for function ollama#logger#PythonLogLevel(g:ollama_debug).
 
++++
+
 ### 4.3 Configure Key Mappings
+
++++
 
 This section covers core commands (Normal/Visual Mode) and suggestion handling (Insert Mode). Read the official documentation for advanced options: `:help vim-ollama-maps`.
 
++++
+
 #### Define a `<Leader>` key
+
++++
 
 Define your leader key (if you haven't already, **`<Space>`** is recommended):
 
@@ -135,7 +171,11 @@ Define your leader key (if you haven't already, **`<Space>`** is recommended):
 let mapleader = " "        " Set Leader key to Spacebar
 ```
 
++++
+
 #### Custom Mappings for Chat, Review, and Edit (Normal and Visual Modes)
+
++++
 
 We will **disable default mappings** to prevent conflicts, then define custom ones (you can choose one keys).
 
@@ -161,7 +201,11 @@ vnoremap <Leader>e :OllamaEdit
 vnoremap <Leader>or :OllamaReview
 ```
 
++++
+
 #### Suggestion Mappings (Insert Mode)
+
++++
 
 **Freeing the `<Tab>` Key**
 
@@ -197,18 +241,30 @@ inoremap <C-]> <Plug>(ollama-dismiss)
 
 By using these official `<Plug>` mappings, you are calling the internal plugin functions directly, guaranteeing stability and avoiding the unreliable terminal transmission of `<M-Right>` or `<M-C-Right>`.
 
++++
+
 ## 5. Workflow and Usage
+
++++
 
 The key to the Vim AI workflow is knowing when to use the plugin and when to use the CLI tool:
 
++++
+
 ### 5.1 In-Vim Task (Plugin): Refactoring a Function
+
++++
 
 1.  **Visual Select:** Use **`V`** or **`v`** to select the function block you want to change.
 2.  **Execute Edit:** Press **`<Space>e`**.
 3.  **Prompt:** A prompt appears. Type your instruction, e.g., `"Rewrite this function to use list comprehension for performance."` Press `<CR>' (`Enter`).
 4.  **Diff Review:** The plugin opens a split with the AI's proposed changes, allowing you to use `vimdiff` commands to accept or reject line-by-line.
 
++++
+
 ### 5.2 Terminal Task (Aider): Multi-File Feature Implementation
+
++++
 
 1.  **Open Terminal:** Use a terminal split in Vim or switch to a terminal (e.g., in tmux/Konsole).
 2.  **Run Aider:** Start the agent: `aider --model ollama_chat/qwen2.5-coder:3b`.
@@ -217,3 +273,17 @@ The key to the Vim AI workflow is knowing when to use the plugin and when to use
 5.  **Vim Reload:** Aider modifies the files on disk. Vim detects the change and prompts you to **reload** the buffers. You approve, and the changes appear instantly.
 
 This hybrid approach gives you the **stability and speed of native Vim** and the **agentic power of modern AI tools**.
+
++++
+
+#### Bonus: Web Aider
+
++++
+
+You can run aider in your browser:
+
+```bash
+$ uv tool install aider-chat[browser]
+
+$ aider --browser
+```
