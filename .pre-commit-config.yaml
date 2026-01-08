@@ -28,12 +28,12 @@ repos:
 #        require_serial: true
 #        stages: [pre-commit]
 
-#      # ---TESTS of HOOK SCRIPTS---
-#      - id: test-modified-scripts
-#        name: Test Modified Hook Scripts
-#        entry: uv run tools/scripts/core/cli.py test --modified
-#        language: python
-#        # Trigger this whenever any script or test in the scripts
-#        # directory changes
-#        files: tools/scripts/.*(py)$
-#        pass_filenames: false
+      # ---TESTS of HOOK SCRIPTS---
+      # Trigger this whenever any script or test in the scripts
+      # directory changes
+      - id: test-check-broken-links
+        name: Test Check Broken Links script
+        entry: uv run pytest tools/tests/test_check_broken_links.py
+        language: python
+        files: tools/(scripts|tests)/.*check_broken_links.py$
+        pass_filenames: false

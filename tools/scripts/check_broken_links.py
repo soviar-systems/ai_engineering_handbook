@@ -20,6 +20,9 @@ import tempfile
 from pathlib import Path
 from typing import List, Optional
 
+# Import DEFAULT_EXCLUDE_DIRS and DEFAULT_EXCLUDE_FILES from paths.py
+from tools.scripts.paths import DEFAULT_EXCLUDE_DIRS, DEFAULT_EXCLUDE_FILES
+
 
 def main():
     """Entry point."""
@@ -29,9 +32,6 @@ def main():
 
 class LinkCheckerCLI:
     """Main application orchestrator."""
-
-    DEFAULT_EXCLUDE_DIRS = ["in_progress", ".venv"]
-    DEFAULT_EXCLUDE_FILES = [".aider.chat.history.md"]
 
     def __init__(self):
         self.parser = self._create_parser()
@@ -48,7 +48,7 @@ Default pattern: *.ipynb""",
         parser.add_argument(
             "paths",
             nargs="*",  # This allows 0 or more files/dirs
-            default=["."],
+            # see input_paths var for default
             help="Directory to search or a single file path (default: current directory)",
         )
         parser.add_argument(
@@ -59,13 +59,13 @@ Default pattern: *.ipynb""",
         parser.add_argument(
             "--exclude-dirs",
             nargs="*",
-            default=self.DEFAULT_EXCLUDE_DIRS,
+            default=DEFAULT_EXCLUDE_DIRS,
             help="Directory names to exclude from the check",
         )
         parser.add_argument(
             "--exclude-files",
             nargs="*",
-            default=self.DEFAULT_EXCLUDE_FILES,
+            default=DEFAULT_EXCLUDE_FILES,
             help="Specific file names to exclude from the check",
         )
         parser.add_argument(
@@ -109,8 +109,14 @@ Default pattern: *.ipynb""",
         files = []
         file_finder = FileFinder(args.exclude_dirs, args.exclude_files, verbose)
 
-        input_paths = args.paths if args.paths else ["."]
+        is_current_dir = False
+        if args.paths:
+            input_paths = args.paths
+        else:
+            is_current_dir = True
+            input_paths = [str(Path.cwd())]
 
+        resolved_paths_list = list()
         for p in input_paths:
             # Resolve input path relative to current working directory (not root_dir!)
             path_obj = Path(p)
@@ -118,6 +124,7 @@ Default pattern: *.ipynb""",
                 resolved = path_obj.resolve()
             else:
                 resolved = (Path.cwd() / path_obj).resolve()
+            resolved_paths_list.append(resolved)
 
             if resolved.is_file():
                 files.append(resolved)
@@ -131,11 +138,18 @@ Default pattern: *.ipynb""",
             sys.exit(0)
 
         effective_pattern = (
-            "file" if len(files) == 1 and files[0].is_file() else pattern
+            "file" if len(files) == 1 and files[0].is_file() else "files"
         )
-        search_display = input_paths[0] if input_paths != ["."] else "."
 
-        print(f"Found {len(files)} {effective_pattern} file(s) in {search_display}")
+        print(f"Found {len(files)} {effective_pattern} in:", end="")
+        if is_current_dir:
+            print(f" {input_paths[0].split('/')[-1]}/")
+        elif len(input_paths) == 1:
+            print(f" {input_paths[0]}")
+        else:
+            for p in input_paths:
+                print(f"\n- {p}", end="")
+            print()
 
         link_extractor = LinkExtractor(verbose=verbose)
         link_validator = LinkValidator(root_dir=root_dir, verbose=verbose)
@@ -197,7 +211,7 @@ class LinkValidator:
     def get_path_from_link(self, link: str) -> str:
         """Remove fragment and escape characters from link."""
         path_only = link.split("#")[0]
-        return path_only.replace("\\", "")
+        return path_only
 
     def resolve_target_path(self, link_path_str: str, source_file: Path) -> Path:
         """Resolve relative or absolute (project-root-relative) paths."""
@@ -206,9 +220,9 @@ class LinkValidator:
         if link_path.is_absolute():
             # Treat as absolute from project root (strip leading /)
             path_str_cleaned = str(link_path).lstrip("/")
-            return self.root_dir / path_str_cleaned
+            return (self.root_dir / path_str_cleaned).resolve()
         else:
-            return source_file.parent / link_path
+            return (source_file.parent / link_path).resolve()
 
     def is_valid_target(self, target_file: Path) -> bool:
         """Check if target exists or is a dir with index/README."""
@@ -237,7 +251,7 @@ class LinkValidator:
             return None
 
         # Skip internal fragments without path separators or dots
-        if "/" not in link_path and "\\" not in link_path and "." not in link_path:
+        if "/" not in link_path and "." not in link_path:
             if self.verbose:
                 print(f"  SKIP Internal Fragment/Variable: {link}")
             return None
