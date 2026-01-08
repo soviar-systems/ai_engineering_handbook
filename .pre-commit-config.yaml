@@ -3,12 +3,12 @@ repos:
     hooks:
 
       - id: check-broken-links
-        name: Check Broken Links in ipynb Files
+        name: Check Broken Links
         entry: uv run tools/scripts/check_broken_links.py
         language: python
         files: \.ipynb$
         pass_filenames: true
-        stages: [pre-commit]
+        stages: [pre-commit, manual]
 
 #      - id: jupytext-sync
 #        name: Jupytext Sync
@@ -35,5 +35,5 @@ repos:
         name: Test Check Broken Links script
         entry: uv run pytest tools/tests/test_check_broken_links.py
         language: python
-        files: tools/(scripts|tests)/.*check_broken_links.py$
+        files: ^tools/(scripts/check_broken_links\.py|scripts/paths\.py|tests/test_check_broken_links\.py)$
         pass_filenames: false

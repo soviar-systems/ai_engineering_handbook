@@ -18,11 +18,15 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.0  
+Version: 0.2.0  
 Birth: 2026-01-04  
-Last Modified: 2026-01-04
+Last Modified: 2026-01-08
 
 ---
+
++++
+
+## Philosophy
 
 +++
 
@@ -32,7 +36,7 @@ Git’s staging area reflects the developer’s intentional choice about what be
 
 +++
 
-## ✅ What you *can* do
+### ✅ What you *can* do
 
 +++
 
@@ -42,7 +46,7 @@ Git’s staging area reflects the developer’s intentional choice about what be
 
 +++
 
-## ❌ What you *must not* do
+### ❌ What you *must not* do
 
 +++
 
@@ -52,7 +56,7 @@ Git’s staging area reflects the developer’s intentional choice about what be
 
 +++
 
-## ⚠️ Why it matters
+### ⚠️ Why it matters
 
 +++
 
@@ -62,7 +66,7 @@ Git’s staging area reflects the developer’s intentional choice about what be
 
 +++
 
-## 🔧 Better alternatives
+### 🔧 Better alternatives
 
 +++
 
@@ -75,3 +79,24 @@ Git’s staging area reflects the developer’s intentional choice about what be
 > **Golden Rule**:  
 > A `pre-commit` hook may *refine* what’s staged—but never *expand* it.  
 > Preserve user agency. Respect the index.
+
++++
+
+## Installation
+
++++
+
+```bash
+$ uv add pre-commit
+$ uv run pre-commit install
+```
+
++++
+
+## Testing Config
+
++++
+
+```bash
+$ uv run pre-commit [<hook_id>] [--all-files]
+```
