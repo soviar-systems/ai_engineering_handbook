@@ -2,31 +2,31 @@ repos:
   - repo: local
     hooks:
 
-#      - id: check-broken-links
-#        name: Check Broken Links in ipynb Files
-#        entry: uv run tools/scripts/core/cli.py links
+      - id: check-broken-links
+        name: Check Broken Links in ipynb Files
+        entry: uv run tools/scripts/check_broken_links.py
+        language: python
+        files: \.ipynb$
+        pass_filenames: true
+        stages: [pre-commit]
+
+#      - id: jupytext-sync
+#        name: Jupytext Sync
+#        entry: uv run tools/scripts/core/cli.py jupytext-sync
 #        language: python
-#        files: \.ipynb$
+#        files: \.(md|ipynb)$
 #        pass_filenames: true
+#        require_serial: true
 #        stages: [pre-commit]
-
-      - id: jupytext-sync
-        name: Jupytext Sync
-        entry: uv run tools/scripts/core/cli.py jupytext-sync
-        language: python
-        files: \.(md|ipynb)$
-        pass_filenames: true
-        require_serial: true
-        stages: [pre-commit]
-
-      - id: jupytext-verify-pair
-        name: Jupytext Verify Pair
-        entry: uv run tools/scripts/core/cli.py jupytext-verify-pair
-        language: python
-        files: \.(md|ipynb)$
-        pass_filenames: true
-        require_serial: true
-        stages: [pre-commit]
+#
+#      - id: jupytext-verify-pair
+#        name: Jupytext Verify Pair
+#        entry: uv run tools/scripts/core/cli.py jupytext-verify-pair
+#        language: python
+#        files: \.(md|ipynb)$
+#        pass_filenames: true
+#        require_serial: true
+#        stages: [pre-commit]
 
 #      # ---TESTS of HOOK SCRIPTS---
 #      - id: test-modified-scripts

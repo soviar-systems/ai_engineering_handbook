@@ -4,17 +4,6 @@ on:
   push:
     # Universal trigger for team validation
     branches: ["**"]
-    paths:
-      - '*/**/*.ipynb'
-    paths-ignore:
-      - 'in_progress/*'
-      - 'research/slm_from_scratch/old/*'
-      - 'RELEASE_NOTES.md'
-  pull_request:
-    # Universal trigger for team validation
-    branches: ["**"]
-    paths:
-      - '**/*/*.ipynb'
     paths-ignore:
       - 'in_progress/*'
       - 'research/slm_from_scratch/old/*'
