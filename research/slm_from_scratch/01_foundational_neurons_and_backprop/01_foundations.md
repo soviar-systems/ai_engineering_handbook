@@ -1,5 +1,6 @@
 ---
 jupytext:
+  formats: ipynb,md:myst
   text_representation:
     extension: .md
     format_name: myst
@@ -11,18 +12,6 @@ kernelspec:
   language: python
 ---
 
----
-abbreviations:
-  ABI: Application Binary Interface
-  API: Application Programming Interface
-  BLAS: Basic Linear Algebra Subprograms
-  FLOPS: Floating Point Operations per Second
-  GEMM: GEneral Matrix-Matrix multiplication
-  GEMV: General Matrix-Vector multiply, a special case of GEMM
-  HPC: High-Performance Computing
-  SRAM: Shared Memory
-  WMMA: Warp-level matrix operations
----
 # PHASE 1: FOUNDATIONAL NEURONS & BACKPROP
 
 ```{code-cell} ipython3
@@ -137,8 +126,6 @@ This cannot model nonlinear decision boundaries—hence the necessity of nonline
 
 ```{hint} What is “eff” in $\mathbf{W}_{\text{eff}}$?*
 :class: dropdown
-:open: true
-
 “eff” stands for **effective**. It denotes that the product of multiple weight matrices collapses to a **single equivalent linear transformation** when all activations are linear. So $\mathbf{W}_{\text{eff}} = \mathbf{W}_L \cdots \mathbf{W}_1$ is the *effective weight matrix* of the entire network.
 ```
 
@@ -289,8 +276,6 @@ This path ensures you understand what PyTorch’s `.backward()` *actually does* 
 
 ```{hint}
 :class: dropdown
-:open: true
-
 **What is *micrograd*?**
 
 *micrograd* is an **educational autodifferentiation engine** written in pure Python. It implements:
@@ -354,8 +339,6 @@ x \xrightarrow{\theta, b} z = \theta x + b \xrightarrow{\text{tanh}} a = \tanh(z
 
 ```{tip} “Loss” vs. “Cost”
 :class: dropdown
-:open: true
-
 - **Loss function** $\ell(a, y)$: defined **per sample** (e.g., $\frac{1}{2}(a-y)^2$).
 - **Cost function** $J(\theta)$: the **aggregate** over a batch or dataset (e.g., mean of $\ell$ over $B$ samples).
 
@@ -637,8 +620,6 @@ print(fin_diff_grad - dL_dtheta)
 
 :::{attention} Critical Clarification: What *is* {math}`L_+`?
 :class: dropdown
-:open: true
-
 > **“Is {math}`L_+` just {math}`\frac{1}{2}(a_+ - y)^2`?”**
 
 **Yes—but only because**:

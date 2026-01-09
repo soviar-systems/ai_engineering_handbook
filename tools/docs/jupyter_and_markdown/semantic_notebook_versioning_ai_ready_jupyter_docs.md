@@ -152,7 +152,6 @@ When you open a notebook inside this folder using the central JupyterLab, Jupyte
 
 :::{tip} Manual Alternative
 :class: dropdown
-:open: false
 If you ever need to do this operation manually (which is discouraged by our philosophy), in JupyterLab session open the Command Palette (`Ctrl+Shift+C`) and select:
 
 ```
@@ -200,7 +199,6 @@ By using these `.gitattributes`, you are telling Git to **ignore the noise** and
 
 :::{tip} ### Real-World Example: The Data Science Team Review
 :class: dropdown
-:open: false
 Imagine you are a Data Engineer working on a project called `data_cleaning.ipynb`. You change one line of code: you change `drop_na()` to `fillna(0)`.
 
 | Aspect | Without Git Attributes | With Git Attributes |
@@ -248,7 +246,7 @@ To automate file synchronization we created a `.pre-commit-config.yaml` in the r
 Run in your terminal:
 
 ```bash
-uv run pre-commit install
+$ uv run pre-commit install
 ``` 
 
 Expected output is:
@@ -272,7 +270,6 @@ The workflow employs a specific local script to manage the relationship between 
 
 :::{seealso} `.pre-commit-config.yaml` example
 :class: dropdown
-:open: false 
 ```yaml
 repos:
   - repo: local
@@ -294,7 +291,6 @@ repos:
 
 :::{seealso} `/helpers/scripts/hooks/sync_and_verify.sh` example
 :class: dropdown
-:open: false
 ```bash
 #!/bin/bash
 set -euo pipefail
@@ -382,7 +378,6 @@ Because Aider only edits the `.md` file, the `.ipynb` file remains "unstaged" ev
 
 :::{caution} Standard Pre-Commit-Hook Problem
 :class: dropdown
-:open: false
 There is another problem with the  [*official `jupytext` hook*](https://github.com/mwouts/jupytext/blob/main/docs/using-pre-commit.md) from their GitHub repository. 
 
 It often fails because it runs in an isolated environment that ignores your local settings and can "hallucinate" formatting differences (like `kernelspec` indentation) that don't actually exist on your disk failing to pass the commit. The conflict becomes unresolvable. Reasons for this behavior are:
@@ -416,7 +411,6 @@ Here you can see the real example how the hook works:
 
 :::{hint} Try to commit only `.md` file
 :class: dropdown
-:open: false
 Let's change the `.md` file in the external editor like vim, add it to index without its `.ipynb` pair, and try to commit.
 
 Edit the file in vim, stage, and check status:
@@ -497,7 +491,6 @@ Both files passed the hook only in pair. Success.
 
 :::{important} Script Execution Permissions
 :class: dropdown
-:open: false
 If you encounter a `Permission denied` error when running the commit, it is likely because the hook script lost its executable bit. Fix it by running from the repo's root directory:
 
 ```bash
@@ -507,7 +500,6 @@ chmod +x helpers/scripts/hooks/sync_and_verify.sh
 
 :::{caution} Troubleshooting the "Stash-Restore" Loop
 :class: dropdown
-:open: false
 If `pre-commit` fails, it automatically restores your workspace to the state it was in *before* you typed `git commit`.
 
 **The Symptom:** You see the hook "Pass" or "Fail," but the `.ipynb` file on your disk doesn't seem to have changed.
@@ -520,7 +512,6 @@ If `pre-commit` fails, it automatically restores your workspace to the state it 
 
 :::{tip} UV Environment Issues
 :class: dropdown
-:open: false
 The hook relies on `uv` being available in your shell path. If the hook fails with `uv: command not found`:
 
 * Ensure you have run `uv sync` in the project root.
@@ -540,7 +531,6 @@ To prevent out-of-sync pushes from bypassing local hooks, add this check to your
 
 :::{seealso} `.github/workflows/deploy.yml` example
 :class: dropdown
-:open: false
 ```yaml
 name: build-and-deploy
 
@@ -716,7 +706,6 @@ For smooth work with Aider you need to configure two files:
 
 :::{note} Alternative
 :class: dropdown
-:class: false
 You can inject a system prompt while working with Aider, like this one:
 
 > *"After editing any .md file, always run 'jupytext --sync <file>' to ensure the paired notebook is updated."*
@@ -756,7 +745,6 @@ The commit workflow is now fully hands-off:
 
 :::{important} aider auto-commits off
 :class: dropdown
-:open: false
 Aider’s Auto-Commits fail in our workflow because when it edits `notebook.md`, it:
 
 1. Modifies the `.md` file.

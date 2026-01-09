@@ -13,26 +13,40 @@ kernelspec:
 
 # GEMM: The Engineering Standard
 
++++
+
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.1  
+Version: 0.2.2  
 Birth: 2025-12-27  
-Last Modified: 2025-12-31
+Last Modified: 2026-01-09
 
 ---
+
++++
 
 This article defines **GEMM** as the foundational standard for HPC and Deep Learning. It contrasts GEMM’s high arithmetic intensity with memory-bound operations like GEMV, explaining how **tiling** and **Tensor Cores** optimize throughput. It highlights the crucial distinction between **Interface, API, and ABI** to ensure software portability. Finally, it maps GEMM to AI architectures, noting its role in Transformers and the efficiency of libraries like cuBLAS.
 
 > INFO: *The handbook is optimized for environments supporting Mermaid.js diagrams. For static export, rasterized versions are available in Appendix C.*
 
-## 1. Mathematical Foundation
++++
+
+## **1. Mathematical Foundation**
+
++++
 
 In High-Performance Computing (**HPC**), we use the **GEMM, General Matrix-Matrix Multiplication** routine defined by the **BLAS (Basic Linear Algebra Subprograms)** standard.
 
++++
+
 ### GEMV vs. GEMM: Understanding Dot Products and Pairwise Dot Products
 
++++
+
 #### GEMV: The Dot Product
+
++++
 
 In linear algebra and deep learning, a **dot product** (GEMV, General Matrix-Vector multiply) is an operation between two vectors of the same dimension, resulting in a single scalar:
 
@@ -40,9 +54,13 @@ In linear algebra and deep learning, a **dot product** (GEMV, General Matrix-Vec
 a \cdot b = \sum_{i=1}^{n} a_i b_i
 ```
 
-When we speak of **matrix multiplication** {math}`C = AB`, we are indeed performing "pairwise dot products" between the **rows** of {math}`A`and the **columns** of {math}`B`. 
+When we speak of **matrix multiplication** {math}`C = AB`, we are indeed performing "pairwise dot products" between the **rows** of {math}`A`and the **columns** of {math}`B`.
+
++++
 
 #### The Hadamard Distinction
+
++++
 
 It is critical to distinguish this from the **Hadamard Product** {math}`A \odot B`, which is an element-wise multiplication between two matrices of the identical shape.
 
@@ -70,7 +88,11 @@ print(A @ B)
  [43 50]]
 ```
 
++++
+
 #### GEMM: Pairwise Dot Product
+
++++
 
 GEMM, matrix multiplication, is a foundational linear algebra operation defined as:
 
@@ -125,7 +147,11 @@ See:
 
 1. [*Аржанцев И.В. Лекция 6. Операции над матрицами*](https://teach-in.ru/lecture/2018-09-29-Arzhantsev)
 
++++
+
 ### The Hardware-Native Residual: Mapping GEMM to Skip-Connections
+
++++
 
 In modern Deep Learning, the GEMM formula $C = \alpha \cdot A \cdot B + \beta \cdot C$ is not just an abstract algebraic expression; it is the physical implementation of a **Residual Block**. 
 
@@ -133,7 +159,11 @@ As an engineer, you must recognize that "Skip Connections" (Residuals) are not m
 
 **"Skip Connections" (Residuals)** are often visualized as an "extra" path in neural network diagrams, but in high-performance engineering, they are simply an exploitation of the **$\beta \cdot C$** term in the GEMM formula.
 
++++
+
 #### The Equation Mapping
+
++++
 
 When we set $\alpha=1$ and $\beta=1$, the GEMM operation performs exactly what is required for a ResNet or Transformer sub-layer:
 
@@ -144,7 +174,11 @@ When we set $\alpha=1$ and $\beta=1$, the GEMM operation performs exactly what i
 | **Skip Connection** | $\beta \cdot C$ | The "Identity" path. By setting $\beta=1$, the hardware uses the existing values in the output buffer $C$ as the shortcut. |
 | **Fused Output** | $C_{new}$ | The final result: $\text{Layer}(X) + \text{Shortcut}$, computed without an extra memory pass. |
 
++++
+
 #### Why This Matters: The Memory Wall
+
++++
 
 Treating the "Addition" step as a separate operation (e.g., in a naive PyTorch custom kernel) introduces a massive performance penalty due to unnecessary Global Memory (VRAM) round-trips.
 
@@ -160,13 +194,21 @@ Treating the "Addition" step as a separate operation (e.g., in a naive PyTorch c
 
 > **Engineering Insight:** Skip connections are computationally "free" not because the math is simple, but because the BLAS standard already reserved a slot for the "accumulator" matrix $C$. Utilizing the $\beta$ parameter is the primary way to bypass the GPU memory wall.
 
-## 2. BLAS:  The Hierarchy of Efficiency
++++
+
+## **2. BLAS:  The Hierarchy of Efficiency**
+
++++
 
 **BLAS** (Basic Linear Algebra Subprograms) is a **specification** of routines like vector addition, dot products, and matrix multiplication, that other numerical libraries build on.
 
 Multiple libraries implement this spec (e.g., OpenBLAS, Intel MKL, cuBLAS, rocBLAS), often with heavy architecture-specific optimization.
 
++++
+
 ### Arithmetic Intensity
+
++++
 
 BLAS organizes operations into three levels based on **Arithmetic Intensity** — the ratio of math operations to memory access.
 
@@ -176,7 +218,11 @@ BLAS organizes operations into three levels based on **Arithmetic Intensity** �
 | **Level 2** | **GEMV** | {math}`O(N^2)`| Memory Bandwidth | RNN cell updates or single-batch inference. |
 | **Level 3** | **GEMM** | {math}`O(N^3)`| **Compute Bound** | Batched Linear Layers (`nn.Linear`). |
 
++++
+
 ### The Data Reuse Principle
+
++++
 
 While both GEMM and GEMV are {math}`O(N^3)` and {math}`O(N^2)` operations respectively, the key difference for GPUs is **arithmetic intensity**, not just big‑O complexity. GEMM performs {math}`O(N)` more floating‑point operations per element loaded than GEMV, so it does far more **work per byte moved** from memory.
 
@@ -184,7 +230,11 @@ On an NVIDIA A100, large, well‑tiled GEMM kernels can sustain more than 90% of
 
 GEMM repeatedly reuses matrix tiles that reside in registers and on‑chip caches, while GEMV has very little data reuse and spends most of its time waiting on DRAM bandwidth rather than executing arithmetic instructions.
 
++++
+
 ### Hardware Acceleration: Tensor Cores & Tiling
+
++++
 
 Modern AI hardware is built specifically to accelerate GEMM using specialized circuits called **Tensor Cores**. These circuits perform a {math}`4 \times 4 \times 4` matrix-multiplication-accumulation in a single clock cycle.
 
@@ -241,7 +291,11 @@ graph TD
     style FragC fill:#c8e6c9,stroke:#2e7d32
 ```
 
++++
+
 ### The Precision-Performance Tradeoff
+
++++
 
 When leveraging Tensor Cores for GEMM acceleration, engineers face a fundamental tradeoff between numerical precision and computational throughput. Modern hardware achieves its peak performance using reduced-precision formats:
 
@@ -279,7 +333,11 @@ scaler.update()
 
 > **Practical Insight**: In Llama-3 training, BF16 mixed precision achieved 2.8x faster throughput than FP32 with <0.1% final accuracy degradation, while pure FP16 training failed to converge due to gradient underflow.
 
++++
+
 ### Role in the ecosystem
+
++++
 
 - Packages like LINPACK and LAPACK are written on top of BLAS so that vendors can optimize just the BLAS layer for each architecture.
 - In GPU land, cuBLAS or rocBLAS are simply BLAS implementations targeting GPUs, giving you a familiar API but different underlying kernels.
@@ -290,11 +348,19 @@ See:
 3. [*BLAS operations introduction*](https://rocm.docs.amd.com/projects/rocBLAS/en/develop/conceptual/blas-operations-intro.html) - AMD
 4. [*Basic Linear Algebra Subprograms*](https://help.imsl.com/fortran/6.0/math/default.htm?turl=basiclinearalgebrasubprograms.htm) - help.imsl.com
 
-## 3. Interface vs. API vs. ABI
++++
+
+## **3. Interface vs. API vs. ABI**
+
++++
 
 In high-performance computing (HPC) and AI engineering, these three layers represent different levels of "binding." Understanding the distinction is critical for ensuring software portability and avoiding runtime memory corruption.
 
++++
+
 ### The Interface: The Semantic Contract
+
++++
 
 An **Interface** is a formal, high-level specification of **capabilities**. It defines *what* a module can do without providing any machine code or implementation details.
 
@@ -302,7 +368,11 @@ An **Interface** is a formal, high-level specification of **capabilities**. It d
 * **Technological Context:** In the BLAS ecosystem, the interface is a formal document. It specifies that a routine named `SGEMM` must perform a Single-precision General Matrix Multiply {math}`C = \alpha AB + \beta C`.
 * **Key Attribute:** It is **language-agnostic** and **hardware-agnostic**. It exists as a "Standard" that vendors agree to follow.
 
++++
+
 ### The API: The Source-Level Contract
+
++++
 
 An **Application Programming Interface (API)** is the **source-code representation** of an interface. It defines the syntax a developer uses to interact with the underlying logic.
 
@@ -312,7 +382,11 @@ An **Application Programming Interface (API)** is the **source-code representati
     * **cuBLAS API:** The CUDA-based API that allows a C++ developer to allocate GPU memory and launch GEMM kernels.
 * **Binding Time:** **Compile-time.** If the API changes (e.g., a function signature is modified), the source code will fail to compile.
 
++++
+
 ### The ABI: The Binary-Level Contract
+
++++
 
 An **Application Binary Interface (ABI)** is the **low-level, machine-code representation** of the interface. It defines how two compiled binary entities (e.g., your compiled Python interpreter and a shared `.so` or `.dll` library) interact at runtime.
 
@@ -331,7 +405,11 @@ If you compile your application against **Intel MKL** but attempt to swap it at 
 
 Runtime / Link-time.
 
++++
+
 ### Historical Lessons: The Interface is the Asset
+
++++
 
 The BLAS standard (originated c. 1972 by Lawson and Hanson at NASA JPL) proved that well-designed software interfaces can outlive the hardware they were written for.
 
@@ -345,7 +423,11 @@ When they tried to move to newer computers (like the ES EVM), they realized they
 
 **The Takeaway:** As an AI engineer, do not build monolithic, machine-specific code. Use **Interfaces** like BLAS to ensure your logic survives the next generation of AI accelerators.
 
++++
+
 ### Summary
+
++++
 
 | Layer | Medium | Interaction Level | Binding Time | Example in AI Stack |
 | :--- | :--- | :--- | :--- | :--- |
@@ -360,15 +442,27 @@ A practical rule of thumb:
 Rule for Linux/data workflow: 
 - Treat ABI as the "wire protocol" for binaries—test with `nm`, `readelf -s`, and static linking early to avoid runtime surprises in multi-lib setups.
 
-## 4. Decision Framework for AI Architects
++++
+
+## **4. Decision Framework for AI Architects**
+
++++
 
 Why GEMM Matters in Deep Learning & CUDA
 
++++
+
 ### Evolving GEMM Implementations
+
++++
 
 Beyond traditional dense matrix multiplication, modern AI systems demand specialized GEMM variants optimized for emerging workloads and hardware architectures.
 
++++
+
 #### Sparse GEMM for Large Language Models
+
++++
 
 As model sizes grow, sparsity becomes critical for efficiency:
 - **Structured Sparsity**: NVIDIA's Sparse Tensor Cores accelerate 2:4 sparsity patterns (2 non-zero values per 4 elements), providing 2x throughput for pruned models
@@ -382,14 +476,22 @@ attention = attention.masked_fill(mask == 0, -1e9)  # Apply sparsity mask
 output = torch.sparse.mm(attention.softmax(dim=-1), V)  # Second sparse GEMM
 ```
 
++++
+
 #### Quantization-Aware GEMM
+
++++
 
 Edge deployment requires extreme efficiency:
 - **INT8 GEMM**: 4x memory reduction vs FP32, with symmetric/asymmetric quantization
 - **INT4/INT2 Kernels**: Emerging on NVIDIA H100 and Apple Neural Engine, enabling 10B+ parameter models on mobile devices
 - **Per-Channel Quantization**: Maintains accuracy by scaling factors per weight channel rather than globally
 
++++
+
 #### Cross-Architecture Implementations
+
++++
 
 Different hardware vendors optimize GEMM uniquely:
 
@@ -400,22 +502,29 @@ Different hardware vendors optimize GEMM uniquely:
 | **Google TPUs** | MXU (Matrix Multiply Unit) | Bfloat16 native support, systolic array design |
 | **Apple Neural Engine** | AMX (Apple Matrix Coprocessor) | INT8/INT4, on-device sparsity exploitation |
 
-:::{glossary} Glossary 
+:::{glossary}
 WMMA
 : Warp-level operations is a programming model where 32 threads (a **warp**) collaborate to perform matrix operations. See also "The Core Challenge: Speaking the GPU’s Language" in ["NVIDIA GPU Optimization: Accelerating AI with CUDA, Nsight, and Systems Thinking"](/1_execution/optimization_nvidia_gpu_cuda_nsight_and_systems_thinking.md).
-
 : WMMA instructions allow a warp to compute a small matrix-multiply-accumulate (e.g., `16×16×16`) in registers without explicit shared memory coordination, enabling direct Tensor Core utilization.
 :::
 
 > **Industry Trend**: The MLPerf 4.0 benchmarks show that specialized GEMM implementations now drive >90% of performance differences between competing AI accelerators, making vendor-specific optimization critical for production systems.
 
++++
+
 ### Core Computational Unit
+
++++
 
 Every dense layer in a neural network is a GEMM:
 - Forward pass: {math}`\text{output} = XW^T` → GEMM with {math}`A = X`, {math}`B = W^T`
 - Backward pass: {math}`\frac{\partial L}{\partial W} = \frac{\partial L}{\partial Z}^T X` → another GEMM
 
++++
+
 ### Hardware Optimization Target
+
++++
 
 - Modern GPUs (like your RTX 4090) dedicate >80% of their die area to **tensor cores** and **GEMM-optimized CUDA cores**
 - Libraries like cuBLAS and CUTLASS provide highly tuned GEMM kernels that exploit:
@@ -477,35 +586,59 @@ gemm_op({m, n, k},      // Problem dimensions
 
 > **Key Insight**: cuBLAS provides a simple, black-box API ideal for production deployment, while CUTLASS exposes fine-grained control over tiling, pipeline stages, and memory layout—essential for research and fused kernel development. The choice depends on whether you prioritize development speed (cuBLAS) or peak performance (CUTLASS).
 
++++
+
 ### Mapping Theory to Production Frameworks
+
++++
 
 In frameworks like **PyTorch**, your high-level code maps directly to these kernels:
 1.  **Linear Layers:** `nn.Linear(in, out)` compiles to a **GEMM** operation under the hood.
 2.  **Transformers:** The Self-Attention mechanism uses **three GEMM operations** {math}`Q, K, V` per attention head. The complexity is {math}`O(N^2 \cdot d`, where {math}`N` is sequence length and {math}`d` is embedding dimension.
 3.  **Batched Operations:** We use **Batched GEMM** to process multiple sequences or attention heads in parallel, maximizing hardware utilization.
 
-## 5. Pitfalls and Technical Debt
++++
+
+## **5. Pitfalls and Technical Debt**
+
++++
 
 In production AI engineering, the gap between a "working" GEMM call and an "optimal" one represents a significant source of hidden technical debt.
 
++++
+
 ### A. The "Black-Box" Performance Trap
+
++++
 
 * **The Shape Bottleneck:** Calling GEMM with "unfriendly" dimensions (e.g., non-multiples of 8 or 16) can disqualify the kernel from using Tensor Cores, leading to a **10x performance cliff**. 
 * **Memory Layout Mismatch:** BLAS's Fortran heritage defaults to **Column-Major** storage. Passing **Row-Major** data (standard in C++/Python) without explicit transposition flags (`CUBLAS_OP_T`) forces the library to perform internal copies, doubling memory overhead.
 * **Underutilization:** For Small Language Models (SLMs) or small batch sizes, GEMM becomes memory-bound (approaching GEMV performance). Relying on heavy GEMM kernels for small workloads introduces unnecessary latency.
 
++++
+
 ### B. The ABI and Dependency Quagmire
+
++++
 
 * **The Fortran Leak:** Because BLAS is a 50-year-old standard, it uses "Pass-by-Reference" and specific naming conventions (e.g., trailing underscores like `sgemm_`). 
 * **Silent ABI Mismatches:** Swapping implementations (e.g., OpenBLAS for Intel MKL) at runtime via `LD_LIBRARY_PATH` can cause segmentation faults or—worse—silent data corruption if the calling conventions for complex numbers or character arguments differ.
 * **Distribution Drift:** A Docker image built with `apt-get install libopenblas-dev` may perform 30% slower than one linked against a hand-tuned `mkl` or vendor-specific library, creating "phantom" performance regressions between dev and prod environments.
 
++++
+
 ### C. Architectural and Vendor Lock-in
+
++++
 
 * **Proprietary Shims:** Heavy reliance on `cuBLAS` specific extensions (like `cublasLt`) makes porting to AMD (ROCm) or TPUs a massive refactoring task.
 * **Abstraction Debt:** Treating `torch.matmul` as a magic box prevents engineers from identifying when **Kernel Fusion** (combining GEMM + Activation) is needed to save VRAM bandwidth.
 
++++
+
 ### Comparison: Implementation Debt vs. Efficiency
+
++++
 
 | Pitfall | Impact | Detection Method | Mitigation |
 | :--- | :--- | :--- | :--- |
@@ -514,43 +647,71 @@ In production AI engineering, the gap between a "working" GEMM call and an "opti
 | **Memory Bound GEMM** | High latency, low TFLOPS | Roofline Analysis | Increase batch size or use fused kernels. |
 | **Vendor Lock-in** | Multi-cloud portability | Source code grep for `cublas` | Use CUTLASS or Triton for portability. |
 
++++
+
 ### Key Insight for AI Architects
+
++++
 
 Understanding GEMM allows you to transcend "black-box" engineering. By analyzing the arithmetic intensity, you can:
 
 1.  **Predict VRAM requirements:** {math}`\text{Bytes moved} \approx mn + mk + kn1.
 2.  **Optimize Transformers:** Recognize that **Grouped-Query Attention (GQA)** is essentially a strategy to move from memory-bound GEMV-like operations toward compute-bound GEMM efficiency during inference.
 
-## Appendix A. GEMM Production Readiness Checklist (PR Review Guide)
++++
+
+## **Appendix A. GEMM Production Readiness Checklist (PR Review Guide)**
+
++++
 
 As a peer reviewer, use this checklist to audit any code involving linear algebra kernels or model definitions. These points target specific technical debt before it reaches the master branch.
 
++++
+
 #### 1. Geometric & Hardware Alignment
+
++++
 
 - [ ] **Alignment:** Are the matrix dimensions ($M, N, K$) multiples of 8 (for FP16) or 16 (for INT8)? 
     * *Why:* Misalignment disqualifies kernels from Tensor Core acceleration.
 - [ ] **Padding:** If shapes are dynamic (e.g., variable sequence lengths), is there a strategy for padding to the nearest 64-bit boundary?
 
++++
+
 #### 2. Memory & Layout Efficiency
+
++++
 
 - [ ] **Majorness/Stride:** Does the layout (Row-Major vs. Column-Major) match the library's expectation? 
     * *Check:* Verify if `CUBLAS_OP_T` or `CUBLAS_OP_N` flags are used correctly to avoid redundant memory copies.
 - [ ] **Fusion Potential:** Is there a GEMM followed immediately by an activation (ReLU) or Bias addition?
     * *Action:* Recommend using a fused kernel (e.g., `cublasLtMatmul`) to save a VRAM round-trip.
 
++++
+
 #### 3. Numerical Stability & Precision
+
++++
 
 - [ ] **Accumulator Precision:** Is the code performing $FP16 \times FP16$ multiplication with an **FP32** accumulator?
 - [ ] **Range Check:** For FP16 inference, is there a safeguard or scaling factor to prevent overflow ($>65,504$)?
 
++++
+
 #### 4. Dependency & ABI Integrity
+
++++
 
 - [ ] **Implementation & Linking Strategy:** Is the library linked statically or via a specific RPATH? 
     * *Check:* Avoid relying on `/usr/lib/libblas.so` which may point to unoptimized generic implementations.
     * *Check:* Verify Fortran-to-C calling conventions (e.g., hidden length arguments for strings or 1-based indexing) for the specific BLAS provider to prevent silent memory corruption.
 - [ ] **Thread Safety:** If calling from multi-threaded C++, is the BLAS handle (e.g., `cublasHandle_t`) thread-local?
 
-## Appendix B. Decision Tree: Kernel Selection
++++
+
+## **Appendix B. Decision Tree: Kernel Selection**
+
++++
 
 Use this logic to determine when to stick to standard libraries versus implementing custom fused kernels.
 
@@ -575,6 +736,10 @@ flowchart TD
     CustomNeeded -- No --> LibCall
 ```
 
-## Appendix C. BLAS Hardware Implementation Graph
++++
 
-![](/1_execution/images/blas_hardware_implementation.png)
+## **Appendix C. BLAS Hardware Implementation Graph**
+
++++
+
+![](./images/blas_hardware_implementation.png)

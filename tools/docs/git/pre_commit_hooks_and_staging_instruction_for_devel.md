@@ -6,9 +6,9 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.18.1
 kernelspec:
-  name: python3
-  display_name: Python 3 (ipykernel)
-  language: python
+  name: bash
+  display_name: Bash
+  language: bash
 ---
 
 # Pre-Commit Hooks and Staging: Instruction for Developers
@@ -18,15 +18,15 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.0  
+Version: 0.2.1  
 Birth: 2026-01-04  
-Last Modified: 2026-01-08
+Last Modified: 2026-01-09
 
 ---
 
 +++
 
-## Philosophy
+## **1. Philosophy**
 
 +++
 
@@ -82,18 +82,28 @@ Git’s staging area reflects the developer’s intentional choice about what be
 
 +++
 
-## Installation
+## **2. Installation and Configuration**
 
 +++
+
+We use a Python package `pre-commit` for handling local hooks (see ["ADR 0002: Adoption of the Pre-commit Framework"](/architecture/adr/adr_0002_adoption_of_pre_commit_framework.md)).
+
+The `.pre-commit-config.yaml` file is already configured in the repo, so the developer needs to install pre-commit and install the config to `.git/hooks` repo: 
 
 ```bash
 $ uv add pre-commit
 $ uv run pre-commit install
 ```
 
+```{code-cell}
+ls ../../../.git/hooks | grep 'pre-commit$'
+```
+
+Run the [repo configuration script](/tools/scripts/configure_repo.sh), it will automatically handle this.
+
 +++
 
-## Testing Config
+## **3. Testing**
 
 +++
 

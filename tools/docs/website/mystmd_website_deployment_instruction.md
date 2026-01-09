@@ -15,14 +15,14 @@ kernelspec:
 
 +++
 
------
+---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.3.1  
+Version: 0.4.0  
 Birth: 2025-12-17  
-Modified: 2026-01-06
+Modified: 2026-01-09
 
------
+---
 
 +++
 
@@ -91,7 +91,6 @@ This file is an entry point for rendering your repo to html. Here you can:
 
 :::{tip} `myst.yml` example
 :class: dropdown
-:open: false
 ```yaml
 # See docs at: https://mystmd.org/guide/frontmatter
 version: 1
@@ -158,9 +157,8 @@ Your workflow file (`.github/workflows/deploy.yml`) automates the "Build and Syn
 
 +++
 
-:::{tip} ### `.github/workflows/deploy.yml` example
+:::{tip} `.github/workflows/deploy.yml` example
 :class: dropdown
-:open: false
 ```yaml
 name: build-and-deploy
 
@@ -269,9 +267,8 @@ Your server needs `rsync` installed to receive the files, and the directory stru
 
 +++
 
-:::{tip} ### `nginx.conf` example
+:::{tip} `nginx.conf` example
 :class: dropdown
-:open: false
 ```
 server {
     listen 80;
@@ -311,9 +308,8 @@ See the K8S YAML manifest example for the given website here: [*play_nginx.yaml*
 
 +++
 
-:::{tip} ### `play_nginx.yaml` example
+:::{tip} `play_nginx.yaml` example
 :class: dropdown
-:open: false
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -446,9 +442,8 @@ Traefik acts as the entry point, handling SSL/TLS and routing traffic from your 
 
 +++
 
-:::{tip} ### `website_traefik.yml` example
+:::{tip} `website_traefik.yml` example
 :class: dropdown
-:open: false
 ```yaml
 # myst-website on nginx for traefik
 http:
@@ -471,7 +466,7 @@ http:
 
 +++
 
-## **Troubleshooting Checklist**
+### Troubleshooting Checklist
 
 +++
 
@@ -479,6 +474,31 @@ http:
 * **Permission Denied:** Check that the GitHub SSH user has write access to the target folder on the server.
 * **No Site Config:** Ensure `myst.yml` is present in the root of your GitHub repository.
 * **Traefik Issues:** Check the Traefik dashboard to ensure the service is "Healthy" and the URL matches the host's listener.
+
++++
+
+## **4. Local Testing**
+
++++
+
+```bash
+$ uv tool install mystmd
+$ uv run myst start
+```
+
+`uv tool install` ensures that the installed mystmd is not the project dependency but the global tool.
+
+You do not need to initialize the myst project because you are testing the existing project - the repo's `myst.yml`.
+
+That's it: now you have a locally running website of the repo with all the files in your working directory, i.e. all the local files you have in the directory, including unstaged and in `.gitignore`. Here you can test all the changes you have made to the website or your notebooks.
+
+When testing is done, you can safely remove `_build` directory with the rendered files.
+
+You can also remove mystmd, optionally:
+
+```bash
+$ uv tool uninstall mystmd
+```
 
 +++
 
@@ -534,9 +554,8 @@ To serve multiple repositories, the Nginx configuration is updated with independ
 
 +++
 
-:::{tip} ### `nginx.conf` multi-site example
+:::{tip} `nginx.conf` multi-site example
 :class: dropdown
-:open: false
 ```yaml
 # Website A (Primary Site)
 server {
@@ -592,9 +611,8 @@ The Pod manifest is updated to define multiple `hostPath` volumes—one for each
 
 +++
 
-:::{tip} ### `play_nginx.yaml` multi-site example
+:::{tip} `play_nginx.yaml` multi-site example
 :class: dropdown
-:open: false
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -691,9 +709,8 @@ and all the occurences of the first website naming in router, services, etc. nam
 
 +++
 
-:::{tip} ### `website_b_traefik.yml` example
+:::{tip} `website_b_traefik.yml` example
 :class: dropdown
-:open: false
 ```yaml
 # Traefik routing for the second MyST website (Website B)
 http:
