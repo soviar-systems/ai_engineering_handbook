@@ -26,17 +26,17 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v45
         with:
-          files: "**/*.ipynb"
+          files: "**/*.md"
           # Ensures spaces in filenames are handled via a safe delimiter if needed
           safe_output: true
 
       - name: Run Link Check on PR Files Only
         # Optional: Make it non-blocking on feature branches
-        continue-on-error: ${{ github.ref != 'refs/heads/main' }}
+        #continue-on-error: ${{ github.ref != 'refs/heads/main' }}
         if: steps.changed-files.outputs.any_changed == 'true'
         env:
           # Ensure tools/scripts is in path if the script imports other local modules
           PYTHONPATH: ${{ github.workspace }}
         run: |
           # Use double quotes around the output to handle potential shell expansion issues
-          uv run tools/scripts/check_broken_links.py ${{ steps.changed-files.outputs.all_changed_files }} --verbose
+          uv run tools/scripts/check_broken_links.py --paths ${{ steps.changed-files.outputs.all_changed_files }} pattern "*.md" --verbose

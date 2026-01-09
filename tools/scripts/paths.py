@@ -3,7 +3,7 @@ Centralized path configurations for the toolkit.
 """
 
 # Directories that should always be excluded from notebook/link scans
-DEFAULT_EXCLUDE_DIRS = {
+BROKEN_LINKS_EXCLUDE_DIRS = {
     ".git",
     ".pytest_cache",
     ".venv",
@@ -15,10 +15,9 @@ DEFAULT_EXCLUDE_DIRS = {
     "dist",
     "in_progress",
     "pr/",
-    "architecture",
 }
 
-DEFAULT_EXCLUDE_FILES = [".aider.chat.history.md"]
+BROKEN_LINKS_EXCLUDE_FILES = [".aider.chat.history.md"]
 
 
 def is_ignored_dir(path: str) -> bool:

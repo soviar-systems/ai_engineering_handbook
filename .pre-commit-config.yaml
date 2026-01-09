@@ -4,9 +4,9 @@ repos:
 
       - id: check-broken-links
         name: Check Broken Links
-        entry: uv run tools/scripts/check_broken_links.py
+        entry: uv run tools/scripts/check_broken_links.py --paths
         language: python
-        files: \.ipynb$
+        files: \.md$
         pass_filenames: true
         stages: [pre-commit, manual]
 

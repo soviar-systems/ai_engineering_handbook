@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.0  
+Version: 0.3.0  
 Birth: 2026-01-07  
-Last Modified: 2026-01-08
+Last Modified: 2026-01-09
 
 ---
 
@@ -46,6 +46,15 @@ SVA isn’t about minimal *code* — it’s about **minimal *cognitive and opera
 
 +++
 
+### Key Architectural Improvements in v0.3.0
+
++++
+
+* **Explicit Interface**: Transitioned from positional to named arguments (`--paths`) to eliminate ambiguity in CI/CD pipelines.
+* * **Injectable Argument Parsing**: The `LinkCheckerCLI.run()` method now accepts an optional `argv` list, allowing for direct integration testing without global state manipulation (`monkeypatch`).
+
++++
+
 ## **2. Validation Layers**
 
 +++
@@ -56,7 +65,9 @@ SVA isn’t about minimal *code* — it’s about **minimal *cognitive and opera
 
 The first line of defense runs automatically during the `git commit` process to prevent broken links from entering the history.
 
-* **Scope**: Validates only the `.ipynb` files currently staged for commit.
+* **Scope**: Validates only the `.md` files currently staged for commit.
+    - Every `.ipynb` file has its pair, but not every `.md` file has its pair, but we need to be sure all the doc files in the repo have healthy links.
+    - If there is a `md - ipynb` pair, the link should point to its `.ipynb` pair because our `myst.yaml` config renders only `.ipynb` files for the website, thus `.md` links will cause files to download, not to open as the web page. 
 * **Efficiency**: Fast execution ensures no significant delay in the developer's workflow.
 * **Logic Tests**: Includes a meta-check (`test-check-broken-links`) that triggers whenever the script itself or its tests change, ensuring the tool's logic remains sound.
 
@@ -66,11 +77,34 @@ The first line of defense runs automatically during the `git commit` process to 
 
 +++
 
-Enforces repository integrity on every push and pull request.
+The CI pipeline in `quality.yml` is optimized to validate only modified files in Pull Requests, preventing the accumulation of technical debt.
 
 * **Differential Checking**: Uses `tj-actions/changed-files` to scan only the notebooks modified in a specific PR, avoiding "blaming" developers for legacy technical debt.
 * **Environment Parity**: Utilizes `uv` for high-performance dependency and environment management, mirroring the local development stack.
 * **Failure Isolation**: Separates logic tests from link validation to pinpoint exactly where a failure occurs.
+
+:::{tip} `quality.yml` Implementation:
+```yaml
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          # Only check .md files for broken links
+          files: "**/*.md"
+          # Ensures spaces in filenames are handled via a safe delimiter if needed
+          safe_output: true
+
+      - name: Run Link Check on PR Files Only
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          uv run tools/scripts/check_broken_links.py --paths ${{ steps.changed-files.outputs.all_changed_files }} --verbose
+```
+
+*Note: `files: "**/*.md"` used to pass only `.md` files.*
+
+*Note: Using the `--paths` flag is critical to handle multiple files provided by the `changed-files` action.*
+:::
 
 +++
 
@@ -175,7 +209,7 @@ check_broken_links.py [paths] [--pattern PATTERN] [options]
 
 | Argument | Description | Default |
 | --- | --- | --- |
-| `paths` | One or more directories to search or specific file paths. | `.` (Current Dir) |
+| `--paths` | One or more directories or specific file paths to scan. | `.` (Current Dir) |
 | `--pattern` | Glob pattern for files to scan. | `*.ipynb` |
 | `--exclude-dirs` | List of directory names to ignore. | `in_progress`, `pr`, `.venv` |
 | `--exclude-files` | List of specific filenames to ignore. | `.aider.chat.history.ipynb` |
@@ -191,10 +225,10 @@ Run these from the repository root using `uv` for consistent environment resolut
 
 | Task | Command |
 | --- | --- |
-| **Scan All Notebooks** | `uv run tools/scripts/check_broken_links.py .` |
-| **Scan Specific Path** | `uv run tools/scripts/check_broken_links.py tools/docs/` |
-| **Verbose Audit** | `uv run tools/scripts/check_broken_links.py . --verbose` |
-| **Run Unit Tests** | `PYTHONPATH=. uv run pytest tools/tests/test_check_broken_links.py` |
+| **Full Repo Audit** | `uv run tools/scripts/check_broken_links.py` |
+| **Scan Specific Directories** | `uv run tools/scripts/check_broken_links.py --paths tools/docs/ architecture/` |
+| **Scan Multiple Files** | `uv run tools/scripts/check_broken_links.py --paths file1.ipynb file2.ipynb` |
+| **Markdown Audit** | `uv run tools/scripts/check_broken_links.py --pattern "*.md"` |
 
 +++
 

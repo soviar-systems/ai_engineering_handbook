@@ -20,8 +20,8 @@ import tempfile
 from pathlib import Path
 from typing import List, Optional
 
-# Import DEFAULT_EXCLUDE_DIRS and DEFAULT_EXCLUDE_FILES from paths.py
-from tools.scripts.paths import DEFAULT_EXCLUDE_DIRS, DEFAULT_EXCLUDE_FILES
+# Import BROKEN_LINKS_EXCLUDE_DIRS and BROKEN_LINKS_EXCLUDE_FILES
+from tools.scripts.paths import BROKEN_LINKS_EXCLUDE_DIRS, BROKEN_LINKS_EXCLUDE_FILES
 
 
 def main():
@@ -40,14 +40,15 @@ class LinkCheckerCLI:
         parser = argparse.ArgumentParser(
             description="Check for broken Markdown-style links in files (Local Filesystem Only)",
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog="""Example: %(prog)s . "*.ipynb" --exclude-dirs drafts
+            epilog="""Example: %(prog)s --pattern "*.ipynb" --exclude-dirs drafts
 Example: %(prog)s docs "*.rst"
 Default directory: current directory
 Default pattern: *.ipynb""",
         )
         parser.add_argument(
-            "paths",
+            "--paths",
             nargs="*",  # This allows 0 or more files/dirs
+            default=".",
             # see input_paths var for default
             help="Directory to search or a single file path (default: current directory)",
         )
@@ -59,13 +60,13 @@ Default pattern: *.ipynb""",
         parser.add_argument(
             "--exclude-dirs",
             nargs="*",
-            default=DEFAULT_EXCLUDE_DIRS,
+            default=BROKEN_LINKS_EXCLUDE_DIRS,
             help="Directory names to exclude from the check",
         )
         parser.add_argument(
             "--exclude-files",
             nargs="*",
-            default=DEFAULT_EXCLUDE_FILES,
+            default=BROKEN_LINKS_EXCLUDE_FILES,
             help="Specific file names to exclude from the check",
         )
         parser.add_argument(
@@ -89,8 +90,13 @@ Default pattern: *.ipynb""",
         except (subprocess.CalledProcessError, FileNotFoundError):
             return None
 
-    def run(self) -> None:
-        args = self.parser.parse_args()
+    def run(self, argv: Optional[List[str]] = None) -> None:
+        """
+        Execute logic.
+        :param argv: Optional list of strings. If None, uses sys.argv[1:].
+        """
+        # Injectable argument parsing
+        args = self.parser.parse_args(argv)
         verbose = args.verbose
         pattern = args.pattern
 

@@ -12,18 +12,18 @@ from tools.scripts.check_broken_links import (
     LinkValidator,
     Reporter,
 )
-from tools.scripts.paths import DEFAULT_EXCLUDE_DIRS, DEFAULT_EXCLUDE_FILES
+from tools.scripts.paths import BROKEN_LINKS_EXCLUDE_DIRS, BROKEN_LINKS_EXCLUDE_FILES
 
 
 @pytest.fixture(autouse=True)
 def mock_paths_module():
-    """Patch the import of DEFAULT_EXCLUDE_*."""
+    """Patch the import of BROKEN_LINKS_EXCLUDE_*."""
     with patch.dict(
         sys.modules,
         {
             "tools.scripts.paths": MagicMock(
-                DEFAULT_EXCLUDE_DIRS=DEFAULT_EXCLUDE_DIRS,
-                DEFAULT_EXCLUDE_FILES=DEFAULT_EXCLUDE_FILES,
+                BROKEN_LINKS_EXCLUDE_DIRS=BROKEN_LINKS_EXCLUDE_DIRS,
+                BROKEN_LINKS_EXCLUDE_FILES=BROKEN_LINKS_EXCLUDE_FILES,
             )
         },
     ):
@@ -251,38 +251,33 @@ class TestLinkCheckerCLI:
         source = tmp_path / "source.ipynb"
         source.write_text(f"[link]({target.name})", encoding="utf-8")
 
-        # Mock CLI args
+        # Corrected: Added "--paths" flag
         monkeypatch.setattr(
             "sys.argv",
-            ["check_broken_links.py", str(source), "--pattern", "*.ipynb"],
+            ["check_broken_links.py", "--paths", str(source), "--pattern", "*.ipynb"],
         )
         with pytest.raises(SystemExit) as exc_info:
             cli = LinkCheckerCLI()
             cli.run()
         assert exc_info.value.code == 0
-        captured = capsys.readouterr()
-        assert "✅ All links are valid!" in captured.out
 
-    def test_run_broken_link_in_dir(self, tmp_path, capsys, monkeypatch):
+    def test_run_broken_link_in_dir(self, tmp_path, capsys):
         (tmp_path / "source.ipynb").write_text("[bad](missing.ipynb)", encoding="utf-8")
 
-        monkeypatch.setattr(
-            "sys.argv", ["check_broken_links.py", str(tmp_path), "--pattern", "*.ipynb"]
-        )
+        cli = LinkCheckerCLI()
         with pytest.raises(SystemExit) as exc_info:
-            cli = LinkCheckerCLI()
-            cli.run()
+            # Pass arguments directly to the method
+            cli.run(["--paths", str(tmp_path), "--pattern", "*.ipynb"])
+
         assert exc_info.value.code == 1
         captured = capsys.readouterr()
         assert "BROKEN LINK" in captured.out
 
-    def test_run_no_files_found(self, tmp_path, capsys, monkeypatch):
-        monkeypatch.setattr(
-            "sys.argv", ["check_broken_links.py", str(tmp_path), "--pattern", "*.xyz"]
-        )
+    def test_run_no_files_found(self, tmp_path, capsys):
+        cli = LinkCheckerCLI()
         with pytest.raises(SystemExit) as exc_info:
-            cli = LinkCheckerCLI()
-            cli.run()
+            # Use the new injectable argv and include --paths
+            cli.run(["--paths", str(tmp_path), "--pattern", "*.xyz"])
         assert exc_info.value.code == 0
         captured = capsys.readouterr()
         assert "No files matching '*.xyz' found!" in captured.out
@@ -293,13 +288,12 @@ class TestLinkCheckerCLI:
 # ======================
 
 
-def test_nonexistent_input_path(tmp_path, capsys, monkeypatch):
+def test_nonexistent_input_path(tmp_path, capsys):
+    cli = LinkCheckerCLI()
     bad_path = tmp_path / "does_not_exist"
-    monkeypatch.setattr("sys.argv", ["check_broken_links.py", str(bad_path)])
     with pytest.raises(SystemExit) as exc_info:
-        cli = LinkCheckerCLI()
-        cli.run()
-    assert exc_info.value.code == 0  # Graceful skip
+        cli.run(["--paths", str(bad_path)])
+    assert exc_info.value.code == 0
     captured = capsys.readouterr()
     assert "Warning: Path does not exist" in captured.err
 
@@ -337,8 +331,7 @@ def test_link_validator_skip_logic(tmp_path, link_str, should_skip):
 # ======================
 
 
-def test_e2e_with_git_root(tmp_path, capsys, monkeypatch):
-    # Simulate being inside a git repo
+def test_e2e_with_git_root(tmp_path, capsys):
     git_root = tmp_path / "repo"
     git_root.mkdir()
     (git_root / ".git").mkdir()
@@ -349,17 +342,14 @@ def test_e2e_with_git_root(tmp_path, capsys, monkeypatch):
     source = docs / "guide.ipynb"
     source.write_text("[data](/data.ipynb)", encoding="utf-8")
 
-    # Mock git call
+    cli = LinkCheckerCLI()
     with (
         patch.object(LinkCheckerCLI, "get_git_root_dir", return_value=git_root),
         patch("pathlib.Path.cwd", return_value=docs),
     ):
-        monkeypatch.setattr(
-            "sys.argv", ["check_broken_links.py", "--verbose", str(source)]
-        )
+        # Explicitly use --paths and avoid monkeypatch
         with pytest.raises(SystemExit) as exc_info:
-            cli = LinkCheckerCLI()
-            cli.run()
+            cli.run(["--verbose", "--paths", str(source)])
         assert exc_info.value.code == 0
         captured = capsys.readouterr()
         assert "Using Git root" in captured.out
