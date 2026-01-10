@@ -354,7 +354,7 @@ The script operates in three distinct stages for every changed file passed to it
     :::{attention} No silent staging
     The hook does not stage files that were not staged before commit started. This is intentional.
     
-    Read more in [*"Pre-Commit Hooks and Staging: Instruction for Developers"*](/tools/docs/git/pre_commit_hooks_and_staging_instruction_for_devel.md)
+    Read more in [*"Pre-Commit Hooks and Staging: Instruction for Developers"*](/tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.ipynb)
     :::
 4. **The Integrity Check (The "Gatekeeper"):** This is the most critical step. The script inspects the actual **Git Index** (`git diff --cached`) to verify that both files are staged together.
 * **If the pair is incomplete:** The hook fails and prints a specific `git add` command.

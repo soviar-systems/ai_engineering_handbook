@@ -106,7 +106,7 @@ What linear algebra operation would efficiently compute all outputs at once? Mat
 Read about GEMM and BLAS:
 
 1. [*Matrix Multiplication Background User's Guide*](https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html) - NVIDIA
-2. [*GEMM: The Engineering Standard*](../../../1_execution/algebra_gemm_engineering_standard.md) - SovIAR
+2. [*GEMM: The Engineering Standard*](/ai_system/1_execution/algebra_gemm_engineering_standard.md) - SovIAR
 
 +++
 

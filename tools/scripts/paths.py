@@ -13,8 +13,8 @@ BROKEN_LINKS_EXCLUDE_DIRS = {
     "build",
     "_build",
     "dist",
-    "in_progress",
-    "pr/",
+    "misc/in_progress",
+    "misc/pr/",
 }
 
 BROKEN_LINKS_EXCLUDE_FILES = [".aider.chat.history.md"]

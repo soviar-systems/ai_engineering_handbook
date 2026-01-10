@@ -4,7 +4,7 @@ repos:
 
       - id: check-broken-links
         name: Check Broken Links
-        entry: uv run tools/scripts/check_broken_links.py --paths
+        entry: uv run --active tools/scripts/check_broken_links.py --paths
         language: python
         files: \.md$
         pass_filenames: true
@@ -33,7 +33,7 @@ repos:
       # directory changes
       - id: test-check-broken-links
         name: Test Check Broken Links script
-        entry: uv run pytest tools/tests/test_check_broken_links.py
+        entry: uv run --active pytest tools/tests/test_check_broken_links.py
         language: python
         files: ^tools/(scripts/check_broken_links\.py|scripts/paths\.py|tests/test_check_broken_links\.py)$
         pass_filenames: false
