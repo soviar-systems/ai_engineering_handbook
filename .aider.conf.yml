@@ -12,12 +12,3 @@ auto-lint: true
 commit-language: "US English"
 editor: "vim"
 analytics-disable: true
-
-alias:
-  - "qwen14:qwen2.5-coder:14b-instruct-q4_K_M"
-  - "ms14:ministral-3:14b-instruct-2512-q4_K_M"
-  - "ds14:deepseek-r1:14b-qwen-distill-q4_K_M"
-  - "llama8:llama3.1:8b-instruct-q4_K_M"
-  - "gemma3n:gemma3n:e4b-it-q4_K_M"
-  - "qwen3-4b:qwen3:4b-instruct-2507-q4_K_M"
-  - "qwen3b:qwen2.5-coder:3b-instruct-q5_K_M"
