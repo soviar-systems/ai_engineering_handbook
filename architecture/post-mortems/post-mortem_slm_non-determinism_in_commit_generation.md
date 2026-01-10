@@ -1,19 +1,4 @@
----
-jupytext:
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
-    jupytext_version: 1.18.1
-kernelspec:
-  name: python3
-  display_name: Python 3 (ipykernel)
-  language: python
----
-
 # Post-Mortem Report: SLM Non-Determinism in Stage 1
-
-+++
 
 ---
 
@@ -24,11 +9,7 @@ Last Modified: 2026-01-11
 
 ---
 
-+++
-
 ## 1. Executive Summary and Architectural Mandate
-
-+++
 
 This report documents the architectural failure observed during the deployment of the **Small Language Model (SLM)** (1B-3B parameter class) for the highly frequent and highly constrained task of generating structured Conventional Commit messages (Pipeline **Stage 1**).
 
@@ -49,11 +30,7 @@ The underlying architectural decision to use the SLM was based on achieving effi
 > [ADR 0003: Adoption of `gitlint` for Tiered Workflow Enforcement](/architecture/adr/adr_0003_adoption_of_gitlint_for_tiered_workflow.md)
 :::
 
-+++
-
 ## 2. Introduction: Failure of a High-Frequency SLM Application
-
-+++
 
 Our testing confirmed that **Small Language Models (1B-3B) are not suitable for mandatory, high-frequency, structured parsing and generation tasks in a production MLOps pipeline.** Their inherent low **Instruction Fidelity** and difficulty maintaining complex, simultaneous constraints (e.g., 50-character limit, imperative mood, conditional ArchTag insertion) leads to non-deterministic, unreliable output.
 
@@ -62,11 +39,7 @@ Our testing confirmed that **Small Language Models (1B-3B) are not suitable for 
 
 This report reinforces the architectural principle that **LLMs must only be applied to generative, low-constraint transformation tasks, not deterministic parsing or rule-based enforcement.**
 
-+++
-
 ## 3. Technical Diagnosis and Failure Analysis
-
-+++
 
 The failure was a direct result of mismatching the task complexity with the model's resource constraints. We attempted to use the SLM for a task that requires **high deterministic parsing capability** and **strict adherence to multiple rules**, a domain better suited to traditional software logic.
 
@@ -77,11 +50,7 @@ The failure was a direct result of mismatching the task complexity with the mode
 | **Instruction Fidelity Breakdown** | The model's low parameter count led to confusion between the JSON system prompt and the required text output format. | **Hallucination of keys**, **ignoring imperative mood**, **omitting mandatory ArchTags**. |
 | **Synthesis and Context Overload** | The model had to hold the complex prompt rules (20+ lines) in context while simultaneously synthesizing a title/body from the large, noisy `git diff`. | **Ignoring the content of the diff** (e.g., using boilerplate text instead of synthesizing the actual change). **Failure to check the 50-character limit.** |
 
-+++
-
 ## 4. Final Mandate: Stage 1 Reversion and New Workflow
-
-+++
 
 To guarantee **industrial-grade reliability** and compliance with the **Production Git Workflow: Standards**, we implement the following mandated architectural change:
 
@@ -94,8 +63,6 @@ This mandate shifts the compliance burden from the brittle SLM synthesis step to
 
 ## 5. Next Steps for Engineers: Mandatory Actions
 
-+++
-
 The following actions are mandatory to implement the new, deterministic architecture and align with the **Commit & Changelog Tooling Standard**. Compliance with these steps is enforced via the `pre-commit` hooks and CI/CD gates.
 
 1.  **SLM Decommissioning (Stage 1 Retirement):** Remove all local configurations and system prompts related to the 1B-3B SLM assisting with commit message generation. This role is permanently retired.
@@ -106,8 +73,6 @@ The following actions are mandatory to implement the new, deterministic architec
 4.  **Training Material:** Training will be immediately deployed to outline the new manual yet validated commit workflow and the updated role of the SLM (now exclusively **Stage 3: Transformation**).
 
 ## Appendix A. Prompts Examples
-
-+++
 
 **SLM Execution Sequence (Workflow)** - Expected
 
@@ -126,13 +91,7 @@ Tested in `aider` with models:
 1. `deepseek-r1:1.5b-qwen-distill-q4_K_M`
 2. `qwen2.5-coder:3b-instruct-q5_K_M`
 
-+++
-
 ### 1. The Prompt Template (Minimize Tokens)
-
-+++
-
-We will use a fixed, minimal template with clear delimiters to maximize parsing speed and minimize unnecessary tokens.
 
 ````json
 {
@@ -152,11 +111,7 @@ We will use a fixed, minimal template with clear delimiters to maximize parsing 
 }
 ````
 
-+++
-
 ### 2. The Minimalist Prompt
-
-+++
 
 ```json
 {
@@ -182,11 +137,7 @@ We will use a fixed, minimal template with clear delimiters to maximize parsing 
 
 `/ask Based on the git diff output provided, output ONLY the JSON object defined in OUTPUT_SCHEMA. Do not include the git diff output in your response.`
 
-+++
-
 ### 3. Ultra-Detailed System Prompt for 3B SLM
-
-+++
 
 ```json
 {
@@ -214,11 +165,7 @@ We will use a fixed, minimal template with clear delimiters to maximize parsing 
 }
 ```
 
-+++
-
 ### 4. The Pure Data Interface
-
-+++
 
 **User Input (Per-Commit):**
 

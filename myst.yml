@@ -8,20 +8,25 @@ project:
   # authors: []
   github: https://github.com/lefthand67/ai_engineering_handbook
   exclude:
-    - "RELEASE_NOTES.*"
-    - "in_progress/*"
-    - "pr/*"
+    - "RELEASE_NOTES.md"
+    - "architecture/adr/0001-template.md"
+    - "misc/*"
     - "research/slm_from_scratch/old/*"
     # jupytext pairs md to ipynb
-    - "*/**/*.md"
+    - "0_intro/**/*.md"
+    - "ai_system/**/*.md"
+    - "mlops/**/*.md"
+    - "tools/**/*.md"
   abbreviations:
     ABI: Application Binary Interface
+    ADR: Architecture Decision Record
     AI: Artificial Intelligence
     API: Application Programming Interface
     ASIC: Application-Specific Integrated Circuit
     BLAS: Basic Linear Algebra Subprograms
-    FPGA: Field-Programmable Gate Arrays
+    FIM: Fill-in-the-Middle
     FLOPS: Floating Point Operations per Second
+    FPGA: Field-Programmable Gate Arrays
     GEMM: GEneral Matrix-Matrix multiplication
     GEMV: General Matrix-Vector multiply, a special case of GEMM
     HDL: Hardware Description Languages
@@ -35,10 +40,9 @@ project:
     TPU: Tensor Processing Unit
     WMMA: Warp-level matrix operations
   contributors:
-    - id: vadim_rudakov
+    - id: https://github.com/lefthand67
       name: Vadim Rudakov
       email: lefthand67@gmail.com
-      github: https://github.com/lefthand67
       affiliations:
         - id: org_a
   affiliations:
@@ -48,7 +52,7 @@ site:
   template: book-theme
   title: AI Engineering Book from SovIAR
   options:
-    logo: pr/Gemini_Generated_Image_ai_systems_engineer_small.png
+    logo: misc/pr/Gemini_Generated_Image_ai_systems_engineer_small.png
     logo_text: Brought by SovIAR
-    favicon: pr/Gemini_Generated_Image_ai_systems_engineer_small.png
+    favicon: misc/pr/Gemini_Generated_Image_ai_systems_engineer_small.png
     analytics_google: G-MB8TS19TGL

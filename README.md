@@ -1,25 +1,12 @@
----
-jupytext:
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
-    jupytext_version: 1.18.1
-kernelspec:
-  name: python3
-  display_name: Python 3 (ipykernel)
-  language: python
----
-
 # About
 
------
+---
 
-Version: 0.2.3  
+Version: 0.2.4  
 Birth: 2025-10-19  
-Last Modified: 2025-12-31
+Last Modified: 2026-01-10
 
------
+---
 
 
 This repository provides a **systematized, AI-engineered knowledge base** for building production-grade AI systems using **Small Language Models (SLMs)**. All content is **generated, validated, and versioned through a controlled Language Model (LM) workflow**—treated as code, not prose.
@@ -37,7 +24,7 @@ This is not a prompt repository. It addresses the **full stack** required to dep
 This is a **practitioner-focused engineering repository**, not academic literature. Therefore:
 
 - **No bibliographic references** are included.
-- **Provenance is encoded** in system prompts (e.g., [`slm_system_consultant.json`](/tools/prompt_helpers/slm_system_consultant.json)), which capture reasoning patterns used during generation. These prompts are open for inspection and serve as traceable “concept lineage” artifacts.
+- **Provenance is encoded** in system prompts (e.g., [`slm_system_consultant.json`](/tools/prompt_helpers/local_ai_systems_consultant.json).
 - **I do not claim originality of ideas**—only of the **generation methodology**, **validation protocol**, and **structural design**.
 
 > I am the architect of the knowledge-generation system. The ideas flow from public technical discourse; the synthesis, cross-validation, and organization are my engineered contribution.
@@ -108,7 +95,7 @@ The primary initiative within this directory is the **bottom-up construction of 
 
 All content follows a reproducible LM pipeline, mirroring software CI/CD:
 
-1. **Idea elaboration:** [slm_system_consultant.json](/tools/prompt_helpers/slm_system_consultant.json) explores and stress-tests concepts
+1. **Idea elaboration:** [slm_system_consultant.json](/tools/prompt_helpers/local_ai_systems_consultant.json) explores and stress-tests concepts
 2. **Draft generation**: [handbook_consultant.json](/tools/prompt_helpers/handbook_consultant.json) produces articles, diagrams, and code
 3. **Cross-validation:** Multiple models critique and refine outputs
 4. **Version control:** Every file is tracked, diffed, and tested like source code
