@@ -18,7 +18,7 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.5  
+Version: 0.1.6  
 Birth: 2025-11-18  
 Last Modified: 2026-01-11
 
@@ -330,21 +330,19 @@ $ aider --model gemini/gemini-3-flash
 
 +++
 
-| Model (Free‑Tier)        | Token Limit Per Request|
-|--------------------------|-------------|
-|**GROQ**||
-| llama-3.3-70b-versatile  | 12K     |
-| qwen/qwen3-32b           | 6K       |
-
-| Model (Free‑Tier)        | Token Limit Per Minute|
-|--------------------------|-------------|
-|**Gemini**||
-|gemini/gemini-3-flash-preview| |
-|gemini/gemini-3-flash| 250K |
-|gemini/gemini-2.5-flash| 250K |
-|gemini/gemini-2.5-flash-preview-09-2025||
-|gemini/gemini-2.5-flash-lite| 250K |
-|gemini/gemma-3-27b-it| 15K|
+| Model (Free‑Tier)        | Token Per Request| Token Per Minute |
+|--------------------------|-------------|----------------------|
+|**GROQ**|||
+| llama-3.3-70b-versatile  | 12K     ||
+| qwen/qwen3-32b           | 6K       ||
+| openai/gpt-oss-120b      | | 8K |
+|**Gemini**|||
+|gemini/gemini-3-flash-preview| ||
+|gemini/gemini-3-flash | | 250K |
+|gemini/gemini-2.5-flash | | 250K |
+|gemini/gemini-2.5-flash-preview-09-2025 | |
+|gemini/gemini-2.5-flash-lite | | 250K | |
+|gemini/gemma-3-27b-it | | 15K|
 
 **Gemini Free tier limits**
 
