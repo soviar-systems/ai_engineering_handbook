@@ -1,5 +1,48 @@
 # Release Notes
 
+
+## release v1.5.0
+
+### Summary of Changes
+
+This release focuses on a major architectural restructuring to improve the separation of concerns between core AI system documentation and the operational processes surrounding it. 
+
+A primary **ai_system** directory has been established to house the layered documentation (Execution, Model, Infrastructure, etc.). 
+
+Additionally, this update introduces enhanced CI/CD quality gates, improved repository configuration for local development, and formalizes the project's licensing structure.
+
+### Major Structural Changes
+
+#### File Tree Refactor (REFACTOR-MIGRATION)
+
+* **AI Layered Docs Migration**: The core architectural layers have been moved to the `ai_system/` directory to decouple the "what" (AI logic) from the "how" (process/tooling).
+    * `1_execution/` → `ai_system/1_execution/`
+* **Operational Tooling Consolidation**: The developer's tools, helper prompts, internal scripts and tests have been reorganized under `tools/`.
+
+All less important stuff like drafts and public relations materials moved to `misc/`.
+
+### MLOps and Repository Tooling
+
+#### CI/CD and Quality Assurance
+
+* **Pre-commit Hooks**: Added local hooks for broken link validation and script testing .
+* **GitHub Actions:**
+    * **New Workflow**: `quality.yml` introduced to automate broken link checks on pull requests and commits using `pytest` and custom scripts .
+    * **Deployment Improvements**: The `deploy.yml` workflow now includes mandatory environment integrity checks using `uv` and notebook synchronization verification with `jupytext` .
+
+#### Developer Experience
+
+* **Aider Handout Expanded:** "Aider Integration with LLMs Using API Keys" workflow introduced in ["Aider Commands Handout"](/tools/docs/ai_agents/02_aider_commands_handout.ipynb).
+* **Aider Configuration**: New `.aider.conf.yml` to automate Jupytext synchronization during AI-assisted coding sessions .
+* **Deps updates**: New environment dependency added - `tiktoken` for analyzing token efficiency of our system prompts. 
+
+### Changes to Existing Files
+
+#### Licensing
+
+* **LICENSE.md**: Updated to clarify the split-licensing model—GPLv3 for software/scripts and CC-BY-SA 4.0 for documentation/articles.
+
+
 ## release v1.4.0
 
 ### Summary of Changes

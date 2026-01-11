@@ -2,43 +2,45 @@
 
 ---
 
-Version: 0.2.4  
+Version: 0.3.0  
 Birth: 2025-10-19  
-Last Modified: 2026-01-10
+Last Modified: 2026-01-12
 
 ---
 
 
-This repository provides a **systematized, AI-engineered knowledge base** for building production-grade AI systems using **Small Language Models (SLMs)**. All content is **generated, validated, and versioned through a controlled Language Model (LM) workflow**—treated as code, not prose.
+This repository provides a **systematized, AI-engineered knowledge base** for building production-grade AI systems. It is the practical manifestation of a **hybrid methodology** that orchestrates capable **Large Language Models (LLM)** alongside local **Small Language Models (SLM)**.
 
-> **Mission**: Enable MLOps engineers and AI architects to construct **reliable, maintainable, and auditable** AI infrastructure by treating documentation as executable, testable artifacts.
+All content is **generated, validated, and versioned** through a controlled Language Model (LM) workflow—treating documentation as executable, testable artifacts rather than static prose.
 
-This is not a prompt repository. It addresses the **full stack** required to deploy and sustain LM-powered systems: execution, model, prompt, orchestration, context, and security layers.
+> **Mission**: To enable MLOps engineers and AI architects to construct **reliable, audit-ready** AI infrastructure. We prioritize a **hybrid approach**: using high-reasoning cloud LLMs for architecture and planning, while utilizing local SLMs for secure, resource-efficient coding and execution.
 
-> NOTE! The .ipynb files and some .md files use [myst](https://mystmd.org/) syntax. GitHub does not render this syntax (yet), do not consider such snippets as bugs.
 
----
+## What's new?
 
-## Authorship & Licensing
 
-This is a **practitioner-focused engineering repository**, not academic literature. Therefore:
+- v1.5.0 features the migration of core layers into the `ai_system/` hierarchy and the introduction of [hybrid LLM+SLM workflows](/tools/docs/ai_agents/02_aider_commands_handout.ipynb) via Aider integration.
 
-- **No bibliographic references** are included.
-- **Provenance is encoded** in system prompts (e.g., [`slm_system_consultant.json`](/tools/prompt_helpers/local_ai_systems_consultant.json).
-- **I do not claim originality of ideas**—only of the **generation methodology**, **validation protocol**, and **structural design**.
 
-> I am the architect of the knowledge-generation system. The ideas flow from public technical discourse; the synthesis, cross-validation, and organization are my engineered contribution.
+## Authorship & Methodology
 
-The repository is licensed under **GPLv3** for its core assets—**directory structure, system prompts, validation rules, and generation pipelines**—which are **software artifacts**, not static documents. This enforces the *documentation-as-code* principle. The article content is licensed under **CC-BY-SA 4.0**.
 
----
+I am a **Systems Engineer and AI Methodology Architect**. This repository is a "practitioner-focused" engineering hub designed to solve a specific problem: the fragility of AI prototypes and the risk of institutional "tribal knowledge".
+
+- **The Architect**: I design the knowledge-generation systems and validation protocols.
+- **Hybrid Synergy**: By integrating tools like **Aider**, I utilize capable models (e.g., Gemini 3 Flash) as "Architects" to handle large context windows, while local models (e.g., Qwen 2.5 Coder) act as "Editors" to perform hardware-aware coding and testing on local GPUs.
+- **Institutional Resilience**: I document systems so thoroughly that they survive staff turnover. When key members leave, the project doesn't collapse because the methodology is encoded in the system itself.
+
+The repository is licensed under **GPLv3** for its core assets and **CC-BY-SA 4.0** for the article content.
+
 
 ## Coverage
+
 
 Content is organized around the six layers of LLM systems:
 
 1. **Execution & Optimization**: CPU/GPU hybrid pipelines, memory (VRAM/RAM) management, NVIDIA tuning
-2. **Model Development**: SLM selection, tokenization, embedding, security hardening
+2. **Model Development**: SLM selection, tokenization, embedding, security
 3. **Prompt Engineering**: Modular design, XML schemas, template lifecycle
 4. **Orchestration**: RAG, workflow chaining, structured output control
 5. **Context Management**: Vector stores, hybrid retrieval, indexing strategies
@@ -46,33 +48,76 @@ Content is organized around the six layers of LLM systems:
 
 All materials are **LM-generated**, then **cross-validated by multiple models**, and deeply **reviewed before promotion** from draft to final by me. The production of one handbook may take tens of manual and AI-backed iterations before I am ready to put it into the main branch, but I understand it can still have problems, so feel free to leave issues.
 
----
+
+## Generation Workflow: Hybrid Orchestration
+
+
+All content follows a reproducible pipeline mirroring software CI/CD, specifically leveraging hybrid LLM/SLM capabilities:
+
+1. **Capable LLM step:**
+    1. **Idea elaboration:** [local_ai_systems_consultant.json](/tools/prompt_helpers/local_ai_systems_consultant.json) helps to peer-review the ideas and solutions in the chat form to stress-test concepts before they're adopted as a methodological tool.
+    1. **Draft generation**: [handbook_consultant.json](/tools/prompt_helpers/handbook_consultant.json) produces articles and diagrams.
+    1. **Cross-validation:** Multiple models critique and refine outputs.
+1. **Human review step:**
+   - Final sanity check before promotion to published directories
+1. **CI/CD:**
+   - **Version control:** Every file is tracked, diffed, and tested like source code with the help of the pre-coomit hooks, GH actions, and local SLM.
+  
+> In this paradigm: prompts = source code, articles = build artifacts, reviews = QA gates.
+
+```mermaid
+graph LR
+B[Idea elaboration: slm_system_consultant.json] --> C[Draft generation: handbook_consultant.json]
+C --> D[Cross-validation by multiple models]
+D --> E[Human review]
+E --> F[CI/CD gates]
+F --> G[Promotion to published directories]
+
+style B fill:#fff,stroke:#333,stroke-width:2px
+style C fill:#fff,stroke:#333,stroke-width:2px
+style D fill:#fff,stroke:#333,stroke-width:2px
+style E fill:#fff,stroke:#333,stroke-width:2px
+style F fill:#fff,stroke:#333,stroke-width:2px
+style G fill:#fff,stroke:#333,stroke-width:2px
+```
+
 
 ## Repository Structure
 
+
+The core part of the repository is the `ai_system` directory which introduces 5 layers of AI system. Read more about this approach in ["A Multi-Layered AI System Architecture"](/0_intro/a_multi_layered_ai_system_architecture.ipynb).
+
 ```text
-ai-systems-engineering/
-├── 0_intro/               # Foundational principles & communication styles
-├── 1_execution/          # Execution strategies and hardware-aware tuning
-├── 2_model/              # Model lifecycle: selection, security, embedding
-├── 3_infrastructure/     # Prompt modularity, templates, and management
-├── 4_orchestration/      # Workflow engines, chaining
-├── 5_context/            # Retrieval, vector DBs
-├── helpers/
-│   ├── ai_consultants/     # System prompts for AI-generated content
-│   ├── scripts/            # Utility scripts for various tasks
-│   └── website/            # Configuration files for the repo's website
-├── mlops/                # Versioning, CI/CD, deployment guardrails
-├── pr/                   # Public Relations directory
-├── research/
-│   └── slm_from_scratch/  # Research and development of Small Language Models
-├── tools/                # Tools for AI development & deployment
-│   ├── ai_agents/
-│   └── languages/
-└── website/              # Website configuration files for the repo's website
+.
+├── 0_intro/                # Introductory material, high‑level overviews, background resources
+├── ai_system/              # Core implementation of the six LLM‑system layers
+│   ├── 1_execution/        # Latency control (<100ms), CUDA optimization, etc.
+│   ├── 2_model/            # Model selection, adaptation, fine-tuning, etc.
+│   ├── 3_prompts/          # Prompt-as-Infrastructure: formatting and transportation, GitOps versioning, etc.
+│   ├── 4_orchestration/    # Wrokflow, agent specialization, etc.
+│   ├── 5_context/          # RAG, knowledge bases, etc.
+│   └── security/           # Centralized policy hub: adversarial threat modeling, RBAC, and OWASP LLM risk mitigationtools
+├── architecture/           # Architectural decision records & post‑mortems
+│   ├── adr/                # Formal ADR documents describing major design choices
+│   └── post-mortems/       # Retrospectives on failures and lessons learned
+├── misc/                   # Miscellaneous, non‑core work
+│   ├── in_progress/        # Drafts, experiments, work‑in‑progress artifacts
+│   └── pr/                 # Pull‑request notes, review checklists, temporary files
+├── mlops/                  # MLOps‑focused tooling and pipelines
+│   ├── ci_cd/              # CI/CD configs, GitHub Actions, quality‑gate scripts (broken‑link checks, Jupytext verification)
+│   └── security/           # MLOps‑specific security tooling, secret‑scanning, compliance checks
+├── research/               # Experimental research code & notebooks
+│   └── slm_from_scratch/   # Tokenizers, model‑training loops, low‑level SLM experiments
+└── tools/                  # Supporting utilities for the repo
+    ├── docs/               # Documentation generation helpers, style guides, reference material
+    ├── prompt_helpers/     # Prompt libraries, system‑prompt JSON files, validation scripts
+    ├── scripts/            # General‑purpose automation (link checking, formatting, Jupytext sync, etc.)
+    └── tests/              # Test suites for tools & research code
 ```
 
+
 ### Research & Foundations (`/research`)
+
 
 While the core layers of this repository focus on the **systemic orchestration** of AI, the `research/` directory is dedicated to the **first principles** of Small Language Models. We treat the transition from a single neuron to a production-grade Transformer not as a "black box," but as a verifiable engineering stack.
 
@@ -81,57 +126,12 @@ In this repository, "Research" is not academic—it is **forensic**. By building
 2. **Optimization is Precise**: Hardware-aware tuning (Layer 1) is more effective when you understand the computational graph of the model (Research Layer).
 3. **Validation is Absolute**: We use manual gradient checks in research to ensure that our automated validation protocols in the MLOps layer are mathematically sound.
 
-#### SLM From Scratch
 
-The primary initiative within this directory is the **bottom-up construction of SLM architectures**. This phase-based research ensures that every higher-level optimization (like KV-caching or Quantization) is grounded in a deep understanding of the underlying calculus.
+## Motivation: Sustainable AI Engineering
 
-### Public Relations directory
 
-`pr` directory is the collection of the informational telegram posts. These posts should not be considered as authoritative or comprehensive documentation.
+My goal is to build AI solutions maintainable as ordinary software. Every problem documented here was confronted while developing local SLM stacks under resource constraints. I share this repository to:
 
----
-
-## Generation Workflow
-
-All content follows a reproducible LM pipeline, mirroring software CI/CD:
-
-1. **Idea elaboration:** [slm_system_consultant.json](/tools/prompt_helpers/local_ai_systems_consultant.json) explores and stress-tests concepts
-2. **Draft generation**: [handbook_consultant.json](/tools/prompt_helpers/handbook_consultant.json) produces articles, diagrams, and code
-3. **Cross-validation:** Multiple models critique and refine outputs
-4. **Version control:** Every file is tracked, diffed, and tested like source code
-5. **Human review:** Final sanity check before promotion to published directories
-
-> In this paradigm: prompts = source code, articles = build artifacts, reviews = QA gates.
-
-```mermaid
-graph TD
-A[Start] --> B[Idea elaboration: slm_system_consultant.json]
-B --> C[Draft generation: handbook_consultant.json]
-C --> D[Cross-validation by multiple models]
-D --> E[Version control]
-E --> F[Human review]
-F --> G[Promotion to published directories]
-G --> H[End]
-
-style A fill:#f96,stroke:#333,stroke-width:4px
-style B fill:#fff,stroke:#333,stroke-width:2px
-style C fill:#fff,stroke:#333,stroke-width:2px
-style D fill:#fff,stroke:#333,stroke-width:2px
-style E fill:#fff,stroke:#333,stroke-width:2px
-style F fill:#fff,stroke:#333,stroke-width:2px
-style G fill:#fff,stroke:#333,stroke-width:2px
-style H fill:#f96,stroke:#333,stroke-width:4px
-```
-
----
-
-## Motivation
-
-My final goal is to build AI solutions that I can maintain as ordinary software, like a calculator. This goal - if achievable - can be achieved only with the strong methodology behind it. MLOps, Devsecops, models fine-tuning, context management, and so on. You can easily prototype almost anything
-with the little help from AI, but the question is whether you can build a reliable, production level system.
-
-Every problem documented here is one I’ve confronted while developing local SLM stacks under resource constraints. Since I learn by doing—and my primary collaborator is the AI itself—I share this repository publicly to:
-
-- Invite technical critique on my understanding of AI systems
-- Offer a methodologically consistent alternative to ad-hoc prompt hacking
-- Demonstrate that documentation can be engineered, not just written
+* **Prove Hybrid Viability**: Demonstrate that combining cloud-based reasoning with local SLM execution is the optimal path for production-grade reliability.
+* **Hardened Security**: By understanding the computational graph of SLMs (Research Layer), we identify points of failure for prompt injection, data leakage, or resources utilization bottlenecks more precisely.
+* **Efficiency through Systems**: Human-led, AI-accelerated process allows for the generation of audit-ready technical documentation in days rather than months.
