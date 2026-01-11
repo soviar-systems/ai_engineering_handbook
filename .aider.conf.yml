@@ -1,4 +1,8 @@
+analytics-disable: true
 auto-commits: false
+
+commit-language: "US English"
+editor: "vim"
 
 read:
   - aider.CONVENTIONS
@@ -9,6 +13,3 @@ lint-cmd:
   - "ipynb: uv run jupytext --sync"
 auto-lint: true
 
-commit-language: "US English"
-editor: "vim"
-analytics-disable: true
