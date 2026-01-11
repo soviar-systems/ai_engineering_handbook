@@ -11,22 +11,32 @@ kernelspec:
   language: python
 ---
 
-# A Multi-Layered AI System Architecture (Refined: Risk Mitigation)
+# A Multi-Layered AI System Architecture
 
------
++++
+
+---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.1  
+Version: 0.2.2  
 Birth: 2025-09-10  
-Modified: 2025-12-31
+Modified: 2026-10-12
 
------
+---
+
++++
 
 ## Part I. A Practical Guide for DevSecOps (Quick Start)
 
++++
+
 This part is a step-by-step guide. Its goal is to quickly launch and stabilize an AI system with DevSecOps and [OWASP](https://owaspai.org/) considerations.
 
++++
+
 ### Five Layer Architecture
+
++++
 
 | | Layer | Key Components |
 | :--- | :--- | :--- |
@@ -36,7 +46,11 @@ This part is a step-by-step guide. Its goal is to quickly launch and stabilize a
 |4.| **Agent/Workflow Layer** (Orchestration & Reasoning) | Agents, frameworks, **Circuit Breakers, Specialization** |
 |5.| **Context Layer** | Vector DBs, knowledge graphs, retrieval, **PII Governance** |
 
++++
+
 ### Practical Recommendations
+
++++
 
 1. **Whitelisting** addresses, **rate limiting**.
 1. Implement **OWASP metrics** in prompt and pipeline checks (sanitization, rate-limiting).
@@ -47,17 +61,29 @@ This part is a step-by-step guide. Its goal is to quickly launch and stabilize a
 1. **OWASP and RBAC** are a must-have.
 1. Train the team on the DevSecOps approach, extending **MLflow/DVC lineage** to track **prompts and agent configurations**.
 
++++
+
 ### Hidden Mistakes (Mitigation Focus)
+
++++
 
 1. **Technical debt:** Quick prototypes on LangChain $\rightarrow$ difficult to maintain later.
 1. **Over-engineering:** Overly complex multi-agent schemes $\rightarrow$ increased latency and costs; **use circuit breaker logic** in Layer 4.
 1. **Security debt:** Insecure or unmanaged system prompts $\rightarrow$ leaks (e.g., **OWASP LLM02**); institute **mandatory prompt CI/CD validation**.
 
++++
+
 ## Part II. Corporate Standard (Depth and Rationale)
+
++++
 
 Attention is given to current security risks, **[OWASP 2025 recommendations](https://genai.owasp.org/llm-top-10/)**, as well as practical advice and examples specifically applicable in the context of log analysis (syslogs, SQL queries to the database).
 
++++
+
 ### 1. Execution Layer
+
++++
 
 This layer contains the hardware and software that ensures model execution with specified performance and stability.
 
@@ -74,7 +100,11 @@ This layer contains the hardware and software that ensures model execution with 
 | **Compute Optimization** | CUDA kernels, quantization (INT8/FP16) | Quantization can reduce accuracy (especially in sensitive domains like legal/biomedical). | Mixed-precision policy; **mandate per-class regression testing** after quantization to verify reliability. | Balances cost/speed with diagnostic/domain reliability. | INT8 gives $\sim 3\times$ speedup and $60\%$ cost reduction; FP16 achieves near-original accuracy with $1.5\times$ throughput |
 | **Networking and APIs** | gRPC/WebSocket for streaming inference | DoS, request floods, model endpoint exhaustion. | Use Envoy filters, tokenized rate limiting, **integrate Layer 4 (Agent/Workflow) circuit breaker logic here.** | Protects endpoints and prevents resource exhaustion. | Rate limiting costs negligible; dynamic batching improves GPU occupancy up to $25\%$ |
 
++++
+
 ### 2. Model Layer
+
++++
 
 The layer responsible for the model's architecture and training.
 
@@ -91,7 +121,11 @@ The layer responsible for the model's architecture and training.
 1. **Model cards** (standardized documents).
 1. **Mandate per-class regression tests** for models using mixed-precision quantization (as noted in Layer 1) to verify domain-specific accuracy.
 
++++
+
 ### 3. Prompt Engineering Layer (Prompt-as-Infrastructure)
+
++++
 
 Prompts are managed, version-controlled configurations. 
 
@@ -128,7 +162,11 @@ Prompts are managed, version-controlled configurations.
 }
 ```
 
++++
+
 ### 4. Agent/Workflow Layer (Orchestration & Reasoning)
+
++++
 
 Responsible for the logic, sequence, and integration of prompts.
 
@@ -153,7 +191,11 @@ Responsible for the logic, sequence, and integration of prompts.
 1. **Design with circuit breaker logic and fallbacks** to prevent local agent failures from degrading system-wide performance.
 1. **Version control agent role specifications** (in Layer 3) to ensure auditability of their behavior.
 
++++
+
 ### 5. Context Layer
+
++++
 
 Provides the system with relevant context and manages dynamic data.
 
@@ -184,7 +226,11 @@ all while complying with various data protection laws like GDPR, CCPA, and HIPAA
 1. Version control for knowledge bases.
 1. **Implement Data Governance and Privacy checks** on all retrieved data to ensure compliance with PII/PHI standards.
 
++++
+
 ### Interconnection and Cyclical Nature of Layers
+
++++
 
 ```mermaid
 flowchart TD
@@ -207,9 +253,11 @@ flowchart TD
 
 The **Context** $\rightarrow$ **Model** feedback loop ensures model adaptability and quality improvement.
 
-
++++
 
 ### Repository Structure for DevSecOps Teams (PROJECT)
+
++++
 
 ```
 ai/
@@ -294,7 +342,11 @@ The repository structure is maintained, with the **security files being the cent
 * `ai/4_orchestration/patterns/multi_agent/`: **Must contain blueprints for agent specialization and circuit breaker implementations.**
 * `ai/mlops/`: **Must track lineage for prompts and configuration artifacts (ADR required).**
 
++++
+
 ## Special Attention to Security (Defense-in-Depth)
+
++++
 
 This hybrid approach ensures that security policies are defined centrally and enforced locally, directly addressing the need for fast onboarding and effective auditing.
 

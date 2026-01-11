@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.2  
+Version: 0.1.3  
 Birth: 2026-01-03  
-Last Modified: 2026-01-11
+Last Modified: 2026-01-12
 
 ---
 
@@ -30,7 +30,7 @@ Last Modified: 2026-01-11
 
 +++
 
-1. ["A Multi-Layered AI System Architecture"](/0_intro/ai_systems_multilayer_approach.ipynb) to understand the repo structure.
+1. ["A Multi-Layered AI System Architecture"](/0_intro/a_multi_layered_ai_system_architecture.ipynb) to understand the repo structure.
 2. Series on how we work with Git in `/tools/docs/git/`.
 
 +++
