@@ -1,5 +1,6 @@
 analytics-disable: true
 auto-commits: false
+map-tokens: 2048
 
 commit-language: "US English"
 editor: "vim"
