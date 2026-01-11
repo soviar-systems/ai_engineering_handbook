@@ -295,31 +295,64 @@ class FileFinder:
 
     def find(self, search_dir: Path, pattern: str) -> List[Path]:
         """Return list of matching files, excluding specified dirs/files."""
-        all_files = list(search_dir.rglob(pattern))
         filtered_files = []
 
-        for file in all_files:
-            resolved_file = file.resolve()
+        # Iterate through all entries matching the pattern within the search_dir
+        for file in search_dir.rglob(pattern):
+            if not file.is_file():
+                if self.verbose:
+                    print(f"  SKIPPING (not a file): {file}")
+                continue
 
-            # Exclude by directory
-            excluded = False
-            for excl_dir in self.exclude_dirs:
-                exclude_path = search_dir / excl_dir
-                if (
-                    exclude_path in resolved_file.parents
-                    or exclude_path == resolved_file
-                ):
-                    excluded = True
-                    break
+            # Check for excluded file names (basename) regardless of path
+            if file.name in self.exclude_files:
+                if self.verbose:
+                    print(f"  EXCLUDING (by file name): {file}")
+                continue
 
-            if not excluded and file.name in self.exclude_files:
-                excluded = True
-
-            if not excluded and ".ipynb_checkpoints" in str(resolved_file):
-                excluded = True
-
-            if not excluded:
+            # Get the path relative to search_dir to analyze directory components.
+            # If `file` is not actually under `search_dir` (e.g., a symlink to an external file),
+            # then `relative_to` will raise ValueError. In such cases, the file is not subject
+            # to directory-based exclusions relative to search_dir.
+            try:
+                relative_path = file.relative_to(search_dir)
+            except ValueError:
+                # If the file is outside the search_dir hierarchy, it's not filtered by
+                # directory-based exclusions relative to search_dir. It passes this check.
                 filtered_files.append(file)
+                continue
+
+            is_excluded_by_dir = False
+
+            # 1. Check for explicit .ipynb_checkpoints exclusion in any part of the relative path
+            if ".ipynb_checkpoints" in relative_path.parts:
+                is_excluded_by_dir = True
+
+            # 2. Check for single-component directory exclusions (e.g., '__pycache__', '.git', 'build')
+            #    If not already excluded by .ipynb_checkpoints
+            if not is_excluded_by_dir:
+                for part in relative_path.parts:
+                    if part in self.exclude_dirs:
+                        is_excluded_by_dir = True
+                        break
+            
+            # 3. Check for multi-segment directory exclusions (e.g., 'misc/in_progress', 'misc/pr')
+            #    This checks if any parent path (relative to search_dir) is an excluded multi-segment path.
+            #    If not already excluded by previous checks
+            if not is_excluded_by_dir:
+                current_check_path = relative_path
+                while current_check_path != Path('.'): # Iterate up to the search_dir itself (represented by '.')
+                    if str(current_check_path) in self.exclude_dirs:
+                        is_excluded_by_dir = True
+                        break
+                    current_check_path = current_check_path.parent
+            
+            if is_excluded_by_dir:
+                if self.verbose:
+                    print(f"  EXCLUDING (by directory rule): {file}")
+                continue
+
+            filtered_files.append(file)
 
         return filtered_files
 

@@ -146,29 +146,77 @@ class TestLinkValidator:
 
 
 class TestFileFinder:
-    def test_find_respects_exclude_dirs(self, tmp_path):
-        (tmp_path / "docs").mkdir()
-        (tmp_path / "docs" / "good.ipynb").touch()
-        (tmp_path / "__pycache__").mkdir()
-        (tmp_path / "__pycache__" / "bad.ipynb").touch()
+    def test_find_respects_exclude_dirs_nested(self, tmp_path):
+        # Setup a mock repository structure with various excluded directories
+        root_test_dir = tmp_path / "repo_root"
+        root_test_dir.mkdir()
+
+        # Files that should be included
+        (root_test_dir / "docs").mkdir()
+        (root_test_dir / "docs" / "good_doc_1.ipynb").touch()
+        (root_test_dir / "src").mkdir()
+        # Nested good file within a valid path
+        (root_test_dir / "src" / "sub_module" / "valid_code_folder").mkdir(parents=True)
+        (root_test_dir / "src" / "sub_module" / "valid_code_folder" / "good_2.py").touch()
+        # Directory name contains part of an excluded dir, but isn't the excluded dir itself
+        (root_test_dir / "valid_dir_not_node_modules" / "some_file.ipynb").mkdir(parents=True)
+        (root_test_dir / "valid_dir_not_node_modules" / "some_file.ipynb" / "good_3.ipynb").touch()
+
+        # Files that should be excluded by directory name (from BROKEN_LINKS_EXCLUDE_DIRS)
+        (root_test_dir / "misc" / "in_progress" / "temp_folder").mkdir(parents=True)
+        (root_test_dir / "misc" / "in_progress" / "temp_folder" / "bad_1.ipynb").touch() # Excluded by misc/in_progress
+        (root_test_dir / "src" / "my_module" / "__pycache__").mkdir(parents=True)
+        (root_test_dir / "src" / "my_module" / "__pycache__" / "bad_2.py").touch() # Excluded by __pycache__
+        (root_test_dir / ".git" / "hooks").mkdir(parents=True)
+        (root_test_dir / ".git" / "hooks" / "bad_3.md").touch() # Excluded by .git
+        (root_test_dir / "node_modules" / "some_lib" / "bad_folder").mkdir(parents=True)
+        (root_test_dir / "node_modules" / "some_lib" / "bad_folder" / "bad_4.js").touch() # Excluded by node_modules
+        (root_test_dir / "nested_build" / "build" / "another_bad.py").mkdir(parents=True)
+        (root_test_dir / "nested_build" / "build" / "another_bad.py" / "bad_5.txt").touch() # Excluded by build
 
         finder = FileFinder(
-            exclude_dirs=["__pycache__"], exclude_files=[], verbose=False
+            exclude_dirs=list(BROKEN_LINKS_EXCLUDE_DIRS),
+            exclude_files=list(BROKEN_LINKS_EXCLUDE_FILES),
+            verbose=False, # Set to True for debugging if needed
         )
-        files = finder.find(tmp_path, "*.ipynb")
-        assert len(files) == 1
-        assert files[0].name == "good.ipynb"
+        files = finder.find(root_test_dir, "*") # Use '*' to find all file types
 
-    def test_find_respects_exclude_files(self, tmp_path):
-        (tmp_path / "good.ipynb").touch()
-        (tmp_path / "temp.ipynb").touch()
+        expected_files = {
+            root_test_dir / "docs" / "good_doc_1.ipynb",
+            root_test_dir / "src" / "sub_module" / "valid_code_folder" / "good_2.py",
+            root_test_dir / "valid_dir_not_node_modules" / "some_file.ipynb" / "good_3.ipynb",
+        }
+
+        assert len(files) == len(expected_files)
+        assert set(files) == expected_files
+
+    def test_find_respects_exclude_files_globally(self, tmp_path):
+        root_test_dir = tmp_path / "repo_root"
+        root_test_dir.mkdir()
+
+        # Files that should be included
+        (root_test_dir / "good_file_1.ipynb").touch()
+        (root_test_dir / "sub" / "good_dir").mkdir(parents=True) # Renamed for clarity, it's a directory
+        (root_test_dir / "sub" / "good_dir" / "another_good.txt").touch()
+
+        # File that should be excluded by name (from BROKEN_LINKS_EXCLUDE_FILES)
+        (root_test_dir / "sub" / "excluded_dir_for_file_test").mkdir(parents=True)
+        (root_test_dir / "sub" / "excluded_dir_for_file_test" / ".aider.chat.history.md").touch() # The file itself has the excluded name
+
 
         finder = FileFinder(
-            exclude_dirs=[], exclude_files=["temp.ipynb"], verbose=False
+            exclude_dirs=list(BROKEN_LINKS_EXCLUDE_DIRS),
+            exclude_files=list(BROKEN_LINKS_EXCLUDE_FILES),
+            verbose=False,
         )
-        files = finder.find(tmp_path, "*.ipynb")
-        assert len(files) == 1
-        assert files[0].name == "good.ipynb"
+        files = finder.find(root_test_dir, "*") # Use '*' to find all file types
+
+        expected_files = {
+            root_test_dir / "good_file_1.ipynb",
+            root_test_dir / "sub" / "good_dir" / "another_good.txt",
+        }
+        assert len(files) == len(expected_files)
+        assert set(files) == expected_files
 
     def test_find_excludes_ipynb_checkpoints(self, tmp_path):
         (tmp_path / "normal.ipynb").touch()
