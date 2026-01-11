@@ -2,7 +2,7 @@
 
 ---
 
-Version: 0.3.0  
+Version: 0.3.1  
 Birth: 2025-10-19  
 Last Modified: 2026-01-12
 
@@ -19,7 +19,7 @@ All content is **generated, validated, and versioned** through a controlled Lang
 ## What's new?
 
 
-- v1.5.0 features the migration of core layers into the `ai_system/` hierarchy and the introduction of [hybrid LLM+SLM workflows](/tools/docs/ai_agents/02_aider_commands_handout.ipynb) via Aider integration.
+- v2.0.0 features the migration of core layers into the `ai_system/` hierarchy and the introduction of [hybrid LLM+SLM workflows](/tools/docs/ai_agents/02_aider_commands_handout.ipynb) via Aider integration.
 
 
 ## Authorship & Methodology
