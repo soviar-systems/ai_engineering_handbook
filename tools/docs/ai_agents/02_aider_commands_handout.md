@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.3  
+Version: 0.1.5  
 Birth: 2025-11-18  
-Last Modified: 2026-01-10
+Last Modified: 2026-01-11
 
 ---
 
@@ -62,7 +62,83 @@ In general, command-line values override environment variables which override co
 
 +++
 
-:::{tip} Basic configuration in file
+## **2. Using proxy**
+
++++
+
+If your organization requires all external traffic to be routed through the proxy, you can set these environment variables and pass them to the terminal session before starting the aider:
+
+```bash
+export HTTPS_PROXY="http://[user:password]@proxy_ip_address:port"
+export https_proxy="http://[user:password]@proxy_ip_address:port"
+```
+
+You should NOT set `HTTP_PROXY` variable because it breaks the connection between the aider and local ollama through `http://127.0.0.1:11434`.
+
+You can wrap this configuration into a script wrapper `aider_proxy.sh`:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+
+main() {
+
+    export HTTPS_PROXY="http://[user:password]@proxy_ip_address:port"
+    export https_proxy="http://[user:password]@proxy_ip_address:port"
+
+    exec aider "$@"
+}
+
+
+main "$@"
+```
+
+Make this [script executable](/tools/docs/scripts_instructions/how_to_use_scripts_on_gnu_linux.ipynb) and add it to your PATH. Now you can run aider simply:
+
+```bash
+$ aider_proxy.sh --model gemini/gemini-3-flash
+```
+
+Avoid using proxy if it's not necessary for it adds complexity to the aider configuration.
+
++++
+
+## **3. Running & Basic Usage**
+
++++
+
+### Launching aider
+
++++
+
+command|description
+-|-
+`aider --model ollama_chat/<model_name>`|run a local model in terminal (get name from `ollama ls`)
+`--gui`, `--no-gui`, `--browser`, `--no-browser`|Run aider in your browser (default: False); env var: `AIDER_GUI`
+`aider --list-models gemini/`| list available models
+
++++
+
+(aider-conf-yaml)=
+### Core File Management
+
++++
+
+| Command | Description |
+| :--- | :--- |
+`--file FILE`|specify a file to edit (can be used multiple times); env var: `AIDER_FILE`
+`--read FILE`|specify a read-only file (can be used multiple times); env var: `AIDER_READ`
+`/add`|Add files to the chat so aider can edit them or review them in detail.
+`/tokens`|Report on the number of tokens used by the current chat context
+
+:::{tip}
+Use `/add` to tell Aider a file exists and is available for modification. This way aider knows this file exists and **will write to it**. Otherwise, aider might write the changes to an existing file; [source](https://aider.chat/docs/usage/tips.html)
+:::
+
++++
+
+:::{tip} Basic configuration file example
 :class: dropdown
 Reepository config file example: `/.aider.conf.yml`
 
@@ -145,81 +221,6 @@ Readonly: aider.CONVENTIONS
 
 +++
 
-## **2. Using proxy**
-
-+++
-
-If your organization requires all external traffic to be routed through the proxy, you can set these environment variables and pass them to the terminal session before starting the aider:
-
-```bash
-export HTTPS_PROXY="http://[user:password]@proxy_ip_address:port"
-export https_proxy="http://[user:password]@proxy_ip_address:port"
-```
-
-You should NOT set `HTTP_PROXY` variable because it breaks the connection between the aider and local ollama through `http://127.0.0.1:11434`.
-
-You can wrap this configuration into a script wrapper `aider_proxy.sh`:
-
-```bash
-#!/bin/bash
-set -euo pipefail
-
-
-main() {
-
-    export HTTPS_PROXY="http://[user:password]@proxy_ip_address:port"
-    export https_proxy="http://[user:password]@proxy_ip_address:port"
-
-    exec aider "$@"
-}
-
-
-main "$@"
-```
-
-Make this [script executable](/tools/docs/scripts_instructions/how_to_use_scripts_on_gnu_linux.ipynb) and add it to your PATH. Now you can run aider simply:
-
-```bash
-$ aider_proxy.sh --model gemini/gemini-3-flash
-```
-
-Avoid using proxy if it's not necessary for it adds complexity to the aider configuration.
-
-+++
-
-## **3. Running & Basic Usage**
-
-+++
-
-### Launching aider
-
-+++
-
-command|description
--|-
-`aider --model ollama_chat/<model_name>`|run a local model in terminal (get name from `ollama ls`)
-`--gui`, `--no-gui`, `--browser`, `--no-browser`|Run aider in your browser (default: False); env var: `AIDER_GUI`
-`aider --list-models gemini/`| list available models
-
-+++
-
-### Core File Management
-
-+++
-
-| Command | Description |
-| :--- | :--- |
-`--file FILE`|specify a file to edit (can be used multiple times); env var: `AIDER_FILE`
-`--read FILE`|specify a read-only file (can be used multiple times); env var: `AIDER_READ`
-`/add`|Add files to the chat so aider can edit them or review them in detail.
-`/tokens`|Report on the number of tokens used by the current chat context
-
-:::{tip}
-Use `/add` to tell Aider a file exists and is available for modification. This way aider knows this file exists and **will write to it**. Otherwise, aider might write the changes to an existing file; [source](https://aider.chat/docs/usage/tips.html)
-:::
-
-+++
-
 ### Using the Repository Map
 
 +++
@@ -276,14 +277,22 @@ Get it in the [Google AI studio](https://aistudio.google.com/api-keys), free tie
 
 +++
 
-### 4.2 Add API to aider
+#### GROQ
+
++++
+
+Groq currently offers free API access to the models they host. Obtain your API key here: https://console.groq.com/keys
+
++++
+
+### 4.2 Add API to aider: Gemini Example
 
 +++
 
 You can pass an API key using either the command line or the config file: 
 
 ```bash
-$ aider --model gemini/gemini-2.5-flash --api-key gemini=<your_api_key>
+$ aider --model gemini/gemini-3-flash --api-key gemini=<your_api_key>
 ```
 
 Using your LOCAL `~/.aider.conf.yml`. Set Gemini as the main (architect) model and save the API key:
@@ -291,7 +300,7 @@ Using your LOCAL `~/.aider.conf.yml`. Set Gemini as the main (architect) model a
 ```bash
 $ ~/.aider.conf.yml
 
-model: gemini/gemini-2.5-flash
+model: gemini/gemini-3-flash
 
 api-key:
   - gemini=<your_api_key>
@@ -303,15 +312,45 @@ Now you can launch it like this:
 $ aider
 ```
 
+:::{seealso} See aider documentation for details
+https://aider.chat/docs/llms.html
+:::
+
 +++
 
-#### Gemini limits
+### 4.3 Limits
 
 +++
 
-But it is a better idea to choose a model via command line because each Gemini model you request has its own limit. You can control the usage [here](https://aistudio.google.com/app/usage):
+But it is a better idea to choose a model via command line because each model you request via API has its limit:
 
-:::{important} How rate limits work
+```bash
+$ aider --model gemini/gemini-3-flash
+```
+
++++
+
+| Model (Free‑Tier)        | Token Limit Per Request|
+|--------------------------|-------------|
+|**GROQ**||
+| llama-3.3-70b-versatile  | 12K     |
+| qwen/qwen3-32b           | 6K       |
+
+| Model (Free‑Tier)        | Token Limit Per Minute|
+|--------------------------|-------------|
+|**Gemini**||
+|gemini/gemini-3-flash-preview| |
+|gemini/gemini-3-flash| 250K |
+|gemini/gemini-2.5-flash| 250K |
+|gemini/gemini-2.5-flash-preview-09-2025||
+|gemini/gemini-2.5-flash-lite| 250K |
+|gemini/gemma-3-27b-it| 15K|
+
+**Gemini Free tier limits**
+
+You can control the usage [here](https://aistudio.google.com/app/usage):
+
+:::{important} How Gemini rate limits work
 :class: dropdown
 Rate limits are usually measured across three dimensions:
 
@@ -330,13 +369,55 @@ Free tier rate limits by model. Peak usage per model compared to its limit over 
 
 +++
 
-### 4.3 Switch between models
+### 4.3 Combining different models
 
 +++
 
-The capable LLM will act as the main model to help you prepare the plan based on the large context while the local model set as `editor-model` will do the coding, testing, and fixing, saving you tokens.
+#### List models
 
-Edit your local, NOT the repo's `.aider.conf.yml`:
++++
+
+You can list available models with this command:
+
+```bash
+$ aider --list-models gemini/
+
+$ aider --list-models groq/
+```
+
+**Gemini**:
+
+Most of the Gemini models are not available in free tier, so manually check. On 11 Jan 2026, the free API key supports these models with limits:
+
+- gemini/gemini-3-flash-preview
+- gemini/gemini-3-flash
+- gemini/gemini-2.5-flash
+- gemini/gemini-2.5-flash-preview-09-2025
+- gemini/gemini-2.5-flash-lite
+- gemini/gemma-3-27b-it
+
+**GROQ**:
+
+- groq/gemma-7b-it
+- groq/llama-3.1-8b-instant
+- **groq/llama-3.3-70b-versatile**
+- groq/meta-llama/llama-4-maverick-17b-128e-instruct
+- groq/meta-llama/llama-4-scout-17b-16e-instruct
+- groq/meta-llama/llama-guard-4-12b
+- groq/moonshotai/kimi-k2-instruct-0905
+- **groq/openai/gpt-oss-120b**
+- groq/openai/gpt-oss-20b
+- **groq/qwen/qwen3-32b**
+
++++
+
+#### Switch between models during session
+
++++
+
+In the `/architect` mode the capable LLM can act as the main model to help you prepare the plan based on the large context while the local or the cheaper model set as `editor-model` can do the coding, testing, and fixing, saving you tokens.
+
+Edit your local, NOT the repo's [`.aider.conf.yml`](#aider-conf-yaml):
 
 ```bash
 $ ~/.aider.conf.yml
@@ -347,12 +428,6 @@ editor-model: ollama_chat/qwen2.5-coder:14b-instruct-q4_K_M
 Now in the `/architect` mode the Gemini model will send tasks to the local Qwen model on your local GPU.
 
 +++
-
-Here is the comprehensive list of available Gemini models through aider:
-
-```{code-cell}
-aider_proxy.sh --list-models gemini/
-```
 
 ## **5. Upgrading**
 
