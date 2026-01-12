@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.6  
+Version: 0.2.0  
 Birth: 2025-11-18  
-Last Modified: 2026-01-11
+Last Modified: 2026-01-13
 
 ---
 
@@ -138,89 +138,6 @@ Use `/add` to tell Aider a file exists and is available for modification. This w
 
 +++
 
-:::{tip} Basic configuration file example
-:class: dropdown
-Reepository config file example: `/.aider.conf.yml`
-
-```yaml
-# Disable telemetry to keep your usage data private
-analytics-disable: true
-
-# Automatically load these files as read-only context for every session
-# Great for project-specific coding standards or documentation
-read:
-  - aider.CONVENTIONS
-
-# --- Global Interface & Git Options ---------
-
-# Set the language used for AI-generated commit messages
-commit-language: "US English"
-
-# Specify your preferred CLI text editor for long-form input
-editor: "vim"
-
-# Optimized for terminal themes with light backgrounds
-light-mode: true
-
-# Set to 'false' to review changes before Aider commits them to Git
-auto-commits: false
-
-# Hide technical warnings about specific model quirks
-show-model-warnings: false
-
-# Max tokens to use for the 'repo map' (helps the AI understand project structure)
-map-tokens: 2048
-
-# ----- Model Selection -----------
-
-# The primary model used for the chat interface
-model: gemini/gemini-2.5-flash
-
-# A secondary model used specifically for applying code edits 
-# (useful for saving costs or using a local model for logic)
-editor-model: ollama_chat/qwen2.5-coder:14b-instruct-q4_K_M
-
-# Friendly names for switching models quickly within the chat
-alias:
-  - "qwen14:ollama_chat/qwen2.5-coder:14b-instruct-q4_K_M"
-  - "gemini2.5-flash:gemini/gemini-2.5-flash"
-
-# ----- Authentication -----------
-
-# Provide API keys for cloud providers
-api-key:
-  - gemini=<your_api_key>
-
-# ---- Environment Configuration ----------
-
-# Define system variables, such as the local endpoint for Ollama
-set-env:
-  - OLLAMA_API_BASE=http://localhost:11434
-
-```
-
-**Starting the Session**
-
-When you run `aider` from your terminal, the output confirms that the configuration was loaded correctly:
-
-```bash
-$ aider
-Analytics have been permanently disabled.
-─────────────────────────────────────────────────────────────────────────
-Aider v0.86.1
-Model: gemini/gemini-2.5-flash with diff-fenced edit format
-Git repo: .git with 243 files
-Repo-map: using 2048 tokens, auto refresh
-Added aider.CONVENTIONS to the chat (read-only).
-─────────────────────────────────────────────────────────────────────────
-Readonly: aider.CONVENTIONS
-> 
-
-```
-:::
-
-+++
-
 ### Using the Repository Map
 
 +++
@@ -285,7 +202,15 @@ Groq currently offers free API access to the models they host. Obtain your API k
 
 +++
 
-### 4.2 Add API to aider: Gemini Example
+#### OpenRouter
+
++++
+
+https://openrouter.ai/settings/keys
+
++++
+
+### 4.2 Add API to aider
 
 +++
 
@@ -304,13 +229,23 @@ model: gemini/gemini-3-flash
 
 api-key:
   - gemini=<your_api_key>
+  - groq=<your_api_key>
+  - openrouter=<your_api_key>
 ```
 
-Now you can launch it like this:
+Now you can launch it like this, the Gemini model will be used as a main model.
 
 ```bash
 $ aider
 ```
+
+Launch other models with `--model` flag, like this:
+
+```bash
+$ aider --model openrouter/openai/gpt-oss-120b
+```
+
+See how to get the list of models in the [{name}](#list-models-section) section below.
 
 :::{seealso} See aider documentation for details
 https://aider.chat/docs/llms.html
@@ -329,20 +264,6 @@ $ aider --model gemini/gemini-3-flash
 ```
 
 +++
-
-| Model (Free‑Tier)        | Token Per Request| Token Per Minute |
-|--------------------------|-------------|----------------------|
-|**GROQ**|||
-| llama-3.3-70b-versatile  | 12K     ||
-| qwen/qwen3-32b           | 6K       ||
-| openai/gpt-oss-120b      | | 8K |
-|**Gemini**|||
-|gemini/gemini-3-flash-preview| ||
-|gemini/gemini-3-flash | | 250K |
-|gemini/gemini-2.5-flash | | 250K |
-|gemini/gemini-2.5-flash-preview-09-2025 | |
-|gemini/gemini-2.5-flash-lite | | 250K | |
-|gemini/gemma-3-27b-it | | 15K|
 
 **Gemini Free tier limits**
 
@@ -371,6 +292,7 @@ Free tier rate limits by model. Peak usage per model compared to its limit over 
 
 +++
 
+(list-models-section)=
 #### List models
 
 +++
@@ -383,29 +305,45 @@ $ aider --list-models gemini/
 $ aider --list-models groq/
 ```
 
-**Gemini**:
+On 13 Jan 2026, the free API keys of Google, GROQ, OpenRouter support these models with limits:
 
-Most of the Gemini models are not available in free tier, so manually check. On 11 Jan 2026, the free API key supports these models with limits:
-
-- gemini/gemini-3-flash-preview
-- gemini/gemini-3-flash
-- gemini/gemini-2.5-flash
-- gemini/gemini-2.5-flash-preview-09-2025
-- gemini/gemini-2.5-flash-lite
-- gemini/gemma-3-27b-it
-
-**GROQ**:
-
-- groq/gemma-7b-it
-- groq/llama-3.1-8b-instant
-- **groq/llama-3.3-70b-versatile**
-- groq/meta-llama/llama-4-maverick-17b-128e-instruct
-- groq/meta-llama/llama-4-scout-17b-16e-instruct
-- groq/meta-llama/llama-guard-4-12b
-- groq/moonshotai/kimi-k2-instruct-0905
-- **groq/openai/gpt-oss-120b**
-- groq/openai/gpt-oss-20b
-- **groq/qwen/qwen3-32b**
+| Model (Free‑Tier)        | Token Per Request| Token Per Minute |
+|--------------------------|-------------|----------------------|
+|**GROQ**|||
+|groq/gemma-7b-it|||
+|groq/llama-3.1-8b-instant|||
+|**groq/llama-3.3-70b-versatile**|  12K ||
+|groq/meta-llama/llama-4-maverick-17b-128e-instruct|||
+|groq/meta-llama/llama-4-scout-17b-16e-instruct|||
+|groq/meta-llama/llama-guard-4-12b|||
+|groq/moonshotai/kimi-k2-instruct-0905|||
+|**groq/openai/gpt-oss-120b**||8K|
+|groq/openai/gpt-oss-20b|||
+|**groq/qwen/qwen3-32b**| 6K ||
+|**Gemini**|||
+|gemini/gemini-3-flash-preview| ||
+|gemini/gemini-3-flash | | 250K |
+|gemini/gemini-2.5-flash | | 250K |
+|gemini/gemini-2.5-flash-preview-09-2025 | |
+|gemini/gemini-2.5-flash-lite | | 250K | |
+|gemini/gemma-3-27b-it | | 15K|
+| **OpenRouter** | | |
+|openrouter/qwen/qwen3-coder:free|||
+|openrouter/qwen/qwen3-next-80b-a3b-instruct|||
+|openrouter/qwen/qwen3-235b-a22b|||
+|openrouter/qwen/qwen-plus|||
+|openrouter/qwen/qwen-turbo|||
+|openrouter/deepseek/deepseek-r1-0528:free|||
+|openrouter/deepseek/deepseek-v3.2|||
+|openrouter/google/gemini-2.5-flash-lite|||
+|openrouter/google/gemini-2.0-flash-lite-001|||
+|openrouter/google/gemini-2.0-flash-001|||
+|openrouter/x-ai/grok-4.1-fast|||
+|openrouter/x-ai/grok-4-fast|||
+|openrouter/x-ai/grok-code-fast-1|||
+|openrouter/x-ai/grok-3-mini|||
+|openrouter/meta-llama/llama-3.3-70b-instruct:free|||
+|openrouter/meta-llama/llama-3.1-405b-instruct|||
 
 +++
 
