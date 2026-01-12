@@ -6,11 +6,10 @@ commit-language: "US English"
 editor: "vim"
 
 read:
-  - aider.CONVENTIONS
+  - CONVENTIONS.md
 
 # Run Jupytext sync as a 'lint' step after Aider makes changes
 lint-cmd:
   - "md: uv run jupytext --sync"
   - "ipynb: uv run jupytext --sync"
 auto-lint: true
-
