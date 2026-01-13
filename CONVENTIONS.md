@@ -6,4 +6,5 @@ NEVER alter, remove, or reformat MyST directive syntax.
 ALWAYS prefer Path from pathlib in Python; NEVER use os library.
 
 ALWAYS follow top-down design in coding: main function at the top as the entry point.
-ALWAYS analyze provided output first and only then analyze the code logic.
+
+When editing configuration files, always use placeholders like [IP_ADDRESS] or [DOMAIN] instead of real values.
