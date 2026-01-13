@@ -168,7 +168,7 @@ command|description
 
 +++
 
-## **5. Upgrading**
+## **4. Upgrading**
 
 +++
 

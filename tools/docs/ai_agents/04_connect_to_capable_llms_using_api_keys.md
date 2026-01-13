@@ -15,6 +15,17 @@ kernelspec:
 
 +++
 
+---
+
+Owner: Vadim Rudakov, lefthand67@gmail.com  
+Version: 0.1.0  
+Birth: 2026-01-14  
+Last Modified: 2026-01-14
+
+---
+
++++
+
 Connect your aider or Open WebUI to the capable LLMs, like Gemini, Grok, etc. with the free or paid teer. This allows you to work with much bigger context windows than the local LMs provide.
 
 +++
@@ -96,6 +107,10 @@ https://aider.chat/docs/llms.html
 
 +++
 
+### Limits
+
++++
+
 But it is a better idea to choose a model via command line because each model you request via API has its limit:
 
 ```bash
@@ -127,6 +142,21 @@ Free tier rate limits by model. Peak usage per model compared to its limit over 
 
 +++
 
+#### OpenRouter Limist
+
++++
+
+:::{note}
+> Free usage limits: If you’re using a free model variant (with an ID ending in `:free`), you can make up to 20 requests per minute.
+>  
+> The following per-day limits apply:  
+> If you have purchased less than 10 credits, you’re limited to 50 `:free` model requests per day.
+>
+> -- https://openrouter.ai/docs/api/reference/limits
+:::
+
++++
+
 (list-models-section)=
 ## **3. List models**
 
@@ -140,45 +170,45 @@ $ aider --list-models gemini/
 $ aider --list-models groq/
 ```
 
-On 13 Jan 2026, the free API keys of Google, GROQ, OpenRouter support these models with limits:
+On 13 Jan 2026, the **free** API keys of Google, GROQ, OpenRouter support these models with limits:
 
-| Model (Free‑Tier)        | Token Per Request| Token Per Minute |
-|--------------------------|-------------|----------------------|
-|**GROQ** |||
-|gemma-7b-it|||
-|llama-3.1-8b-instant|||
-|llama-3.3-70b-versatile|  12K ||
-|meta-llama/llama-4-maverick-17b-128e-instruct|||
-|meta-llama/llama-4-scout-17b-16e-instruct|||
-|meta-llama/llama-guard-4-12b|||
-|moonshotai/kimi-k2-instruct-0905|||
-|openai/gpt-oss-120b||8K|
-|openai/gpt-oss-20b|||
-|qwen/qwen3-32b| 6K ||
-|**Gemini** |||
-|gemini-3-flash-preview| ||
-|gemini-3-flash | | 250K |
-|gemini-2.5-flash | | 250K |
-|gemini-2.5-flash-preview-09-2025 | |
-|gemini-2.5-flash-lite | | 250K | |
-|gemma-3-27b-it | | 15K|
-| **OpenRouter** | | |
-|qwen/qwen3-coder:free|||
-|qwen/qwen3-next-80b-a3b-instruct|||
-|qwen/qwen3-235b-a22b|||
-|qwen/qwen-plus|||
-|qwen/qwen-turbo|||
-|deepseek/deepseek-r1-0528:free|||
-|deepseek/deepseek-v3.2|||
-|google/gemini-2.5-flash-lite|||
-|google/gemini-2.0-flash-lite-001|||
-|google/gemini-2.0-flash-001|||
-|x-ai/grok-4.1-fast|||
-|x-ai/grok-4-fast|||
-|x-ai/grok-code-fast-1|||
-|x-ai/grok-3-mini|||
-|meta-llama/llama-3.3-70b-instruct:free|||
-|meta-llama/llama-3.1-405b-instruct|||
+| Model (Free‑Tier)        | Token Per Request| Token Per Minute | Requests per day |
+|--------------------------|-------------|----------------------|---|
+|**GROQ** ||||
+|gemma-7b-it||||
+|llama-3.1-8b-instant||||
+|llama-3.3-70b-versatile|  12K |||
+|meta-llama/llama-4-maverick-17b-128e-instruct||||
+|meta-llama/llama-4-scout-17b-16e-instruct||||
+|meta-llama/llama-guard-4-12b||||
+|moonshotai/kimi-k2-instruct-0905||||
+|openai/gpt-oss-120b||8K||
+|openai/gpt-oss-20b||||
+|qwen/qwen3-32b| 6K |||
+|**Gemini** ||||
+|gemini-3-flash-preview| || 20 |
+|gemini-3-flash | | 250K | 20 |
+|gemini-2.5-flash | | 250K | 20 |
+|gemini-2.5-flash-preview-09-2025 | | 20 |
+|gemini-2.5-flash-lite | | 250K | | 20 |
+|gemma-3-27b-it | | 15K| 14.4K|
+| **OpenRouter** | | | 50 for all models |
+|qwen/qwen3-coder:free||||
+|qwen/qwen3-next-80b-a3b-instruct||||
+|qwen/qwen3-235b-a22b||||
+|qwen/qwen-plus||||
+|qwen/qwen-turbo||||
+|deepseek/deepseek-r1-0528:free||||
+|deepseek/deepseek-v3.2||||
+|google/gemini-2.5-flash-lite||||
+|google/gemini-2.0-flash-lite-001||||
+|google/gemini-2.0-flash-001||||
+|x-ai/grok-4.1-fast||||
+|x-ai/grok-4-fast||||
+|x-ai/grok-code-fast-1||||
+|x-ai/grok-3-mini||||
+|meta-llama/llama-3.3-70b-instruct:free||||
+|meta-llama/llama-3.1-405b-instruct||||
 
 To use these models, add prefix of the provider: `groq/`, `gemini/`, `openrouter/`.
 
