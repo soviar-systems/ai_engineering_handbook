@@ -1,4 +1,4 @@
-# ADR 0002: Adoption of the Pre-commit Framework
+# ADR 26002: Adoption of the Pre-commit Framework
 
 ## Title
 
@@ -51,7 +51,7 @@ We will adopt the **`pre-commit` framework** as our primary hook manager.
 
 ## References
 
-* [ADR 0001: Use of Python and OOP for Git Hook Scripts](/architecture/adr/adr_0001_use_of_python_and_oop_for_git_hook_scripts.md)
+* [ADR 26001: Use of Python and OOP for Git Hook Scripts](/architecture/adr/adr_26001_use_of_python_and_oop_for_git_hook_scripts.md)
 * `configure_repo.sh` (Current repository configuration script)
 * [Pre-commit Framework Documentation](https://pre-commit.com/)
 

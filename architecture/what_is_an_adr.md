@@ -1,5 +1,14 @@
 # What is an ADR?
 
+---
+
+Owner: Vadim Rudakov, lefthand67@gmail.com  
+Version: 0.1.1  
+Birth: 2026-01-06  
+Last Modified: 2026-01-14
+
+---
+
 **ADR (Architecture Decision Record) is a simple text document capturing a key architectural decision made within a project.** An ADR describes:
 
 * How and why the decision was made,
@@ -30,12 +39,12 @@ Maintaining and approving ADRs is often the responsibility of Tech Leads or Seni
 
 ## ADR Template in Russian
 
-Use the file `./0001-template.md` as a template.
+Use the [template](/architecture/adr/adr_template.md) for new ADRs.
 
 ## Best Practices for Using ADR in Git
 
-* Store ADRs as Markdown files in a separate folder — for example, `docs/adr/` or `architecture/decisions/` within the repository.
-* The filename should start with a number (with leading zeros) and contain a brief description of the decision, e.g., `0001-use-postgresql.md`.
+* Store ADRs as Markdown files in a separate folder — for example, `architecture/adr/` within the repository.
+* The filename should start with a number (with leading YY - year, i.e. 26) and contain a brief description of the decision, e.g., `adr_26001_use_of_python_and_oop_for_git_hook_scripts.md`.
 * Treat an ADR as an immutable historical document; if a decision changes, create a new ADR, referencing the previous one as "superseded."
 * Leverage Git capabilities: discuss, review, and approve ADRs via pull requests, just like regular code.
 * Indicate the decision status (Proposed, Accepted, Deprecated, Superseded) to track its lifecycle stage.

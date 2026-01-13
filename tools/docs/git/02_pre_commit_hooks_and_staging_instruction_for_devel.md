@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.1  
+Version: 0.2.2  
 Birth: 2026-01-04  
-Last Modified: 2026-01-09
+Last Modified: 2026-01-14
 
 ---
 
@@ -86,7 +86,7 @@ Git’s staging area reflects the developer’s intentional choice about what be
 
 +++
 
-We use a Python package `pre-commit` for handling local hooks (see ["ADR 0002: Adoption of the Pre-commit Framework"](/architecture/adr/adr_0002_adoption_of_pre_commit_framework.md)).
+We use a Python package `pre-commit` for handling local hooks (see ["ADR 26002: Adoption of the Pre-commit Framework"](/architecture/adr/adr_26002_adoption_of_pre_commit_framework.md)).
 
 The `.pre-commit-config.yaml` file is already configured in the repo, so the developer needs to install pre-commit and install the config to `.git/hooks` repo: 
 

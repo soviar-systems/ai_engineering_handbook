@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.0  
+Version: 0.1.1  
 Birth: 2025-11-29  
-Last Modified: 2026-01-11
+Last Modified: 2026-01-14
 
 ---
 
@@ -71,7 +71,7 @@ Branch names **MUST** use the format:
 
 :::{seealso}
 > 1. [Conventional Branch](https://conventional-branch.github.io/) - external link
-> 2. [ADR 0003: Adoption of `gitlint` for Tiered Workflow Enforcement](/architecture/adr/adr_0003_adoption_of_gitlint_for_tiered_workflow.md)
+> 2. [ADR 26003: Adoption of `gitlint` for Tiered Workflow Enforcement](/architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md)
 :::
 
 +++

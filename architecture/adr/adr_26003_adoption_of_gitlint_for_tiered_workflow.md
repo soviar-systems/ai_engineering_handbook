@@ -1,4 +1,4 @@
-# ADR 0003: Adoption of `gitlint` for Tiered Workflow Enforcement
+# ADR 26003: Adoption of `gitlint` for Tiered Workflow Enforcement
 
 ## Title
 
@@ -50,8 +50,8 @@ We will adopt `gitlint` ([https://jorisroovers.com/gitlint/](https://jorisroover
 ## References
 
 - [Production Git Workflow Standards](/tools/docs/git/01_production_git_workflow_standards.ipynb)
-- [ADR 0001: Use of Python and OOP for Git Hook Scripts](/architecture/adr/adr_0001_use_of_python_and_oop_for_git_hook_scripts.md)
-- [ADR 0002: Adoption of the Pre-commit Framework](/architecture/adr/adr_0002_adoption_of_pre_commit_framework.md)
+- [ADR 26001: Use of Python and OOP for Git Hook Scripts](/architecture/adr/adr_26001_use_of_python_and_oop_for_git_hook_scripts.md)
+- [ADR 26002: Adoption of the Pre-commit Framework](/architecture/adr/adr_26002_adoption_of_pre_commit_framework.md)
 - [Gitlint User-defined Rules](https://www.google.com/search?q=https://jorisroovers.com/gitlint/user_defined_rules/)
 
 ## Participants

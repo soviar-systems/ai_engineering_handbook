@@ -1,4 +1,4 @@
-# ADR 0001: Use of Python and OOP for Git Hook Scripts
+# ADR 26001: Use of Python and OOP for Git Hook Scripts
 
 ## Title
 

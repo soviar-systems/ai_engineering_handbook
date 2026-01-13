@@ -3,9 +3,9 @@
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.4  
+Version: 0.1.5  
 Birth: 2025-12-02  
-Last Modified: 2026-01-11
+Last Modified: 2026-01-14
 
 ---
 
@@ -27,7 +27,7 @@ The underlying architectural decision to use the SLM was based on achieving effi
 | **Mandated Solution** | **Replace the LLM** in Stage 1 with a **Deterministic CLI Tool** (`gitlint`) to enforce the format. Limit the SLM role to the final, high-context Stage 3 transformation. | **MANDATORY** |
 
 :::{seealso}
-> [ADR 0003: Adoption of `gitlint` for Tiered Workflow Enforcement](/architecture/adr/adr_0003_adoption_of_gitlint_for_tiered_workflow.md)
+> [ADR 26003: Adoption of `gitlint` for Tiered Workflow Enforcement](/architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md)
 :::
 
 ## 2. Introduction: Failure of a High-Frequency SLM Application

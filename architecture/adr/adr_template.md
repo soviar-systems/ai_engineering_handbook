@@ -1,6 +1,4 @@
-# Architecture Decision Record (ADR) Template
-
-# ADR 0001: Short Description
+# ADR YY001: Short Description
 
 ## Title
 A brief, concise name for the architectural decision 
