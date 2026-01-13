@@ -1,4 +1,4 @@
-# ADR 0004: Implementation of Agentic RAG for Autonomous Research
+# ADR 26004: Implementation of Agentic RAG for Autonomous Research
 
 ## Title
 
@@ -51,8 +51,7 @@ We will implement an **Agentic RAG "Pre-Flight" Wrapper** (the `aidx` pattern). 
 
 ## References
 
-* [ADR 0001: Use of Python and OOP for Git Hook Scripts](/architecture/adr/adr_0001_use_of_python_and_oop_for_git_hook_scripts.md)
-* [Agentic RAG and Standardized Automation for AI Engineering](/ai_system/4_orchestration/workflows/agentic_rag_and_standardized_automation_for_ai_eng.ipynb)
+* [ADR 26001: Use of Python and OOP for Git Hook Scripts](/architecture/adr/adr_26001_use_of_python_and_oop_for_git_hook_scripts.md)
 * ISO 29148: Systems and Software Engineering — Life Cycle Processes
 * SWEBOK Guide V4.0 - Software Engineering Body of Knowledge
 * [Agentic Retrieval-Augmented Generation: A Survey](https://arxiv.org/abs/2501.09136)
