@@ -39,7 +39,7 @@ All Git hooks will be written in Python. These scripts must follow Object-Orient
 ### Negative/Risks
 
 * **Execution Latency:** Python's startup time is roughly 100ms–200ms. **Mitigation:** Logic will be kept lean, and heavy imports will be deferred until needed within specific methods.
-* **Interpreter Dependency:** Requires Python to be present on the host machine. **Mitigation:** We are standardizing on Python 3.10+ as part of our core development environment.
+* **Interpreter Dependency:** Requires Python to be present on the host machine. **Mitigation:** We are standardizing on Python 3.13+ as part of our core development environment.
 
 ## Alternatives Considered
 
