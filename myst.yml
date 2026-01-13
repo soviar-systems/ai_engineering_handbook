@@ -9,6 +9,7 @@ project:
   github: https://github.com/lefthand67/ai_engineering_handbook
   exclude:
     - "RELEASE_NOTES.md"
+    - "CONVENTIONS.md"
     - "architecture/adr/0001-template.md"
     - "misc/*"
     - "research/slm_from_scratch/old/*"
