@@ -39,11 +39,25 @@ class TestLinkExtractor:
     @pytest.mark.parametrize(
         "content,expected_links",
         [
-            ("[text](link.ipynb)", ["link.ipynb"]),
-            ("[a](x.ipynb) and [b](y.ipynb)", ["x.ipynb", "y.ipynb"]),
+            ("[text](link.ipynb)", [("link.ipynb", 1)]),
+            ("[a](x.ipynb) and [b](y.ipynb)", [("x.ipynb", 1), ("y.ipynb", 1)]),
             ("no links here", []),
-            ("![image](img.png)", ["img.png"]),  # also matches image links
-            ("[broken](  spaced link.ipynb  )", ["  spaced link.ipynb  "]),
+            ("![image](img.png)", [("img.png", 1)]),  # also matches image links
+            ("[broken](  spaced link.ipynb  )", [("  spaced link.ipynb  ", 1)]),
+            # MyST include directives
+            (
+                "```{include} /architecture/adr_index.md\n:class: dropdown\n```",
+                [("/architecture/adr_index.md", 1)],
+            ),
+            ("```{include} ../adr_index.md\n```", [("../adr_index.md", 1)]),
+            ("```{include} simple.md```", [("simple.md", 1)]),
+            (
+                "Multiple:\n```{include} one.md\n```\nAnd ```{include} /two.md\n```",
+                [("one.md", 2), ("/two.md", 4)],
+            ),
+            ("```{include}  spaced.md  \n```", [("  spaced.md  ", 1)]),
+            ("```{not_an_include} file.md\n```", []),
+            ("```{include} \n```", []),
         ],
     )
     def test_extract_links(self, tmp_path, content, expected_links):
@@ -123,25 +137,25 @@ class TestLinkValidator:
 
     def test_validate_link_external_skipped(self, validator, tmp_path):
         source = tmp_path / "a.ipynb"
-        error = validator.validate_link("https://example.com", source)
+        error = validator.validate_link("https://example.com", source, 1)
         assert error is None
 
     def test_validate_link_internal_fragment_skipped(self, validator, tmp_path):
         source = tmp_path / "a.ipynb"
-        error = validator.validate_link("#section", source)
+        error = validator.validate_link("#section", source, 1)
         assert error is None
 
     def test_validate_link_broken(self, validator, tmp_path):
         source = tmp_path / "a.ipynb"
-        error = validator.validate_link("nonexistent.ipynb", source)
+        error = validator.validate_link("nonexistent.ipynb", source, 10)
         assert "BROKEN LINK" in error
-        assert "a.ipynb" in error
+        assert "a.ipynb:10" in error
 
     def test_validate_link_valid(self, validator, tmp_path):
         target = tmp_path / "exists.ipynb"
         target.touch()
         source = tmp_path / "a.ipynb"
-        error = validator.validate_link("exists.ipynb", source)
+        error = validator.validate_link("exists.ipynb", source, 1)
         assert error is None
 
 
@@ -330,6 +344,19 @@ class TestLinkCheckerCLI:
         captured = capsys.readouterr()
         assert "No files matching '*.xyz' found!" in captured.out
 
+    def test_run_broken_myst_include(self, tmp_path, capsys):
+        (tmp_path / "source.md").write_text(
+            "```{include} missing.md\n```", encoding="utf-8"
+        )
+
+        cli = LinkCheckerCLI()
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(["--paths", str(tmp_path), "--pattern", "*.md"])
+
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "BROKEN LINK" in captured.out
+
 
 # ======================
 # Defensive Tests
@@ -366,7 +393,7 @@ def test_nonexistent_input_path(tmp_path, capsys):
 def test_link_validator_skip_logic(tmp_path, link_str, should_skip):
     validator = LinkValidator(root_dir=tmp_path)
     source = tmp_path / "source.ipynb"
-    error = validator.validate_link(link_str, source)
+    error = validator.validate_link(link_str, source, 1)
     if should_skip:
         assert error is None
     else:
@@ -398,6 +425,33 @@ def test_e2e_with_git_root(tmp_path, capsys):
         # Explicitly use --paths and avoid monkeypatch
         with pytest.raises(SystemExit) as exc_info:
             cli.run(["--verbose", "--paths", str(source)])
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "Using Git root" in captured.out
+
+
+def test_e2e_myst_include_with_git_root(tmp_path, capsys):
+    git_root = tmp_path / "repo"
+    git_root.mkdir()
+    (git_root / ".git").mkdir()
+    docs = git_root / "docs"
+    docs.mkdir()
+    target = git_root / "architecture" / "adr_index.md"
+    target.parent.mkdir()
+    target.touch()
+    source = docs / "guide.md"
+    source.write_text(
+        "```{include} /architecture/adr_index.md\n:class: dropdown\n```",
+        encoding="utf-8",
+    )
+
+    cli = LinkCheckerCLI()
+    with (
+        patch.object(LinkCheckerCLI, "get_git_root_dir", return_value=git_root),
+        patch("pathlib.Path.cwd", return_value=docs),
+    ):
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(["--paths", str(source)])
         assert exc_info.value.code == 0
         captured = capsys.readouterr()
         assert "Using Git root" in captured.out
