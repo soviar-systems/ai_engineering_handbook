@@ -46,3 +46,7 @@ List of personnel who participated in the decision.
 
 1. Name1 
 2. Name2
+
+```{include} /architecture/adr_index.md
+
+```

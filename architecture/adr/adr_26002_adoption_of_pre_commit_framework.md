@@ -14,7 +14,7 @@ Accepted
 
 ## Context
 
-While **ADR 0001** established Python and OOP as the standard for writing hook logic to improve testability and maintainability, we require a standardized way to distribute and execute these hooks across the team.
+While {term}`ADR 26001` established Python and OOP as the standard for writing hook logic to improve testability and maintainability, we require a standardized way to distribute and execute these hooks across the team.
 
 Currently, a `configure_repo.sh` script exists to manually install the `pre-commit` package and set up the Git hooks. Without a formal framework:
 
@@ -34,7 +34,7 @@ We will adopt the **`pre-commit` framework** as our primary hook manager.
 
 ### Positive
 
-* **Efficiency:** `pre-commit` only runs on staged files by default, mitigating the execution latency risks noted in ADR 0001.
+* **Efficiency:** `pre-commit` only runs on staged files by default, mitigating the execution latency risks noted in {term}`ADR 26001`.
 * **Consistency:** Every developer runs the exact same hook versions defined in the configuration file.
 * **Simplified Onboarding:** The `configure_repo.sh` script automates the environment setup via `uv`.
 * **Standardization:** Provides a unified way to combine custom OOP-based hooks with industry-standard tools.
@@ -46,16 +46,20 @@ We will adopt the **`pre-commit` framework** as our primary hook manager.
 
 ## Alternatives
 
-* **Manual Bash Hooks:** Rejected in ADR 0001 due to lack of testing and maintenance debt.
+* **Manual Bash Hooks:** Rejected in {term}`ADR 26001` due to lack of testing and maintenance debt.
 * **Husky:** Rejected as it introduces a Node.js dependency into a Python-standardized environment.
 
 ## References
 
-* [ADR 26001: Use of Python and OOP for Git Hook Scripts](/architecture/adr/adr_26001_use_of_python_and_oop_for_git_hook_scripts.md)
-* `configure_repo.sh` (Current repository configuration script)
+* {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
+* [configure_repo.sh](/tools/scripts/configure_repo.sh) (Current repository configuration script)
 * [Pre-commit Framework Documentation](https://pre-commit.com/)
 
 ## Participants
 
 1. Vadim Rudakov
 2. Gemini (AI Thought Partner)
+
+```{include} /architecture/adr_index.md
+
+```

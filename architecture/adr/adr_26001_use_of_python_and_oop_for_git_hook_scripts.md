@@ -56,3 +56,8 @@ All Git hooks will be written in Python. These scripts must follow Object-Orient
 ## Participants
 
 1. Vadim Rudakov
+2. Senior AI Architect (Gemini 3 Flash)
+
+```{include} /architecture/adr_index.md
+
+```
