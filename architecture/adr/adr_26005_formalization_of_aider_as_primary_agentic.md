@@ -16,10 +16,10 @@ Proposed
 
 Our environment requires high-integrity CI/CD and automation while operating on bare-metal systems with limited VRAM (Fedora/Debian stack). We face a critical "Switching Moment" bottleneck where local 14B models (e.g., `qwen2.5-coder`) suffer from context overload and GPU crashes when inheriting full conversational histories from high-reasoning cloud models. Furthermore, we must adhere to:
 
-* **ADR 26001**: Python/OOP standards for all automation logic.
-* **ADR 26002**: Orchestration via the `pre-commit` framework.
-* **ADR 26003**: Strict Tiered Workflow enforcement via `gitlint`.
-* **ADR 26004**: Integration with Agentic RAG for knowledge retrieval.
+* **{term}`ADR 26001`**: Python/OOP standards for all automation logic.
+* **{term}`ADR 26002`**: Orchestration via the `pre-commit` framework.
+* **{term}`ADR 26003`**: Strict Tiered Workflow enforcement via `gitlint`.
+* **{term}`ADR 26004`**: Integration with Agentic RAG for knowledge retrieval.
 
 ## Decision
 
@@ -27,7 +27,7 @@ We will adopt `aider` as our primary agentic tool, implemented through a **Two-P
 
 1. **Hybrid Configuration**: We will utilize a Cloud Architect (e.g., Gemini 3 Flash) for high-reasoning planning and a Local Editor (e.g., Qwen2.5-Coder 14B) for code implementation.
 2. **State Isolation (The Bridge Pattern)**: To prevent VRAM crashes, the Architect and Editor phases will be decoupled. The Architect will generate a standalone `artifacts/plan.md` file, and the Editor will be initialized with a clean context to apply only that plan.
-3. **OOP Python Wrapper**: Following ADR 0001, we will not use raw Shell scripts for complex aider workflows. Instead, we will use the `aider` Python API (`aider.coders`) to build testable, class-based orchestrators (e.g., an `aidx` utility).
+3. **OOP Python Wrapper**: Following {term}`ADR 26001`, we will not use raw Shell scripts for complex aider workflows. Instead, we will use the `aider` Python API (`aider.coders`) to build testable, class-based orchestrators (e.g., an `aidx` utility).
 4. **Workflow Enforcement**: Aider's execution will be gated by `pre-commit` hooks and `gitlint` to ensure all generated code and commits meet Tier 3 standards.
 
 ## Consequences
@@ -37,11 +37,11 @@ We will adopt `aider` as our primary agentic tool, implemented through a **Two-P
 * **VRAM Stability**: Decoupling the "Architect" reasoning from the "Editor" execution prevents the  context growth that crashes local 14B models.
 * **Data Sovereignty**: Highly sensitive code-writing tasks remain local, while only abstract planning is sent to cloud APIs.
 * **Architectural Traceability**: Formalizing plans in `artifacts/plan.md` provides an audit trail for AI decisions.
-* **ADR Compliance**: Using the Python API ensures all AI orchestration logic is unit-testable via `pytest` per ADR 0001.
+* **ADR Compliance**: Using the Python API ensures all AI orchestration logic is unit-testable via `pytest` per {term}`ADR 26001`.
 
 ### Negative
 
-* **Manual Bridge Overhead**: The Two-Pass approach requires explicit hand-off between planning and execution phases. **Mitigation**: Automate this via the `HybridOrchestrator` Python class and `aidx` (see ADR 0004) wrapper.
+* **Manual Bridge Overhead**: The Two-Pass approach requires explicit hand-off between planning and execution phases. **Mitigation**: Automate this via the `HybridOrchestrator` Python class and `aidx` (see {term}`ADR 26004`) wrapper.
 * **Context Truncation Risk**: The Editor may lack "conversational nuance" if the Architect's plan is underspecified. **Mitigation**: Use strict MyST/Markdown templates for the Architect's output to ensure all technical requirements are captured.
 
 ## Alternatives
@@ -51,13 +51,17 @@ We will adopt `aider` as our primary agentic tool, implemented through a **Two-P
 
 ## References
 
-* ADR 26001: Use of Python and OOP for Git Hook Scripts
-* ADR 26002: Adoption of the Pre-commit Framework
-* ADR 26003: Adoption of gitlint for Tiered Workflow Enforcement
-* ADR 26004: Implementation of Agentic RAG for Autonomous Research
+* {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
+* {term}`ADR 26002`: Adoption of the Pre-commit Framework
+* {term}`ADR 26003`: Adoption of gitlint for Tiered Workflow Enforcement
+* {term}`ADR 26004`: Implementation of Agentic RAG for Autonomous Research
 * [Aider Scripting Documentation](https://aider.chat/docs/scripting.html)
 
 ## Participants
 
 1. Vadim Rudakov
-2. Senior DevOps Systems Architect (Gemini)
+2. Senior DevOps Systems Architect (Gemini 3 Flash)
+
+```{include} /architecture/adr_index.md
+
+```
