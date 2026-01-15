@@ -277,7 +277,6 @@ server_config/config/public_key
 rendered/
 
 .aider*
-!.aider.conf.yml
 
 # MyST build outputs
 _build
