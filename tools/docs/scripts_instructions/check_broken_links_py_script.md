@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.3.0  
+Version: 0.4.0  
 Birth: 2026-01-07  
-Last Modified: 2026-01-09
+Last Modified: 2026-01-17
 
 ---
 
@@ -46,16 +46,157 @@ SVA isn’t about minimal *code* — it’s about **minimal *cognitive and opera
 
 +++
 
-### Key Architectural Improvements in v0.3.0
+### Key Architectural Improvements in v0.4.0
 
 +++
 
-* **Explicit Interface**: Transitioned from positional to named arguments (`--paths`) to eliminate ambiguity in CI/CD pipelines.
-* * **Injectable Argument Parsing**: The `LinkCheckerCLI.run()` method now accepts an optional `argv` list, allowing for direct integration testing without global state manipulation (`monkeypatch`).
+The script handles the MyST type of links:
+
+````{include} path/to/file.md ````
 
 +++
 
-## **2. Validation Layers**
+## **2. Key Capabilities & Logic**
+
++++
+
+The script identifies and validates three distinct types of references:
+
+**A. Markdown Links**
+
+Standard syntax: `[text](link)` or `![alt](image)`.
+
+* **Regex**: `r"\[[^\]]*\]\(([^)]+)\)"`
+
+**B. MyST Include Directives**
+
+Used for file transclusion. The script identifies targets within MyST code blocks.
+
+* **Syntax**: ````{include} path/to/file.md ````
+* **Regex**: `r"```\{include\}([^`\n]+)"`
+* **Special Handling**: The script automatically strips a single leading space (common in MyST formatting) to ensure the path resolves correctly.
+
+**C. Directory Resolution**
+
+If a link points to a directory (e.g., `[Intro](./intro/)`), the validator marks it as **valid** only if the directory contains an index file:
+
+1. `index.ipynb`
+2. `README.ipynb`
+
+**Other features:**
+
+* **Git Root Awareness**: The script attempts to find the Git project root using `git rev-parse --show-toplevel`. This allows it to correctly resolve "root-absolute" links (e.g., `/docs/images/logo.png`) relative to the repository base.
+* **Resolution Logic**:
+    * **Relative Paths**: Resolved relative to the source file.
+    * **Root-Relative Paths**: Resolved starting from the Git root directory.
+* **Directory Links**: Validates that a directory exists and contains an index file (e.g., `README.ipynb`).
+* **Skips**: Automatically ignores external URLs (`https://...`), email links (`mailto:`), and internal document fragments (`#anchor`).
+* **Directory & File Exclusion:** Automatically skips common noise directories like `.venv` and `.ipynb_checkpoints`.
+
++++
+
+## **3. Technical Architecture**
+
++++
+
+The script is organized into specialized classes to maintain clarity:
+
+* **`FileFinder`**: Handles recursive traversal. Implements exclusion logic for `.ipynb_checkpoints` and user-defined patterns.
+* **`LinkExtractor`**: Scans file content line-by-line using regex. It captures both standard Markdown and `{include}` patterns.
+* **`LinkValidator`**: The core engine. It determines if a link is an external URL, a fragment, or a local path, then resolves it against the filesystem.
+* **`Reporter`**: Collects `BROKEN LINK` strings into a temporary file and exits with `code 1` if the file is non-empty.
+
++++
+
+## **4. Operational Guide**
+
++++
+
+### Configuration Reference
+
++++
+
+* **Primary Script**: `tools/scripts/check_broken_links.py`
+* **Exclusion Logic**: Managed via `tools/scripts/paths.py` (e.g., ignoring `.venv`, `in_progress/`, and `.ipynb_checkpoints`).
+* **Pre-commit Config**: `.pre-commit-config.yaml`
+* **CI Config**: `.github/workflows/quality.yml`
+
++++
+
+### Command Line Interface
+
++++
+
+```bash
+check_broken_links.py [paths] [--pattern PATTERN] [options]
+
+```
+
+| Argument | Description | Default |
+| --- | --- | --- |
+| `--paths` | One or more directories or specific file paths to scan. | `.` (Current Dir) |
+| `--pattern` | Glob pattern for files to scan. | `*.ipynb` |
+| `--exclude-dirs` | List of directory names to ignore. | `in_progress`, `pr`, `.venv` |
+| `--exclude-files` | List of specific filenames to ignore. | `.aider.chat.history.ipynb` |
+| `--verbose` | Shows detailed logs of skipped URLs and valid links. | `False` |
+
++++
+
+### Manual Execution Commands
+
++++
+
+Run these from the repository root using `uv` for consistent environment resolution:
+
+| Task | Command |
+| --- | --- |
+| **Full Repo Audit** | `uv run tools/scripts/check_broken_links.py` |
+| **Scan Specific Directories** | `uv run tools/scripts/check_broken_links.py --paths tools/docs/ architecture/` |
+| **Scan Multiple Files** | `uv run tools/scripts/check_broken_links.py --paths file1.ipynb file2.ipynb` |
+| **Markdown Audit** | `uv run tools/scripts/check_broken_links.py --pattern "*.md"` |
+
++++
+
+### Examples
+
+```{code-cell}
+cd ../../../
+ls
+```
+
+1. Check all `*.md` files in the current directory and subdirectories:
+
+```{code-cell}
+check_broken_links.py
+```
+
+2. Check all `*.md` files recursively from the `tools/docs` directory:
+
+```{code-cell}
+check_broken_links.py tools/docs --pattern "*.md"
+```
+
+3. Use exclusions (default exclusion are overidden):
+
+```{code-cell}
+check_broken_links.py --exclude-dirs 4_orchestration in_porgress --exclude-files README.ipynb
+```
+
+4. Check the given file:
+
+```{code-cell}
+check_broken_links.py 0_intro/00_onboarding.ipynb
+```
+
+4. Use verbose mode:
+
+    ```bash
+    check_broken_links.py --verbose
+    ```
+
++++
+
+## **5. Validation Layers**
 
 +++
 
@@ -180,122 +321,6 @@ flowchart TB
     style J fill:#f96,stroke:#333
     style K fill:#9f9,stroke:#333
 ```
-
-+++
-
-## **3. Operational Guide**
-
-+++
-
-### Configuration Reference
-
-+++
-
-* **Primary Script**: `tools/scripts/check_broken_links.py`
-* **Exclusion Logic**: Managed via `tools/scripts/paths.py` (e.g., ignoring `.venv`, `in_progress/`, and `.ipynb_checkpoints`).
-* **Pre-commit Config**: `.pre-commit-config.yaml`
-* **CI Config**: `.github/workflows/quality.yml`
-
-+++
-
-### Command Line Interface
-
-+++
-
-```bash
-check_broken_links.py [paths] [--pattern PATTERN] [options]
-
-```
-
-| Argument | Description | Default |
-| --- | --- | --- |
-| `--paths` | One or more directories or specific file paths to scan. | `.` (Current Dir) |
-| `--pattern` | Glob pattern for files to scan. | `*.ipynb` |
-| `--exclude-dirs` | List of directory names to ignore. | `in_progress`, `pr`, `.venv` |
-| `--exclude-files` | List of specific filenames to ignore. | `.aider.chat.history.ipynb` |
-| `--verbose` | Shows detailed logs of skipped URLs and valid links. | `False` |
-
-+++
-
-### Manual Execution Commands
-
-+++
-
-Run these from the repository root using `uv` for consistent environment resolution:
-
-| Task | Command |
-| --- | --- |
-| **Full Repo Audit** | `uv run tools/scripts/check_broken_links.py` |
-| **Scan Specific Directories** | `uv run tools/scripts/check_broken_links.py --paths tools/docs/ architecture/` |
-| **Scan Multiple Files** | `uv run tools/scripts/check_broken_links.py --paths file1.ipynb file2.ipynb` |
-| **Markdown Audit** | `uv run tools/scripts/check_broken_links.py --pattern "*.md"` |
-
-+++
-
-## **4. Key Capabilities & Logic**
-
-+++
-
-* **Link Detection**: Identifies Markdown-style links: `[text](link)` and `![image](img)`.
-* **Git Root Awareness**: The script attempts to find the Git project root using `git rev-parse --show-toplevel`. This allows it to correctly resolve "root-absolute" links (e.g., `/docs/images/logo.png`) relative to the repository base.
-* **Resolution Logic**:
-    * **Relative Paths**: Resolved relative to the source file.
-    * **Root-Relative Paths**: Resolved starting from the Git root directory.
-* **Directory Links**: Validates that a directory exists and contains an index file (e.g., `README.ipynb`).
-* **Skips**: Automatically ignores external URLs (`https://...`), email links (`mailto:`), and internal document fragments (`#anchor`).
-* **Directory & File Exclusion:** Automatically skips common noise directories like `.venv` and `.ipynb_checkpoints`.
-
-+++
-
-## **5. Technical Architecture**
-
-+++
-
-The script is organized into specialized classes to maintain clarity:
-
-* **`FileFinder`**: Traverses the filesystem to collect files while respecting exclusion rules.
-* **`LinkExtractor`**: Uses regular expressions (`r"\[[^\]]*\]\(([^)]+)\)"`) to identify Markdown links within file content.
-* **`LinkValidator`**: Resolves link paths relative to the source file or the Git root and verifies their existence.
-* **`Reporter`**: Aggregates findings and generates a final report, exiting with status code `1` if any broken links are found.
-
-+++
-
-## **Examples**
-
-```{code-cell}
-cd ../../../
-ls
-```
-
-1. Check all `*.md` files in the current directory and subdirectories:
-
-```{code-cell}
-check_broken_links.py
-```
-
-2. Check all `*.md` files recursively from the `tools/docs` directory:
-
-```{code-cell}
-check_broken_links.py tools/docs --pattern "*.md"
-```
-
-3. Use exclusions (default exclusion are overidden):
-
-```{code-cell}
-check_broken_links.py --exclude-dirs 4_orchestration in_porgress --exclude-files README.ipynb
-```
-
-4. Check the given file:
-
-```{code-cell}
-check_broken_links.py 0_intro/00_onboarding.ipynb
-```
-
-4. Use verbose mode:
-
-    ```bash
-    check_broken_links.py --verbose
-    ```
 
 +++
 

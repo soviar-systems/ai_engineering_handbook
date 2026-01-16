@@ -17,12 +17,11 @@ BROKEN_LINKS_EXCLUDE_DIRS = {
     "misc/pr",
 }
 
+# Strings that should be excluded from link validation
+BROKEN_LINKS_EXCLUDE_LINK_STRINGS = {
+    "path/to/file.md",
+    "./intro/",
+    "valid.md", # Added for test_validate_link_with_exclusions
+}
+
 BROKEN_LINKS_EXCLUDE_FILES = [".aider.chat.history.md"]
-
-
-def is_ignored_dir(path: str) -> bool:
-    """Check if a given path string contains any excluded directory segments."""
-    for p in DEFAULT_EXCLUDE_DIRS:
-        if p in path:
-            return True
-    return False

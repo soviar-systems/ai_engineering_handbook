@@ -21,7 +21,11 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 # Import BROKEN_LINKS_EXCLUDE_DIRS and BROKEN_LINKS_EXCLUDE_FILES
-from tools.scripts.paths import BROKEN_LINKS_EXCLUDE_DIRS, BROKEN_LINKS_EXCLUDE_FILES
+from tools.scripts.paths import (
+    BROKEN_LINKS_EXCLUDE_DIRS,
+    BROKEN_LINKS_EXCLUDE_FILES,
+    BROKEN_LINKS_EXCLUDE_LINK_STRINGS,
+)
 
 
 def main():
@@ -158,7 +162,11 @@ Default pattern: *.ipynb""",
             print()
 
         link_extractor = LinkExtractor(verbose=verbose)
-        link_validator = LinkValidator(root_dir=root_dir, verbose=verbose)
+        link_validator = LinkValidator(
+            root_dir=root_dir,
+            verbose=verbose,
+            exclude_link_strings=list(BROKEN_LINKS_EXCLUDE_LINK_STRINGS),
+        )
         broken_links_found = False
 
         with tempfile.NamedTemporaryFile(
@@ -223,9 +231,15 @@ class LinkExtractor:
 class LinkValidator:
     """Validates whether a link points to a valid local target."""
 
-    def __init__(self, root_dir: Path, verbose: bool = False):
+    def __init__(
+        self,
+        root_dir: Path,
+        verbose: bool = False,
+        exclude_link_strings: Optional[List[str]] = None,
+    ):
         self.root_dir = root_dir.resolve()
         self.verbose = verbose
+        self.exclude_link_strings = set(exclude_link_strings) if exclude_link_strings else set()
 
     def is_absolute_url(self, link: str) -> bool:
         """Check if link is an absolute HTTP/HTTPS URL."""
@@ -279,6 +293,12 @@ class LinkValidator:
         if "/" not in link_path and "." not in link_path:
             if self.verbose:
                 print(f"  SKIP Internal Fragment/Variable: {link}")
+            return None
+
+        # Check for excluded link strings
+        if any(exclude_str in link_path for exclude_str in self.exclude_link_strings):
+            if self.verbose:
+                print(f"  SKIP Excluded Link String: {link}")
             return None
 
         target_file = self.resolve_target_path(link_path, source_file)
