@@ -2,9 +2,9 @@
 
 ---
 
-Version: 0.3.2  
+Version: 0.3.3  
 Birth: 2025-10-19  
-Last Modified: 2026-01-14
+Last Modified: 2026-01-17
 
 ---
 
@@ -19,7 +19,15 @@ All content is **generated, validated, and versioned** through a controlled Lang
 ## What's new?
 
 
-- v2.0.0 features the migration of core layers into the `ai_system/` hierarchy and the introduction of [hybrid LLM+SLM workflows](/tools/docs/ai_agents/04_connect_to_capable_llms_using_api_keys.ipynb) via Aider integration.
+v2.1.0
+* **AI Strategy**: Formalized the [**aidx Industrial AI Orchestration Framework**](/ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.ipynb), including specialized model selection for Architect vs. Editor phases. 
+* **ADR Migration**: Transitioned to a new 2026 naming convention for ADRs and added a centralized index at `architecture/adr_index.md`. 
+* **Connectivity**: Added comprehensive setup guides for utilizing high-performance LLMs via API keys within agentic workflows. 
+* **Maintenance**: Enhanced repository stabilization through MyST-aware link validation and refined pre-commit hooks. 
+
+v2.0.0 features:
+- the migration of core layers into the `ai_system/` hierarchy and
+- - the introduction of [hybrid LLM+SLM workflows](/tools/docs/ai_agents/04_connect_to_capable_llms_using_api_keys.ipynb) via Aider integration.
 
 
 ## Authorship & Methodology

@@ -1,7 +1,76 @@
 # Release Notes
 
 
-## release v2.0.0
+## v2.1.0
+
+### **Summary of Changes**
+
+The update includes
+
+* a new naming convention for Architecture Decision Records (ADRs),
+* enhanced automated linting for MyST include directives via `tools/scripts/check_broken_links.py`, and
+* comprehensive documentation for connecting to LLMs via free-tier API keys.
+
+One of the **major advancements** is the presentation of the `ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.md` called `aidx` ("aider extended"), transitioning toward a formal "Architect/Editor" model selection strategy where the Architect is a capable cloud model and the editor is the small local model.
+
+Significant work was also done on repository stabilization, including fixing broken link detection and refining pre-commit hook logic in `.pre-commit-config.yaml`.
+
+### **New Features and Articles Added**
+
+The new ADRs are aimed at equipping the developer with the right tools for effective development workflow backed by AI tools.
+
+* **Architecture Decision Records (ADRs)** in  `architecture/adr/`:
+    * `adr_26004`: Implementation of Agentic RAG for Autonomous Knowledge Retrieval.
+    * `adr_26005`: Formalization of Aider as the primary agentic editor.
+    * `adr_26006`: Mandating Agentic-Class models (e.g., Gemini 3 Flash) for the Architect Phase.
+    * `adr_26007`: Formalization of Phase 0: Intent Synthesis.
+    * `adr_26008`: Selection of Reasoning-Class models for Abstract Synthesis.
+    * `adr_index.md`: Created a centralized index for all architectural decisions.
+
+The new articles support ADRs:
+
+* **Model Selection & Orchestration** in `ai_system/`:
+    * Added `2_model/selection/general_purpose_vs_agentic_models.md` article to guide model selection for Requirements Engineering vs. Implementation.
+    * Added the `4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.md` documentation, detailing the Research-Apply pipeline.
+
+Other articles covering daily work of the developer:
+
+* **Documentation & AI Tools** in `tools/docs/ai_agents/`:
+    * New guide: `03_vim_ollama_llm_tab_completion_nuances.md` covering LLM-based tab completion.
+    * New guide: `04_connect_to_capable_llms_using_api_keys.md` providing detailed setup and usage limits for Gemini, GROQ, and OpenRouter.
+
+* **Tooling**:
+    * Added `tools/templates/Release_Notes.tmpl` for standardized release documentation.
+    * Added Aider-specific configuration files `tools/configs/aider.conf.yml`. This config is now added to `.gitignore` and is installed locally to the dev working tree via `tools/scripts/configure_repo.sh`.
+    * Added `misc/pr/tg_channel_ai_learning/2026_01_12_release_announcement_v2_0_0.md` for external communications.
+
+### **Updates in Existing Files**
+
+* **Onboarding**: Updated `0_intro/00_onboarding.md` to include references to the new ADR structure and renamed sections to emphasize essential reading and AI tool proficiency.
+* **Broken Link Script**:
+    * Updated `tools/scripts/check_broken_links.py` to support MyST `{include}` directive validation.
+    * Fixed nested directory exclusion logic and improved verbose logging in `tools/tests/test_check_broken_links.py`.
+    * Integrated a global check in `.pre-commit-config.yaml` to ensure renamed files don't break external references.
+
+* **Aider Handout**: Updated `tools/docs/ai_agents/02_aider_commands_handout.md` with OpenRouter integration, updated model flags, and usage limit tables.
+* **Configurations**:
+    * `pyproject.toml`: Added `pytest-cov` library.
+    * `.aider.conf.yml`: Set `map-tokens: 2048` to optimize repository map limits.
+    * `myst.yml`: Updated to exclude specific Aider convention files.
+    * `uv.lock`: Updated dependencies.
+
+### Existing Files Moved or Renamed
+
+| Original Path | New Path |
+| --- | --- |
+| `aider.CONVENTIONS` | `CONVENTIONS.md` |
+| `architecture/adr/adr_0001_use_of_python_and_oop_for_git_hook_scripts.md` | `architecture/adr/adr_26001_use_of_python_and_oop_for_git_hook_scripts.md` |
+| `architecture/adr/adr_0002_adoption_of_pre_commit_framework.md` | `architecture/adr/adr_26002_adoption_of_pre_commit_framework.md` |
+| `architecture/adr/adr_0003_adoption_of_gitlint_for_tiered_workflow.md` | `architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md` |
+| `architecture/adr/0001-template.md` | `architecture/adr/adr_template.md` |
+
+
+## v2.0.0
 
 ### Summary of Changes
 
@@ -43,7 +112,7 @@ All less important stuff like drafts and public relations materials moved to `mi
 * **LICENSE.md**: Updated to clarify the split-licensing model—GPLv3 for software/scripts and CC-BY-SA 4.0 for documentation/articles.
 
 
-## release v1.4.0
+## v1.4.0
 
 ### Summary of Changes
 
@@ -95,7 +164,8 @@ To align with the new thematic structure, several files were reorganized:
 * **README.md**: Updated tree structure to reflect new specialized subdirectories in `tools/` and `4_orchestration/`.
 * **Security Documentation**: Enhanced sections on OWASP Top-10 for LLMs and prompt injection mitigation.
 
-## release v1.3.0
+
+## v1.3.0
 
 ### Summary of Changes
 This release introduces several new articles and directories to enhance the documentation on MLOps workflows and Vim tools for AI-driven tasks. Additionally, it moves several existing articles to more appropriate locations.
@@ -133,7 +203,8 @@ This release introduces several new articles and directories to enhance the docu
 #### CHANGELOG
 - **New Release Entry**: Added an entry for release 1.3.0 detailing the new articles, moved articles, and directory additions.
 
-## release v1.2.0
+
+## v1.2.0
 
 ### Summary of Changes
 This release introduces several new articles and directories to enhance the documentation on general AI systems, introductory materials, and orchestration patterns.
@@ -160,7 +231,7 @@ This release introduces several new articles and directories to enhance the docu
 - **New Release Entry**: Added an entry for release 1.2.0 detailing the new articles, moved articles, and directory additions.
 
 
-## release v1.1.0
+## v1.1.0
 
 ### New Features and Articles Added
 
@@ -172,7 +243,8 @@ This release introduces several new articles and directories to enhance the docu
   - `right_tool_for_right_layer.md`: Provides guidance on choosing the right tools for different layers in AI stack.
   - `python314_parallelism_game_changer.md`: Highlights the improvements in Python 3.14 for parallelism.
 
-## release v1.0.0
+
+## v1.0.0
 
 ### Initial Release
 - **Tree Structure Prepared**: The repository structure was prepared to accommodate new articles.
