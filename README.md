@@ -2,9 +2,9 @@
 
 ---
 
-Version: 0.3.1  
+Version: 0.3.2  
 Birth: 2025-10-19  
-Last Modified: 2026-01-12
+Last Modified: 2026-01-14
 
 ---
 
@@ -19,13 +19,13 @@ All content is **generated, validated, and versioned** through a controlled Lang
 ## What's new?
 
 
-- v2.0.0 features the migration of core layers into the `ai_system/` hierarchy and the introduction of [hybrid LLM+SLM workflows](/tools/docs/ai_agents/02_aider_commands_handout.ipynb) via Aider integration.
+- v2.0.0 features the migration of core layers into the `ai_system/` hierarchy and the introduction of [hybrid LLM+SLM workflows](/tools/docs/ai_agents/04_connect_to_capable_llms_using_api_keys.ipynb) via Aider integration.
 
 
 ## Authorship & Methodology
 
 
-I am a **Systems Engineer and AI Methodology Architect**. This repository is a "practitioner-focused" engineering hub designed to solve a specific problem: the fragility of AI prototypes and the risk of institutional "tribal knowledge".
+My name is Vadim Rudakov, I am a **Systems Engineer and AI Methodology Architect** from Sverdlovsk oblast, Russia. This repository is a "practitioner-focused" engineering hub designed to solve a specific problem: the fragility of AI prototypes and the risk of institutional "tribal knowledge".
 
 - **The Architect**: I design the knowledge-generation systems and validation protocols.
 - **Hybrid Synergy**: By integrating tools like **Aider**, I utilize capable models (e.g., Gemini 3 Flash) as "Architects" to handle large context windows, while local models (e.g., Qwen 2.5 Coder) act as "Editors" to perform hardware-aware coding and testing on local GPUs.
@@ -135,3 +135,9 @@ My goal is to build AI solutions maintainable as ordinary software. Every proble
 * **Prove Hybrid Viability**: Demonstrate that combining cloud-based reasoning with local SLM execution is the optimal path for production-grade reliability.
 * **Hardened Security**: By understanding the computational graph of SLMs (Research Layer), we identify points of failure for prompt injection, data leakage, or resources utilization bottlenecks more precisely.
 * **Efficiency through Systems**: Human-led, AI-accelerated process allows for the generation of audit-ready technical documentation in days rather than months.
+
+
+## Contact Information
+
+
+Vadim Rudakov, lefthand67@gmail.com
