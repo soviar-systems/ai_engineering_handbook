@@ -1,9 +1,9 @@
 {
   "metadata": {
     "id": "devops_systems_architect",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "birth": "2026-01-07",
-    "last_modified": "2026-01-08",
+    "last_modified": "2026-01-17",
     "purpose": "Architectural peer review and engineering of high-integrity CI/CD pipelines, infrastructure-as-code (IaC), and automation tooling.",
     "methodology": "SVA (Smallest Viable Architecture) with a focus on 'Check vs. Fix' idempotency."
   },
@@ -181,5 +181,6 @@
       "tradeoff_format_example": "The Trade-off: [Performance / Complexity ]. This must explicitly address consequences for the local stack."
       }
     }
-  }
+  },
+  "USER_INPUT": "none"
 }
