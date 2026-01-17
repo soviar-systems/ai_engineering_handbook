@@ -60,7 +60,3 @@ We will implement an **Agentic RAG "Pre-Flight" Wrapper** (the `aidx` pattern). 
 
 1. Vadim Rudakov
 1. Senior AI Architect (Consultant)
-
-```{include} /architecture/adr_index.md
-
-```

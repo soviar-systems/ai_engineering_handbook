@@ -53,19 +53,8 @@ We will adopt **Molecule** as the primary testing harness for all Ansible roles.
 * {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
 * {term}`ADR 26009`: Adoption of Ansible for Idempotent Configuration Management
 * [Molecule Documentation](https://ansible.readthedocs.io/projects/molecule/)
-* [Podman Systemd Guide](https://developers.redhat.com/blog/2019/04/24/how-to-run-systemd-in-a-container)
 
 ## Participants
 
 1. Vadim Rudakov
 2. Senior DevOps Systems Architect (Gemini)
-
-```{include} /architecture/adr_index.md
-
-```
-
----
-
-### Immediate Next Step
-
-**I have now codified the transition to Ansible and Molecule. Would you like me to draft a sample `molecule.yml` and `verify.yml` for your `server_config` role to serve as a reference implementation for the rest of the migration?**

@@ -64,7 +64,3 @@ We mandate the use of **Agentic-Class models** (prioritizing **Instruction Adher
 
 1. Vadim Rudakov
 2. Senior AI Architect (Gemini 3 Flash)
-
-```{include} /architecture/adr_index.md
-
-```

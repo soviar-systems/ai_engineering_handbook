@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.2  
+Version: 0.1.3  
 Birth: 2026-01-14  
-Last Modified: 2026-01-16
+Last Modified: 2026-01-17
 
 ---
 
@@ -185,7 +185,6 @@ graph TD
     style E stroke-dasharray: 5 5
 ```
 
-
 +++
 
 ## **6. Team Implementation**
@@ -207,9 +206,3 @@ graph TD
 
 * **Embedding Drift:** If the KB isn't updated, the Researcher will retrieve outdated advice.
     * *Mitigation:* Automated re-indexing triggers upon KB changes.
-
-+++
-
-```{include} /architecture/adr_index.md
-:class: dropdown
-```

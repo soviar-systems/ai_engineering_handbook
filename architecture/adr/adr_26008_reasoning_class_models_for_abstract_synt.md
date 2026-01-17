@@ -57,7 +57,3 @@ We mandate the use of **Reasoning-Class (Abstract Synthesis)** models for the Ph
 
 1. Vadim Rudakov
 2. Senior AI Systems Architect
-
-```{include} /architecture/adr_index.md
-
-```

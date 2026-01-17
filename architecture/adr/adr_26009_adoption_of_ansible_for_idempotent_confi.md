@@ -59,7 +59,3 @@ We will adopt **Ansible** as the primary engine for server configuration and Saa
 
 1. Vadim Rudakov
 2. Senior DevOps Systems Architect (Gemini)
-
-```{include} /architecture/adr_index.md
-
-```

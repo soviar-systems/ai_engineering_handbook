@@ -55,7 +55,3 @@ We will implement a mandatory **Phase 0: Intent Synthesis** (Requirements Engine
 
 1. Vadim Rudakov
 2. Senior AI Systems Architect
-
-```{include} /architecture/adr_index.md
-
-```

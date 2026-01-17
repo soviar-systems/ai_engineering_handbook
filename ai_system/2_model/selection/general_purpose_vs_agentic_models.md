@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.0  
+Version: 0.1.1  
 Birth: 2026-01-16  
-Last Modified: 2026-01-16
+Last Modified: 2026-01-17
 
 ---
 
@@ -83,9 +83,3 @@ As stated in {term}`ADR 26008`, this list is the Single Source of Truth for choo
 | **Unstructured Brainstorming** | General Purpose | Highest "Reasoning Ceiling" for abstract problems. |
 | **Plan Serialization (`plan.md`)** | Agentic | High-fidelity adherence to ADR 26006 templates. |
 | **Security/Logic Audit** | Thinking | Self-verifying logic gates for high-stakes code. |
-
-+++
-
-```{include} /architecture/adr_index.md
-
-```

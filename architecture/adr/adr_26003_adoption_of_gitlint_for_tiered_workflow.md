@@ -58,7 +58,3 @@ We will adopt `gitlint` ([https://jorisroovers.com/gitlint/](https://jorisroover
 
 1. Vadim Rudakov
 2. Senior DevOps Systems Architect (Gemini)
-
-```{include} /architecture/adr_index.md
-
-```

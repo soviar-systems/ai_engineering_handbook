@@ -59,7 +59,3 @@ We will adopt the **`pre-commit` framework** as our primary hook manager.
 
 1. Vadim Rudakov
 2. Gemini (AI Thought Partner)
-
-```{include} /architecture/adr_index.md
-
-```

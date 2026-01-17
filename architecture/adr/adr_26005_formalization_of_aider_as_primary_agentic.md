@@ -16,10 +16,10 @@ Proposed
 
 Our environment requires high-integrity CI/CD and automation while operating on bare-metal systems with limited VRAM (Fedora/Debian stack). We face a critical "Switching Moment" bottleneck where local 14B models (e.g., `qwen2.5-coder`) suffer from context overload and GPU crashes when inheriting full conversational histories from high-reasoning cloud models. Furthermore, we must adhere to:
 
-* **{term}`ADR 26001`**: Python/OOP standards for all automation logic.
-* **{term}`ADR 26002`**: Orchestration via the `pre-commit` framework.
-* **{term}`ADR 26003`**: Strict Tiered Workflow enforcement via `gitlint`.
-* **{term}`ADR 26004`**: Integration with Agentic RAG for knowledge retrieval.
+* {term}`ADR 26001`: Python/OOP standards for all automation logic.
+* {term}`ADR 26002`: Orchestration via the `pre-commit` framework.
+* {term}`ADR 26003`: Strict Tiered Workflow enforcement via `gitlint`.
+* {term}`ADR 26004`: Integration with Agentic RAG for knowledge retrieval.
 
 ## Decision
 
@@ -61,7 +61,3 @@ We will adopt `aider` as our primary agentic tool, implemented through a **Two-P
 
 1. Vadim Rudakov
 2. Senior DevOps Systems Architect (Gemini 3 Flash)
-
-```{include} /architecture/adr_index.md
-
-```
