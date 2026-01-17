@@ -1,3 +1,24 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .md
+      format_name: pandoc
+      format_version: 3.1.11.1
+      jupytext_version: 1.18.1
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+  nbformat: 4
+  nbformat_minor: 5
+---
+
+::: {#4d63fe3c-edc6-403a-88fa-1fe70676001c .cell .markdown}
+# ADR Index
+:::
+
+::: {#df69a443-a89b-4dbd-afbf-07e2b6f40e07 .cell .markdown}
 :::{glossary}
 ADR 26001
 : [Use of Python and OOP for Git Hook Scripts](/architecture/adr/adr_26001_use_of_python_and_oop_for_git_hook_scripts.md)
@@ -22,4 +43,11 @@ ADR 26007
 
 ADR 26008
 : [Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)](/architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md)
+
+ADR 26009
+: [Adoption of Ansible for Idempotent Configuration Management](/architecture/adr/adr_26009_adoption_of_ansible_for_idempotent_confi.md)
+
+ADR 26010
+: [Adoption of Molecule for Automated Ansible Role Validation](/architecture/adr/adr_26010_adoption_of_molecule_for_automated_ansib.md)
+:::
 :::
