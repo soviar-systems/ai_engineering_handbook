@@ -2,7 +2,7 @@
 
 ---
 
-Version: 0.3.3  
+Version: 0.3.4  
 Birth: 2025-10-19  
 Last Modified: 2026-01-17
 
@@ -63,8 +63,8 @@ All materials are **LM-generated**, then **cross-validated by multiple models**,
 All content follows a reproducible pipeline mirroring software CI/CD, specifically leveraging hybrid LLM/SLM capabilities:
 
 1. **Capable LLM step:**
-    1. **Idea elaboration:** [local_ai_systems_consultant.json](/tools/prompt_helpers/local_ai_systems_consultant.json) helps to peer-review the ideas and solutions in the chat form to stress-test concepts before they're adopted as a methodological tool.
-    1. **Draft generation**: [handbook_consultant.json](/tools/prompt_helpers/handbook_consultant.json) produces articles and diagrams.
+    1. **Idea elaboration:** [local_ai_systems_consultant.json](/ai_system/3_prompts/consultants/local_ai_systems_consultant.json) helps to peer-review the ideas and solutions in the chat form to stress-test concepts before they're adopted as a methodological tool.
+    1. **Draft generation**: [handbook_consultant.json](/ai_system/3_prompts/consultants/handbook_consultant.json) produces articles and diagrams.
     1. **Cross-validation:** Multiple models critique and refine outputs.
 1. **Human review step:**
    - Final sanity check before promotion to published directories
