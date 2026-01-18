@@ -3,8 +3,11 @@ set -euo pipefail
 
 
 main() {
+    # Validate JSON first (optional but good practice)
     jq . "$1" >/dev/null
-    yq -oy "$1"
+
+    # Remove metadata and escape special characters
+    yq 'del(.metadata)' "$1" -oy | sed "s/[*'\''\"\`#]//g" 
 }
 
 
