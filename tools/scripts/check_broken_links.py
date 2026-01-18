@@ -114,7 +114,7 @@ Default pattern: *.ipynb""",
                 )
         else:
             # Remove 'if verbose:' to satisfy test expectations
-            print(f"Using Git root as project root: {root_dir}")
+            print(f"Using Git root as project root: {root_dir.name}")
 
         files = []
         file_finder = FileFinder(args.exclude_dirs, args.exclude_files, verbose)
@@ -239,7 +239,9 @@ class LinkValidator:
     ):
         self.root_dir = root_dir.resolve()
         self.verbose = verbose
-        self.exclude_link_strings = set(exclude_link_strings) if exclude_link_strings else set()
+        self.exclude_link_strings = (
+            set(exclude_link_strings) if exclude_link_strings else set()
+        )
 
     def is_absolute_url(self, link: str) -> bool:
         """Check if link is an absolute HTTP/HTTPS URL."""
@@ -374,18 +376,20 @@ class FileFinder:
                     if part in self.exclude_dirs:
                         is_excluded_by_dir = True
                         break
-            
+
             # 3. Check for multi-segment directory exclusions (e.g., 'misc/in_progress', 'misc/pr')
             #    This checks if any parent path (relative to search_dir) is an excluded multi-segment path.
             #    If not already excluded by previous checks
             if not is_excluded_by_dir:
                 current_check_path = relative_path
-                while current_check_path != Path('.'): # Iterate up to the search_dir itself (represented by '.')
+                while current_check_path != Path(
+                    "."
+                ):  # Iterate up to the search_dir itself (represented by '.')
                     if str(current_check_path) in self.exclude_dirs:
                         is_excluded_by_dir = True
                         break
                     current_check_path = current_check_path.parent
-            
+
             if is_excluded_by_dir:
                 if self.verbose:
                     print(f"  EXCLUDING (by directory rule): {file}")
