@@ -41,6 +41,11 @@ def format_string(input_string):
         "$",
         "%",
         "@",
+        '"',
+        "“",
+        "”",
+        "'",
+        "’",
     ]
     for s in special_symbols_to_remove:
         formatted_string = formatted_string.replace(s, "")
