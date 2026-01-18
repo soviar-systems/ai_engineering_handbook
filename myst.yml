@@ -39,6 +39,7 @@ project:
     LM: Language Model
     SLM: Small Language Model
     SRAM: Shared Memory
+    SVA: Smallest Viable Architecture
     TPU: Tensor Processing Unit
     WMMA: Warp-level matrix operations
   contributors:
