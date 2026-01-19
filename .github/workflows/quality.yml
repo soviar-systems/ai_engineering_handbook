@@ -17,17 +17,22 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Get changed paths.py
+        id: changed-paths
+        uses: tj-actions/changed-files@v45
+        with:
+          files: tools/scripts/paths.py
+
       - name: Get changed check_broken_links files
         id: changed-check-broken-links
         uses: tj-actions/changed-files@v45
         with:
           files: |
             tools/scripts/check_broken_links.py
-            tools/scripts/paths.py
             tools/tests/test_check_broken_links.py
 
       - name: Run Logic Tests
-        if: steps.changed-check-broken-links.outputs.any_changed == 'true'
+        if: steps.changed-check-broken-links.outputs.any_changed == 'true' || steps.changed-paths.outputs.any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_check_broken_links.py
@@ -39,12 +44,11 @@ jobs:
           files: |
             tools/scripts/jupytext_sync.py
             tools/scripts/jupytext_verify_pair.py
-            tools/scripts/paths.py
             tools/tests/test_jupytext_sync.py
             tools/tests/test_jupytext_verify_pair.py
 
       - name: Run Jupytext Script Tests
-        if: steps.changed-jupytext.outputs.any_changed == 'true'
+        if: steps.changed-jupytext.outputs.any_changed == 'true' || steps.changed-paths.outputs.any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_jupytext_sync.py tools/tests/test_jupytext_verify_pair.py

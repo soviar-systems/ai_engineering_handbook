@@ -59,7 +59,10 @@ The repository is organized around a six-layer AI system architecture:
 
 Two GitHub Actions workflows:
 
-1. **quality.yml** - Runs on all pushes: pytest for link checker, validates changed .md files
+1. **quality.yml** - Runs on all pushes/PRs:
+   - Runs check_broken_links tests when script, tests, or `paths.py` change
+   - Runs jupytext tests when sync/verify scripts, tests, or `paths.py` change
+   - Validates links in changed `.md` files
 2. **deploy.yml** - Validates notebook sync on all branches, deploys to server on main only
 
 The pipeline verifies that .md and .ipynb pairs are synchronized before allowing deployment.

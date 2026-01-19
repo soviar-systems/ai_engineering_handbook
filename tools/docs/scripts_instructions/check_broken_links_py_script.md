@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: bash
   display_name: Bash
@@ -226,14 +226,29 @@ The CI pipeline in `quality.yml` is optimized to validate only modified files in
 
 :::{tip} `quality.yml` Implementation:
 ```yaml
+      - name: Get changed paths.py
+        id: changed-paths
+        uses: tj-actions/changed-files@v45
+        with:
+          files: tools/scripts/paths.py
+
+      - name: Get changed check_broken_links files
+        id: changed-check-broken-links
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            tools/scripts/check_broken_links.py
+            tools/tests/test_check_broken_links.py
+
+      - name: Run Logic Tests
+        if: steps.changed-check-broken-links.outputs.any_changed == 'true' || steps.changed-paths.outputs.any_changed == 'true'
+        run: uv run pytest tools/tests/test_check_broken_links.py
 
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v45
         with:
-          # Only check .md files for broken links
           files: "**/*.md"
-          # Ensures spaces in filenames are handled via a safe delimiter if needed
           safe_output: true
 
       - name: Run Link Check on PR Files Only
@@ -242,7 +257,7 @@ The CI pipeline in `quality.yml` is optimized to validate only modified files in
           uv run tools/scripts/check_broken_links.py --paths ${{ steps.changed-files.outputs.all_changed_files }} --verbose
 ```
 
-*Note: `files: "**/*.md"` used to pass only `.md` files.*
+*Note: `paths.py` is detected separately because it's a shared dependency across multiple test suites.*
 
 *Note: Using the `--paths` flag is critical to handle multiple files provided by the `changed-files` action.*
 :::
@@ -281,11 +296,14 @@ flowchart TB
         D_Fix["Fix Staged Links"]
   end
  subgraph Quality_Job_Steps["quality.yml: validate_broken_links (Sequential)"]
-        G2["Step 2: Install uv"]
         G1["Step 1: Checkout"]
-        G3["Step 3: Run Logic Tests<br>(pytest)"]
-        G4["Step 4: Get Changed Files<br>(tj-actions)"]
-        G5["Step 5: Run Link Check<br>(on changed files only)"]
+        G2["Step 2: Install uv"]
+        G3["Step 3: Detect paths.py &<br>check_broken_links changes"]
+        G4{"Step 4: Run Logic Tests<br>(if script/paths.py changed)"}
+        G5["Step 5: Detect jupytext changes"]
+        G6{"Step 6: Run Jupytext Tests<br>(if scripts/paths.py changed)"}
+        G7["Step 7: Get Changed .md Files"]
+        G8{"Step 8: Run Link Check<br>(on changed files only)"}
         H_Stop["Job Stops: Logic Regression"]
         J["PR Blocked / Red X"]
         K["PR Quality Check Green"]
@@ -301,22 +319,27 @@ flowchart TB
     E --> F["GitHub Repository"]
     G1 --> G2
     G2 --> G3
-    G3 -- Pass --> G4
-    G4 --> G5
-    G3 -- Fail --> H_Stop
-    G5 -- Fail --> J
-    G5 -- Pass --> K
+    G3 --> G4
+    G4 -- Pass --> G5
+    G4 -- Fail --> H_Stop
+    G5 --> G6
+    G6 -- Pass --> G7
+    G6 -- Fail --> H_Stop
+    G7 --> G8
+    G8 -- Fail --> J
+    G8 -- Pass --> K
     F --> G1
 
     B@{ shape: event}
     E@{ shape: event}
-    G3@{ shape: decision}
-    G5@{ shape: decision}
+    G4@{ shape: decision}
+    G6@{ shape: decision}
+    G8@{ shape: decision}
     style D fill:#9f9,stroke:#333
     style E fill:#9f9,stroke:#333
     style C_Fix fill:#f96,stroke:#333
     style D_Fix fill:#f96,stroke:#333
-    style G4 fill:#9f9,stroke:#333
+    style G7 fill:#9f9,stroke:#333
     style H_Stop fill:#f96,stroke:#333
     style J fill:#f96,stroke:#333
     style K fill:#9f9,stroke:#333
