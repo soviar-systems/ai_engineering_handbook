@@ -17,7 +17,17 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Get changed check_broken_links files
+        id: changed-check-broken-links
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            tools/scripts/check_broken_links.py
+            tools/scripts/paths.py
+            tools/tests/test_check_broken_links.py
+
       - name: Run Logic Tests
+        if: steps.changed-check-broken-links.outputs.any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_check_broken_links.py
