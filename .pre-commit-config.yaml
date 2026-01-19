@@ -37,3 +37,17 @@ repos:
         language: python
         files: ^tools/(scripts/check_broken_links\.py|scripts/paths\.py|tests/test_check_broken_links\.py)$
         pass_filenames: false
+
+      - id: test-jupytext-sync
+        name: Test Jupytext Sync script
+        entry: uv run --active pytest tools/tests/test_jupytext_sync.py
+        language: python
+        files: ^tools/(scripts/jupytext_sync\.py|scripts/paths\.py|tests/test_jupytext_sync\.py)$
+        pass_filenames: false
+
+      - id: test-jupytext-verify-pair
+        name: Test Jupytext Verify Pair script
+        entry: uv run --active pytest tools/tests/test_jupytext_verify_pair.py
+        language: python
+        files: ^tools/(scripts/jupytext_verify_pair\.py|scripts/paths\.py|tests/test_jupytext_verify_pair\.py)$
+        pass_filenames: false
