@@ -1,103 +1,119 @@
+#!/usr/bin/env python3
+"""
+Verify that if one file of a pair is staged, the other is too.
+
+CLI: uv run tools/scripts/jupytext_verify_pair.py file1.md file2.ipynb
+  Exit 0 if all pairs are properly staged, 1 if any pair is incomplete
+"""
+import subprocess
 import sys
 from pathlib import Path
-from typing import List
 
-from tools.scripts.configs.paths import is_ignored
-from tools.scripts.lib.git_service.git_service import GitService
+from paths import is_excluded
 
 
-def run(paths: List[str]) -> bool:
-    """
-    Verifies the integrity of Jupytext pairs in the Git index.
+def get_pair_path(file_path: str) -> str | None:
+    """Get the paired file path (.md <-> .ipynb)."""
+    path = Path(file_path)
+    if path.suffix == ".md":
+        return str(path.with_suffix(".ipynb"))
+    elif path.suffix == ".ipynb":
+        return str(path.with_suffix(".md"))
+    return None
 
-    Logic Matrix:
-    - State 0: Neither file tracked -> Skip (Success).
-    - State 1: Both tracked and clean -> Success.
-    - States 2, 3, 7: Unstaged changes -> Failure (Action: git add).
-    - States 4, 5, 6: Partial tracking -> Failure (Action: git add missing).
-    - State 8: Git system failure -> Failure.
-    """
-    git = GitService()
-    overall_success = True
-    count = 0
 
-    for p in paths:
-        print("count:", count)
-        count += 1
-        if not isinstance(p, str) or not p:
-            overall_success = False
+def is_staged(file_path: str) -> bool:
+    """Check if file is staged in git index."""
+    result = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", "--cached", file_path],
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        return False
+
+    # Check if there are staged changes for this file
+    result = subprocess.run(
+        ["git", "diff", "--cached", "--name-only", file_path],
+        capture_output=True,
+        text=True,
+    )
+    return bool(result.stdout.strip())
+
+
+def has_unstaged_changes(file_path: str) -> bool:
+    """Check if file has unstaged changes."""
+    result = subprocess.run(
+        ["git", "diff", "--exit-code", file_path],
+        capture_output=True,
+    )
+    return result.returncode != 0
+
+
+def main() -> int:
+    if len(sys.argv) < 2:
+        return 0
+
+    files = sys.argv[1:]
+
+    # Filter to .md/.ipynb files only
+    valid_files = [
+        f for f in files if f.endswith(".md") or f.endswith(".ipynb")
+    ]
+
+    # Skip files in excluded directories
+    files_to_check = [f for f in valid_files if not is_excluded(f)]
+
+    if not files_to_check:
+        return 0
+
+    # Track checked pairs to avoid duplicates
+    checked_pairs: set[tuple[str, str]] = set()
+    failed = False
+
+    for file_path in files_to_check:
+        pair_path = get_pair_path(file_path)
+        if pair_path is None:
             continue
 
-        # Convert to Path object and resolve to handle absolute/relative inputs
-        path = Path(p)
+        # Create normalized pair key
+        pair_key = tuple(sorted([file_path, pair_path]))
+        if pair_key in checked_pairs:
+            continue
+        checked_pairs.add(pair_key)
 
-        # 1. Exclusion Logic: Respect EXCLUDED_DIRS defined in paths.py
-        if is_ignored(str(path)):
+        # Check if pair file exists
+        if not Path(pair_path).exists():
             continue
 
-        # 2. Physical Validation
-        if not path.is_file():
-            # If the file is missing from disk, we skip it to let Git handle deletions
+        file_staged = is_staged(file_path)
+        pair_staged = is_staged(pair_path)
+
+        # Neither staged -> OK (skip)
+        if not file_staged and not pair_staged:
             continue
 
-        # 3. Pair Identification
-        if path.suffix == ".ipynb":
-            ipynb_path, md_path = path, path.with_suffix(".md")
-        elif path.suffix == ".md":
-            ipynb_path, md_path = path.with_suffix(".ipynb"), path
-        else:
-            # Skip non-notebook/markdown files
+        # One staged, other not -> FAIL
+        if file_staged and not pair_staged:
+            print(f"FAIL: {file_path} is staged but {pair_path} is not")
+            failed = True
             continue
 
-        # 4. Verification Logic
-        try:
-            # Check Staging Status
-            ipynb_tracked = git.is_in_index(ipynb_path)
-            md_tracked = git.is_in_index(md_path)
+        if pair_staged and not file_staged:
+            print(f"FAIL: {pair_path} is staged but {file_path} is not")
+            failed = True
+            continue
 
-            # --- State 0: Both Untracked ---
-            # If neither file is in the Git index, ignore them (allow WIP files)
-            if not ipynb_tracked and not md_tracked:
-                continue
+        # Both staged - check for unstaged changes
+        if has_unstaged_changes(file_path):
+            print(f"FAIL: {file_path} has unstaged changes")
+            failed = True
 
-            # --- States 4/5/6: Partial Tracking ---
-            if not ipynb_tracked or not md_tracked:
-                missing = ipynb_path if not ipynb_tracked else md_path
-                tracked = md_path if not ipynb_tracked else ipynb_path
-                print(
-                    f"❌ Partial Tracking: {tracked} is staged but {missing} is not. "
-                    f"Run 'git add {missing}'",
-                    file=sys.stderr,
-                )
-                overall_success = False
-                continue
+        if has_unstaged_changes(pair_path):
+            print(f"FAIL: {pair_path} has unstaged changes")
+            failed = True
 
-            # --- States 2/3/7: Unstaged Changes (Dirty) ---
-            i_dirty = git.has_unstaged_changes(ipynb_path)
-            m_dirty = git.has_unstaged_changes(md_path)
+    return 1 if failed else 0
 
-            if i_dirty or m_dirty:
-                if i_dirty:
-                    print(
-                        f"❌ Unstaged changes in {ipynb_path}. Run 'git add {ipynb_path}'.",
-                        file=sys.stderr,
-                    )
-                if m_dirty:
-                    print(
-                        f"❌ Unstaged changes in {md_path}. Run 'git add {md_path}'.",
-                        file=sys.stderr,
-                    )
-                overall_success = False
-                continue
 
-            # State 1: Both tracked and clean (Implicit Success)
-
-        except Exception as e:
-            # State 8: System Failure (e.g., Git error code 128)
-            print(
-                f"❌ State 8 Failure: Git service error on {path.name}: {e}",
-                file=sys.stderr,
-            )
-            overall_success = False
-
-    return overall_success
+if __name__ == "__main__":
+    sys.exit(main())

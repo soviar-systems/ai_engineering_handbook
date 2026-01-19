@@ -25,3 +25,11 @@ BROKEN_LINKS_EXCLUDE_LINK_STRINGS = {
 }
 
 BROKEN_LINKS_EXCLUDE_FILES = [".aider.chat.history.md"]
+
+# Reuse for jupytext - same directories should be excluded
+JUPYTEXT_EXCLUDE_DIRS = BROKEN_LINKS_EXCLUDE_DIRS
+
+
+def is_excluded(path: str) -> bool:
+    """Check if path should be excluded from jupytext processing."""
+    return any(excl in path for excl in JUPYTEXT_EXCLUDE_DIRS)

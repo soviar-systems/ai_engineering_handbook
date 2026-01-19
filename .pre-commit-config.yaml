@@ -10,23 +10,23 @@ repos:
         pass_filenames: false
         stages: [pre-commit, manual]
 
-#      - id: jupytext-sync
-#        name: Jupytext Sync
-#        entry: uv run tools/scripts/core/cli.py jupytext-sync
-#        language: python
-#        files: \.(md|ipynb)$
-#        pass_filenames: true
-#        require_serial: true
-#        stages: [pre-commit]
-#
-#      - id: jupytext-verify-pair
-#        name: Jupytext Verify Pair
-#        entry: uv run tools/scripts/core/cli.py jupytext-verify-pair
-#        language: python
-#        files: \.(md|ipynb)$
-#        pass_filenames: true
-#        require_serial: true
-#        stages: [pre-commit]
+      - id: jupytext-sync
+        name: Jupytext Sync
+        entry: uv run tools/scripts/jupytext_sync.py
+        language: python
+        files: \.(md|ipynb)$
+        pass_filenames: true
+        require_serial: true
+        stages: [pre-commit]
+
+      - id: jupytext-verify-pair
+        name: Jupytext Verify Pair
+        entry: uv run tools/scripts/jupytext_verify_pair.py
+        language: python
+        files: \.(md|ipynb)$
+        pass_filenames: true
+        require_serial: true
+        stages: [pre-commit]
 
       # ---TESTS of HOOK SCRIPTS---
       # Trigger this whenever any script or test in the scripts
