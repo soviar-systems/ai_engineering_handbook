@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  validate_broken_links:
+  broken-links:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,28 +17,44 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Get changed paths.py
-        id: changed-paths
+      - name: Get changed files
+        id: changed
         uses: tj-actions/changed-files@v45
         with:
-          files: tools/scripts/paths.py
-
-      - name: Get changed check_broken_links files
-        id: changed-check-broken-links
-        uses: tj-actions/changed-files@v45
-        with:
-          files: |
-            tools/scripts/check_broken_links.py
-            tools/tests/test_check_broken_links.py
+          files_yaml: |
+            logic:
+              - tools/scripts/check_broken_links.py
+              - tools/tests/test_check_broken_links.py
+              - tools/scripts/paths.py
+            docs:
+              - "**/*.md"
+          safe_output: true
 
       - name: Run Logic Tests
-        if: steps.changed-check-broken-links.outputs.any_changed == 'true' || steps.changed-paths.outputs.any_changed == 'true'
+        if: steps.changed.outputs.logic_any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_check_broken_links.py
 
-      - name: Get changed jupytext files
-        id: changed-jupytext
+      - name: Run Link Check on Changed Files
+        if: steps.changed.outputs.docs_any_changed == 'true'
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          uv run tools/scripts/check_broken_links.py --paths ${{ steps.changed.outputs.docs_all_changed_files }} --pattern "*.md" --verbose
+
+  jupytext:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Get changed files
+        id: changed
         uses: tj-actions/changed-files@v45
         with:
           files: |
@@ -46,15 +62,26 @@ jobs:
             tools/scripts/jupytext_verify_pair.py
             tools/tests/test_jupytext_sync.py
             tools/tests/test_jupytext_verify_pair.py
+            tools/scripts/paths.py
 
       - name: Run Jupytext Script Tests
-        if: steps.changed-jupytext.outputs.any_changed == 'true' || steps.changed-paths.outputs.any_changed == 'true'
+        if: steps.changed.outputs.any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_jupytext_sync.py tools/tests/test_jupytext_verify_pair.py
 
-      - name: Get changed api-keys files
-        id: changed-api-keys
+  api-keys:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Get changed files
+        id: changed
         uses: tj-actions/changed-files@v45
         with:
           files_yaml: |
@@ -64,46 +91,54 @@ jobs:
               - tools/scripts/paths.py
             scan:
               - "**"
-          files_ignore: |
-            tools/tests/test_check_api_keys.py
-            tools/docs/scripts_instructions/check_api_keys_py_script.md
+          files_ignore: tools/tests/test_check_api_keys.py
           safe_output: true
 
-      - name: Run API Keys Tests
-        if: steps.changed-api-keys.outputs.any_changed == 'true' || steps.changed-paths.outputs.any_changed == 'true'
+      - name: Run Logic Tests
+        if: steps.changed.outputs.logic_any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_check_api_keys.py
 
-      - name: Get changed json-validation files
-        id: changed-json-validation
+      - name: Run API Key Check on Changed Files
+        if: steps.changed.outputs.scan_any_changed == 'true'
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          uv run tools/scripts/check_api_keys.py ${{ steps.changed.outputs.scan_all_changed_files }}
+
+  json-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Get changed files
+        id: changed
         uses: tj-actions/changed-files@v45
         with:
-          files: |
-            tools/scripts/check_json_files.py
-            tools/tests/test_check_json_files.py
+          files_yaml: |
+            logic:
+              - tools/scripts/check_json_files.py
+              - tools/tests/test_check_json_files.py
+              - tools/scripts/paths.py
+            json:
+              - "**/*.json"
+          safe_output: true
 
-      - name: Run JSON Validation Tests
-        if: steps.changed-json-validation.outputs.any_changed == 'true' || steps.changed-paths.outputs.any_changed == 'true'
+      - name: Run Logic Tests
+        if: steps.changed.outputs.logic_any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_check_json_files.py
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v45
-        with:
-          files: "**/*.md"
-          # Ensures spaces in filenames are handled via a safe delimiter if needed
-          safe_output: true
-
-      - name: Run Link Check on PR Files Only
-        # Optional: Make it non-blocking on feature branches
-        #continue-on-error: ${{ github.ref != 'refs/heads/main' }}
-        if: steps.changed-files.outputs.any_changed == 'true'
+      - name: Run JSON Validation on Changed Files
+        if: steps.changed.outputs.json_any_changed == 'true'
         env:
-          # Ensure tools/scripts is in path if the script imports other local modules
           PYTHONPATH: ${{ github.workspace }}
         run: |
-          # Use double quotes around the output to handle potential shell expansion issues
-          uv run tools/scripts/check_broken_links.py --paths ${{ steps.changed-files.outputs.all_changed_files }} pattern "*.md" --verbose
+          uv run tools/scripts/check_json_files.py ${{ steps.changed.outputs.json_all_changed_files }}
