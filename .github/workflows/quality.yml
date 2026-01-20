@@ -91,7 +91,9 @@ jobs:
               - tools/scripts/paths.py
             scan:
               - "**"
-          files_ignore: tools/tests/test_check_api_keys.py
+          files_ignore: |
+            tools/tests/test_check_api_keys.py
+            tools/docs/scripts_instructions/check_api_keys_py_script.md
           safe_output: true
 
       - name: Run Logic Tests
@@ -105,7 +107,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
-          uv run tools/scripts/check_api_keys.py ${{ steps.changed.outputs.scan_all_changed_files }}
+          uv run tools/scripts/check_api_keys.py ${{ steps.changed.outputs.scan_all_changed_files }} --verbose
 
   json-validation:
     runs-on: ubuntu-latest
@@ -141,4 +143,4 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
-          uv run tools/scripts/check_json_files.py ${{ steps.changed.outputs.json_all_changed_files }}
+          uv run tools/scripts/check_json_files.py ${{ steps.changed.outputs.json_all_changed_files }} --verbose

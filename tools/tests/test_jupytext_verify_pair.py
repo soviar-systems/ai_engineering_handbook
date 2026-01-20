@@ -1,5 +1,6 @@
 """Tests for jupytext_verify_pair.py script."""
 import sys
+import runpy
 from pathlib import Path
 from unittest.mock import MagicMock, patch, call
 
@@ -90,6 +91,11 @@ class TestVerifyPairNoFiles:
         monkeypatch.setattr("sys.argv", ["jupytext_verify_pair.py"])
         assert main() == 0
 
+    def test_empty_files_list_returns_zero(self, monkeypatch):
+        """Empty files list should return 0."""
+        monkeypatch.setattr("sys.argv", ["jupytext_verify_pair.py"])
+        assert main() == 0
+
 
 class TestVerifyPairFileFiltering:
     """Test file filtering logic."""
@@ -109,6 +115,14 @@ class TestVerifyPairFileFiltering:
         venv_file = venv_dir / "test.md"
         venv_file.touch()
 
+        monkeypatch.setattr("sys.argv", ["jupytext_verify_pair.py", str(venv_file)])
+        assert main() == 0
+
+    def test_all_files_excluded_returns_zero(self, monkeypatch, tmp_path):
+        """If all provided files are excluded, should return 0."""
+        venv_file = tmp_path / ".venv" / "test.md"
+        venv_file.parent.mkdir()
+        venv_file.touch()
         monkeypatch.setattr("sys.argv", ["jupytext_verify_pair.py", str(venv_file)])
         assert main() == 0
 
@@ -247,6 +261,34 @@ class TestVerifyPairOneStagedOtherNot:
         assert result == 1
         captured = capsys.readouterr()
         assert "FAIL:" in captured.out
+
+    @patch("tools.scripts.jupytext_verify_pair.subprocess.run")
+    def test_pair_staged_md_not_fails(self, mock_run, monkeypatch, tmp_path, capsys):
+        """Ipynb staged but md not should fail (asymmetric check)."""
+        md_file = tmp_path / "test.md"
+        md_file.touch()
+        ipynb_file = tmp_path / "test.ipynb"
+        ipynb_file.touch()
+
+        def mock_git_response(cmd, **kwargs):
+            if "ls-files" in cmd:
+                return MagicMock(returncode=0)
+            if "diff" in cmd and "--cached" in cmd:
+                # Only ipynb file is staged
+                if str(ipynb_file) in cmd:
+                    return MagicMock(returncode=0, stdout=f"{ipynb_file}\n")
+                return MagicMock(returncode=0, stdout="")
+            return MagicMock(returncode=0)
+
+        mock_run.side_effect = mock_git_response
+        monkeypatch.setattr("sys.argv", ["jupytext_verify_pair.py", str(md_file)])
+
+        result = main()
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "FAIL:" in captured.out
+        assert "is staged but" in captured.out
 
 
 class TestVerifyPairUnstagedChanges:
@@ -399,3 +441,8 @@ class TestVerifyPairMixedScenarios:
         assert result == 1
         captured = capsys.readouterr()
         assert "FAIL:" in captured.out
+
+def test_main_entry_point():
+    # Cover the __main__ block
+    with patch("sys.argv", ["jupytext_verify_pair.py", "--help"]), pytest.raises(SystemExit):
+        runpy.run_path("tools/scripts/jupytext_verify_pair.py", run_name="__main__")

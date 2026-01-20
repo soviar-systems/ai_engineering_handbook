@@ -1,5 +1,6 @@
 """Tests for jupytext_sync.py script."""
 import sys
+import runpy
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -8,7 +9,7 @@ import pytest
 # Add tools/scripts to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from tools.scripts.jupytext_sync import main
+from tools.scripts.jupytext_sync import main, find_all_paired_notebooks
 
 
 class TestJupytextSyncNoFiles:
@@ -217,3 +218,182 @@ class TestIsExcluded:
         assert is_excluded("src/test.md") is False
         assert is_excluded("docs/guide.ipynb") is False
         assert is_excluded("notebooks/analysis.md") is False
+
+class TestFindAllPairedNotebooks:
+    """Test the find_all_paired_notebooks function."""
+
+    def test_finds_paired_notebooks(self, tmp_path):
+        """Should find .md files that have paired .ipynb files."""
+        # Create paired notebooks
+        (tmp_path / "notebook1.md").touch()
+        (tmp_path / "notebook1.ipynb").touch()
+        (tmp_path / "notebook2.md").touch()
+        (tmp_path / "notebook2.ipynb").touch()
+
+        result = find_all_paired_notebooks(tmp_path)
+
+        assert len(result) == 2
+        assert any("notebook1.md" in f for f in result)
+        assert any("notebook2.md" in f for f in result)
+
+    def test_ignores_unpaired_md_files(self, tmp_path):
+        """Should ignore .md files without paired .ipynb files."""
+        (tmp_path / "paired.md").touch()
+        (tmp_path / "paired.ipynb").touch()
+        (tmp_path / "unpaired.md").touch()  # No matching .ipynb
+
+        result = find_all_paired_notebooks(tmp_path)
+
+        assert len(result) == 1
+        assert any("paired.md" in f for f in result)
+
+    def test_excludes_venv_directory(self, tmp_path):
+        """Should skip files in .venv directory."""
+        venv_dir = tmp_path / ".venv"
+        venv_dir.mkdir()
+        (venv_dir / "notebook.md").touch()
+        (venv_dir / "notebook.ipynb").touch()
+
+        result = find_all_paired_notebooks(tmp_path)
+
+        assert len(result) == 0
+
+    def test_excludes_multiple_directories(self, tmp_path):
+        """Should skip files in all excluded directories."""
+        for dir_name in [".git", "node_modules", "__pycache__", "_build"]:
+            exc_dir = tmp_path / dir_name
+            exc_dir.mkdir()
+            (exc_dir / "notebook.md").touch()
+            (exc_dir / "notebook.ipynb").touch()
+
+        result = find_all_paired_notebooks(tmp_path)
+
+        assert len(result) == 0
+
+    def test_finds_nested_notebooks(self, tmp_path):
+        """Should find notebooks in subdirectories."""
+        subdir = tmp_path / "docs" / "tutorials"
+        subdir.mkdir(parents=True)
+        (subdir / "intro.md").touch()
+        (subdir / "intro.ipynb").touch()
+
+        result = find_all_paired_notebooks(tmp_path)
+
+        assert len(result) == 1
+        assert any("intro.md" in f for f in result)
+
+    def test_returns_sorted_list(self, tmp_path):
+        """Should return sorted list of paths."""
+        (tmp_path / "z_last.md").touch()
+        (tmp_path / "z_last.ipynb").touch()
+        (tmp_path / "a_first.md").touch()
+        (tmp_path / "a_first.ipynb").touch()
+
+        result = find_all_paired_notebooks(tmp_path)
+
+        assert len(result) == 2
+        assert result[0] < result[1]  # Sorted order
+
+    def test_empty_directory(self, tmp_path):
+        """Should return empty list for directory with no paired notebooks."""
+        result = find_all_paired_notebooks(tmp_path)
+
+        assert result == []
+
+
+class TestJupytextSyncAllFlag:
+    """Test the --all flag behavior."""
+
+    @patch("tools.scripts.jupytext_sync.subprocess.run")
+    @patch("tools.scripts.jupytext_sync.find_all_paired_notebooks")
+    def test_all_flag_finds_and_processes_notebooks(
+        self, mock_find, mock_run, monkeypatch, tmp_path
+    ):
+        """--all flag should find all paired notebooks and process them."""
+        md_file = tmp_path / "test.md"
+        md_file.touch()
+        mock_find.return_value = [str(md_file)]
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+
+        monkeypatch.setattr("sys.argv", ["jupytext_sync.py", "--all"])
+        result = main()
+
+        assert result == 0
+        mock_find.assert_called_once()
+        mock_run.assert_called_once()
+
+    @patch("tools.scripts.jupytext_sync.subprocess.run")
+    @patch("tools.scripts.jupytext_sync.find_all_paired_notebooks")
+    def test_all_flag_with_test_mode(self, mock_find, mock_run, monkeypatch, tmp_path):
+        """--all --test should run test mode on all notebooks."""
+        md_file = tmp_path / "test.md"
+        md_file.touch()
+        mock_find.return_value = [str(md_file)]
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+
+        monkeypatch.setattr("sys.argv", ["jupytext_sync.py", "--all", "--test"])
+        result = main()
+
+        assert result == 0
+        call_args = mock_run.call_args[0][0]
+        assert "--to" in call_args
+        assert "ipynb" in call_args
+        assert "--test" in call_args
+
+    @patch("tools.scripts.jupytext_sync.find_all_paired_notebooks")
+    def test_all_flag_no_notebooks_found(self, mock_find, monkeypatch, capsys):
+        """--all flag with no notebooks should print message and return 0."""
+        mock_find.return_value = []
+
+        monkeypatch.setattr("sys.argv", ["jupytext_sync.py", "--all"])
+        result = main()
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "No paired notebooks found" in captured.out
+
+    @patch("tools.scripts.jupytext_sync.subprocess.run")
+    @patch("tools.scripts.jupytext_sync.find_all_paired_notebooks")
+    def test_all_flag_processes_multiple_notebooks(
+        self, mock_find, mock_run, monkeypatch, tmp_path
+    ):
+        """--all flag should process all found notebooks."""
+        file1 = tmp_path / "file1.md"
+        file1.touch()
+        file2 = tmp_path / "file2.md"
+        file2.touch()
+        mock_find.return_value = [str(file1), str(file2)]
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+
+        monkeypatch.setattr("sys.argv", ["jupytext_sync.py", "--all"])
+        result = main()
+
+        assert result == 0
+        assert mock_run.call_count == 2
+
+    @patch("tools.scripts.jupytext_sync.subprocess.run")
+    @patch("tools.scripts.jupytext_sync.find_all_paired_notebooks")
+    def test_all_flag_one_failure_returns_one(
+        self, mock_find, mock_run, monkeypatch, tmp_path
+    ):
+        """--all flag should return 1 if any notebook fails."""
+        file1 = tmp_path / "file1.md"
+        file1.touch()
+        file2 = tmp_path / "file2.md"
+        file2.touch()
+        mock_find.return_value = [str(file1), str(file2)]
+        mock_run.side_effect = [
+            MagicMock(returncode=0, stdout="", stderr=""),
+            MagicMock(returncode=1, stdout="", stderr="Error"),
+        ]
+
+        monkeypatch.setattr("sys.argv", ["jupytext_sync.py", "--all"])
+        result = main()
+
+        assert result == 1
+
+
+def test_main_entry_point():
+    # Cover the __main__ block
+    with patch("sys.argv", ["jupytext_sync.py", "--help"]), pytest.raises(SystemExit):
+        runpy.run_path("tools/scripts/jupytext_sync.py", run_name="__main__")

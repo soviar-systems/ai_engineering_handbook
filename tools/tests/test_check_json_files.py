@@ -1,4 +1,5 @@
 import sys
+import runpy
 from pathlib import Path
 from unittest.mock import patch
 
@@ -166,6 +167,16 @@ class TestFileFinder:
         filenames = {f.name for f in files}
         assert filenames == {"file1.json", "file2.json", "file3.json"}
 
+    def test_find_skips_directories(self, tmp_path):
+        # Create a directory named 'test.json'
+        (tmp_path / "test.json").mkdir()
+        (tmp_path / "real.json").touch()
+        
+        finder = FileFinder(verbose=False)
+        files = finder.find(tmp_path)
+        assert len(files) == 1
+        assert files[0].name == "real.json"
+
     def test_excludes_git_directory(self, tmp_path):
         (tmp_path / "file.json").touch()
         (tmp_path / ".git").mkdir()
@@ -301,6 +312,15 @@ class TestJsonValidatorCLI:
         captured = capsys.readouterr()
         assert "validation error(s) found" in captured.out
 
+    def test_run_with_directory_in_files(self, cli, tmp_path):
+        # Passing a directory in the files list should be skipped by is_file check
+        subdir = tmp_path / "subdir"
+        subdir.mkdir()
+        
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(subdir)])
+        assert exc_info.value.code == 0
+
     def test_multiple_files_all_valid(self, cli, tmp_path):
         file1 = tmp_path / "file1.json"
         file1.write_text('{"a": 1}', encoding="utf-8")
@@ -409,8 +429,11 @@ def test_json_validation_edge_cases(tmp_path, content, is_valid):
 
 
 def test_main_entry_point():
+    # Cover the __main__ block
+    with patch("sys.argv", ["check_json_files.py", "--help"]), pytest.raises(SystemExit):
+        runpy.run_path("tools/scripts/check_json_files.py", run_name="__main__")
+
     with patch("tools.scripts.check_json_files.JsonValidatorCLI.run") as mock_run:
         from tools.scripts.check_json_files import main
-
         main()
         mock_run.assert_called_once_with()

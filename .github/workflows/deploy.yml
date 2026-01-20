@@ -23,23 +23,18 @@ jobs:
           fetch-depth: 0
 
       # --- 1. INTEGRITY CHECK (Enforced on all branches) ---
-      - name: Install uv (Python package manager)
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
 
-      - name: Restore project environment using uv.lock
+      - name: Restore project environment
         run: uv sync --frozen
 
       - name: Verify Notebook Synchronization
-        run: |
-          # Only validate notebooks with a .md pair
-          for md in **/*.md; do
-            if [[ -f "${md%.md}.ipynb" ]]; then
-              echo "Testing: $md"
-              uv run jupytext --to ipynb --test "$md"
-            fi
-          done
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: uv run tools/scripts/jupytext_sync.py --all --test
 
       # --- 2. DEPLOYMENT STEPS (Only runs on Main) ---
       - name: Setup Node.js

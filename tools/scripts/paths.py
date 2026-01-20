@@ -5,6 +5,7 @@ Centralized path configurations for the toolkit.
 # Directories that should always be excluded from notebook/link scans
 BROKEN_LINKS_EXCLUDE_DIRS = {
     ".git",
+    ".ipynb_checkpoints",
     ".pytest_cache",
     ".venv",
     "venv",

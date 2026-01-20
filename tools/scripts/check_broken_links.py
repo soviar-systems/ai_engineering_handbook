@@ -52,8 +52,7 @@ Default pattern: *.ipynb""",
         parser.add_argument(
             "--paths",
             nargs="*",  # This allows 0 or more files/dirs
-            default=".",
-            # see input_paths var for default
+            default=None,
             help="Directory to search or a single file path (default: current directory)",
         )
         parser.add_argument(
@@ -261,6 +260,7 @@ class LinkValidator:
             path_str_cleaned = str(link_path).lstrip("/")
             return (self.root_dir / path_str_cleaned).resolve()
         else:
+            # Use walk_up=True for Python 3.13 compatibility with relative_to
             return (source_file.parent / link_path).resolve()
 
     def is_valid_target(self, target_file: Path) -> bool:

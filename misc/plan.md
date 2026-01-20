@@ -42,3 +42,14 @@ This plan outlines the refactoring of `.github/workflows/quality.yml` to separat
 - Use `tj-actions/changed-files` within each job to determine execution paths.
 - Use `files_ignore` in `tj-actions/changed-files` for the API key scan to exclude the test fixture file and its documentation.
 - **Security**: Ensure test keys in `tools/tests/test_check_api_keys.py` do not trigger GitHub Push Protection (e.g., avoid `xoxb-[digits]-` patterns for Slack).
+
+## 5. Coverage Improvements
+- **`check_api_keys.py`**: Add tests for verbose output of skipped keys, empty string entropy, and directory handling in CLI.
+    - **Fix**: Updated `test_verbose_skips` and `test_edge_cases` in `test_api_keys.py` and `test_check_api_keys.py` to use test strings that correctly match provider regex patterns (e.g., OpenAI keys must be at least 51 characters).
+- **`check_broken_links.py`**: Add tests for relative path resolution, multiple input paths, target outside root in verbose mode, and multi-segment directory exclusions.
+    - **Fix**: Updated `test_validate_link_target_outside_root_verbose` in `test_check_broken_links.py` to use `walk_up=True` in `relative_to()` for Python 3.13 compatibility.
+    - **Fix**: Changed default value of `--paths` to `None` in `check_broken_links.py` to correctly exercise default path logic.
+    - **Fix**: Added `test_run_no_git_root_warning` to cover the warning message when not in a Git repository.
+- **`check_json_files.py`**: Add tests for directory handling in CLI and file discovery edge cases.
+- **`jupytext_verify_pair.py`**: Add tests for empty file lists and asymmetric staging (pair staged, file not).
+- **General**: Use `runpy` to cover `if __name__ == "__main__":` blocks in all scripts.

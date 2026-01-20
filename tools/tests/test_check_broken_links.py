@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import runpy
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 
@@ -182,6 +183,22 @@ class TestLinkValidator:
         captured = capsys.readouterr()
         assert f"  SKIP Excluded Link String: {excluded_link}" in captured.out
 
+    def test_validate_link_target_outside_root_verbose(self, tmp_path, capsys):
+        validator = LinkValidator(root_dir=tmp_path / "root", verbose=True)
+        validator.root_dir.mkdir()
+        source = validator.root_dir / "a.ipynb"
+        # Ensure source file exists for relative path resolution
+        source.touch()
+        # Link to a file outside the root directory
+        outside = tmp_path / "outside.ipynb"
+        outside.touch()
+        # Resolve the path relative to the source file's parent directory
+        relative_path_str = str(outside.relative_to(source.parent, walk_up=True))
+        error = validator.validate_link(relative_path_str, source, 1)
+        assert error is None
+        captured = capsys.readouterr()
+        assert f"  OK: {relative_path_str} -> {outside.resolve()}" in captured.out
+
     def test_validate_link_valid_verbose(self, tmp_path, capsys):
         target = tmp_path / "exists.ipynb"
         target.touch()
@@ -337,6 +354,19 @@ class TestFileFinder:
         assert len(files) == 1
         assert files[0] == symlink_path
 
+    def test_find_skipping_non_files(self, tmp_path, capsys):
+        # Create a directory that matches the pattern (e.g. ends in .ipynb)
+        dir_matching_pattern = tmp_path / "not_a_file.ipynb"
+        dir_matching_pattern.mkdir()
+        (tmp_path / "real.ipynb").touch()
+        
+        finder = FileFinder(exclude_dirs=[], exclude_files=[], verbose=True)
+        files = finder.find(tmp_path, "*.ipynb")
+        assert len(files) == 1
+        assert files[0].name == "real.ipynb"
+        captured = capsys.readouterr()
+        assert "SKIPPING (not a file)" in captured.out
+
 
 class TestReporter:
     def test_report_broken_links_exits_1(self, tmp_path, capsys):
@@ -419,6 +449,27 @@ class TestLinkCheckerCLI:
         captured = capsys.readouterr()
         assert "Found 1 file in:" in captured.out
         assert "✅ All links are valid!" in captured.out
+
+    def test_run_relative_path_input(self, tmp_path, capsys, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        source = Path("source.ipynb")
+        source.touch()
+        with pytest.raises(SystemExit) as exc_info:
+            LinkCheckerCLI().run(["--paths", "source.ipynb"])
+        assert exc_info.value.code == 0
+        assert "Found 1 file in: source.ipynb" in capsys.readouterr().out
+
+    def test_run_multiple_paths_reporting(self, tmp_path, capsys):
+        f1 = tmp_path / "f1.ipynb"
+        f1.touch()
+        f2 = tmp_path / "f2.ipynb"
+        f2.touch()
+        with pytest.raises(SystemExit) as exc_info:
+            LinkCheckerCLI().run(["--paths", str(f1), str(f2)])
+        assert exc_info.value.code == 0
+        out = capsys.readouterr().out
+        assert "- " + str(f1) in out
+        assert "- " + str(f2) in out
 
     def test_run_current_directory_default_path(self, tmp_path, capsys, monkeypatch):
         # Simulate running with no --paths argument, defaulting to current directory
@@ -562,6 +613,16 @@ def test_nonexistent_input_path(tmp_path, capsys):
     assert "Warning: Path does not exist" in captured.err
 
 
+def test_run_no_git_root_warning(tmp_path, capsys):
+    cli = LinkCheckerCLI()
+    with patch.object(LinkCheckerCLI, "get_git_root_dir", return_value=None):
+        # We need to provide --paths so it doesn't try to find git root for CWD if we are in one
+        with pytest.raises(SystemExit):
+            cli.run(["--paths", str(tmp_path), "--verbose"])
+    captured = capsys.readouterr()
+    assert "Warning: Not in a Git repository" in captured.out
+
+
 # ======================
 # Parametrized Edge Cases
 # ======================
@@ -655,6 +716,10 @@ def test_e2e_myst_include_with_git_root(tmp_path, capsys):
 
 
 def test_main_entry_point(monkeypatch):
+    # Cover the __main__ block
+    with patch("sys.argv", ["check_broken_links.py", "--help"]), pytest.raises(SystemExit):
+        runpy.run_path("tools/scripts/check_broken_links.py", run_name="__main__")
+
     # This test covers the `if __name__ == "__main__":` block
     # by directly calling main() after patching LinkCheckerCLI.
     with patch("tools.scripts.check_broken_links.LinkCheckerCLI.run") as mock_run:
