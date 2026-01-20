@@ -5,9 +5,10 @@ on:
     # Universal trigger for team validation
     branches: ["**"]
     paths-ignore:
-      - 'in_progress/*'
-      - 'research/slm_from_scratch/old/*'
       - 'RELEASE_NOTES.md'
+      - 'misc/in_progress/*'
+      - 'misc/pr/*'
+      - 'misc/research/slm_from_scratch/old/*'
   # Allows you to trigger the build manually from the Actions tab
   workflow_dispatch:
 
@@ -32,7 +33,7 @@ jobs:
 
       - name: Verify Notebook Synchronization
         run: |
-          # Only validate notebooks with a .md pair (your source of truth)
+          # Only validate notebooks with a .md pair
           for md in **/*.md; do
             if [[ -f "${md%.md}.ipynb" ]]; then
               echo "Testing: $md"
