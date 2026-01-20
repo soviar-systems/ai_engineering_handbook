@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: bash
   display_name: Bash
@@ -17,10 +17,10 @@ kernelspec:
 
 ---
 
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.0  
+Owner: Vadim Rudakov, rudakow.wadim@gmail.com  
+Version: 0.2.1  
 Birth: 2026-01-18  
-Last Modified: 2026-01-18  
+Last Modified: 2026-01-21  
 
 ---
 
@@ -49,7 +49,7 @@ If an attacker uses this handbook to target you, the fault lies in:
 ✅ **Intended Audience**:
 - Security engineers designing password management systems
 - DevOps leads implementing secret management
-- Compliance officers mapping to [ISO 27001](https://en.wikipedia.org/wiki/ISO/IEC_27001) / NIST requirements
+- Compliance officers mapping to [ISO/IEC 27001](wiki:ISO%2FIEC_27001) / NIST requirements
 
 ❌ **NOT Intended For**:
 - Copy-paste implementation without customization
@@ -79,20 +79,20 @@ The production secret management system uses a three-layer security model:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Layer 1: GPG Private Key (Hardware-backed, passphrase-protected) │
-│         Protected by: OS keyring + gpg-agent caching        │
+│ Layer 1: GPG Private Key (Hardware-backed, passphrase-protected)       │
+│         Protected by: OS keyring + gpg-agent caching                   │
 └────────────────────┬────────────────────────────────────────┘
-                     │ decrypts
-                     ▼
+                         │ decrypts
+                         ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Layer 2: Encrypted Vault Password (.vault_pass.gpg)        │
-│         Location: Git repository (version-controlled)       │
+│ Layer 2: Encrypted Vault Password (.vault_pass.gpg)                    │
+│         Location: Git repository (version-controlled)                  │
 └────────────────────┬────────────────────────────────────────┘
-                     │ unlocks
-                     ▼
+                         │ unlocks
+                         ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Layer 3: Encrypted Secrets (vault.yml files)               │
-│         Contains: Passwords, API keys, certificates         │
+│ Layer 3: Encrypted Secrets (vault.yml files)                           │
+│         Contains: Passwords, API keys, certificates                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 

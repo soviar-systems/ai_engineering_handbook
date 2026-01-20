@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
@@ -17,10 +17,10 @@ kernelspec:
 
 ---
 
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.0  
+Owner: Vadim Rudakov, rudakow.wadim@gmail.com  
+Version: 0.1.1  
 Birth: 2026-01-18  
-Last Modified: 2026-01-18  
+Last Modified: 2026-01-21
 
 ---
 
@@ -49,7 +49,7 @@ If an attacker uses this handbook to target you, the fault lies in:
 ✅ **Intended Audience**:
 - Security engineers designing password management systems
 - DevOps leads implementing secret management
-- Compliance officers mapping to [ISO 27001](https://en.wikipedia.org/wiki/ISO/IEC_27001) / NIST requirements
+- Compliance officers mapping to [ISO/IEC 27001](wiki:ISO%2FIEC_27001) / NIST requirements
 
 ❌ **NOT Intended For**:
 - Copy-paste implementation without customization
