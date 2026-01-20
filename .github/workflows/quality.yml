@@ -53,6 +53,28 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_jupytext_sync.py tools/tests/test_jupytext_verify_pair.py
 
+      - name: Get changed api-keys files
+        id: changed-api-keys
+        uses: tj-actions/changed-files@v45
+        with:
+          files_yaml: |
+            logic:
+              - tools/scripts/check_api_keys.py
+              - tools/tests/test_check_api_keys.py
+              - tools/scripts/paths.py
+            scan:
+              - "**"
+          files_ignore: |
+            tools/tests/test_check_api_keys.py
+            tools/docs/scripts_instructions/check_api_keys_py_script.md
+          safe_output: true
+
+      - name: Run API Keys Tests
+        if: steps.changed-api-keys.outputs.any_changed == 'true' || steps.changed-paths.outputs.any_changed == 'true'
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: uv run pytest tools/tests/test_check_api_keys.py
+
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v45
