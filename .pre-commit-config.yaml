@@ -36,6 +36,15 @@ repos:
         exclude: ^(tools/tests/test_check_api_keys\.py|tools/docs/scripts_instructions/check_api_keys_py_script\.md)$
         stages: [pre-commit]
 
+      - id: check-json-files
+        name: Check JSON Files
+        entry: uv run --active tools/scripts/check_json_files.py
+        language: system
+        files: \.json$
+        pass_filenames: true
+        exclude: ^(tools/tests/|\.vscode/)
+        stages: [pre-commit]
+
       # ---TESTS of HOOK SCRIPTS---
       # Trigger this whenever any script or test in the scripts
       # directory changes
@@ -65,4 +74,11 @@ repos:
         entry: uv run --active pytest tools/tests/test_check_api_keys.py
         language: python
         files: ^tools/(scripts/check_api_keys\.py|scripts/paths\.py|tests/test_check_api_keys\.py)$
+        pass_filenames: false
+
+      - id: test-check-json-files
+        name: Test JSON validation script
+        entry: uv run --active pytest tools/tests/test_check_json_files.py
+        language: system
+        files: ^tools/(scripts/check_json_files\.py|scripts/paths\.py|tests/test_check_json_files\.py)$
         pass_filenames: false

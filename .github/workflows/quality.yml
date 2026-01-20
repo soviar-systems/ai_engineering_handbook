@@ -75,6 +75,20 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_check_api_keys.py
 
+      - name: Get changed json-validation files
+        id: changed-json-validation
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            tools/scripts/check_json_files.py
+            tools/tests/test_check_json_files.py
+
+      - name: Run JSON Validation Tests
+        if: steps.changed-json-validation.outputs.any_changed == 'true' || steps.changed-paths.outputs.any_changed == 'true'
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: uv run pytest tools/tests/test_check_json_files.py
+
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v45
