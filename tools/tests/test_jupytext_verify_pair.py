@@ -1,13 +1,9 @@
 """Tests for jupytext_verify_pair.py script."""
 import sys
 import runpy
-from pathlib import Path
 from unittest.mock import MagicMock, patch, call
 
 import pytest
-
-# Add tools/scripts to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from tools.scripts.jupytext_verify_pair import (
     main,

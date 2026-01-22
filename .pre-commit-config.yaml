@@ -39,7 +39,7 @@ repos:
       - id: check-json-files
         name: Check JSON Files
         entry: uv run --active tools/scripts/check_json_files.py
-        language: system
+        language: python
         files: \.json$
         pass_filenames: true
         exclude: ^(tools/tests/|\.vscode/)

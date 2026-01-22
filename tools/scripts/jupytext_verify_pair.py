@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from paths import is_excluded
+from tools.scripts.paths import is_excluded
 
 
 def get_pair_path(file_path: str) -> str | None:

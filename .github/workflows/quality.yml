@@ -57,18 +57,30 @@ jobs:
         id: changed
         uses: tj-actions/changed-files@v45
         with:
-          files: |
-            tools/scripts/jupytext_sync.py
-            tools/scripts/jupytext_verify_pair.py
-            tools/tests/test_jupytext_sync.py
-            tools/tests/test_jupytext_verify_pair.py
-            tools/scripts/paths.py
+          files_yaml: |
+            logic:
+              - tools/scripts/jupytext_sync.py
+              - tools/scripts/jupytext_verify_pair.py
+              - tools/tests/test_jupytext_sync.py
+              - tools/tests/test_jupytext_verify_pair.py
+              - tools/scripts/paths.py
+            notebooks:
+              - "**/*.md"
+              - "**/*.ipynb"
+          safe_output: true
 
       - name: Run Jupytext Script Tests
-        if: steps.changed.outputs.any_changed == 'true'
+        if: steps.changed.outputs.logic_any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_jupytext_sync.py tools/tests/test_jupytext_verify_pair.py
+
+      - name: Verify Notebook Sync on Changed Files
+        if: steps.changed.outputs.notebooks_any_changed == 'true'
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          uv run tools/scripts/jupytext_sync.py --test ${{ steps.changed.outputs.notebooks_all_changed_files }}
 
   api-keys:
     runs-on: ubuntu-latest

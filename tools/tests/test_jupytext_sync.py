@@ -1,13 +1,9 @@
 """Tests for jupytext_sync.py script."""
 import sys
 import runpy
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-# Add tools/scripts to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from tools.scripts.jupytext_sync import main, find_all_paired_notebooks
 
