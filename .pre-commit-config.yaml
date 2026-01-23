@@ -4,10 +4,10 @@ repos:
 
       - id: check-broken-links
         name: Check Broken Links
-        entry: uv run --active tools/scripts/check_broken_links.py --pattern "*.md"
+        entry: uv run --active tools/scripts/check_broken_links.py
         language: python
         files: \.md$
-        pass_filenames: true
+        pass_filenames: false
         stages: [pre-commit, manual]
 
       - id: jupytext-sync
