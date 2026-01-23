@@ -6,6 +6,7 @@ on:
     branches: ["**"]
     paths-ignore:
       - 'RELEASE_NOTES.md'
+      - 'CLAUDE.md'
       - 'misc/in_progress/*'
       - 'misc/pr/*'
       - 'misc/research/slm_from_scratch/old/*'
