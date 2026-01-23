@@ -36,12 +36,11 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_check_broken_links.py
 
-      - name: Run Link Check on Changed Files
+      - name: Run Link Check on All Files
         if: steps.changed.outputs.docs_any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
-        run: |
-          uv run tools/scripts/check_broken_links.py --paths ${{ steps.changed.outputs.docs_all_changed_files }} --pattern "*.md" --verbose
+        run: uv run tools/scripts/check_broken_links.py --verbose
 
   jupytext:
     runs-on: ubuntu-latest

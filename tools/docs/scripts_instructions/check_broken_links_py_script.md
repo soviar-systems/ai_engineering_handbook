@@ -17,10 +17,10 @@ kernelspec:
 
 ---
 
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.4.0  
+Owner: Vadim Rudakov, rudakow.wadim@gmail.com  
+Version: 0.4.1  
 Birth: 2026-01-07  
-Last Modified: 2026-01-17
+Last Modified: 2026-01-24
 
 ---
 
@@ -30,7 +30,7 @@ Last Modified: 2026-01-17
 
 +++
 
-This [script](/tools/scripts/check_broken_links.py) performs fast validation of relative file links within a directory and its subdirectories. While optimized for Jupyter Notebooks (`.ipynb`), it can scan any Markdown-style links. 
+This [script](/tools/scripts/check_broken_links.py) performs fast validation of relative file links within a directory and its subdirectories. While optimized for Markdown files (`.md`), it can scan any file containing Markdown-style links (e.g., `.ipynb`). 
 
 This tool is designed to serve as a high-quality diagnostic step in CI/CD, providing clear, parsable feedback to automate documentation maintenance.
 
@@ -128,14 +128,14 @@ The script is organized into specialized classes to maintain clarity:
 +++
 
 ```bash
-check_broken_links.py [paths] [--pattern PATTERN] [options]
+check_broken_links.py [--paths PATH] [--pattern PATTERN] [options]
 
 ```
 
 | Argument | Description | Default |
 | --- | --- | --- |
 | `--paths` | One or more directories or specific file paths to scan. | `.` (Current Dir) |
-| `--pattern` | Glob pattern for files to scan. | `*.ipynb` |
+| `--pattern` | Glob pattern for files to scan. | `*.md` |
 | `--exclude-dirs` | List of directory names to ignore. | `in_progress`, `pr`, `.venv` |
 | `--exclude-files` | List of specific filenames to ignore. | `.aider.chat.history.ipynb` |
 | `--verbose` | Shows detailed logs of skipped URLs and valid links. | `False` |
@@ -150,10 +150,10 @@ Run these from the repository root using `uv` for consistent environment resolut
 
 | Task | Command |
 | --- | --- |
-| **Full Repo Audit** | `uv run tools/scripts/check_broken_links.py` |
+| **Full Repo Audit (all .md)** | `uv run tools/scripts/check_broken_links.py` |
 | **Scan Specific Directories** | `uv run tools/scripts/check_broken_links.py --paths tools/docs/ architecture/` |
-| **Scan Multiple Files** | `uv run tools/scripts/check_broken_links.py --paths file1.ipynb file2.ipynb` |
-| **Markdown Audit** | `uv run tools/scripts/check_broken_links.py --pattern "*.md"` |
+| **Scan Multiple Files** | `uv run tools/scripts/check_broken_links.py --paths file1.md file2.md` |
+| **Notebook Audit** | `uv run tools/scripts/check_broken_links.py --pattern "*.ipynb"` |
 
 +++
 
@@ -161,7 +161,6 @@ Run these from the repository root using `uv` for consistent environment resolut
 
 ```{code-cell}
 cd ../../../
-ls
 ```
 
 1. Check all `*.md` files in the current directory and subdirectories:
@@ -170,22 +169,26 @@ ls
 check_broken_links.py
 ```
 
-2. Check all `*.md` files recursively from the `tools/docs` directory:
+2. Check all `*.ipynb` files recursively from the `tools/docs` directory:
 
 ```{code-cell}
-check_broken_links.py tools/docs --pattern "*.md"
+check_broken_links.py --paths tools/docs --pattern "*.ipynb"
 ```
 
-3. Use exclusions (default exclusion are overidden):
+3. Use exclusions (default exclusion are overidden, so be careful):
 
 ```{code-cell}
-check_broken_links.py --exclude-dirs 4_orchestration in_porgress --exclude-files README.ipynb
+check_broken_links.py --exclude-dirs 4_orchestration in_porgress --exclude-files README.ipynb | head -n 10
 ```
 
 4. Check the given file:
 
 ```{code-cell}
-check_broken_links.py 0_intro/00_onboarding.ipynb
+check_broken_links.py --paths 0_intro/00_onboarding.ipynb
+```
+
+```{code-cell}
+check_broken_links.py --paths 0_intro/00_onboarding.ipynb README.md
 ```
 
 4. Use verbose mode:
@@ -206,9 +209,7 @@ check_broken_links.py 0_intro/00_onboarding.ipynb
 
 The first line of defense runs automatically during the `git commit` process to prevent broken links from entering the history.
 
-* **Scope**: Validates only the `.md` files currently staged for commit.
-    - Every `.ipynb` file has its pair, but not every `.md` file has its pair, but we need to be sure all the doc files in the repo have healthy links.
-    - If there is a `md - ipynb` pair, the link should point to its `.ipynb` pair because our `myst.yaml` config renders only `.ipynb` files for the website, thus `.md` links will cause files to download, not to open as the web page. 
+* **Scope**: All `.md` files are validated because if the developer changes their file name other files will not be able to reach it, so the developer must fix all the links they have broken.
 * **Efficiency**: Fast execution ensures no significant delay in the developer's workflow.
 * **Logic Tests**: Includes a meta-check (`test-check-broken-links`) that triggers whenever the script itself or its tests change, ensuring the tool's logic remains sound.
 
@@ -218,48 +219,38 @@ The first line of defense runs automatically during the `git commit` process to 
 
 +++
 
-The CI pipeline in `quality.yml` is optimized to validate only modified files in Pull Requests, preventing the accumulation of technical debt.
+The CI pipeline in `quality.yml` validates **ALL** `.md` files when any documentation changes, ensuring renamed or moved files don't break links across the repository.
 
-* **Differential Checking**: Uses `tj-actions/changed-files` to scan only the notebooks modified in a specific PR, avoiding "blaming" developers for legacy technical debt.
+* **Full Repository Scan**: When any `.md` file changes, the workflow scans ALL `.md` files — not just the changed ones. This catches broken links in unchanged files that reference renamed/moved files.
+* **Trigger Optimization**: Uses `tj-actions/changed-files` to detect when docs change, but runs the full scan to ensure consistency with the pre-commit hook.
 * **Environment Parity**: Utilizes `uv` for high-performance dependency and environment management, mirroring the local development stack.
 * **Failure Isolation**: Separates logic tests from link validation to pinpoint exactly where a failure occurs.
 
 :::{tip} `quality.yml` Implementation:
 ```yaml
-      - name: Get changed paths.py
-        id: changed-paths
-        uses: tj-actions/changed-files@v45
-        with:
-          files: tools/scripts/paths.py
-
-      - name: Get changed check_broken_links files
-        id: changed-check-broken-links
-        uses: tj-actions/changed-files@v45
-        with:
-          files: |
-            tools/scripts/check_broken_links.py
-            tools/tests/test_check_broken_links.py
-
-      - name: Run Logic Tests
-        if: steps.changed-check-broken-links.outputs.any_changed == 'true' || steps.changed-paths.outputs.any_changed == 'true'
-        run: uv run pytest tools/tests/test_check_broken_links.py
-
       - name: Get changed files
-        id: changed-files
+        id: changed
         uses: tj-actions/changed-files@v45
         with:
-          files: "**/*.md"
+          files_yaml: |
+            logic:
+              - tools/scripts/check_broken_links.py
+              - tools/tests/test_check_broken_links.py
+              - tools/scripts/paths.py
+            docs:
+              - "**/*.md"
           safe_output: true
 
-      - name: Run Link Check on PR Files Only
-        if: steps.changed-files.outputs.any_changed == 'true'
-        run: |
-          uv run tools/scripts/check_broken_links.py --paths ${{ steps.changed-files.outputs.all_changed_files }} --verbose
+      - name: Run Logic Tests
+        if: steps.changed.outputs.logic_any_changed == 'true'
+        run: uv run pytest tools/tests/test_check_broken_links.py
+
+      - name: Run Link Check on All Files
+        if: steps.changed.outputs.docs_any_changed == 'true'
+        run: uv run tools/scripts/check_broken_links.py --verbose
 ```
 
-*Note: `paths.py` is detected separately because it's a shared dependency across multiple test suites.*
-
-*Note: Using the `--paths` flag is critical to handle multiple files provided by the `changed-files` action.*
+*Note: The workflow triggers on doc changes but scans ALL files to match pre-commit behavior.*
 :::
 
 +++
@@ -303,7 +294,7 @@ flowchart TB
         G5["Step 5: Detect jupytext changes"]
         G6{"Step 6: Run Jupytext Tests<br>(if scripts/paths.py changed)"}
         G7["Step 7: Get Changed .md Files"]
-        G8{"Step 8: Run Link Check<br>(on changed files only)"}
+        G8{"Step 8: Run Link Check<br>(on ALL .md files)"}
         H_Stop["Job Stops: Logic Regression"]
         J["PR Blocked / Red X"]
         K["PR Quality Check Green"]
