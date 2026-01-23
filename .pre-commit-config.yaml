@@ -7,7 +7,7 @@ repos:
         entry: uv run --active tools/scripts/check_broken_links.py --pattern "*.md"
         language: python
         files: \.md$
-        pass_filenames: false
+        pass_filenames: true
         stages: [pre-commit, manual]
 
       - id: jupytext-sync

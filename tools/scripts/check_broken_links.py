@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Script to check broken links in files (default: Jupyter files .ipynb).
+Script to check broken links in files (default: Markdown files .md).
 
-Usage: check_broken_links.py [paths] [--pattern PATTERN] [options]
+Usage: check_broken_links.py [--paths PATH ...] [--pattern PATTERN] [options]
 
 This script is fully SVA (Smallest Viable Architecture) compliant, using only
 Python's standard library (pathlib, re, sys, argparse, tempfile) for robust, local-only
 link validation with full exclusion capabilities.
 
 By default, it looks for Markdown-style links ([text](link)) in files matching the
-given pattern (default: *.ipynb), but any file type can be scanned.
+given pattern (default: *.md), but any file type can be scanned.
 """
 
 import argparse
@@ -44,21 +44,20 @@ class LinkCheckerCLI:
         parser = argparse.ArgumentParser(
             description="Check for broken Markdown-style links in files (Local Filesystem Only)",
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog="""Example: %(prog)s --pattern "*.ipynb" --exclude-dirs drafts
-Example: %(prog)s docs "*.rst"
+            epilog="""Example: %(prog)s --pattern "*.md" --exclude-dirs drafts
+Example: %(prog)s --paths docs --pattern "*.rst"
 Default directory: current directory
-Default pattern: *.ipynb""",
+Default pattern: *.md""",
         )
         parser.add_argument(
             "--paths",
-            nargs="*",  # This allows 0 or more files/dirs
-            default=None,
-            help="Directory to search or a single file path (default: current directory)",
+            nargs="*",
+            help="Paths to Markdown files or directories to check (default: current directory if not using pre-commit).",
         )
         parser.add_argument(
             "--pattern",
-            default="*.ipynb",
-            help="File glob pattern to match (default: *.ipynb) - ignored if a single file is specified",
+            default="*.md",
+            help="File glob pattern to match (default: *.md) - ignored if a single file is specified",
         )
         parser.add_argument(
             "--exclude-dirs",
@@ -268,6 +267,8 @@ class LinkValidator:
         if target_file.exists():
             if target_file.is_dir():
                 index_files = [
+                    target_file / "index.md",
+                    target_file / "README.md",
                     target_file / "index.ipynb",
                     target_file / "README.ipynb",
                 ]
