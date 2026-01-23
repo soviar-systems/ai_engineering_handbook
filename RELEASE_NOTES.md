@@ -1,6 +1,6 @@
 # Release Notes
 
-## v2.2.0
+## v2.2.0 "The Hardened Foundation"
 
 ### Summary of Changes
 
@@ -50,7 +50,7 @@ Research materials and prompt consultants have been relocated to better align wi
 | `tools/scripts/release_notes_data.sh` | `ai_system/4_orchestration/workflows/release_notes_generation/release_notes_data.sh` |
 | `tools/scripts/sync_and_verify.py` | *Removed (replaced by jupytext_sync.py)* |
 
-## v2.1.0
+## v2.1.0 "The Agentic Architect"
 
 ### **Summary of Changes**
 
