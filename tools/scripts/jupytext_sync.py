@@ -7,31 +7,13 @@ CLI: uv run tools/scripts/jupytext_sync.py [--test] [--all] file1.md file2.ipynb
   --all: Find and process all paired notebooks in the repository
   Exit 0 on success, 1 on failure
 """
+
 import argparse
 import subprocess
 import sys
 from pathlib import Path
 
 from tools.scripts.paths import is_excluded
-
-
-def find_all_paired_notebooks(root: Path | None = None) -> list[str]:
-    """Find all .md files that have a paired .ipynb file."""
-    if root is None:
-        root = Path.cwd()
-
-    paired_files = []
-    for md_file in root.rglob("*.md"):
-        md_str = str(md_file)
-        # Skip excluded directories
-        if is_excluded(md_str):
-            continue
-        # Check if paired .ipynb exists
-        ipynb_file = md_file.with_suffix(".ipynb")
-        if ipynb_file.exists():
-            paired_files.append(md_str)
-
-    return sorted(paired_files)
 
 
 def main() -> int:
@@ -94,6 +76,25 @@ def main() -> int:
                 print(result.stdout.strip())
 
     return 1 if failed else 0
+
+
+def find_all_paired_notebooks(root: Path | None = None) -> list[str]:
+    """Find all .md files that have a paired .ipynb file."""
+    if root is None:
+        root = Path.cwd()
+
+    paired_files = []
+    for md_file in root.rglob("*.md"):
+        md_str = str(md_file)
+        # Skip excluded directories
+        if is_excluded(md_str):
+            continue
+        # Check if paired .ipynb exists
+        ipynb_file = md_file.with_suffix(".ipynb")
+        if ipynb_file.exists():
+            paired_files.append(md_str)
+
+    return sorted(paired_files)
 
 
 if __name__ == "__main__":
