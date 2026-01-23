@@ -1,10 +1,11 @@
 # About
 
+
 ---
 
-Version: 0.3.4  
+Version: 0.3.5  
 Birth: 2025-10-19  
-Last Modified: 2026-01-17
+Last Modified: 2026-01-24
 
 ---
 
@@ -18,6 +19,10 @@ All content is **generated, validated, and versioned** through a controlled Lang
 
 ## What's new?
 
+v2.2.0
+* **Security**: Implemented automated API key detection and JSON validation scripts with CI integration.
+* **Infrastructure**: Adopted Ansible and Molecule for idempotent configuration management (ADR 26009, 26010).
+* **Organization**: Relocated research materials to `misc/research/` and centralized prompt consultants in Layer 3.
 
 v2.1.0
 * **AI Strategy**: Formalized the [**aidx Industrial AI Orchestration Framework**](/ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.ipynb), including specialized model selection for Architect vs. Editor phases. 
