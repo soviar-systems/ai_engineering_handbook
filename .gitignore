@@ -277,6 +277,7 @@ server_config/config/public_key
 rendered/
 
 .aider*
+misc/plan.md
 
 # MyST build outputs
 _build
