@@ -5,7 +5,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: slm_from_scratch
   display_name: slm_from_scratch
@@ -106,7 +106,7 @@ What linear algebra operation would efficiently compute all outputs at once? Mat
 Read about GEMM and BLAS:
 
 1. [*Matrix Multiplication Background User's Guide*](https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html) - NVIDIA
-2. [*GEMM: The Engineering Standard*](/ai_system/1_execution/algebra_gemm_engineering_standard.md) - SovIAR
+2. [*GEMM: The Engineering Standard*](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb) - SovIAR
 
 +++
 

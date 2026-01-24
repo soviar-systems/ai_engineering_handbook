@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
@@ -30,7 +30,7 @@ The size of the Large Language Model (LLM) affects its performance, resource req
 
 
 See also: 
-- [LLM Usage Patterns: Chats, Workflows, and Agents in AI](/ai_system/4_orchestration/patterns/llm_usage_patterns.md)
+- [LLM Usage Patterns: Chats, Workflows, and Agents in AI](/ai_system/4_orchestration/patterns/llm_usage_patterns.ipynb)
 
 +++
 

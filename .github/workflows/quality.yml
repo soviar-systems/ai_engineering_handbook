@@ -42,6 +42,41 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run tools/scripts/check_broken_links.py --verbose
 
+  link-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Get changed files
+        id: changed
+        uses: tj-actions/changed-files@v45
+        with:
+          files_yaml: |
+            logic:
+              - tools/scripts/check_link_format.py
+              - tools/tests/test_check_link_format.py
+              - tools/scripts/paths.py
+            docs:
+              - "**/*.md"
+          safe_output: true
+
+      - name: Run Logic Tests
+        if: steps.changed.outputs.logic_any_changed == 'true'
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: uv run pytest tools/tests/test_check_link_format.py
+
+      - name: Run Link Format Check on All Files
+        if: steps.changed.outputs.docs_any_changed == 'true'
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: uv run tools/scripts/check_link_format.py --verbose
+
   jupytext:
     runs-on: ubuntu-latest
     steps:

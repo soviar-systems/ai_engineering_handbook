@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
@@ -33,7 +33,7 @@ Large Language Models (LLMs) like GPT have transformed how we build AI applicati
 * **Agents**
 
 :::{seealso}
-- [Choosing Model Size for Chats, Workflows, and Agents: Model Size, Reasoning, and Optimization](/ai_system/2_model/selection/choosing_model_size.md)
+- [Choosing Model Size for Chats, Workflows, and Agents: Model Size, Reasoning, and Optimization](/ai_system/2_model/selection/choosing_model_size.ipynb)
 :::
 
 +++

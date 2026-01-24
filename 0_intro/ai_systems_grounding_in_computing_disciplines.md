@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
@@ -40,7 +40,7 @@ The table below maintains the official ACM/IEEE Computing Curricula structure bu
 
 | Discipline | Latest Version | Target Audience/Focus Areas | Key Differences/Overlaps | AI/ML Implementation Examples |
 | :--- | :--- | :--- | :--- | :--- |
-| **Computer Engineering** | CE2016 | Undergraduate programs in Computer Engineering. | Focuses on **hardware-software integration**; crucial for specialized accelerator design. | [**FPGA/ASIC optimization**](/ai_system/1_execution/optimization_fpga_asic_hardware_acceleration_for_ai.md) for inference, [**CUDA kernel development**](/ai_system/1_execution/optimization_nvidia_gpu_cuda_nsight_and_systems_thinking.md), low-level memory management for HPC. |
+| **Computer Engineering** | CE2016 | Undergraduate programs in Computer Engineering. | Focuses on **hardware-software integration**; crucial for specialized accelerator design. | [**FPGA/ASIC optimization**](/ai_system/1_execution/optimization_fpga_asic_hardware_acceleration_for_ai.ipynb) for inference, [**CUDA kernel development**](/ai_system/1_execution/optimization_nvidia_gpu_cuda_nsight_and_systems_thinking.ipynb), low-level memory management for HPC. |
 | **Computer Science** | CS2023 | Undergraduate programs in Computer Science. | Broad foundational computing; emphasizes **theoretical aspects, algorithms, and complexity**. | **Algorithm design** for efficient sampling, **Time/Space complexity analysis** of inference, **Novel attention mechanism design**. |
 | **Cybersecurity** | CSEC2017 | Post-secondary degree programs in Cybersecurity. | Focuses on **security competencies**; essential for robust, compliant MLOps deployment. | **Threat modeling** for MLOps pipelines, **Adversarial attack mitigation** (e.g., poisoning), secure API endpoint deployment. |
 | **ML/Statistical Foundations**[^1] | CCDS2021 | Undergraduate programs with a data science focus. | Integrates computing with statistics; focuses on **analysis, modeling, and core ML principles**. | **Feature engineering**, **Exploratory Data Analysis (EDA)**, **Model selection/hyperparameter tuning**, designing evaluation metrics. |

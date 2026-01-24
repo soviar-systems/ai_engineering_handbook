@@ -10,6 +10,14 @@ repos:
         pass_filenames: false
         stages: [pre-commit, manual]
 
+      - id: check-link-format
+        name: Check Link Format (ipynb priority)
+        entry: uv run --active tools/scripts/check_link_format.py
+        language: python
+        files: \.md$
+        pass_filenames: false
+        stages: [pre-commit, manual]
+
       - id: jupytext-sync
         name: Jupytext Sync
         entry: uv run tools/scripts/jupytext_sync.py
@@ -53,6 +61,13 @@ repos:
         entry: uv run --active pytest tools/tests/test_check_broken_links.py
         language: python
         files: ^tools/(scripts/check_broken_links\.py|scripts/paths\.py|tests/test_check_broken_links\.py)$
+        pass_filenames: false
+
+      - id: test-check-link-format
+        name: Test Check Link Format script
+        entry: uv run --active pytest tools/tests/test_check_link_format.py
+        language: python
+        files: ^tools/(scripts/check_link_format\.py|scripts/paths\.py|tests/test_check_link_format\.py)$
         pass_filenames: false
 
       - id: test-jupytext-sync

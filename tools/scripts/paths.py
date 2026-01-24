@@ -21,8 +21,9 @@ BROKEN_LINKS_EXCLUDE_DIRS = {
 # Strings that should be excluded from link validation
 BROKEN_LINKS_EXCLUDE_LINK_STRINGS = {
     "path/to/file.md",
+    "path/to/file.ipynb",
     "./intro/",
-    "valid.md", # Added for test_validate_link_with_exclusions
+    "valid.md",  # Added for test_validate_link_with_exclusions
 }
 
 BROKEN_LINKS_EXCLUDE_FILES = [".aider.chat.history.md"]
