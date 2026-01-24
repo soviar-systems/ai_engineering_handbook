@@ -20,7 +20,7 @@ kernelspec:
 Owner: Vadim Rudakov, rudakow.wadim@gmail.com
 Version: 0.1.0
 Birth: 2026-01-24
-Last Modified: 2026-01-24
+Last Modified: 2026-01-26
 
 ---
 
@@ -34,13 +34,13 @@ This [script](/tools/scripts/check_link_format.py) validates link format in Mark
 
 When a `.md` file has a paired `.ipynb` file, links should point to the `.ipynb` version because `myst.yml` only renders `.ipynb` files. Links to `.md` files cause downloads instead of opening as web pages.
 
-:::{important} **Separation of Concerns**
-This script is deliberately separate from `check_broken_links.py`:
+:::{important} **This Script Does NOT Check If Links Exist**
+This script only validates link **format** — it checks whether `.md` links should be `.ipynb` when a Jupytext pair exists. It does **NOT** verify that link targets actually exist or are valid.
 
+* **check_link_format.py** → validates link **format** (ipynb priority when pair exists)
 * **check_broken_links.py** → validates link targets **exist**
-* **check_link_format.py** → validates link **format** (ipynb priority)
 
-This separation keeps each tool focused on a single responsibility.
+Use both scripts for complete link validation.
 :::
 
 It adheres to the **Smallest Viable Architecture (SVA)** principle.
@@ -49,7 +49,7 @@ It adheres to the **Smallest Viable Architecture (SVA)** principle.
 SVA isn't about minimal *code* — it's about **minimal *cognitive and operational overhead***.
 
 * **Zero Dependencies**: Uses only the Python standard library (`pathlib`, `re`, `sys`, `argparse`, `tempfile`), ensuring it runs on any system with Python installed.
-* **Idempotency**: Operates on a "Check vs. Fix" logic—validating state without modifying existing files.
+* **Check and Fix Modes**: Can validate without modification (check-only) or automatically fix detected issues.
 * **High Portability**: Designed for local-only validation, making it ideal for air-gapped or high-security environments.
 :::
 
@@ -139,7 +139,7 @@ The script is organized into specialized classes:
 +++
 
 ```bash
-check_link_format.py [--paths PATH] [--pattern PATTERN] [options]
+check_link_format.py [--paths PATH] [--pattern PATTERN] [--fix | --fix-all] [options]
 
 ```
 
@@ -150,6 +150,8 @@ check_link_format.py [--paths PATH] [--pattern PATTERN] [options]
 | `--exclude-dirs` | List of directory names to ignore. | `in_progress`, `pr`, `.venv` |
 | `--exclude-files` | List of specific filenames to ignore. | `.aider.chat.history.md` |
 | `--verbose` | Shows detailed logs of skipped URLs and valid links. | `False` |
+| `--fix` | Interactive fix mode - asks for confirmation before fixing each file. | `False` |
+| `--fix-all` | Automatic fix mode - fixes all errors without prompts. | `False` |
 
 +++
 
@@ -164,6 +166,8 @@ Run these from the repository root using `uv` for consistent environment resolut
 | **Full Repo Audit** | `uv run tools/scripts/check_link_format.py` |
 | **Scan Specific Directory** | `uv run tools/scripts/check_link_format.py --paths ai_system/` |
 | **Verbose Mode** | `uv run tools/scripts/check_link_format.py --verbose` |
+| **Interactive Fix** | `uv run tools/scripts/check_link_format.py --fix` |
+| **Automatic Fix All** | `uv run tools/scripts/check_link_format.py --fix-all` |
 
 +++
 
@@ -282,16 +286,66 @@ The error message includes:
 
 +++
 
-## **7. Test Suite**
+## **7. Auto-Fix Functionality**
 
 +++
 
-The script is accompanied by a comprehensive test suite (`test_check_link_format.py`) with 34 tests covering:
+The script can automatically fix detected link format issues using two modes:
+
+### Interactive Mode (`--fix`)
+
+Prompts for confirmation before fixing each file:
+
+```
+File: ai_system/2_model/selection/choosing_model_size.md
+  Line 33: /ai_system/4_orchestration/patterns/llm_usage_patterns.md → .ipynb
+
+Fix this file? [y/n/q] (q=quit):
+```
+
+* **y**: Fix all issues in this file
+* **n**: Skip this file
+* **q**: Quit and stop processing remaining files
+
+### Automatic Mode (`--fix-all`)
+
+Fixes all errors without prompts - useful for CI pipelines or batch processing:
+
+```bash
+uv run tools/scripts/check_link_format.py --fix-all
+```
+
+### Fix Output
+
+After fixing, the script reports:
+* Total fixes applied
+* Files modified
+* Any skipped files (in interactive mode)
+
+```
+✅ Fixed all 5 link format errors.
+```
+
+or in interactive mode:
+
+```
+✓ Fixed 3/5 link format errors.
+  Skipped: 2
+```
+
++++
+
+## **8. Test Suite**
+
++++
+
+The script is accompanied by a comprehensive test suite (`test_check_link_format.py`) with 42 tests covering:
 
 * **Link Extraction**: Verifies Markdown and MyST links are correctly identified
 * **Format Validation**: Tests the core logic for detecting `.md` links with `.ipynb` pairs
 * **File Discovery**: Tests recursive search and exclusion logic
 * **CLI Integration**: End-to-end tests for command-line behavior
+* **Fix Functionality**: Tests for `LinkFixer` class and fix modes (`--fix`, `--fix-all`)
 * **Edge Cases**: External URLs, fragments, excluded paths
 
 +++

@@ -385,3 +385,150 @@ def test_main_entry_point():
 
         main()
         mock_run.assert_called_once_with()
+
+
+# ======================
+# LinkFixer Tests
+# ======================
+
+
+class TestLinkFixer:
+    def test_fix_links_in_file(self, tmp_path):
+        """Test that LinkFixer correctly replaces links in a file."""
+        from tools.scripts.check_link_format import LinkFixer
+
+        # Create test file with wrong link format
+        source = tmp_path / "source.md"
+        source.write_text("[Guide](target.md)\n[Other](other.md)", encoding="utf-8")
+
+        # Create paired .ipynb files
+        (tmp_path / "target.ipynb").touch()
+        (tmp_path / "other.ipynb").touch()
+
+        issues = [
+            {"link": "target.md", "suggested": "target.ipynb", "line": 1},
+            {"link": "other.md", "suggested": "other.ipynb", "line": 2},
+        ]
+
+        fixer = LinkFixer(verbose=False)
+        count = fixer.fix_links_in_file(source, issues)
+
+        assert count == 2
+        content = source.read_text()
+        assert "target.ipynb" in content
+        assert "other.ipynb" in content
+        assert "target.md" not in content
+        assert "other.md" not in content
+
+    def test_fix_links_preserves_other_content(self, tmp_path):
+        """Test that fixing links doesn't affect other content."""
+        from tools.scripts.check_link_format import LinkFixer
+
+        source = tmp_path / "source.md"
+        original_content = "# Title\n\nSome text [Guide](target.md) more text.\n\n## Section"
+        source.write_text(original_content, encoding="utf-8")
+        (tmp_path / "target.ipynb").touch()
+
+        issues = [{"link": "target.md", "suggested": "target.ipynb", "line": 3}]
+
+        fixer = LinkFixer(verbose=False)
+        fixer.fix_links_in_file(source, issues)
+
+        content = source.read_text()
+        assert "# Title" in content
+        assert "Some text [Guide](target.ipynb) more text." in content
+        assert "## Section" in content
+
+
+class TestLinkFormatCLIFixModes:
+    def test_fix_all_mode(self, tmp_path, capsys):
+        """Test --fix-all mode fixes all errors without prompts."""
+        # Create paired files
+        (tmp_path / "target.md").touch()
+        (tmp_path / "target.ipynb").touch()
+
+        # Source file links to .md (wrong format)
+        source = tmp_path / "source.md"
+        source.write_text("[link](target.md)", encoding="utf-8")
+
+        cli = LinkFormatCLI()
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(["--paths", str(tmp_path), "--pattern", "*.md", "--fix-all"])
+
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "Fixed" in captured.out
+
+        # Verify the file was actually fixed
+        content = source.read_text()
+        assert "target.ipynb" in content
+        assert "target.md" not in content
+
+    def test_fix_all_mode_multiple_files(self, tmp_path, capsys):
+        """Test --fix-all mode fixes multiple files."""
+        # Create paired files
+        (tmp_path / "a.ipynb").touch()
+        (tmp_path / "b.ipynb").touch()
+
+        # Create source files with wrong links
+        (tmp_path / "file1.md").write_text("[link](a.md)", encoding="utf-8")
+        (tmp_path / "file2.md").write_text("[link](b.md)", encoding="utf-8")
+        (tmp_path / "a.md").touch()
+        (tmp_path / "b.md").touch()
+
+        cli = LinkFormatCLI()
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(["--paths", str(tmp_path), "--fix-all"])
+
+        assert exc_info.value.code == 0
+
+        # Verify both files were fixed
+        assert "a.ipynb" in (tmp_path / "file1.md").read_text()
+        assert "b.ipynb" in (tmp_path / "file2.md").read_text()
+
+    def test_fix_all_no_issues(self, tmp_path, capsys):
+        """Test --fix-all mode with no issues to fix."""
+        (tmp_path / "target.ipynb").touch()
+        source = tmp_path / "source.md"
+        source.write_text("[link](target.ipynb)", encoding="utf-8")
+
+        cli = LinkFormatCLI()
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(["--paths", str(tmp_path), "--fix-all"])
+
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "All link formats are correct" in captured.out
+
+
+class TestReporterFixes:
+    def test_report_fixes_all_fixed(self, capsys):
+        """Test report when all issues are fixed."""
+        from tools.scripts.check_link_format import Reporter
+
+        with pytest.raises(SystemExit) as exc_info:
+            Reporter.report_fixes(5, 5)
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "Fixed all 5" in captured.out
+
+    def test_report_fixes_partial(self, capsys):
+        """Test report when some issues are fixed."""
+        from tools.scripts.check_link_format import Reporter
+
+        with pytest.raises(SystemExit) as exc_info:
+            Reporter.report_fixes(3, 5, 2)
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "Fixed 3/5" in captured.out
+        assert "Skipped: 2" in captured.out
+
+    def test_report_fixes_none_fixed(self, capsys):
+        """Test report when no issues are fixed."""
+        from tools.scripts.check_link_format import Reporter
+
+        with pytest.raises(SystemExit) as exc_info:
+            Reporter.report_fixes(0, 5)
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "No fixes applied" in captured.out

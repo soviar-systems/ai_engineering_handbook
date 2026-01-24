@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """
-Script to check link format in Markdown files - ensures ipynb priority.
+Script to check and fix link format in Markdown files - ensures ipynb priority.
 
 Usage: check_link_format.py [--paths PATH ...] [--pattern PATTERN] [options]
 
 When a .md file has a paired .ipynb file (Jupytext pair), links should point to
 the .ipynb version because myst.yml only renders .ipynb files. Links to .md files
 cause downloads instead of opening as web pages.
+
+NOTE: This script only validates link FORMAT (.md vs .ipynb extension), NOT whether
+the link target actually exists. Use check_broken_links.py to verify link targets.
 
 This script is fully SVA (Smallest Viable Architecture) compliant, using only
 Python's standard library (pathlib, re, sys, argparse, tempfile).
@@ -18,7 +21,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from tools.scripts.paths import (
     BROKEN_LINKS_EXCLUDE_DIRS,
@@ -45,6 +48,8 @@ class LinkFormatCLI:
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog="""Example: %(prog)s --pattern "*.md" --exclude-dirs drafts
 Example: %(prog)s --paths docs --verbose
+Example: %(prog)s --fix        # Interactive fix mode
+Example: %(prog)s --fix-all    # Automatic fix mode
 Default directory: current directory
 Default pattern: *.md""",
         )
@@ -76,6 +81,18 @@ Default pattern: *.md""",
             default=False,
             help="Enable verbose mode for more output information.",
         )
+        parser.add_argument(
+            "--fix",
+            action="store_true",
+            default=False,
+            help="Interactive fix mode - ask for confirmation before fixing each file.",
+        )
+        parser.add_argument(
+            "--fix-all",
+            action="store_true",
+            default=False,
+            help="Automatic fix mode - fix all errors without prompts.",
+        )
         return parser
 
     def get_git_root_dir(self) -> Optional[Path]:
@@ -99,6 +116,8 @@ Default pattern: *.md""",
         args = self.parser.parse_args(argv)
         verbose = args.verbose
         pattern = args.pattern
+        fix_mode = args.fix
+        fix_all_mode = args.fix_all
 
         root_dir = self.get_git_root_dir()
         if root_dir is None:
@@ -158,26 +177,86 @@ Default pattern: *.md""",
             verbose=verbose,
             exclude_link_strings=list(BROKEN_LINKS_EXCLUDE_LINK_STRINGS),
         )
-        format_errors_found = False
 
-        with tempfile.NamedTemporaryFile(
-            delete=False, mode="w", encoding="utf-8"
-        ) as tf:
-            temp_path = Path(tf.name)
-            for file in files:
-                if verbose:
-                    print(f"\nChecking file: {file}")
-                links = link_extractor.extract(file)
-                for link, line_no in links:
-                    error = link_format_validator.validate_link_format(
-                        link, file, line_no
-                    )
-                    if error:
+        # Collect all issues by file
+        issues_by_file: Dict[Path, List[dict]] = {}
+
+        for file in files:
+            if verbose:
+                print(f"\nChecking file: {file}")
+            links = link_extractor.extract(file)
+            file_issues = []
+            for link, line_no in links:
+                issue = link_format_validator.find_format_issue(link, file, line_no)
+                if issue:
+                    file_issues.append(issue)
+            if file_issues:
+                issues_by_file[file] = file_issues
+
+        # No issues found
+        if not issues_by_file:
+            print("\n✅ All link formats are correct! (Note: format only - use check_broken_links.py to verify targets exist)")
+            sys.exit(0)
+
+        total_issues = sum(len(issues) for issues in issues_by_file.values())
+
+        # Handle fix modes
+        if fix_all_mode:
+            # Automatic fix mode - no prompts
+            fixer = LinkFixer(verbose=verbose)
+            fixed_count = 0
+            for file, issues in issues_by_file.items():
+                count = fixer.fix_links_in_file(file, issues)
+                fixed_count += count
+            Reporter.report_fixes(fixed_count, total_issues)
+        elif fix_mode:
+            # Interactive fix mode - ask per file
+            fixer = LinkFixer(verbose=verbose)
+            fixed_count = 0
+            skipped_count = 0
+            try:
+                for file, issues in issues_by_file.items():
+                    try:
+                        rel_file = file.relative_to(root_dir)
+                    except ValueError:
+                        rel_file = file
+
+                    print(f"\nFile: {rel_file}")
+                    for issue in issues:
+                        print(f"  Line {issue['line']}: {issue['link']} → {issue['suggested']}")
+
+                    response = input("Fix this file? [y/n/q] (q=quit): ").strip().lower()
+                    if response == "y":
+                        count = fixer.fix_links_in_file(file, issues)
+                        fixed_count += count
+                        print(f"  ✓ Fixed {count} link(s)")
+                    elif response == "q":
+                        skipped_count += len(issues)
+                        # Count remaining files
+                        remaining = list(issues_by_file.keys())
+                        idx = remaining.index(file)
+                        for remaining_file in remaining[idx + 1 :]:
+                            skipped_count += len(issues_by_file[remaining_file])
+                        break
+                    else:
+                        skipped_count += len(issues)
+                        print("  ✗ Skipped")
+            except (KeyboardInterrupt, EOFError):
+                print("\n\nInterrupted.")
+
+            Reporter.report_fixes(fixed_count, total_issues, skipped_count)
+        else:
+            # Check-only mode (original behavior)
+            with tempfile.NamedTemporaryFile(
+                delete=False, mode="w", encoding="utf-8"
+            ) as tf:
+                temp_path = Path(tf.name)
+                for file, issues in issues_by_file.items():
+                    for issue in issues:
                         with open(temp_path, "a", encoding="utf-8") as f:
-                            f.write(error)
-                        format_errors_found = True
+                            f.write(issue["error_msg"])
 
-            Reporter.report(temp_path, format_errors_found)
+                Reporter.report(temp_path, True)
 
 
 class LinkExtractor:
@@ -251,12 +330,12 @@ class LinkFormatValidator:
         else:
             return (source_file.parent / link_path).resolve()
 
-    def validate_link_format(
+    def find_format_issue(
         self, link: str, source_file: Path, line_no: int
-    ) -> Optional[str]:
+    ) -> Optional[dict]:
         """
-        Validate link format - check if .md link should be .ipynb.
-        Returns error message if format issue found, None if valid/skipped.
+        Find format issue - check if .md link should be .ipynb.
+        Returns dict with issue info if found, None if valid/skipped.
         """
         if self.is_absolute_url(link):
             if self.verbose:
@@ -296,15 +375,69 @@ class LinkFormatValidator:
                 rel_source = source_file
 
             suggested_link = link.replace(".md", ".ipynb")
-            return (
+            error_msg = (
                 f"LINK FORMAT ERROR: File '{rel_source}:{line_no}' links to '{link}' "
                 f"but paired .ipynb exists.\n"
                 f"  Suggested fix: Change to '{suggested_link}'\n"
             )
+            return {
+                "link": link,
+                "suggested": suggested_link,
+                "line": line_no,
+                "source": source_file,
+                "error_msg": error_msg,
+            }
         elif self.verbose:
             print(f"  OK (no .ipynb pair): {link}")
 
         return None
+
+    def validate_link_format(
+        self, link: str, source_file: Path, line_no: int
+    ) -> Optional[str]:
+        """
+        Validate link format - check if .md link should be .ipynb.
+        Returns error message if format issue found, None if valid/skipped.
+        """
+        issue = self.find_format_issue(link, source_file, line_no)
+        return issue["error_msg"] if issue else None
+
+
+class LinkFixer:
+    """Fixes .md links to .ipynb in source files."""
+
+    def __init__(self, verbose: bool = False):
+        self.verbose = verbose
+
+    def fix_links_in_file(self, source_file: Path, issues: List[dict]) -> int:
+        """
+        Apply all fixes to a file.
+        Returns count of fixes applied.
+        """
+        try:
+            content = source_file.read_text(encoding="utf-8")
+            lines = content.splitlines(keepends=True)
+
+            fixes_applied = 0
+            for issue in issues:
+                line_idx = issue["line"] - 1  # Convert to 0-indexed
+                if 0 <= line_idx < len(lines):
+                    old_link = issue["link"]
+                    new_link = issue["suggested"]
+                    if old_link in lines[line_idx]:
+                        lines[line_idx] = lines[line_idx].replace(old_link, new_link)
+                        fixes_applied += 1
+                        if self.verbose:
+                            print(f"  Fixed line {issue['line']}: {old_link} → {new_link}")
+
+            # Write back
+            new_content = "".join(lines)
+            source_file.write_text(new_content, encoding="utf-8")
+
+            return fixes_applied
+        except (OSError, UnicodeDecodeError) as e:
+            print(f"Error fixing file {source_file}: {e}", file=sys.stderr)
+            return 0
 
 
 class FileFinder:
@@ -390,8 +523,22 @@ class Reporter:
             print(report_content, end="")
             sys.exit(1)
         else:
-            print("\n✅ All link formats are correct!")
+            print("\n✅ All link formats are correct! (Note: format only - use check_broken_links.py to verify targets exist)")
             sys.exit(0)
+
+    @staticmethod
+    def report_fixes(fixed_count: int, total_count: int, skipped_count: int = 0) -> None:
+        if fixed_count == total_count:
+            print(f"\n✅ Fixed all {fixed_count} link format errors.")
+            sys.exit(0)
+        elif fixed_count > 0:
+            print(f"\n✓ Fixed {fixed_count}/{total_count} link format errors.")
+            if skipped_count > 0:
+                print(f"  Skipped: {skipped_count}")
+            sys.exit(0)
+        else:
+            print(f"\n❌ No fixes applied. {total_count} errors remain.")
+            sys.exit(1)
 
 
 if __name__ == "__main__":
