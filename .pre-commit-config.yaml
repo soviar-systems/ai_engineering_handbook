@@ -53,6 +53,14 @@ repos:
         exclude: ^(tools/tests/|\.vscode/)
         stages: [pre-commit]
 
+      - id: check-script-suite
+        name: Check Script Suite (script + test + doc)
+        entry: uv run --active tools/scripts/check_script_suite.py
+        language: python
+        files: ^tools/(scripts/.*\.py|tests/test_.*\.py|docs/scripts_instructions/.*_py_script\.md)$
+        pass_filenames: false
+        stages: [pre-commit]
+
       # ---TESTS of HOOK SCRIPTS---
       # Trigger this whenever any script or test in the scripts
       # directory changes
@@ -103,4 +111,11 @@ repos:
         entry: uv run --active pytest tools/tests/test_prepare_prompt.py
         language: python
         files: ^tools/(scripts/prepare_prompt\.py|scripts/paths\.py|tests/test_prepare_prompt\.py)$
+        pass_filenames: false
+
+      - id: test-check-script-suite
+        name: Test Check Script Suite script
+        entry: uv run --active pytest tools/tests/test_check_script_suite.py
+        language: python
+        files: ^tools/(scripts/check_script_suite\.py|scripts/paths\.py|tests/test_check_script_suite\.py)$
         pass_filenames: false
