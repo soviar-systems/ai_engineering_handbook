@@ -97,3 +97,10 @@ repos:
         language: system
         files: ^tools/(scripts/check_json_files\.py|scripts/paths\.py|tests/test_check_json_files\.py)$
         pass_filenames: false
+
+      - id: test-prepare-prompt
+        name: Test Prepare Prompt script
+        entry: uv run --active pytest tools/tests/test_prepare_prompt.py
+        language: python
+        files: ^tools/(scripts/prepare_prompt\.py|scripts/paths\.py|tests/test_prepare_prompt\.py)$
+        pass_filenames: false
