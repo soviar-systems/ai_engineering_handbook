@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: bash
   display_name: Bash
@@ -17,10 +17,10 @@ kernelspec:
 
 ---
 
-Owner: Vadim Rudakov, lefthand67@gmail.com
-Version: 0.1.0  
-Birth: 2026-01-07  
-Last Modified: 2026-01-07
+Owner: Vadim Rudakov, rudakow.wadim@gmail.com
+Version: 0.2.0
+Birth: 2026-01-07
+Last Modified: 2026-01-26
 
 ---
 
@@ -65,4 +65,22 @@ format_string.py 'From Concepts to Code: Introduction to Data Science (2024)'
 
 ```{code-cell}
 format_string.py 'Quiz - Special Applications: Face Recognition & Neural Style Transfer'
+```
+
+## Test Suite
+
+The [test suite](/tools/tests/test_format_string.py) covers all transformation rules:
+
+| Test Area | Coverage |
+|-----------|----------|
+| Case conversion | Lowercase transformation |
+| Symbol replacement | &, punctuation, slashes, etc. |
+| Symbol removal | Parentheses, quotes, special chars |
+| Underscore handling | Collapsing, stripping |
+| Truncation | 50 character limit |
+
+Run tests with:
+
+```bash
+uv run pytest tools/tests/test_format_string.py -v
 ```
