@@ -73,3 +73,37 @@ This project uses Aider as the primary AI editor with Jupytext sync as a lint st
 
 Python version: 3.13+ (locked in `.python-version`)
 Package manager: `uv` (never use pip directly)
+
+**TDD Approach:**
+- Scripts require comprehensive test suites (e.g., prepare_prompt.py has 96 tests)
+- Tests live in `tools/tests/` with `test_<script_name>.py` naming
+- Run tests with `uv run pytest tools/tests/test_<script_name>.py`
+- Pre-commit hooks automatically run relevant tests on commit
+
+**Commit Conventions:**
+- Use conventional commits with prefixes: `feat:`, `fix:`, `docs:`, `ci:`, `chore:`, `pr:`
+- `pr:` prefix is for promotional/announcement posts
+- Keep commit messages concise, focusing on the "why"
+
+**Pre-commit Hooks:**
+- Extensive validation runs before each commit (see `.pre-commit-config.yaml`)
+- Includes: broken links check, link format check, jupytext sync/verify, API key detection, JSON validation, script tests
+- All hooks use `uv run` for Python execution
+
+## Telegram Channel Posts
+
+Posts for the `@ai_learning` Telegram channel are stored in `misc/pr/tg_channel_ai_learning/`.
+
+**Naming convention:** `YYYY_MM_DD_<topic_slug>.md`
+
+**Language:** Russian
+
+**Post structure:**
+1. Bold headline
+2. Problem statement (with 💡 icon)
+3. Technical explanation (with 🧠 icon if applicable)
+4. Solution description (with ⚙️ icon)
+5. Key features list (with ✅ checkmarks)
+6. Usage examples in code blocks
+7. Documentation link
+8. Hashtags (e.g., #Python #LLM #ai_engineering_handbook)
