@@ -20,7 +20,7 @@ repos:
 
       - id: jupytext-sync
         name: Jupytext Sync
-        entry: uv run tools/scripts/jupytext_sync.py
+        entry: uv run --active tools/scripts/jupytext_sync.py
         language: python
         files: \.(md|ipynb)$
         pass_filenames: true
@@ -29,7 +29,7 @@ repos:
 
       - id: jupytext-verify-pair
         name: Jupytext Verify Pair
-        entry: uv run tools/scripts/jupytext_verify_pair.py
+        entry: uv run --active tools/scripts/jupytext_verify_pair.py
         language: python
         files: \.(md|ipynb)$
         pass_filenames: true
