@@ -11,23 +11,51 @@ kernelspec:
   language: bash
 ---
 
-# Prompts-as-Infrastructure
+# Layer 3: Prompts-as-Infrastructure
+
++++
+
+---
+
+Owner: Vadim Rudakov, rudakow.wadim@gmail.com  
+Version: 0.1.1  
+Birth: 2026-01-26  
+Last Modified: 2026-01-26
+
+---
+
++++
 
 This directory contains structured prompt files and tooling for the AI Engineering Book project.
 
-## Directory Structure
+The directory is under initial development. Currently here are the monolithic prompts that must be refactored to the block prompts.
+
+The prompts are stored and transported via JSON format which is natively machine-readable and highly testable for errors. Before pass it to the LLM it is very advised to convert them into YAML format with minimum markup symbols which is noise for the transformer. Use the [`prepare_prompt.py`](#prepare-prompt-section) script for this cleaning.
+
++++
+
+## **1. Directory Structure**
 
 ```{code-cell}
-tree .
+tree . --gitignore -I "*.md"
 ```
 
-## Tools
+## **2. Tools**
 
-### Prepare Prompt Script
++++
 
-The `prepare_prompt.py` script converts JSON prompt files to LLM-friendly formats.
+(prepare-prompt-section)=
+### Prepare Prompt Suite
 
-**Location:** `tools/scripts/prepare_prompt.py`
++++
+
+The [`prepare_prompt.py`](/tools/scripts/prepare_prompt.py) script converts JSON prompt files to LLM-friendly formats.
+
+**Location:** `tools/scripts/prepare_prompt.py`, verify:
+
+```{code-cell}
+ls ../../tools/scripts/prepare_prompt.py
+```
 
 **Usage:**
 
@@ -49,7 +77,11 @@ cat consultants/devops_consultant.json | uv run tools/scripts/prepare_prompt.py 
 
 **Full documentation:** [prepare_prompt_py_script.ipynb](/tools/docs/scripts_instructions/prepare_prompt_py_script.ipynb)
 
-## Consultant Prompt Files
++++
+
+## **3. Consultant Prompt Files**
+
++++
 
 Each consultant JSON file follows a standard structure:
 

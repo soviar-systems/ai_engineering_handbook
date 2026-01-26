@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: bash
   display_name: Bash
@@ -94,7 +94,7 @@ main() {
 main "$@"
 ```
 
-Make this [script executable](/tools/docs/scripts_instructions/how_to_use_scripts_on_gnu_linux.ipynb) and add it to your PATH. Now you can run aider simply:
+Make this [script executable](/tools/docs/scripts_instructions/README.ipynb#how-to-use-scripts) and add it to your PATH. Now you can run aider simply:
 
 ```bash
 $ aider_proxy.sh --model gemini/gemini-3-flash
