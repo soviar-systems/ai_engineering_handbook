@@ -54,6 +54,43 @@ def get_renamed_files() -> dict[str, str]:
     return renamed
 
 
+def is_mode_only_change(file_path: str) -> bool:
+    """Check if a staged file has only mode (permission) changes, no content changes.
+
+    Uses git diff --cached to check if there are actual content changes.
+    Mode-only changes show only the mode line in diff output, no hunks.
+    """
+    result = subprocess.run(
+        ["git", "diff", "--cached", "--", file_path],
+        capture_output=True,
+        text=True,
+    )
+    diff_output = result.stdout.strip()
+
+    if not diff_output:
+        return True  # No diff content means no content changes
+
+    # Check if diff contains only mode change (old mode ... new mode) and no actual hunks
+    lines = diff_output.split("\n")
+    has_mode_change = False
+    has_content_change = False
+
+    for line in lines:
+        if line.startswith("old mode") or line.startswith("new mode"):
+            has_mode_change = True
+        elif line.startswith("@@"):
+            # Hunk header indicates actual content change
+            has_content_change = True
+            break
+
+    return has_mode_change and not has_content_change
+
+
+def has_content_changed(file_path: str, staged_files: set[str]) -> bool:
+    """Check if a file is staged and has content changes."""
+    return file_path in staged_files and not is_mode_only_change(file_path)
+
+
 def script_name_to_paths(name: str) -> tuple[Path, Path, Path]:
     """Convert script name to script, test, and doc paths."""
     script = SCRIPTS_DIR / f"{name}.py"
@@ -96,14 +133,16 @@ def check_doc_staged(staged: set[str], verbose: bool = False) -> list[str]:
     for name in get_all_scripts():
         script, test, doc = script_name_to_paths(name)
 
-        script_changed = str(script) in staged
-        test_changed = str(test) in staged
-        doc_staged = str(doc) in staged
+        script_content_changed = has_content_changed(str(script), staged)
+        test_content_changed = has_content_changed(str(test), staged)
 
-        if (script_changed or test_changed) and not doc_staged:
-            trigger = str(script) if script_changed else str(test)
+        doc_required = script_content_changed or test_content_changed
+        doc_is_staged = str(doc) in staged
+
+        if doc_required and not doc_is_staged:
+            trigger = str(script) if script_content_changed else str(test)
             errors.append(f"Doc not staged: {doc} (triggered by change in {trigger})")
-        elif verbose and (script_changed or test_changed):
+        elif verbose and doc_required and doc_is_staged:
             print(f"OK: {doc} is staged with its script/test")
 
     return errors

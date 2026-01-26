@@ -76,6 +76,10 @@ When a script or test file is staged for commit, the corresponding documentation
 | `tools/scripts/<name>.py` staged | `<name>_py_script.md` must be staged |
 | `tools/tests/test_<name>.py` staged | `<name>_py_script.md` must be staged |
 
+:::{note}
+**Mode-only changes** (e.g., changing file permissions from 0644 to 0755) do not trigger the documentation requirement. Only content changes require documentation updates.
+:::
+
 +++
 
 ### C. Rename Tracking
@@ -180,9 +184,10 @@ The [test suite](/tools/tests/test_check_script_suite.py) covers:
 | `TestScriptNameToPaths` | Path derivation from script names |
 | `TestGetStagedFiles` | Git staged file detection |
 | `TestGetRenamedFiles` | Git rename detection |
+| `TestIsModeOnlyChange` | Detection of permission-only changes |
 | `TestGetAllScripts` | Script discovery and exclusions |
 | `TestCheckNamingConvention` | Suite completeness validation |
-| `TestCheckDocStaged` | Co-staging enforcement |
+| `TestCheckDocStaged` | Co-staging enforcement (including mode-only exception) |
 | `TestCheckDocRename` | Rename tracking |
 | `TestMain` | CLI integration |
 
