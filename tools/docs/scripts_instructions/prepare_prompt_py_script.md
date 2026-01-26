@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, rudakow.wadim@gmail.com
-Version: 0.1.0
+Version: 0.3.0
 Birth: 2026-01-25
-Last Modified: 2026-01-25
+Last Modified: 2026-01-26
 
 ---
 
@@ -30,7 +30,7 @@ Last Modified: 2026-01-25
 
 +++
 
-This [script](/tools/scripts/prepare_prompt.py) prepares prompt files for LLM consumption by removing metadata, stripping special characters, and converting to a YAML-like output format.
+This [script](/tools/scripts/prepare_prompt.py) prepares prompt files (["Layer 3: Prompts-as-Infrastructure"](/ai_system/3_prompts/)) for LLM consumption by removing metadata, stripping special characters, and converting to a YAML-like output format.
 
 This tool is designed to transform structured prompt files into clean, readable formats suitable for copying into LLM interfaces or automated prompt injection. It supports multiple input formats with automatic detection based on file extension.
 
@@ -71,13 +71,29 @@ The script auto-detects format from file extension:
 | Operation | Description |
 |-----------|-------------|
 | **Metadata Removal** | Removes the `metadata` field/table from structured data |
-| **Character Stripping** | Removes `*`, `'`, `"`, `` ` ``, `#` from output |
+| **Character Stripping** | Removes `*`, `'`, `"`, `` ` ``, `#` from output (preserves `*` in math expressions) |
 | **YAML Conversion** | Converts data structure to YAML-like indented format |
 | **Plain Text Extraction** | Optionally extracts only text values |
 
 +++
 
-### C. Output Formats
+### C. Math Expression Preservation
+
+The script uses context-aware character stripping to preserve multiplication operators in mathematical expressions:
+
+| Pattern | Example | Preserved |
+|---------|---------|-----------|
+| `var * num` | `E * 0.35` | ✓ |
+| `num * var` | `0.35 * E` | ✓ |
+| `num * num` | `0.35 * 0.25` | ✓ |
+
+This ensures formulas like `WRC = (E * 0.35) + (A * 0.25)` remain meaningful rather than becoming `WRC = (E  0.35) + (A  0.25)`.
+
+Formatting characters (`**bold**`, `` `code` ``) are still stripped as they are visual noise for LLM consumption.
+
++++
+
+### D. Output Formats
 
 | Format | Description | Use Case |
 |--------|-------------|----------|
@@ -265,6 +281,7 @@ The script is accompanied by a comprehensive test suite (`test_prepare_prompt.py
 | `TestPreparePromptCLI` | Integration tests for CLI modes |
 | `TestPreparePromptCLIComplexJson` | Tests with realistic nested structures |
 | `TestPreparePromptCLIInputFormats` | Multi-format integration tests |
+| `TestMathPreservation` | Math operator preservation, formatting stripping |
 
 +++
 
@@ -275,6 +292,7 @@ The script is accompanied by a comprehensive test suite (`test_prepare_prompt.py
 - **Invalid Input**: Syntax errors for each format
 - **Metadata Removal**: Verification across all formats
 - **Character Stripping**: Special characters removed from output
+- **Math Preservation**: Multiplication operators preserved in formulas (`E * 0.35`)
 - **Stdin Mode**: Reading from stdin with format specification
 - **Output Formats**: Both yaml and plain output
 - **Error Handling**: File not found, invalid format

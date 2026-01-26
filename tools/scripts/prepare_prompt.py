@@ -21,6 +21,7 @@ metadata, stripping special characters, and converting to YAML-like output.
 
 import argparse
 import json
+import re
 import sys
 import tomllib
 from abc import ABC, abstractmethod
@@ -63,6 +64,13 @@ class InputHandler(ABC):
     """Abstract base class for input format handlers."""
 
     STRIP_CHARS = "*'\"\\`#"
+
+    # Patterns where asterisks represent math multiplication (preserve these)
+    MATH_PATTERNS = [
+        re.compile(r"\b\w+\s*\*\s*[\d.]+"),  # var * num (E * 0.35)
+        re.compile(r"[\d.]+\s*\*\s*\w+"),  # num * var (0.35 * E)
+        re.compile(r"[\d.]+\s*\*\s*[\d.]+"),  # num * num (0.35 * 0.25)
+    ]
 
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
@@ -129,11 +137,26 @@ class InputHandler(ABC):
             values.append(self._format_value(data))
 
     def _strip_chars(self, text: str) -> str:
-        """Remove special characters from text."""
-        result = text
-        for char in self.STRIP_CHARS:
-            result = result.replace(char, "")
-        return result
+        """Remove special characters, preserving math multiplication operators."""
+        # Find positions protected by math patterns (asterisks in multiplication)
+        protected = set()
+        for pattern in self.MATH_PATTERNS:
+            for match in pattern.finditer(text):
+                # Only protect the asterisk positions within the match
+                for i in range(match.start(), match.end()):
+                    if text[i] == "*":
+                        protected.add(i)
+
+        # Build result, only stripping unprotected chars
+        result = []
+        for i, char in enumerate(text):
+            if char in self.STRIP_CHARS:
+                if char == "*" and i in protected:
+                    result.append(char)
+                # else: skip (strip the character)
+            else:
+                result.append(char)
+        return "".join(result)
 
     def _format_value(self, value) -> str:
         """Format a value for output, converting booleans to lowercase."""

@@ -796,3 +796,79 @@ class TestPreparePromptCLIInputFormats:
         captured = capsys.readouterr()
         assert "title: Test" in captured.out
         assert "metadata" not in captured.out
+
+
+# ======================
+# Unit Tests: Math and Formatting Preservation
+# ======================
+
+
+class TestMathPreservation:
+    """Test that math multiplication operators are preserved."""
+
+    @pytest.fixture
+    def handler(self):
+        return JsonHandler(verbose=False)
+
+    def test_preserves_multiplication_in_formula(self, handler):
+        data = {"formula": "WRC = (E * 0.35) + (A * 0.25)"}
+        result = handler.to_yaml_like(data)
+        assert "E * 0.35" in result
+        assert "A * 0.25" in result
+
+    def test_preserves_inline_multiplication(self, handler):
+        data = {"calc": "Penalty = violations * 0.10"}
+        result = handler.to_yaml_like(data)
+        assert "* 0.10" in result
+
+    def test_preserves_multiplication_number_times_variable(self, handler):
+        data = {"calc": "Result = 0.35 * E"}
+        result = handler.to_yaml_like(data)
+        assert "0.35 * E" in result
+
+    def test_preserves_complex_formula_in_parentheses(self, handler):
+        data = {"wrc": "WRC = (E * 0.35) + (A * 0.25) + (T * 0.40)"}
+        result = handler.to_yaml_like(data)
+        assert "(E * 0.35)" in result
+        assert "(A * 0.25)" in result
+        assert "(T * 0.40)" in result
+
+    def test_preserves_number_times_number(self, handler):
+        data = {"calc": "Result = 0.35 * 0.25"}
+        result = handler.to_yaml_like(data)
+        assert "0.35 * 0.25" in result
+
+    def test_preserves_math_in_plain_text_output(self, handler):
+        data = {"formula": "WRC = (E * 0.35)"}
+        result = handler.to_plain_text(data)
+        assert "E * 0.35" in result
+
+    def test_strips_markdown_bold(self, handler):
+        # Bold formatting is noise for LLM - should be stripped
+        data = {"text": "Use **bold** for emphasis"}
+        result = handler.to_yaml_like(data)
+        assert "**" not in result
+        assert "bold" in result
+
+    def test_strips_inline_code_backticks(self, handler):
+        # Backticks are formatting noise for LLM - should be stripped
+        data = {"code": "Run `MENU_OUTPUT` procedure"}
+        result = handler.to_yaml_like(data)
+        assert "`" not in result
+        assert "MENU_OUTPUT" in result
+
+    def test_strips_unprotected_hash(self, handler):
+        data = {"text": "Item # 5"}
+        result = handler.to_yaml_like(data)
+        assert "#" not in result
+
+    def test_strips_unprotected_quotes(self, handler):
+        data = {"text": 'Say "hello" to me'}
+        result = handler.to_yaml_like(data)
+        assert '"' not in result
+
+    def test_strips_lone_asterisk(self, handler):
+        # Lone asterisk (not math) should be stripped
+        data = {"text": "Important * note"}
+        result = handler.to_yaml_like(data)
+        assert "*" not in result
