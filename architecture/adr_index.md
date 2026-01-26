@@ -30,4 +30,10 @@ ADR 26009
 
 ADR 26010
 : [Adoption of Molecule for Automated Ansible Role Validation](/architecture/adr/adr_26010_adoption_of_molecule_for_automated_ansib.md)
+
+ADR 26011
+: [Formalization of the Mandatory Script Suite Workflow](/architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md)
+
+ADR 26012
+: [Extraction of Documentation Validation Engine](/architecture/adr/adr_26012_extraction_of_docs_validation_engine.md)
 :::
