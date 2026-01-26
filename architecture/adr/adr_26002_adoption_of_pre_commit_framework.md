@@ -52,7 +52,7 @@ We will adopt the **`pre-commit` framework** as our primary hook manager.
 ## References
 
 * {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
-* [configure_repo.sh](/tools/scripts/configure_repo.sh) (Current repository configuration script)
+* [configure_repo.py](/tools/scripts/configure_repo.py) (Current repository configuration script)
 * [Pre-commit Framework Documentation](https://pre-commit.com/)
 
 ## Participants

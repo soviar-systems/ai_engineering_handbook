@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: bash
   display_name: Bash
@@ -99,7 +99,7 @@ $ uv run pre-commit install
 ls ../../../.git/hooks | grep 'pre-commit$'
 ```
 
-Run the [repo configuration script](/tools/scripts/configure_repo.sh), it will automatically handle this.
+Run the [repo configuration script](/tools/scripts/configure_repo.py), it will automatically handle this.
 
 +++
 
