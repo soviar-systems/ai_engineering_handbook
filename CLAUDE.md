@@ -43,6 +43,8 @@ The repository is organized around a six-layer AI system architecture:
 
 ## Critical Conventions
 
+Use misc/plan.md to save your plan before implementing so other AI instances can use it. 
+
 **MyST Notebooks:**
 - Never convert `{code-cell}` blocks to standard markdown code blocks
 - Always preserve MyST directive syntax exactly
@@ -89,6 +91,9 @@ Package manager: `uv` (never use pip directly)
 - Extensive validation runs before each commit (see `.pre-commit-config.yaml`)
 - Includes: broken links check, link format check, jupytext sync/verify, API key detection, JSON validation, script tests
 - All hooks use `uv run` for Python execution
+
+Script suite:
+- Use architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md convention when developing Python scripts.
 
 ## Telegram Channel Posts
 
