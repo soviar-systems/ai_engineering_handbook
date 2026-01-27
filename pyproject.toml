@@ -8,6 +8,7 @@ dependencies = [
     "ansible>=13.2.0",
     "ansible-core>=2.20.1",
     "jupytext>=1.19.0",
+    "mystmd>=1.8.0",
     "pre-commit>=4.5.1",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
