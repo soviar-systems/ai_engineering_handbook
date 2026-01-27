@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.3.1  
+Version: 0.4.0  
 Birth: 2026-01-03  
-Last Modified: 2026-01-18
+Last Modified: 2026-01-26
 
 ---
 
@@ -34,7 +34,25 @@ ADR -> tools -> workflow directories
 
 +++
 
-## Step 1. Read Introductory Materials
+## **Step 1. Setup Your Environment**
+
++++
+
+Run this scripts in your GNU/Linux terminal:
+
+```bash
+bash ./tools/scripts/configure_repo.sh
+```
+
+(in development) Configure JupyterLab for working with the files in this repo.
+
++++
+
+## **Step 2. Read Most Important Materials**
+
++++
+
+### Arthicture
 
 +++
 
@@ -44,17 +62,17 @@ ADR -> tools -> workflow directories
 
 +++
 
-## Step 2. Essential Reading on Working with the Repository
+### Working with the Repository
 
 +++
 
-1. (in development) Configure JupyterLab for working with the files in this repo.
 1. [Setup Jupytext and git hooks](/tools/docs/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb)
 1. ["Production Git Workflow Standards"](/tools/docs/git/01_production_git_workflow_standards.ipynb)
+1. ["The Scripts That Help"](/tools/docs/scripts_instructions/README.ipynb)
 
 +++
 
-## Step 3. Understand Your AI Tools
+### Your AI Tools
 
 +++
 
@@ -64,7 +82,7 @@ ADR -> tools -> workflow directories
 
 +++
 
-## Step 4. Keep Your Work Clean
+## **Keep Your Work Clean**
 
 +++
 
