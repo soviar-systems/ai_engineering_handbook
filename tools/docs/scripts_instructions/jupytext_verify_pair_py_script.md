@@ -34,10 +34,10 @@ This [script](/tools/scripts/jupytext_verify_pair.py) verifies that when one fil
 
 This prevents partial commits where only one file of a pair is committed, which would break synchronization.
 
-It adheres to the **Smallest Viable Architecture (SVA)** principle.
-
 :::{hint} **SVA = right tool for the job**
 :class: dropdown
+It adheres to the **Smallest Viable Architecture (SVA)** principle.
+
 SVA isn't about minimal *code* — it's about **minimal *cognitive and operational overhead***.
 
 * **Zero External Dependencies**: Uses only the Python standard library and git commands.
@@ -66,13 +66,19 @@ If both files are staged, also checks for unstaged changes that might be missed.
 
 +++
 
-### C. Validation States
+### C. Automatic Sync on Failure
+
+When one file is staged but not the other, the script automatically runs `jupytext --sync` on the staged file to update its pair.
+
++++
+
+### D. Validation States
 
 | State | Result |
 |-------|--------|
 | Neither staged | OK (skip) |
 | Both staged, no unstaged changes | OK |
-| One staged, other not | FAIL |
+| One staged, other not | FAIL (auto-sync attempted) |
 | Both staged, has unstaged changes | FAIL |
 
 +++
@@ -133,6 +139,7 @@ The [test suite](/tools/tests/test_jupytext_verify_pair.py) covers:
 |-----------|----------|
 | Pair detection | `get_pair_path` function |
 | Staging checks | `is_staged`, `has_unstaged_changes` |
+| Auto-sync | `sync_pair` function |
 | Validation logic | All state combinations |
 
 Run tests with:

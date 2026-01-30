@@ -10,6 +10,7 @@ from tools.scripts.jupytext_verify_pair import (
     get_pair_path,
     is_staged,
     has_unstaged_changes,
+    sync_pair,
 )
 
 
@@ -77,6 +78,72 @@ class TestHasUnstagedChanges:
         """File without unstaged changes should return False."""
         mock_run.return_value = MagicMock(returncode=0)  # diff exits 0 if no changes
         assert has_unstaged_changes("test.md") is False
+
+
+class TestSyncPair:
+    """Test the sync_pair helper function."""
+
+    @patch("tools.scripts.jupytext_verify_pair.subprocess.run")
+    def test_sync_pair_success(self, mock_run, capsys):
+        """Successful sync should print stdout if present."""
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="[jupytext] Syncing test.md\n", stderr=""
+        )
+        sync_pair("test.md")
+
+        captured = capsys.readouterr()
+        assert "[jupytext] Syncing test.md" in captured.out
+        mock_run.assert_called_once_with(
+            ["uv", "run", "jupytext", "--sync", "test.md"],
+            capture_output=True,
+            text=True,
+        )
+
+    @patch("tools.scripts.jupytext_verify_pair.subprocess.run")
+    def test_sync_pair_failure(self, mock_run, capsys):
+        """Failed sync should print error message and stderr."""
+        mock_run.return_value = MagicMock(
+            returncode=1, stdout="", stderr="Error: file not found\n"
+        )
+        sync_pair("test.md")
+
+        captured = capsys.readouterr()
+        assert "FAIL: test.md cannot be synced." in captured.out
+        assert "Error: file not found" in captured.out
+
+    @patch("tools.scripts.jupytext_verify_pair.subprocess.run")
+    def test_sync_pair_called_when_one_staged(self, mock_run, monkeypatch, tmp_path, capsys):
+        """Verify sync_pair is called when one file is staged but not the other."""
+        md_file = tmp_path / "test.md"
+        md_file.touch()
+        ipynb_file = tmp_path / "test.ipynb"
+        ipynb_file.touch()
+
+        call_log = []
+
+        def mock_git_response(cmd, **kwargs):
+            call_log.append(cmd)
+            if "jupytext" in cmd:
+                return MagicMock(returncode=0, stdout="Synced\n", stderr="")
+            if "ls-files" in cmd:
+                return MagicMock(returncode=0)
+            if "diff" in cmd and "--cached" in cmd:
+                # Only md file is staged
+                if str(md_file) in cmd:
+                    return MagicMock(returncode=0, stdout=f"{md_file}\n")
+                return MagicMock(returncode=0, stdout="")
+            return MagicMock(returncode=0)
+
+        mock_run.side_effect = mock_git_response
+        monkeypatch.setattr("sys.argv", ["jupytext_verify_pair.py", str(md_file)])
+
+        result = main()
+
+        assert result == 1
+        # Verify jupytext --sync was called
+        jupytext_calls = [c for c in call_log if "jupytext" in c]
+        assert len(jupytext_calls) == 1
+        assert "--sync" in jupytext_calls[0]
 
 
 class TestVerifyPairNoFiles:
