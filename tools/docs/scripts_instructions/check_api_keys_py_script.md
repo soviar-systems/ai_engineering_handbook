@@ -191,6 +191,7 @@ The first line of defense runs automatically during the `git commit` process to 
 * **Scope**: Validates all staged files (no file type restrictions)
 * **`pass_filenames: true`**: Receives file list from git, enabling targeted checking
 * **Exclusion**: `test_check_api_keys.py` and this documentation file are excluded (see section 6 for rationale)
+* **Runtime Exclusion**: The script also has built-in exclusion via `API_KEYS_EXCLUDE_FILES` in `paths.py` for cases when files are passed directly (e.g., CI)
 
 +++
 

@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 from typing import NamedTuple
 
-from tools.scripts.paths import API_KEYS_PLACEHOLDER_INDICATORS
+from tools.scripts.paths import API_KEYS_EXCLUDE_FILES, API_KEYS_PLACEHOLDER_INDICATORS
 
 
 def main():
@@ -240,6 +240,12 @@ class ApiKeyCheckerCLI:
                 continue
 
             if not file_path.is_file():
+                continue
+
+            # Skip excluded files (contain test keys by design)
+            if any(str(file_path).endswith(excl) for excl in API_KEYS_EXCLUDE_FILES):
+                if verbose:
+                    print(f"  SKIP (excluded file): {file_path}")
                 continue
 
             matches = detector.detect_in_file(file_path)

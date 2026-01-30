@@ -1,7 +1,6 @@
-import sys
 import runpy
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -13,23 +12,6 @@ from tools.scripts.check_api_keys import (
     FileFinder,
     Reporter,
 )
-from tools.scripts.paths import API_KEYS_PLACEHOLDER_INDICATORS
-
-
-@pytest.fixture(autouse=True)
-def mock_paths_module():
-    """Patch the import of API_KEYS_PLACEHOLDER_INDICATORS."""
-    with patch.dict(
-        sys.modules,
-        {
-            "tools.scripts.paths": MagicMock(
-                API_KEYS_PLACEHOLDER_INDICATORS=API_KEYS_PLACEHOLDER_INDICATORS,
-            )
-        },
-    ):
-        yield
-
-
 # ======================
 # Unit Tests: ApiKeyDetector
 # ======================
@@ -292,10 +274,27 @@ class TestApiKeyCheckerCLI:
         # Passing a directory in the files list should be skipped by is_file check
         subdir = tmp_path / "subdir"
         subdir.mkdir()
-        
+
         with pytest.raises(SystemExit) as exc_info:
             cli.run([str(subdir)])
         assert exc_info.value.code == 0
+
+    def test_excluded_file_skipped(self, cli, tmp_path, capsys):
+        """Files in API_KEYS_EXCLUDE_FILES should be skipped even with real keys."""
+        # Create a file with path ending in an excluded pattern
+        excluded_dir = tmp_path / "tools" / "tests"
+        excluded_dir.mkdir(parents=True)
+        excluded_file = excluded_dir / "test_check_api_keys.py"
+        excluded_file.write_text(
+            'KEY = "sk-TESTDATATESTDATATESTDATATESTDATATESTDATATESTDATA1234"',
+            encoding="utf-8",
+        )
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(["--verbose", str(excluded_file)])
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "SKIP (excluded file)" in captured.out
 
     def test_file_without_key_exits_0(self, cli, tmp_path, capsys):
         file = tmp_path / "clean.py"

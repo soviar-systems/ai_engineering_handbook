@@ -39,6 +39,12 @@ API_KEYS_PLACEHOLDER_INDICATORS = {
     "example", "placeholder", "your_", "test_", "fake_",
 }
 
+# Files to exclude from API key scanning (contain test keys by design)
+API_KEYS_EXCLUDE_FILES = {
+    "tools/tests/test_check_api_keys.py",
+    "tools/docs/scripts_instructions/check_api_keys_py_script.md",
+}
+
 
 def is_excluded(path: str) -> bool:
     """Check if path should be excluded from jupytext processing."""
