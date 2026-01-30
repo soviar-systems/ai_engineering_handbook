@@ -40,4 +40,7 @@ ADR 26012
 ADR 26013
 : [Just-in-Time Prompt Transformation](/architecture/adr/adr_26013_just_in_time_prompt_transformation.md)
 
+ADR 26014
+: [Semantic Notebook Pairing Strategy](/architecture/adr/adr_26014_semantic_notebook_pairing_strategy.md)
+
 :::
