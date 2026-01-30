@@ -16,7 +16,7 @@ uv sync --frozen
 uv run jupytext --sync
 
 # Run link validation tests
-uv run pytest tools/tests/test_file.py --cov=. --cov-report=term-missing
+uv run pytest tools/tests/test_file.py --cov=tools.tests.test_file --cov-report=term-missing
 
 # Check broken links in markdown files
 uv run tools/scripts/check_broken_links.py --pattern "*.md"
@@ -78,6 +78,7 @@ Package manager: `uv` (never use pip directly)
 
 **TDD Approach:**
 - Scripts require comprehensive test suites (e.g., prepare_prompt.py has 96 tests)
+- Production-grade tests should verify the contract (exit codes, side effects) not implementation details (specific message wording).
 - Tests live in `tools/tests/` with `test_<script_name>.py` naming
 - Run tests with `uv run pytest tools/tests/test_<script_name>.py`
 - Pre-commit hooks automatically run relevant tests on commit
