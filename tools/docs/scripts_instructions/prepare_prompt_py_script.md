@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, rudakow.wadim@gmail.com
-Version: 0.3.0
+Version: 0.3.1
 Birth: 2026-01-25
-Last Modified: 2026-01-26
+Last Modified: 2026-01-30
 
 ---
 
@@ -31,6 +31,10 @@ Last Modified: 2026-01-26
 +++
 
 This [script](/tools/scripts/prepare_prompt.py) prepares prompt files (["Layer 3: Prompts-as-Infrastructure"](/ai_system/3_prompts/)) for LLM consumption by removing metadata, stripping special characters, and converting to a YAML-like output format.
+
+:::{seealso}
+> ADR 26013: Just-in-Time Prompt Transformation
+:::
 
 This tool is designed to transform structured prompt files into clean, readable formats suitable for copying into LLM interfaces or automated prompt injection. It supports multiple input formats with automatic detection based on file extension.
 

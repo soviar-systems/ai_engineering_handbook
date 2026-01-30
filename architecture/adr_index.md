@@ -36,4 +36,7 @@ ADR 26011
 
 ADR 26012
 : [Extraction of Documentation Validation Engine](/architecture/adr/adr_26012_extraction_of_docs_validation_engine.md)
+
+ADR 26013
+: [Just-in-Time Prompt Transformation](/architecture/adr/adr_26013_just_in_time_prompt_transformation.md)
 :::
