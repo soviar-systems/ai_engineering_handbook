@@ -224,7 +224,8 @@ The CI pipeline in `quality.yml` validates **ALL** `.md` files when any document
 * **Environment Parity**: Utilizes `uv` for high-performance dependency management.
 * **Failure Isolation**: Separates logic tests from format validation.
 
-:::{tip} `quality.yml` Implementation:
+:::{tip} `quality.yml` Implementation
+:class: dropdown
 ```yaml
 link-format:
   runs-on: ubuntu-latest
