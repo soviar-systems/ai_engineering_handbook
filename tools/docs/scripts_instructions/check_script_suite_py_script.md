@@ -82,6 +82,28 @@ When a script or test file is staged for commit, the corresponding documentation
 
 +++
 
+### Design Philosophy: Why Doc is the Synchronization Point
+
+The co-staging rules enforce `script→doc` and `test→doc` pairs, but deliberately do **not** require all three files (script + test + doc) to be staged together.
+
+**Rationale:**
+
+1. **Documentation as the common denominator**: Any change to script behavior or test coverage should be reflected in documentation. This makes doc the natural synchronization point.
+
+2. **Legitimate script-only changes**:
+   - Bug fixes already covered by existing tests
+   - Internal refactoring without behavior change
+   - Performance improvements with unchanged API
+
+3. **Legitimate test-only changes**:
+   - Adding edge case coverage for existing functionality
+   - Refactoring test structure or reducing duplication
+   - Fixing flaky or brittle tests
+
+4. **Avoiding over-constraint**: Requiring all three files together would block normal development workflows. The doc requirement alone ensures documentation stays current without imposing unnecessary friction.
+
++++
+
 ### C. Rename Tracking
 
 When a documentation file is renamed, the configuration files must be updated:
