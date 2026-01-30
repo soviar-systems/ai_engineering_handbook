@@ -16,7 +16,7 @@ uv sync --frozen
 uv run jupytext --sync
 
 # Run link validation tests
-uv run pytest tools/tests/test_check_broken_links.py
+uv run pytest tools/tests/test_file.py --cov=. --cov-report=term-missing
 
 # Check broken links in markdown files
 uv run tools/scripts/check_broken_links.py --pattern "*.md"

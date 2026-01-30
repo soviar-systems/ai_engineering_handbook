@@ -61,6 +61,14 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
+      - id: check-adr-index
+        name: Check ADR Index
+        entry: uv run --active tools/scripts/check_adr_index.py
+        language: python
+        files: ^architecture/(adr/adr_.*\.md|adr_index\.md)$
+        pass_filenames: false
+        stages: [pre-commit, manual]
+
       # ---TESTS of HOOK SCRIPTS---
       # Trigger this whenever any script or test in the scripts
       # directory changes
@@ -118,4 +126,11 @@ repos:
         entry: uv run --active pytest tools/tests/test_check_script_suite.py
         language: python
         files: ^tools/(scripts/check_script_suite\.py|scripts/paths\.py|tests/test_check_script_suite\.py)$
+        pass_filenames: false
+
+      - id: test-check-adr-index
+        name: Test Check ADR Index script
+        entry: uv run --active pytest tools/tests/test_check_adr_index.py
+        language: python
+        files: ^tools/(scripts/check_adr_index\.py|tests/test_check_adr_index\.py)$
         pass_filenames: false

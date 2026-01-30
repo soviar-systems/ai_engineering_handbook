@@ -22,6 +22,8 @@ BROKEN_LINKS_EXCLUDE_DIRS = {
 BROKEN_LINKS_EXCLUDE_LINK_STRINGS = {
     "path/to/file.md",
     "path/to/file.ipynb",
+    "path/to/adr_26001_slug.md",
+    "path/to/adr_26002_slug.md",
     "./intro/",
     "valid.md",  # Added for test_validate_link_with_exclusions
 }
