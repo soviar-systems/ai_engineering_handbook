@@ -63,7 +63,7 @@ repos:
 
       - id: check-adr-index
         name: Check ADR Index
-        entry: uv run --active tools/scripts/check_adr_index.py
+        entry: uv run --active tools/scripts/check_adr_index.py --fix
         language: python
         files: ^architecture/(adr/adr_.*\.md|adr_index\.md)$
         pass_filenames: false
