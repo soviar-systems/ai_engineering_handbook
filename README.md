@@ -3,9 +3,9 @@
 
 ---
 
-Version: 0.3.5  
-Birth: 2025-10-19  
-Last Modified: 2026-01-24
+Version: 2.3.0
+Birth: 2025-10-19
+Last Modified: 2026-01-31
 
 ---
 
@@ -19,6 +19,12 @@ All content is **generated, validated, and versioned** through a controlled Lang
 
 ## What's new?
 
+v2.3.0
+* **Semantic Versioning**: Adopted Jupytext for pairing `.ipynb` with `.md` files, enabling clean git diffs and AI-friendly processing (ADR 26014).
+* **Script Suite Convention**: Formalized 1:1:1 rule (Script, Test, Doc) with automated `check_script_suite.py` enforcement (ADR 26011).
+* **Tooling Overhaul**: Refactored `prepare_prompt` and `configure_repo` from Bash to Python; added `check_adr_index.py` and `check_link_format.py` validators.
+* **JIT Prompts**: Implemented on-the-fly YAML generation from JSON source of truth to prevent artifact drift (ADR 26013).
+
 v2.2.0
 * **Security**: Implemented automated API key detection and JSON validation scripts with CI integration.
 * **Infrastructure**: Adopted Ansible and Molecule for idempotent configuration management (ADR 26009, 26010).
@@ -29,10 +35,6 @@ v2.1.0
 * **ADR Migration**: Transitioned to a new 2026 naming convention for ADRs and added a centralized index at `architecture/adr_index.md`. 
 * **Connectivity**: Added comprehensive setup guides for utilizing high-performance LLMs via API keys within agentic workflows. 
 * **Maintenance**: Enhanced repository stabilization through MyST-aware link validation and refined pre-commit hooks. 
-
-v2.0.0 features:
-- the migration of core layers into the `ai_system/` hierarchy and
-- - the introduction of [hybrid LLM+SLM workflows](/tools/docs/ai_agents/04_connect_to_capable_llms_using_api_keys.ipynb) via Aider integration.
 
 
 ## Authorship & Methodology
