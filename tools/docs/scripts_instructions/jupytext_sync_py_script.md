@@ -67,7 +67,16 @@ Runs `jupytext --to ipynb --test` to verify synchronization without making chang
 
 +++
 
-### C. Batch Processing
+### C. Unpaired File Handling
+
+Files without a paired counterpart are automatically skipped:
+- A `.md` file without a matching `.ipynb` is skipped (e.g., plain README files)
+- A `.ipynb` file without a matching `.md` is skipped
+- This prevents errors when pre-commit passes unrelated markdown files
+
++++
+
+### D. Batch Processing
 
 The `--all` flag finds and processes all paired notebooks in the repository:
 - Scans for .md files with matching .ipynb files

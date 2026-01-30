@@ -59,6 +59,16 @@ def main() -> int:
             print(f"Warning: {file_path} does not exist, skipping")
             continue
 
+        # Skip files without a paired counterpart (plain markdown, not notebooks)
+        if path.suffix == ".md":
+            pair = path.with_suffix(".ipynb")
+        else:
+            pair = path.with_suffix(".md")
+
+        if not pair.exists():
+            print(f"Skipping {file_path} (no paired file)")
+            continue
+
         if args.test:
             cmd = ["uv", "run", "jupytext", "--to", "ipynb", "--test", file_path]
         else:

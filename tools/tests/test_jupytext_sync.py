@@ -76,6 +76,80 @@ class TestJupytextSyncNonExistentFile:
         assert result == 0
 
 
+class TestJupytextSyncUnpairedFiles:
+    """Test handling of unpaired files (plain markdown without .ipynb pair)."""
+
+    def test_unpaired_md_file_skipped(self, monkeypatch, capsys, tmp_path):
+        """Markdown file without paired .ipynb should be skipped."""
+        md_file = tmp_path / "readme.md"
+        md_file.write_text("# Just a readme")
+
+        monkeypatch.setattr("sys.argv", ["jupytext_sync.py", str(md_file)])
+        result = main()
+
+        captured = capsys.readouterr()
+        assert "Skipping" in captured.out
+        assert "no paired file" in captured.out
+        assert result == 0
+
+    def test_unpaired_ipynb_file_skipped(self, monkeypatch, capsys, tmp_path):
+        """Notebook file without paired .md should be skipped."""
+        ipynb_file = tmp_path / "orphan.ipynb"
+        ipynb_file.write_text("{}")
+
+        monkeypatch.setattr("sys.argv", ["jupytext_sync.py", str(ipynb_file)])
+        result = main()
+
+        captured = capsys.readouterr()
+        assert "Skipping" in captured.out
+        assert "no paired file" in captured.out
+        assert result == 0
+
+    @patch("tools.scripts.jupytext_sync.subprocess.run")
+    def test_paired_files_processed(self, mock_run, monkeypatch, capsys, tmp_path):
+        """Files with pairs should be processed normally."""
+        md_file = tmp_path / "notebook.md"
+        md_file.write_text("# Notebook")
+        ipynb_file = tmp_path / "notebook.ipynb"
+        ipynb_file.write_text("{}")
+
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+        monkeypatch.setattr("sys.argv", ["jupytext_sync.py", str(md_file)])
+        result = main()
+
+        assert result == 0
+        mock_run.assert_called_once()
+        captured = capsys.readouterr()
+        assert "Skipping" not in captured.out
+
+    def test_mixed_paired_and_unpaired(self, monkeypatch, capsys, tmp_path):
+        """Mix of paired and unpaired files - only paired should be processed."""
+        # Unpaired file
+        unpaired_md = tmp_path / "readme.md"
+        unpaired_md.write_text("# Readme")
+
+        # Paired files
+        paired_md = tmp_path / "notebook.md"
+        paired_md.write_text("# Notebook")
+        paired_ipynb = tmp_path / "notebook.ipynb"
+        paired_ipynb.write_text("{}")
+
+        with patch("tools.scripts.jupytext_sync.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+            monkeypatch.setattr(
+                "sys.argv",
+                ["jupytext_sync.py", str(unpaired_md), str(paired_md)],
+            )
+            result = main()
+
+        captured = capsys.readouterr()
+        assert "Skipping" in captured.out
+        assert "readme.md" in captured.out
+        # Paired file should be processed
+        mock_run.assert_called_once()
+        assert result == 0
+
+
 class TestJupytextSyncMode:
     """Test sync mode execution."""
 
@@ -84,6 +158,9 @@ class TestJupytextSyncMode:
         """Sync mode should run jupytext --sync."""
         md_file = tmp_path / "test.md"
         md_file.touch()
+        # Create paired .ipynb file so the .md file is processed
+        ipynb_file = tmp_path / "test.ipynb"
+        ipynb_file.touch()
 
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         monkeypatch.setattr("sys.argv", ["jupytext_sync.py", str(md_file)])
@@ -102,6 +179,9 @@ class TestJupytextSyncMode:
         """Sync mode should work with .ipynb files."""
         ipynb_file = tmp_path / "test.ipynb"
         ipynb_file.touch()
+        # Create paired .md file so the .ipynb file is processed
+        md_file = tmp_path / "test.md"
+        md_file.touch()
 
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         monkeypatch.setattr("sys.argv", ["jupytext_sync.py", str(ipynb_file)])
@@ -121,6 +201,9 @@ class TestJupytextSyncTestMode:
         """Test mode should run jupytext --to ipynb --test."""
         md_file = tmp_path / "test.md"
         md_file.touch()
+        # Create paired .ipynb file so the .md file is processed
+        ipynb_file = tmp_path / "test.ipynb"
+        ipynb_file.touch()
 
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
         monkeypatch.setattr("sys.argv", ["jupytext_sync.py", "--test", str(md_file)])
@@ -144,6 +227,9 @@ class TestJupytextSyncSubprocessFailure:
         """Subprocess failure should return 1 and print error."""
         md_file = tmp_path / "test.md"
         md_file.touch()
+        # Create paired .ipynb file so the .md file is processed
+        ipynb_file = tmp_path / "test.ipynb"
+        ipynb_file.touch()
 
         mock_run.return_value = MagicMock(
             returncode=1, stdout="", stderr="Jupytext error: file not synced"
@@ -164,6 +250,9 @@ class TestJupytextSyncSubprocessFailure:
         file1.touch()
         file2 = tmp_path / "file2.md"
         file2.touch()
+        # Create paired .ipynb files so both .md files are processed
+        (tmp_path / "file1.ipynb").touch()
+        (tmp_path / "file2.ipynb").touch()
 
         # First call fails, second succeeds
         mock_run.side_effect = [
@@ -182,6 +271,9 @@ class TestJupytextSyncSubprocessFailure:
         """Successful sync should print stdout."""
         md_file = tmp_path / "test.md"
         md_file.touch()
+        # Create paired .ipynb file so the .md file is processed
+        ipynb_file = tmp_path / "test.ipynb"
+        ipynb_file.touch()
 
         mock_run.return_value = MagicMock(
             returncode=0, stdout="[jupytext] Syncing test.md", stderr=""
@@ -308,6 +400,8 @@ class TestJupytextSyncAllFlag:
         """--all flag should find all paired notebooks and process them."""
         md_file = tmp_path / "test.md"
         md_file.touch()
+        # Create paired .ipynb so the file passes the pair check
+        (tmp_path / "test.ipynb").touch()
         mock_find.return_value = [str(md_file)]
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
 
@@ -324,6 +418,8 @@ class TestJupytextSyncAllFlag:
         """--all --test should run test mode on all notebooks."""
         md_file = tmp_path / "test.md"
         md_file.touch()
+        # Create paired .ipynb so the file passes the pair check
+        (tmp_path / "test.ipynb").touch()
         mock_find.return_value = [str(md_file)]
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
 
@@ -358,6 +454,9 @@ class TestJupytextSyncAllFlag:
         file1.touch()
         file2 = tmp_path / "file2.md"
         file2.touch()
+        # Create paired .ipynb files so both pass the pair check
+        (tmp_path / "file1.ipynb").touch()
+        (tmp_path / "file2.ipynb").touch()
         mock_find.return_value = [str(file1), str(file2)]
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
 
@@ -377,6 +476,9 @@ class TestJupytextSyncAllFlag:
         file1.touch()
         file2 = tmp_path / "file2.md"
         file2.touch()
+        # Create paired .ipynb files so both pass the pair check
+        (tmp_path / "file1.ipynb").touch()
+        (tmp_path / "file2.ipynb").touch()
         mock_find.return_value = [str(file1), str(file2)]
         mock_run.side_effect = [
             MagicMock(returncode=0, stdout="", stderr=""),
