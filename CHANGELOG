@@ -1,6 +1,30 @@
-release next
+release 2.3.0
+* Architecture Decisions (ADRs) added:
+    - ADR 26011: Formalization of Mandatory Script Suite (Script + Test + Doc).
+    - ADR 26012: Extraction of Docs Validation Engine.
+    - ADR 26013: Just-in-Time Prompt Transformation.
+    - ADR 26014: Semantic Notebook Pairing Strategy (Jupytext).
+    - ADR 26015: Mandatory Sync Guard and Diff Suppression.
+* Tooling Ecosystem Overhaul:
+    - New `check_script_suite.py` enforces the 1:1:1 convention (Script, Test, Documentation).
+    - New `check_adr_index.py` validates ADR index synchronization.
+    - New `check_link_format.py` ensures links point to `.ipynb` in paired files.
+    - `prepare_prompt` refactored to Python (`prepare_prompt.py`) with multi-format support (JSON, YAML, TOML, Markdown) and JIT transformation.
+    - `configure_repo` refactored to Python (`configure_repo.py`) for better cross-platform support.
+    - `jupytext_sync` and `jupytext_verify_pair` updated for Semantic Notebook Pairing.
+* Documentation & Standards:
+    - `CONVENTIONS.md` and `CLAUDE.md` updated with MyST, Jupytext, and Script Suite guidelines.
+    - Onboarding instructions updated to use `configure_repo.py`.
+    - Documentation for all scripts centralized in `tools/docs/scripts_instructions/`.
+* Content Organization:
+    - Password management handbooks moved to `misc/in_progress`.
+    - Prompts directory (`ai_system/3_prompts`) restructured for Prompts-as-Infrastructure.
+* CI/CD & Quality:
+    - Pre-commit hooks updated for new tools and Python-based scripts.
+    - CI now checks all Markdown files for broken links.
+    - API Key scanning improved with file exclusion lists.
 * New articles added:
-  - 1_execution/hybrid_cpu_gpu_execution_and_kv_cache_offloading.md
+    - 1_execution/hybrid_cpu_gpu_execution_and_kv_cache_offloading.md
 
 release 1.3.0
 * New articles added:

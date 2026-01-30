@@ -1,5 +1,62 @@
 # Release Notes
 
+## release v2.3.0 "The Validated Ecosystem"
+
+### Summary of Changes
+
+This release introduces a rigorous **"Semantic Notebook Versioning"** strategy, fundamentally changing how we handle Jupyter notebooks to make them AI-friendly and git-diff clean.
+
+We have formalized the **"Script Suite"** concept (Code + Test + Doc) with automated enforcement to prevent documentation drift. Additionally, core tooling (`prepare_prompt`, `configure_repo`) has been refactored from Bash to Python for cross-platform reliability and better testability.
+
+We also introduce **Just-in-Time prompt transformation** script to keep our repository clean of derivative artifacts, ensuring a Single Source of Truth (SSoT) for our prompt infrastructure.
+
+### New Features and Articles Added
+
+*   **Architecture & Standards**:
+  *   **Semantic Notebook Pairing**: Adopted Jupytext to pair `.ipynb` files with `.md` files. This allows for clean git diffs and efficient LLM processing while preserving execution state. See `architecture/adr/adr_26014_semantic_notebook_pairing_strategy.md`.
+  *   **Mandatory Script Suite**: Formalized the requirement that every utility script must have a corresponding test and documentation file, enforcedby CI. See `architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md`.
+  *   **JIT Prompt Transformation**: Moved from storing YAML prompts to generating them on-the-fly from JSON source of truth to prevent artifact drift. See `architecture/adr/adr_26013_just_in_time_prompt_transformation.md`.
+  *   **Docs Validation Engine**: Proposed extraction of validation logic into a standalone package for reuse. See `architecture/adr/adr_26012_extraction_of_docs_validation_engine.md`.
+
+*   **Performance & Execution**:
+  *   Added `1_execution/hybrid_cpu_gpu_execution_and_kv_cache_offloading.md` for advanced optimization strategies.
+
+*   **Tooling Ecosystem Overhaul**:
+  *   `check_script_suite.py`: A new validator that enforces the 1:1:1 rule (Script, Test, Doc) and ensures documentation is co-staged with code changes.
+  *   `check_adr_index.py`: Automates the maintenance of `architecture/adr_index.md`, ensuring all ADRs are indexed, ordered, and correctly linked.
+  *   `check_link_format.py`: Enforces the rule that Markdown files should link to `.ipynb` files (not `.md`) when a pair exists, ensuring correct rendering in the documentation site.
+  *   `prepare_prompt.py`: A Python rewrite of the prompt preparation tool, now supporting JSON, YAML, TOML, and Markdown inputs with auto-detection.
+  *   `configure_repo.py`: A Python rewrite of the setup script, adding dry-run capabilities and better error handling for environment provisioning.
+  *   `jupytext_sync.py` & `jupytext_verify_pair.py`: Updated to fully support the Semantic Notebook Pairing strategy, ensuring consistent synchronization and staging of paired files.
+
+*   **Documentation**:
+  *   Added comprehensive instructions for all new and refactored scripts in `tools/docs/scripts_instructions/`, including `prepare_prompt.py`, `configure_repo.py`, `check_script_suite.py`, `check_adr_index.py`, `check_link_format.py`, `jupytext_sync.py`, and `jupytext_verify_pair.py`.
+  *   Added `docs_validation_engine_development_plan.md` outlining the roadmap for tooling extraction.
+
+### Updates in Existing Files
+
+*   **CI/CD & Quality**:
+  *   Updated `.pre-commit-config.yaml` and `quality.yml` to include the new validators (`check_script_suite`, `check_adr_index`, `check_link_format`)and enhance existing checks.
+  *   Enhanced `check_api_keys.py` with file exclusion lists to prevent false positives in test files.
+  *   Updated `check_broken_links.py` to scan all Markdown files in CI, preventing regression when files are renamed.
+  *   **Dependency Management**: Updated `pyproject.toml` and `uv.lock` to reflect new and updated project dependencies.
+
+*   **Project Configuration**:
+  *   Updated `CONVENTIONS.md` and `CLAUDE.md` to reflect the new MyST, Jupytext, and Script Suite guidelines, providing clearer instructions for AI assistants and developers.
+  *   Updated `0_intro/00_onboarding.md` to streamline the setup process and reference the new `configure_repo.py` script.
+  *   Refactored `ai_system/3_prompts/README.md` to align with the "Prompts-as-Infrastructure" approach, detailing the use of structured prompt files and the `prepare_prompt.py` script.
+  *   Updated `tools/docs/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.md` with detailed guidance on the new notebook pairing strategy, Git attributes, and pre-commit sync guards.
+  *   Updated `tools/docs/scripts_instructions/README.md` to provide an overview of the new script suite and how to use the refactored Python scripts.
+
+### Existing Files Moved or Renamed
+
+| Original Path | New Path |
+| :--- | :--- |
+| `security/password_management/*` | `misc/in_progress/security/password_management/*` |
+| `tools/docs/scripts_instructions/precommit_ci_validation_system.md` | `tools/docs/git/03_precommit_ci_validation_system.md` |
+| `ai_system/3_prompts/prepare_prompt.sh` | `tools/scripts/prepare_prompt.py` (Refactored) |
+| `tools/scripts/configure_repo.sh` | `tools/scripts/configure_repo.py` (Refactored) |
+
 ## v2.2.0 "The Hardened Foundation"
 
 ### Summary of Changes
