@@ -5,7 +5,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: bash
   display_name: Bash
@@ -19,11 +19,83 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.5.0  
+Version: 0.6.0  
 Birth: 2025-12-28  
-Last Modified: 2026-01-18
+Last Modified: 2026-01-30
 
 ---
+
++++
+
+To enable clean Git diffs, prevent notebook metadata noise, and provide high-fidelity Markdown inputs for SLM/LLM assistants (e.g., Aider) while preserving execution state.
+
++++
+
+:::{seealso}
+> 1. [ADR 26014: Semantic Notebook Pairing Strategy](/architecture/adr/adr_26014_semantic_notebook_pairing_strategy.md)
+> 1. [ADR 26015: Mandatory Sync-Guard & Diff Suppression](/architecture/adr/adr_26015_mandatory_sync_guard_and_diff_suppression.md)
+:::
+
++++
+
+## **Executive Summary**
+
++++
+
+This document establishes a **Production-Ready** protocol for AI engineering that bridges the gap between interactive data science and rigorous software engineering. By implementing **Semantic Notebook Versioning**, teams can achieve industrial-grade compliance with **ISO/IEC/IEEE 29148** and **SWEBOK** standards.
+
++++
+
+### Core Objectives
+
++++
+
+* **Decouple Logic from State**: Separate human-readable MyST Markdown (source of truth) from JSON-based `.ipynb` artifacts (execution state).
+* **Enable AI-Native Development**: Provide high-fidelity, token-efficient Markdown inputs optimized for Small Language Models (SLMs) and AI assistants like Aider.
+* **Enforce Artifact Integrity**: Utilize automated Git hooks and CI pipelines to ensure synchronization and prevent "metadata noise" from polluting the version history.
+
++++
+
+### Stakeholder Benefits
+
++++
+
+* **For Lead Engineers**: Simplifies code reviews with clean, line-by-line diffs that focus exclusively on logic changes.
+* **For AI/ML Developers**: Provides a stable environment where interactive exploration does not compromise GitOps-native workflows.
+* **For Project Managers**: Ensures all development artifacts are **traceable, verifiable, and maintainable**, meeting international software quality criteria.
+
++++
+
+### Standard Compliance Alignment
+
++++
+
+The methodology is classified as **Production-Ready** because it adheres to the following frameworks:
+
++++
+
+#### 1. ISO/IEC/IEEE 29148: Requirements Engineering
+
++++
+
+The standard mandates that specification artifacts be **unambiguous** and **maintainable**. This workflow achieves this by:
+
+* **Verifiability**: Establishing the `.md` file as the primary source of truth, allowing for objective verification of logic independently of the execution environment.
+* **Traceability**: Every change in the model’s architecture or logic is clearly traceable through Git, free from machine-generated JSON clutter.
+
++++
+
+#### 2. SWEBOK Quality-2.1: Verifiability
+
++++
+
+The Software Engineering Body of Knowledge emphasizes that development artifacts must be **verifiable**. By pairing `.md` and `.ipynb` files with a mandatory sync guard, we ensure that the interactive output is always a direct result of the stated logic, preventing "hidden state" discrepancies.
+
++++
+
+#### 3. Simplest Viable Architecture (SVA)
+
+The approach avoids vendor lock-in by using open-source tools (`uv`, `jupytext`, `myst`) and standard file formats, ensuring that the project remains fully functional on local CPU/RAM-limited stacks without proprietary overhead.
 
 +++
 
@@ -31,39 +103,52 @@ Last Modified: 2026-01-18
 
 +++
 
-### Purpose
+### Substantiation of the Approach: Architectural Rationale
 
 +++
 
-To enable clean Git diffs, prevent notebook metadata noise, and provide high-fidelity Markdown inputs for SLM/LLM assistants (e.g., Aider) while preserving execution state.
-
-:::{attention}
-It is supposed that you have already configured the central JupyterLab server (configuration scripts are in progress phase).
-
-* **Why:** The central JupyterLab server keeps your workspace stable. Even if a specific project's dependencies break, your "IDE" remains functional.
-:::
+The adoption of semantic notebook versioning is not merely a workflow preference but a rigorous adherence to **industrial-grade MLOps criteria** and **Software Engineering Body of Knowledge (SWEBOK)** standards. This methodology enforces the **Simplest Viable Architecture (SVA)** principle while ensuring development artifacts are traceable and verifiable.
 
 +++
 
-### Substantiation of the Approach
+#### **1. Verifiability (SWEBOK Quality-2.1)**
 
 +++
 
-This workflow is engineered to satisfy **industrial-grade MLOps criteria** under the constraints of Small Language Model (SLM) development environments (1B–14B parameters, CPU/RAM-limited, GitOps-native). It adheres to the **Simplest Viable Architecture (SVA)** principle.
+Standard `.ipynb` files are opaque JSON structures that obscure logic changes within metadata and execution noise. By promoting MyST Markdown as the primary source of truth, we ensure that every code modification is **verifiable** through human-readable Git diffs. The synchronization guard (Phase 4) serves as a formal verification step, ensuring that the execution artifact (`.ipynb`) and the specification artifact (`.md`) remain logically equivalent.
 
-The proposed methodology—semantic notebook versioning via **Jupytext paired `.md`/`.ipynb` artifacts**, enforced by 
-- pre-commit sync guards, 
-- `.gitattributes` diff suppression, and 
-- CI integrity validation
++++
 
-is classified as **Production-Ready** because it:  
+#### **2. Unambiguous Specification (ISO/IEC/IEEE 29148)**
 
-- ✅ **Runs fully on CPU/local stack** (uv, JupyterLab, Jupytext CLI)  
-- ✅ **Introduces zero vendor lock-in** (open formats: MyST Markdown, standard Jupyter)  
-- ✅ **Integrates into GitOps/CI pipelines** (pre-commit + GitHub Actions)  
-- ✅ **Produces version-controllable, LLM-efficient inputs** (clean `.md` for Aider/SLMs)  
++++
 
-All components are **traceable to ISO/IEC/IEEE 29148** requirements for *unambiguous, verifiable, and maintainable specification artifacts*, and comply with **SWEBOK Quality-2.1** (verifiability of development artifacts). It is a **minimal, auditable, and enforceable workflow** for AI engineering teams operating at the edge.
+ISO 29148 requires specifications to be *unambiguous, verifiable, and maintainable*.
+
+* **Unambiguity**: Decoupling the prose and code (logic) from the binary-encoded outputs prevents "hidden state" errors common in standard Jupyter workflows.
+* **Traceability**: Each iteration of a model or algorithm is traceable in version control history without the interference of machine-generated metadata.
+* **Maintainability**: The use of open formats (MyST Markdown) eliminates vendor lock-in, ensuring the project remains maintainable across diverse IDEs and AI-assisted environments.
+
++++
+
+#### 3. Idempotency & State Determinism
+
++++
+
+The Jupytext synchronization protocol is designed to be **idempotent**. In an AI engineering context, this ensures that the transformation from Markdown logic to a Notebook execution state is deterministic. By implementing `outdated_text_notebook_margin` and metadata filters, we mitigate "timestamp drift"—a common failure mode in distributed cloud-sync environments like Yandex.Disk—thereby maintaining the integrity of the project's **GitOps-native** pipeline.
+
++++
+
+### Comparison of Standards Compliance
+
++++
+
+| Criterion | Standard Jupyter Workflow | Semantic Versioning Workflow |
+| --- | --- | --- |
+| **Artifact Transparency** | **Low**: Logic buried in JSON. | **High**: Logic exposed in MyST Markdown. |
+| **Reviewability** | **Difficult**: 500+ lines of noise. | **Seamless**: Line-by-line code diffs. |
+| **AI Ingestion** | **Inefficient**: Wastes tokens on metadata. | **Optimized**: High-fidelity text inputs. |
+| **Verifiability** | **Manual**: Relies on dev discipline. | **Automated**: Enforced by Sync Guards/CI. |
 
 +++
 
@@ -91,35 +176,24 @@ For actual contents of the file inspect the original files in the repo, not the 
 
 +++
 
-### **Critical Architecture: Jupytext Installation Location**
-
-+++
-
-:::{danger}
-**Jupytext MUST be installed in the central JupyterLab environment, NOT only in the project's `.venv`.**
-
-**Why:** JupyterLab server extensions (like Jupytext) must be discoverable by the JupyterLab process. If installed only in a project's virtual environment, the central JupyterLab server cannot see the extension, and the pairing commands will not appear in the Command Palette.
-:::
-
-+++
-
 ### Step 1: Configure Central JupyterLab Environment
 
 +++
 
-Assuming your central JupyterLab is installed in `~/venv/jupyter`:
+The Jupytext must be installed within the venv where your JupyterLab server is. 
 
-```bash
-# Activate the central JupyterLab environment
-source ~/venv/jupyter/bin/activate
+**Why:** JupyterLab server extensions (like Jupytext) must be discoverable by the JupyterLab process. 
 
+Assuming your JupyterLab is installed in `~/venv/jupyter`:
+
+```{code-cell}
 # Install Jupytext into the central environment
-pip install jupytext
+uv pip install -p ~/venv/jupyter/ jupytext
+```
 
+```{code-cell}
 # Verify installation
-jupyter labextension list | grep jupytext
-
-# Restart your JupyterLab server for changes to take effect
+~/venv/jupyter/bin/jupyter labextension list 2>&1 | grep jupytext
 ```
 
 :::{important}
@@ -155,68 +229,7 @@ After cloning the repo, run from within the repo's root directory:
 
 +++
 
-### Environment Verification
-
-+++
-
-The configuration described in this instruction was tested in this environment:
-
-```{code-cell}
-grep -i 'pretty' /etc/os-release
-```
-
-The global uv:
-
-```{code-cell}
-uv -V
-```
-
-Central JupyterLab server:
-
-```{code-cell}
-~/venv/jupyter/bin/jupyter-lab -V
-```
-
-Verify Jupytext is accessible from the central environment:
-
-```{code-cell}
-~/venv/jupyter/bin/jupytext --version
-```
-
-## **Phase 2: Mandatory Pairing: Automate Jupytext Defaulting**
-
-+++
-
-To ensure the LLM assistant can read the semantic content of your work, every engineer must initialize notebook [pairing](https://github.com/mwouts/jupytext/blob/main/docs/paired-notebooks.md).
-
-+++
-
-The `pyproject.toml` file in the **root of the repo** must contain these lines:
-
-```toml
-[tool.jupytext]
-formats = "ipynb,md:myst"
-```
-
-When you open a notebook inside this folder using the central JupyterLab, Jupytext looks "up" the directory tree. It finds this file and automatically applies the "Pair with MyST" setting.
-
-+++
-
-:::{tip} Manual Alternative
-:class: dropdown
-If you ever need to do this operation manually (which is discouraged by our philosophy), in JupyterLab session open the Command Palette (`Ctrl+Shift+C`) and select:
-
-```
-Pair with myst md
-```
-```{figure} ./images/Screenshot_20251228_194236.png
-:width: 100%
-```
-:::
-
-+++
-
-## **Phase 3: Markdown Prirority Setup: The Git Attributes Diff Filter**
+## **Phase 2: Markdown Priority Setup: The Git Attributes Diff Filter**
 
 +++
 
@@ -277,7 +290,47 @@ Binary files a/research/slm_from_scratch/01_foundational_neurons_and_backprop/01
 
 +++
 
-## **Phase 4: Pre-commit hook: Sync Guard**
+## **Phase 3: Mandatory Pairing: Automate Jupytext Defaulting**
+
++++
+
+To ensure the LLM assistant can read the semantic content of your work, every engineer must initialize notebook [pairing](https://github.com/mwouts/jupytext/blob/main/docs/paired-notebooks.md).
+
++++
+
+The `pyproject.toml` file in the **root of the repo** must contain these lines:
+
+```toml
+[tool.jupytext]
+formats = "ipynb,md:myst"
+```
+
+When you open a notebook inside this folder using the central JupyterLab, Jupytext looks "up" the directory tree. It finds this file and automatically applies the "Pair with MyST" setting.
+
++++
+
+:::{tip} Manual Alternative
+:class: dropdown
+If you ever need to do this operation manually (which is discouraged by our philosophy), in JupyterLab session open the Command Palette (`Ctrl+Shift+C`) and select:
+
+```
+Pair with myst md
+```
+```{figure} ./images/Screenshot_20251228_194236.png
+:width: 100%
+```
+:::
+
++++
+
+## **Phase 4: Validation Gates**
+
++++
+
+:::{seealso}
+> 1. ["Instruction on jupytext_sync.py script"](/tools/docs/scripts_instructions/jupytext_sync_py_script.ipynb)
+> 1. [Instruction on jupytext_verify_pair.py script](/tools/docs/scripts_instructions/jupytext_verify_pair_py_script.ipynb)
+:::
 
 +++
 
@@ -292,9 +345,13 @@ This means:
 
 +++
 
-### **The Pre-commit Hook as a Safety Guard**
+### Pre-commit hook: Sync Guard
 
 +++
+
+:::{seealso}
+> ADR 26002: Adoption of the Pre-commit Framework
+:::
 
 Before each commit, the hook runs:
 
@@ -306,127 +363,15 @@ If the two files differ, the hook **fails** and the commit is blocked, forcing y
 
 +++
 
-### **Implementation**
-
-+++
-
-#### Option 1: Use Pre-commit Framework (Recommended)
-
-+++
-
-File: `.pre-commit-config.yaml`:
-
-```yaml
-repos:
-  - repo: local
-    hooks:
-      - id: jupytext-sync
-        name: Jupytext Sync Check
-        entry: bash -c 'uv run jupytext --sync'
-        language: system
-        files: '\.(ipynb|md)$'
-        pass_filenames: true
-```
-
-Install the hook:
-
-```bash
-uv run pre-commit install
-```
-
-+++
-
-#### Option 2: Manual Git Hook Script
-
-+++
-
-File: `.git/hooks/pre-commit`:
-
-```bash
-#!/usr/bin/env bash
-
-set -e
-
-# Find all staged .ipynb and .md files
-staged_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ipynb|md)$' || true)
-
-if [[ -z "$staged_files" ]]; then
-    exit 0
-fi
-
-# Run sync for each file
-echo "$staged_files" | while read -r file; do
-    if [[ -f "$file" ]]; then
-        echo "Syncing: $file"
-        uv run jupytext --sync "$file"
-        
-        # Re-stage if the sync modified the file
-        git add "$file"
-    fi
-done
-
-exit 0
-```
-
-Make it executable:
-
-```bash
-chmod +x .git/hooks/pre-commit
-```
-
-+++
-
-## **Phase 5: CI Verification**
+### CI Verification
 
 +++
 
 To ensure that no desynchronized notebooks reach the main branch, add a CI check that validates all paired notebooks are in sync.
 
-File: `.github/workflows/verify-notebooks.yml`:
-
-```yaml
-name: Verify Notebook Sync
-
-on:
-  pull_request:
-    paths:
-      - '**.ipynb'
-      - '**.md'
-  push:
-    branches:
-      - main
-
-jobs:
-  verify-sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install UV
-        uses: astral-sh/setup-uv@v5
-        
-      - name: Sync notebooks
-        run: |
-          uv sync
-          uv run jupytext --sync **/*.ipynb **/*.md
-          
-      - name: Check for changes
-        run: |
-          if ! git diff --exit-code; then
-            echo "❌ Notebooks are out of sync!"
-            echo "Run 'jupytext --sync' locally and commit the changes."
-            exit 1
-          fi
-          echo "✅ All notebooks are in sync."
-```
-
-This workflow:
-1. Syncs all notebooks
-2. Fails the CI if any files changed (indicating they were out of sync)
-
 +++
 
-## **Phase 6: Workflow for AI Engineering**
+## **Phase 5: Workflow for AI Engineering**
 
 +++
 
@@ -571,7 +516,7 @@ In the repo's root directory create a file `CONVENTIONS.md`.
 
 +++
 
-##### ✅ Key Principles for aider-Centric `CONVENTIONS`
+##### Key Principles for aider-Centric `CONVENTIONS`
 
 +++
 
@@ -599,7 +544,7 @@ NEVER alter, remove, or reformat MyST directive syntax.
 
 +++
 
-##### 🔧 Implementation Protocol
+##### Implementation Protocol
 
 +++
 
@@ -622,7 +567,7 @@ Do not forget to exclude the `CONVENTIONS.md` file from the MyST build process. 
 
 +++
 
-##### ❌ What **Not** to Do
+##### What **Not** to Do
 
 +++
 
@@ -643,7 +588,65 @@ When you push to GitHub, the workflow pays off for the **Reviewer**:
 
 +++
 
-### Semantic Notebook Versioning &  **Critical Maintenance Notes**
+## **Phase 6: The "Logical Identity" Stalemate & Timestamp Drift**
+
++++
+
+Jupytext is engineered to be **idempotent**. It prioritizes **content integrity** (code and prose) over **file metadata** (kernelspec ordering, display names, or execution counts). While this prevents "metadata noise" in Git, it can lead to a stalemate where your system thinks files are out of sync while Jupytext thinks they are identical.
+
++++
+
+### The Problem: Metadata vs. System Clock
+
++++
+
+A conflict occurs when the `.ipynb` file has a newer timestamp than the `.md` file, but the only difference is trivial metadata.
+
+1. **JupyterLab** sees the newer timestamp on the `.ipynb` and blocks the file from opening to prevent overwriting "unsaved changes".
+2. **Jupytext CLI** (`--sync` or `--update`) compares the actual code/text. If they match, it identifies them as **"Unchanged"** and refuses to write to the disk to preserve efficiency.
+3. **The Result**: The timestamp mismatch remains, and the file stays "locked" in JupyterLab.
+
++++
+
+### The Solution: Forcing a "Logical" Sync
+
++++
+
+When the CLI reports "Unchanged" but JupyterLab still complains about timestamps, you must break the deadlock by explicitly defining the source of truth.
+
+| Scenario | Recommended Command | Result |
+| --- | --- | --- |
+| **Markdown is Truth** | `uv run jupytext --to ipynb <file>.md` | **Overwrites** the notebook. Realigns metadata exactly to the `.md` state. **Wipes existing outputs.** |
+| **Keep Outputs + Sync** | `uv run jupytext --update --to ipynb <file>.md` | Merges text changes into the notebook. **Preserves execution outputs.** |
+| **Fix Clock Drift** | `touch <file>.md && uv run jupytext --sync <file>.md` | Artificially makes the `.md` the newest file, forcing Jupytext to "win" the timestamp race. |
+
++++
+
+### Preventative Configuration
+
++++
+
+To minimize these "safety locks" caused by cloud sync (e.g., Yandex.Disk) or minor metadata jitter, add a **safety margin** to your project configuration.
+
+File: `jupytext.toml` (or `pyproject.toml` under `[tool.jupytext]`):
+
+```toml
+# Allow the notebook to be up to 60 seconds newer than the text file 
+# without triggering a "stale" warning in JupyterLab.
+outdated_text_notebook_margin = 60
+
+# Filter out minor metadata changes that cause sync stalemates
+notebook_metadata_filter = "-all"
+
+```
+
+:::{warning}
+If an engineer has a background process or an IDE extension (like a linter) that "touches" the `.ipynb` after they finished editing the `.md` via Aider, the `--sync` command might favor the older notebook state. Always verify your Git status before and after syncing.
+:::
+
++++
+
+## **Semantic Notebook Versioning & Critical Maintenance Notes**
 
 +++
 
