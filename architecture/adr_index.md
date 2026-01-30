@@ -43,4 +43,7 @@ ADR 26013
 ADR 26014
 : [Semantic Notebook Pairing Strategy](/architecture/adr/adr_26014_semantic_notebook_pairing_strategy.md)
 
+ADR 26015
+: [Mandatory Sync-Guard & Diff Suppression](/architecture/adr/adr_26015_mandatory_sync_guard_and_diff_suppression.md)
+
 :::
