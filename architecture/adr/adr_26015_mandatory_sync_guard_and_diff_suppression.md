@@ -65,7 +65,3 @@ We will enforce repository integrity through a three-tier synchronization and su
 
 1. Vadim Rudakov
 2. Gemini (AI Thought Partner)
-
----
-
-**Next Step**: Would you like me to generate the exact **`.aider.conf.yml`** and **`CONVENTIONS.md`** content required to implement the "AI-Assisted Workflow" section of this ADR?
