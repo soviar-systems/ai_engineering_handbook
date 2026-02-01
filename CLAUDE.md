@@ -76,9 +76,11 @@ This project uses Aider as the primary AI editor with Jupytext sync as a lint st
 Python version: 3.13+ (locked in `.python-version`)
 Package manager: `uv` (never use pip directly)
 
-**TDD Approach:**
+**TDD Approach (Tests First):**
+- **IMPORTANT: Always write tests FIRST, then implement the functionality to make them pass (Red → Green → Refactor)**
+- For new features or refactoring: write failing tests first, then implement until tests pass
 - Scripts require comprehensive test suites (e.g., prepare_prompt.py has 96 tests)
-- Production-grade tests should verify the contract (exit codes, side effects) not implementation details (specific message wording).
+- Production-grade tests should verify the contract (exit codes, side effects) not implementation details (specific message wording)
 - Tests live in `tools/tests/` with `test_<script_name>.py` naming
 - Run tests with `uv run pytest tools/tests/test_<script_name>.py`
 - Pre-commit hooks automatically run relevant tests on commit
