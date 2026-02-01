@@ -271,8 +271,8 @@ jobs:
         with:
           files_yaml: |
             logic:
-              - tools/scripts/check_adr_index.py
-              - tools/tests/test_check_adr_index.py
+              - tools/scripts/check_adr.py
+              - tools/tests/test_check_adr.py
             adr:
               - architecture/adr/adr_*.md
               - architecture/adr_index.md
@@ -282,10 +282,10 @@ jobs:
         if: steps.changed.outputs.logic_any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
-        run: uv run pytest tools/tests/test_check_adr_index.py
+        run: uv run pytest tools/tests/test_check_adr.py
 
       - name: Run ADR Index Check
         if: steps.changed.outputs.adr_any_changed == 'true'
         env:
           PYTHONPATH: ${{ github.workspace }}
-        run: uv run tools/scripts/check_adr_index.py --verbose
+        run: uv run tools/scripts/check_adr.py --verbose

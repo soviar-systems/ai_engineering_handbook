@@ -1,4 +1,13 @@
-# ADR 26006: Requirement for Agentic-Class Models for the Architect Phase
+---
+id: 26006
+title: Requirement for Agentic-Class Models for the Architect Phase
+date: 2026-01-24
+status: proposed
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26006: Requirement for Agentic-Class Models for the Architect Phase
 
 ## Title
 

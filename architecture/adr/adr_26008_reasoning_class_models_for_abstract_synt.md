@@ -1,4 +1,13 @@
-# ADR 26008: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
+---
+id: 26008
+title: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
+date: 2026-01-24
+status: proposed
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26008: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
 
 ## Title
 

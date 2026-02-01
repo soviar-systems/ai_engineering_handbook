@@ -1,0 +1,104 @@
+# ADR Configuration - Single Source of Truth
+# This file defines valid values and structure for Architecture Decision Records.
+# Used by: check_adr.py, adr_template.md
+
+# Required frontmatter fields
+required_fields:
+  - id
+  - title
+  - date
+  - status
+  - tags
+
+# Date format validation (YYYY-MM-DD)
+date_format: "^\\d{4}-\\d{2}-\\d{2}$"
+
+# Valid tags (SSoT)
+tags:
+  - architecture
+  - ci
+  - context_management
+  - devops
+  - documentation
+  - governance
+  - hardware
+  - model
+  - security
+  - testing
+  - workflow
+
+# Required document sections
+required_sections:
+  - Context
+  - Decision
+  - Consequences
+  - Alternatives
+  - References
+  - Participants
+
+# Optional subsections (warn if missing, don't fail)
+recommended_subsections:
+  Consequences:
+    - Positive
+    - "Negative / Risks"
+
+statuses:
+  - proposed
+  - accepted
+  - rejected
+  - superseded
+  - deprecated
+
+# Maps statuses to index sections for partitioned display
+sections:
+  Active Architecture:
+    - accepted
+  Evolutionary Proposals:
+    - proposed
+  Historical Context:
+    - rejected
+    - superseded
+    - deprecated
+
+# Default status for ADRs without explicit status
+default_status: proposed
+
+# Common typos and synonyms mapped to correct status
+# Used by --fix to suggest corrections
+status_corrections:
+  proposed:
+    - prposed
+    - propposed
+    - proposd
+    - porposed
+    - draft
+    - pending
+    - wip
+    - "work in progress"
+  accepted:
+    - acepted
+    - accpeted
+    - acceptd
+    - acceped
+    - approved
+    - active
+    - implemented
+    - done
+  rejected:
+    - rejectd
+    - rejcted
+    - declined
+    - denied
+    - refused
+  superseded:
+    - superceded
+    - superseeded
+    - superseed
+    - replaced
+    - obsolete
+  deprecated:
+    - deprected
+    - depricated
+    - depracated
+    - legacy
+    - retired

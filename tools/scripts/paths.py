@@ -14,8 +14,7 @@ BROKEN_LINKS_EXCLUDE_DIRS = {
     "build",
     "_build",
     "dist",
-    "misc/in_progress",
-    "misc/pr",
+    "misc",
 }
 
 # Strings that should be excluded from link validation

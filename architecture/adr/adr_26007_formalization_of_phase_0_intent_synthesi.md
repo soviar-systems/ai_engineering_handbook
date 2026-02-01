@@ -1,4 +1,13 @@
-# ADR 26007: Formalization of Phase 0: Intent Synthesis (Requirements Engineering)
+---
+id: 26007
+title: "Formalization of Phase 0: Intent Synthesis (Requirements Engineering)"
+date: 2026-01-24
+status: proposed
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26007: Formalization of Phase 0: Intent Synthesis (Requirements Engineering)
 
 ## Title
 

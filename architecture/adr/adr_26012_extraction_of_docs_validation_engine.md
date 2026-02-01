@@ -1,4 +1,13 @@
-# ADR 26012: Extraction of Documentation Validation Engine
+---
+id: 26012
+title: Extraction of Documentation Validation Engine
+date: 2026-01-31
+status: proposed
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26012: Extraction of Documentation Validation Engine
 
 ## Title
 

@@ -1,4 +1,13 @@
-# ADR 26001: Use of Python and OOP for Git Hook Scripts
+---
+id: 26001
+title: Use of Python and OOP for Git Hook Scripts
+date: 2026-01-24
+status: accepted
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26001: Use of Python and OOP for Git Hook Scripts
 
 ## Title
 
@@ -41,7 +50,7 @@ All Git hooks will be written in Python. These scripts must follow Object-Orient
 * **Execution Latency:** Python's startup time is roughly 100ms–200ms. **Mitigation:** Logic will be kept lean, and heavy imports will be deferred until needed within specific methods.
 * **Interpreter Dependency:** Requires Python to be present on the host machine. **Mitigation:** We are standardizing on Python 3.13+ as part of our core development environment.
 
-## Alternatives Considered
+## Alternatives
 
 * **Shell/Bash:** Rejected due to poor testability and difficulty handling complex data structures.
 * **Functional Python:** Rejected because the shared state (Git environment variables) and shared utility methods are more naturally represented as class attributes and methods.

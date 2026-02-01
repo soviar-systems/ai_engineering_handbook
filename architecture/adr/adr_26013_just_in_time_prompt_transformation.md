@@ -1,4 +1,13 @@
-# ADR 26013: Just-in-Time Prompt Transformation
+---
+id: 26013
+title: Just-in-Time Prompt Transformation
+date: 2026-01-31
+status: accepted
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26013: Just-in-Time Prompt Transformation
 
 ## Title
 

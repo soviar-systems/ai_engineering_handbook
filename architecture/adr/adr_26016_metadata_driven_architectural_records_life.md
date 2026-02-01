@@ -24,8 +24,6 @@ We will implement a **Status-Driven Immutable Path** pattern for all ADRs.
 3. **State Machine:** ADR statuses are strictly limited to the following enum: `proposed`, `accepted`, `rejected`, `superseded`, `deprecated`.
 4. **Linkage:** When a decision is superseded, the `superseded_by` field must be updated with the ID of the new record, and the file body must link to the new record.
 
-**Implementation Strategy:** Lazy Migration > To maintain Git history integrity, existing ADRs will not be retroactively updated to the new schema. Migration will occur only when an existing ADR is **Superseded** or **Amended**.
-
 ## Consequences
 
 ### Local Stack Impact (SVA Audit)

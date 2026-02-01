@@ -63,7 +63,7 @@ repos:
 
       - id: check-adr-index
         name: Check ADR Index
-        entry: uv run --active tools/scripts/check_adr_index.py --fix
+        entry: uv run --active tools/scripts/check_adr.py --fix
         language: python
         files: ^architecture/(adr/adr_.*\.md|adr_index\.md)$
         pass_filenames: false
@@ -130,7 +130,7 @@ repos:
 
       - id: test-check-adr-index
         name: Test Check ADR Index script
-        entry: uv run --active pytest tools/tests/test_check_adr_index.py
+        entry: uv run --active pytest tools/tests/test_check_adr.py
         language: python
-        files: ^tools/(scripts/check_adr_index\.py|tests/test_check_adr_index\.py)$
+        files: ^tools/(scripts/check_adr\.py|tests/test_check_adr\.py)$
         pass_filenames: false

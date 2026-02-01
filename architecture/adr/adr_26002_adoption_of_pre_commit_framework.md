@@ -1,4 +1,13 @@
-# ADR 26002: Adoption of the Pre-commit Framework
+---
+id: 26002
+title: Adoption of the Pre-commit Framework
+date: 2026-01-31
+status: accepted
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26002: Adoption of the Pre-commit Framework
 
 ## Title
 

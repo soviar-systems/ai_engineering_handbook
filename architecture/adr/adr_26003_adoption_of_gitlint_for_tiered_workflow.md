@@ -1,4 +1,13 @@
-# ADR 26003: Adoption of `gitlint` for Tiered Workflow Enforcement
+---
+id: 26003
+title: Adoption of `gitlint` for Tiered Workflow Enforcement
+date: 2026-01-24
+status: proposed
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26003: Adoption of `gitlint` for Tiered Workflow Enforcement
 
 ## Title
 

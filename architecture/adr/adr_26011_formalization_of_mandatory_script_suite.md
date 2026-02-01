@@ -1,4 +1,13 @@
-# ADR 26011: Formalization of the Mandatory Script Suite Workflow
+---
+id: 26011
+title: Formalization of the Mandatory Script Suite Workflow
+date: 2026-01-31
+status: proposed
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26011: Formalization of the Mandatory Script Suite Workflow
 
 ## Title
 

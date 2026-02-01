@@ -1,4 +1,13 @@
-# ADR 26005: Formalization of Aider as the Primary Agentic Orchestrator
+---
+id: 26005
+title: Formalization of Aider as the Primary Agentic Orchestrator
+date: 2026-01-24
+status: proposed
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26005: Formalization of Aider as the Primary Agentic Orchestrator
 
 ## Title
 

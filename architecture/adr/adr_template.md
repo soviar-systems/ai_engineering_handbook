@@ -1,10 +1,10 @@
 ---
-id: ADR-YY001
-title: "Short Description"
+id: YY001
+title: "Short Description"  # Always quote titles (may contain colons)
 date: YYYY-MM-DD
-status: proposed  # choices: [proposed, accepted, rejected, superseded, deprecated]
+status: proposed  # Valid values defined in adr_config.yaml
 superseded_by: null
-tags: [architecture, documentation, hardware, model, workflow, context_management, ci, governance]
+tags: [architecture]  # Valid tags defined in adr_config.yaml
 ---
 
 # ADR-YY001: {{ title }}

@@ -1,4 +1,13 @@
-# ADR 26010: Adoption of Molecule for Automated Ansible Role Validation
+---
+id: 26010
+title: Adoption of Molecule for Automated Ansible Role Validation
+date: 2026-01-24
+status: proposed
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26010: Adoption of Molecule for Automated Ansible Role Validation
 
 ## Title
 

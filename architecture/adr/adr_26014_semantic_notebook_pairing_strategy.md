@@ -1,4 +1,13 @@
-# ADR 26014: Semantic Notebook Pairing Strategy
+---
+id: 26014
+title: Semantic Notebook Pairing Strategy
+date: 2026-01-31
+status: accepted
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26014: Semantic Notebook Pairing Strategy
 
 ## Title
 

@@ -1,4 +1,13 @@
-# ADR 26015: Mandatory Sync-Guard & Diff Suppression
+---
+id: 26015
+title: Mandatory Sync-Guard & Diff Suppression
+date: 2026-02-01
+status: proposed
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26015: Mandatory Sync-Guard & Diff Suppression
 
 ## Title
 

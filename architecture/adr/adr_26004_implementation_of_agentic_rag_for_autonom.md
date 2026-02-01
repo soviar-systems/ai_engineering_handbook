@@ -1,4 +1,13 @@
-# ADR 26004: Implementation of Agentic RAG for Autonomous Research
+---
+id: 26004
+title: Implementation of Agentic RAG for Autonomous Research
+date: 2026-02-01
+status: proposed
+tags: [architecture]
+superseded_by: null
+---
+
+# ADR-26004: Implementation of Agentic RAG for Autonomous Research
 
 ## Title
 
@@ -6,7 +15,7 @@ Standardizing Autonomous Knowledge Retrieval via an Agentic RAG "Pre-Flight" Wor
 
 ## Status
 
-Prposed
+Proposed
 
 ## Date
 
