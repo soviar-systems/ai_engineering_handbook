@@ -9,6 +9,18 @@ tags: [devops, documentation, governance]
 
 # ADR-26016: Metadata-Driven Architectural Records Lifecycle
 
+## Title
+
+Metadata-Driven Architectural Records Lifecycle
+
+## Date
+
+2026-02-01
+
+## Status
+
+accepted
+
 ## Context
 
 Our current documentation process relies on unstructured Markdown files. This creates two primary failures in production-grade maintenance:

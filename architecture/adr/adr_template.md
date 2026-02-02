@@ -7,7 +7,15 @@ superseded_by: null
 tags: [architecture]  # Valid tags defined in adr_config.yaml
 ---
 
-# ADR-YY001: {{ title }}
+# ADR-{{ id }}: {{ title }}
+
+## Date
+{{ date }}
+
+## Status
+
+{{ status }}
+{% if status == "superseded" %}Superseded: {{ superseded_by }}{% endif %}
 
 ## Context
 Describe the problem or situation that necessitates a decision. 

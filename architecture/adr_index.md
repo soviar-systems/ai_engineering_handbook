@@ -59,4 +59,10 @@ ADR-26015
 ADR-26017
 : [ADR Format Validation Workflow](/architecture/adr/adr_26017_adr_format_validation_workflow.md)
 
+ADR-26018
+: [Universal YAML Frontmatter Adoption for Machine-Readable Documentation](/architecture/adr/adr_26018_universal_yaml_frontmatter_adoption.md)
+
+ADR-26019
+: [Mirroring YAML Metadata to Document Body for Human Verification](/architecture/adr/adr_26019_mirroring_yaml_metadata_to_document_body.md)
+
 :::

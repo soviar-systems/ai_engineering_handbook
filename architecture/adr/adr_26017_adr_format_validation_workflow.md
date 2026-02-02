@@ -9,6 +9,18 @@ tags: [governance, documentation, ci]
 
 # ADR-26017: ADR Format Validation Workflow
 
+## Title
+
+ADR Format Validation Workflow
+
+## Date
+
+2026-02-01
+
+## Status
+
+proposed
+
 ## Context
 
 Architecture Decision Records (ADRs) are critical governance artifacts that document significant technical decisions. Without consistent format enforcement, ADRs can drift in structure, making them harder to maintain and parse programmatically.

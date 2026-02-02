@@ -2,6 +2,35 @@
 # This file defines valid values and structure for Architecture Decision Records.
 # Used by: check_adr.py, adr_template.md
 
+# =============================================================================
+# Term Reference Format (MyST Glossary Cross-References)
+# =============================================================================
+#
+# PROBLEM:
+#   MyST Markdown uses {term}`GLOSSARY_ENTRY` syntax to create cross-references
+#   to glossary definitions. The glossary in adr_index.md defines entries like:
+#
+#       ADR-26001
+#       : [Title](/path/to/adr.md)
+#
+#   The term reference MUST match the glossary entry EXACTLY, including the
+#   hyphen separator. If you write {term}`ADR 26001` (space), MyST build fails:
+#
+#       ERROR: Cross reference target was not found: term-adr 26001
+#
+# CORRECT:   {term}`ADR-26001`  (hyphen matches glossary entry "ADR-26001")
+# INCORRECT: {term}`ADR 26001`  (space doesn't match, MyST can't resolve)
+#
+# The check_adr.py script uses these patterns to detect and fix broken refs.
+# =============================================================================
+term_reference:
+  # Separator between "ADR" and number in glossary entries
+  separator: "-"
+  # Regex to match VALID term references (group 1 = ADR number)
+  valid_pattern: "\\{term\\}`ADR-(\\d+)`"
+  # Regex to match BROKEN term references that need fixing (group 1 = ADR number)
+  broken_pattern: "\\{term\\}`ADR (\\d+)`"
+
 # Required frontmatter fields
 required_fields:
   - id
@@ -29,6 +58,9 @@ tags:
 
 # Required document sections
 required_sections:
+  - Title
+  - Date
+  - Status
   - Context
   - Decision
   - Consequences
