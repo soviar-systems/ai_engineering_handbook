@@ -43,7 +43,7 @@ The repository is organized around a six-layer AI system architecture:
 
 ## Critical Conventions
 
-Use misc/plan.md to save your plan before implementing so other AI instances can use it. 
+When you implemented a plan in /plan mode, save it to misc/plan/plan_<date_hash>.md, ONLY then start implementation. This is needed to save the history of the decisions made between context switch. 
 
 **MyST Notebooks:**
 - Never convert `{code-cell}` blocks to standard markdown code blocks
@@ -80,10 +80,17 @@ Package manager: `uv` (never use pip directly)
 - **IMPORTANT: Always write tests FIRST, then implement the functionality to make them pass (Red → Green → Refactor)**
 - For new features or refactoring: write failing tests first, then implement until tests pass
 - Scripts require comprehensive test suites (e.g., prepare_prompt.py has 96 tests)
-- Production-grade tests should verify the contract (exit codes, side effects) not implementation details (specific message wording)
 - Tests live in `tools/tests/` with `test_<script_name>.py` naming
 - Run tests with `uv run pytest tools/tests/test_<script_name>.py`
 - Pre-commit hooks automatically run relevant tests on commit
+
+**Test Quality Standards (Non-Brittle Tests):**
+- **Test contracts, not implementation**: Verify exit codes, return types, and side effects—not exact message strings or output formatting
+- **Avoid asserting on specific wording**: Use `assert exit_code == 1` instead of `assert "specific error text" in output`
+- **Test behavior boundaries**: One broken ref → exit 1, zero broken refs → exit 0. Don't test message content
+- **Use semantic assertions**: `assert len(errors) > 0` or `assert adr_number in {found_numbers}` instead of exact counts when the exact count isn't the contract
+- **Parameterize inputs**: Test varied scenarios (edge cases, empty inputs, multiple items) without duplicating test logic
+- **Document the contract**: Each test class should have a docstring explaining what contract it verifies
 
 **Commit Conventions:**
 - Use conventional commits with prefixes: `feat:`, `fix:`, `docs:`, `ci:`, `chore:`, `pr:`
