@@ -28,7 +28,7 @@ Last Modified: 2026-01-27
 
 ## Overview
 
-This document outlines the development plan for extracting the validation scripts from `tools/scripts/` into a standalone, reusable Python package. See {term}`ADR 26012` for the architectural decision and rationale.
+This document outlines the development plan for extracting the validation scripts from `tools/scripts/` into a standalone, reusable Python package. See {term}`ADR-26012` for the architectural decision and rationale.
 
 +++
 
@@ -317,9 +317,9 @@ repos:
 
 ## References
 
-- {term}`ADR 26012`: Extraction of Documentation Validation Engine
-- {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
-- {term}`ADR 26002`: Adoption of the Pre-commit Framework
-- {term}`ADR 26011`: Formalization of the Mandatory Script Suite Workflow
+- {term}`ADR-26012`: Extraction of Documentation Validation Engine
+- {term}`ADR-26001`: Use of Python and OOP for Git Hook Scripts
+- {term}`ADR-26002`: Adoption of the Pre-commit Framework
+- {term}`ADR-26011`: Formalization of the Mandatory Script Suite Workflow
 - [Pre-commit: Creating new hooks](https://pre-commit.com/#creating-new-hooks)
 - [Click Documentation](https://click.palletsprojects.com/)

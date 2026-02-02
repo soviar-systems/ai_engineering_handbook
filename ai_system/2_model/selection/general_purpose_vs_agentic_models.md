@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
@@ -42,8 +42,8 @@ Using a "General Purpose" model for an "Agentic" task (like generating execution
 :::
 
 :::{seealso}
-> 1. {term}`ADR 26006`: Requirement for Agentic-Class Models for the Architect Phase
-> 2. {term}`ADR 26008`: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
+> 1. {term}`ADR-26006`: Requirement for Agentic-Class Models for the Architect Phase
+> 2. {term}`ADR-26008`: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
 :::
 
 +++
@@ -53,7 +53,7 @@ Using a "General Purpose" model for an "Agentic" task (like generating execution
 +++
 
 :::{warning}
-As stated in {term}`ADR 26008`, this list is the Single Source of Truth for choosing the model for the Requirements Engineering step - General Purpose models are only allowed.
+As stated in {term}`ADR-26008`, this list is the Single Source of Truth for choosing the model for the Requirements Engineering step - General Purpose models are only allowed.
 :::
 
 | Tier | Models | Primary Capability | Architectural "Why" |

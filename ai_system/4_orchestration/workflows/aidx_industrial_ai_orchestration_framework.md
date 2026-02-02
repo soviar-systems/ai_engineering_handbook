@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
@@ -33,8 +33,8 @@ Last Modified: 2026-01-17
 This handbook serves as the definitive standard for AI-assisted engineering within the organization. This framework is designed to provide production-grade velocity on local hardware by solving the critical "Switching Moment" bottleneck—where large context histories from cloud models overload local GPU VRAM.
 
 :::{seealso}
-> 1. {term}`ADR 26005`
-> 2. {term}`ADR 26006`
+> 1. {term}`ADR-26005`
+> 2. {term}`ADR-26006`
 > 3. ["VIM in AI Era: Hybrid Setup with Ollama and Aider"](/tools/docs/ai_agents/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.ipynb)
 :::
 
@@ -52,10 +52,10 @@ The `aidx` framework moves away from **passive** AI chat toward an **Active (Age
 
 | Phase | Component | Action | ADR / Standard |
 | --- | --- | --- | --- |
-| **1. Research** | **Researcher** | A lightweight local agent (e.g., `ministral`) identifies relevant context from the 1M+ token Knowledge Base via vector DB (Qdrant/pgvector). | {term}`ADR 26004` |
-| **2. Planning** | **Architect** | A high-reasoning cloud LLM (e.g., Gemini 3 Flash) processes the research results to generate a precise `artifacts/plan.md`. | {term}`ADR 26005`, {term}`ADR 26006` |
-| **3. Execution** | **Editor** | A local SLM (e.g., `qwen2.5-coder:14b`) applies the plan to the codebase in a clean context state to prevent GPU OOM. | {term}`ADR 26005` |
-| **4. Validation** | **CI/CD Gates** | Automated `pre-commit` and `gitlint` hooks verify code integrity, architectural tags, and Conventional Commit standards. | {term}`ADR 26002` {term}`ADR 26003` |
+| **1. Research** | **Researcher** | A lightweight local agent (e.g., `ministral`) identifies relevant context from the 1M+ token Knowledge Base via vector DB (Qdrant/pgvector). | {term}`ADR-26004` |
+| **2. Planning** | **Architect** | A high-reasoning cloud LLM (e.g., Gemini 3 Flash) processes the research results to generate a precise `artifacts/plan.md`. | {term}`ADR-26005`, {term}`ADR-26006` |
+| **3. Execution** | **Editor** | A local SLM (e.g., `qwen2.5-coder:14b`) applies the plan to the codebase in a clean context state to prevent GPU OOM. | {term}`ADR-26005` |
+| **4. Validation** | **CI/CD Gates** | Automated `pre-commit` and `gitlint` hooks verify code integrity, architectural tags, and Conventional Commit standards. | {term}`ADR-26002` {term}`ADR-26003` |
 | **5. Review** | **Forensic** | Human-led verification of changes. | SWEBOK V4.0 |
 
 +++
@@ -64,7 +64,7 @@ The `aidx` framework moves away from **passive** AI chat toward an **Active (Age
 
 +++
 
-> {term}`ADR 26005`
+> {term}`ADR-26005`
 
 This hybrid model is specifically engineered for **bare-metal systems with limited VRAM**.
 
@@ -108,7 +108,7 @@ See ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Mo
 
 +++
 
-> {term}`ADR 26004`
+> {term}`ADR-26004`
 
 **The Problem:**  
 - Standard RAG (e.g., within `aider` or Open WebUI) faces "Context Overload." 1M tokens exceed the functional window of local models like `qwen2.5-coder`, leading to noise and hallucinations.
@@ -124,7 +124,7 @@ An **Agentic RAG "Pre-Flight" Wrapper** (the `aidx` pattern). This decouples "Kn
 This phase links retrieval to commit integrity:
 
 * **Requirement**: Every automated code change must cite the documentation chunk retrieved in Phase 1.
-* **Enforcement**: Our `ArchTag` system ({term}`ADR 26003`) ensures that if a change was driven by a RAG retrieval, the commit body contains a traceability link (e.g., `REF: [Workflow-Standard-04]`).
+* **Enforcement**: Our `ArchTag` system ({term}`ADR-26003`) ensures that if a change was driven by a RAG retrieval, the commit body contains a traceability link (e.g., `REF: [Workflow-Standard-04]`).
 
 +++
 
@@ -132,7 +132,7 @@ This phase links retrieval to commit integrity:
 
 +++
 
-> {term}`ADR 26001`, {term}`ADR 26002`, {term}`ADR 26003`
+> {term}`ADR-26001`, {term}`ADR-26002`, {term}`ADR-26003`
 
 To prevent "Orchestration Debt," all wrappers and automation logic must adhere to industrial-grade Python standards.
 
