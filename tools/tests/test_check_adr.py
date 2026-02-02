@@ -33,7 +33,8 @@ class AdrTestEnv:
 def create_adr_file(directory: Path, number: int, title: str, slug: str | None = None) -> Path:
     """Create an ADR file with given number and title.
 
-    Creates a full ADR file with YAML frontmatter and all required sections.
+    Creates a full ADR file with YAML frontmatter and all required sections
+    from the module's REQUIRED_SECTIONS (loaded from config).
 
     Args:
         directory: Directory to create file in
@@ -47,51 +48,16 @@ def create_adr_file(directory: Path, number: int, title: str, slug: str | None =
     if slug is None:
         # Generate slug from title: lowercase, replace spaces with underscores, truncate
         slug = title.lower().replace(" ", "_").replace("-", "_")[:40]
-    filename = f"adr_{number}_{slug}.md"
-    filepath = directory / filename
-    content = f"""---
-id: {number}
-title: {title}
-date: 2024-01-15
-status: accepted
-tags: [architecture]
-superseded_by: null
----
 
-# ADR-{number}: {title}
-
-## Context
-
-Context for this ADR.
-
-## Decision
-
-Decision content.
-
-## Consequences
-
-### Positive
-
-Positive consequences.
-
-### Negative / Risks
-
-Negative consequences.
-
-## Alternatives
-
-Alternative options considered.
-
-## References
-
-References and links.
-
-## Participants
-
-Participants list.
-"""
-    filepath.write_text(content, encoding="utf-8")
-    return filepath
+    # Use create_adr_file_full with default sections from config
+    return create_adr_file_full(
+        directory=directory,
+        number=number,
+        title=title,
+        slug=slug,
+        status="accepted",
+        include_subsections=True,
+    )
 
 
 def create_adr_file_with_frontmatter(
@@ -188,6 +154,9 @@ tags:
   - workflow
 
 required_sections:
+  - Title
+  - Date
+  - Status
   - Context
   - Decision
   - Consequences
@@ -307,7 +276,8 @@ def create_adr_file_full(
         frontmatter_title: Optional title in frontmatter (defaults to title param)
         date: Date in YYYY-MM-DD format
         adr_id: Optional ADR ID (defaults to number)
-        sections: Optional list of section names to include
+        sections: Optional list of section names to include. If None, uses
+                  REQUIRED_SECTIONS from the module (loaded from config).
         include_subsections: Whether to include recommended subsections
 
     Returns:
@@ -339,7 +309,9 @@ def create_adr_file_full(
     ]
 
     if sections is None:
-        sections = ["Context", "Decision", "Consequences", "Alternatives", "References", "Participants"]
+        # Import here to get the monkeypatched value from the test fixture
+        import tools.scripts.check_adr as module
+        sections = module.REQUIRED_SECTIONS
 
     for section in sections:
         content_lines.append(f"## {section}")
@@ -389,6 +361,7 @@ def adr_env(tmp_path, monkeypatch):
     monkeypatch.setattr(module, "DEFAULT_STATUS", config.get("default_status", "proposed"))
     monkeypatch.setattr(module, "SECTION_ORDER", list(config.get("sections", {}).keys()))
     monkeypatch.setattr(module, "STATUS_CORRECTIONS", module._build_status_corrections(config))
+    monkeypatch.setattr(module, "REQUIRED_SECTIONS", config.get("required_sections", []))
 
     return AdrTestEnv(adr_dir=adr_dir, index_path=index_path, root=tmp_path)
 
@@ -2138,12 +2111,12 @@ class TestValidateSections:
         """ADR with all required sections should pass validation."""
         from tools.scripts.check_adr import get_adr_files, parse_index, validate_sync
 
+        # Don't pass sections= to use defaults from REQUIRED_SECTIONS (config-driven)
         create_adr_file_full(
             adr_env.adr_dir,
             26001,
             "Complete Sections ADR",
             "complete_sections",
-            sections=["Context", "Decision", "Consequences", "Alternatives", "References", "Participants"],
         )
         create_index(
             adr_env.index_path,
@@ -2621,3 +2594,363 @@ class TestSectionValidationEdgeCases:
         errors = validate_sections(adr_file)
 
         assert errors == []  # Should return empty list, not crash
+
+
+# ======================
+# Term Reference Validation Tests
+# ======================
+
+
+def create_md_file_with_term_refs(directory: Path, name: str, content: str) -> Path:
+    """Create a markdown file with term references.
+
+    Args:
+        directory: Directory to create file in
+        name: Filename (without extension)
+        content: File content
+
+    Returns:
+        Path to created file
+    """
+    filepath = directory / f"{name}.md"
+    filepath.write_text(content, encoding="utf-8")
+    return filepath
+
+
+class TestTermReferenceDetection:
+    """Tests for detecting MyST term reference patterns.
+
+    Core contract: find_broken_term_references should identify {term}`ADR <space>`
+    patterns that need to be changed to {term}`ADR-<hyphen>` format.
+    """
+
+    def test_detects_broken_space_format(self, adr_env):
+        """Space separator in term ref should be detected as broken."""
+        from tools.scripts.check_adr import find_broken_term_references
+
+        content = "This references {term}`ADR 26001` which is wrong."
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        broken = find_broken_term_references([filepath])
+
+        assert len(broken) == 1
+        assert broken[0].adr_number == 26001
+
+    def test_valid_hyphen_format_not_flagged(self, adr_env):
+        """Hyphen separator in term ref should NOT be flagged."""
+        from tools.scripts.check_adr import find_broken_term_references
+
+        content = "This references {term}`ADR-26001` which is correct."
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        broken = find_broken_term_references([filepath])
+
+        assert len(broken) == 0
+
+    def test_detects_multiple_broken_refs_same_file(self, adr_env):
+        """Multiple broken refs in one file should all be detected."""
+        from tools.scripts.check_adr import find_broken_term_references
+
+        content = """
+See {term}`ADR 26001` and {term}`ADR 26002` for details.
+Also {term}`ADR 26005` is relevant.
+"""
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        broken = find_broken_term_references([filepath])
+
+        numbers = {b.adr_number for b in broken}
+        assert numbers == {26001, 26002, 26005}
+
+    def test_detects_broken_refs_across_files(self, adr_env):
+        """Broken refs should be detected across multiple files."""
+        from tools.scripts.check_adr import find_broken_term_references
+
+        content1 = "Reference {term}`ADR 26001` here."
+        content2 = "Reference {term}`ADR 26002` there."
+
+        file1 = create_md_file_with_term_refs(adr_env.adr_dir.parent, "doc1", content1)
+        file2 = create_md_file_with_term_refs(adr_env.adr_dir.parent, "doc2", content2)
+
+        broken = find_broken_term_references([file1, file2])
+
+        numbers = {b.adr_number for b in broken}
+        assert 26001 in numbers
+        assert 26002 in numbers
+
+    def test_mixed_valid_and_broken_refs(self, adr_env):
+        """Only broken refs should be flagged, valid ones ignored."""
+        from tools.scripts.check_adr import find_broken_term_references
+
+        content = """
+Valid: {term}`ADR-26001`
+Broken: {term}`ADR 26002`
+Valid: {term}`ADR-26003`
+"""
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        broken = find_broken_term_references([filepath])
+
+        assert len(broken) == 1
+        assert broken[0].adr_number == 26002
+
+
+class TestTermReferenceValidation:
+    """Tests for validate_term_references function.
+
+    Core contract: should return ValidationError list for broken refs.
+    """
+
+    def test_returns_validation_errors_for_broken_refs(self, adr_env):
+        """Broken refs should produce ValidationError objects."""
+        from tools.scripts.check_adr import validate_term_references
+
+        content = "See {term}`ADR 26001` for details."
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        errors = validate_term_references([filepath])
+
+        assert len(errors) == 1
+        assert errors[0].error_type == "broken_term_reference"
+
+    def test_no_errors_for_valid_refs(self, adr_env):
+        """Valid refs should produce no errors."""
+        from tools.scripts.check_adr import validate_term_references
+
+        content = "See {term}`ADR-26001` and {term}`ADR-26002` for details."
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        errors = validate_term_references([filepath])
+
+        assert len(errors) == 0
+
+    def test_no_errors_for_no_term_refs(self, adr_env):
+        """Files without term refs should produce no errors."""
+        from tools.scripts.check_adr import validate_term_references
+
+        content = "Just some regular markdown content without ADR references."
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        errors = validate_term_references([filepath])
+
+        assert len(errors) == 0
+
+
+class TestTermReferenceFix:
+    """Tests for fix_term_references function.
+
+    Core contract: should replace space with hyphen in term refs
+    and return list of modified files.
+    """
+
+    def test_fixes_space_to_hyphen(self, adr_env):
+        """Space separator should be replaced with hyphen."""
+        from tools.scripts.check_adr import fix_term_references
+
+        content = "Reference {term}`ADR 26001` in text."
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        modified = fix_term_references([filepath])
+
+        assert filepath in modified
+        new_content = filepath.read_text(encoding="utf-8")
+        assert "{term}`ADR-26001`" in new_content
+        assert "{term}`ADR 26001`" not in new_content
+
+    def test_fixes_multiple_refs_in_file(self, adr_env):
+        """All broken refs in a file should be fixed."""
+        from tools.scripts.check_adr import fix_term_references
+
+        content = "{term}`ADR 26001` and {term}`ADR 26002` referenced."
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        fix_term_references([filepath])
+
+        new_content = filepath.read_text(encoding="utf-8")
+        # No space-separated refs should remain
+        assert "{term}`ADR " not in new_content
+        # Both should be fixed
+        assert "{term}`ADR-26001`" in new_content
+        assert "{term}`ADR-26002`" in new_content
+
+    def test_preserves_valid_refs(self, adr_env):
+        """Valid refs should remain unchanged after fix."""
+        from tools.scripts.check_adr import fix_term_references
+
+        content = "Valid {term}`ADR-26001` and broken {term}`ADR 26002` refs."
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        fix_term_references([filepath])
+
+        new_content = filepath.read_text(encoding="utf-8")
+        # Valid ref count should be unchanged
+        assert new_content.count("{term}`ADR-26001`") == 1
+        # Broken one should be fixed
+        assert "{term}`ADR-26002`" in new_content
+
+    def test_returns_empty_for_no_broken_refs(self, adr_env):
+        """No modifications when all refs are valid."""
+        from tools.scripts.check_adr import fix_term_references
+
+        content = "All valid: {term}`ADR-26001` and {term}`ADR-26002`."
+        filepath = create_md_file_with_term_refs(
+            adr_env.adr_dir.parent, "test_doc", content
+        )
+
+        modified = fix_term_references([filepath])
+
+        assert len(modified) == 0
+
+    def test_fixes_refs_across_multiple_files(self, adr_env):
+        """Refs should be fixed in all provided files."""
+        from tools.scripts.check_adr import fix_term_references
+
+        content1 = "File 1: {term}`ADR 26001`"
+        content2 = "File 2: {term}`ADR 26002`"
+
+        file1 = create_md_file_with_term_refs(adr_env.adr_dir.parent, "doc1", content1)
+        file2 = create_md_file_with_term_refs(adr_env.adr_dir.parent, "doc2", content2)
+
+        modified = fix_term_references([file1, file2])
+
+        assert len(modified) == 2
+        assert "{term}`ADR-26001`" in file1.read_text(encoding="utf-8")
+        assert "{term}`ADR-26002`" in file2.read_text(encoding="utf-8")
+
+
+class TestTermReferenceCliFlags:
+    """Tests for --check-terms and --fix-terms CLI flags.
+
+    Core contract:
+    - --check-terms: exit 1 if broken refs found, exit 0 otherwise
+    - --fix-terms: fix broken refs and exit 0
+    """
+
+    def test_check_terms_fails_on_broken_refs(self, adr_env):
+        """--check-terms should exit 1 when broken refs exist."""
+        from tools.scripts.check_adr import main
+
+        create_adr_file(adr_env.adr_dir, 26001, "Test ADR", "test_adr")
+        create_index(
+            adr_env.index_path,
+            [(26001, "Test ADR", "/architecture/adr/adr_26001_test_adr.md")],
+        )
+
+        docs_dir = adr_env.root / "docs"
+        docs_dir.mkdir(exist_ok=True)
+        create_md_file_with_term_refs(docs_dir, "guide", "See {term}`ADR 26001`.")
+
+        exit_code = main(["--check-terms"])
+
+        assert exit_code == 1
+
+    def test_check_terms_passes_with_valid_refs(self, adr_env):
+        """--check-terms should exit 0 when all refs are valid."""
+        from tools.scripts.check_adr import main
+
+        create_adr_file(adr_env.adr_dir, 26001, "Test ADR", "test_adr")
+        create_index(
+            adr_env.index_path,
+            [(26001, "Test ADR", "/architecture/adr/adr_26001_test_adr.md")],
+        )
+
+        docs_dir = adr_env.root / "docs"
+        docs_dir.mkdir(exist_ok=True)
+        create_md_file_with_term_refs(docs_dir, "guide", "See {term}`ADR-26001`.")
+
+        exit_code = main(["--check-terms"])
+
+        assert exit_code == 0
+
+    def test_fix_terms_fixes_and_succeeds(self, adr_env):
+        """--fix-terms should fix refs and exit 0."""
+        from tools.scripts.check_adr import main
+
+        create_adr_file(adr_env.adr_dir, 26001, "Test ADR", "test_adr")
+        create_index(
+            adr_env.index_path,
+            [(26001, "Test ADR", "/architecture/adr/adr_26001_test_adr.md")],
+        )
+
+        docs_dir = adr_env.root / "docs"
+        docs_dir.mkdir(exist_ok=True)
+        doc_file = create_md_file_with_term_refs(
+            docs_dir, "guide", "See {term}`ADR 26001`."
+        )
+
+        exit_code = main(["--fix-terms"])
+
+        assert exit_code == 0
+        # Verify the actual fix happened
+        new_content = doc_file.read_text(encoding="utf-8")
+        assert "{term}`ADR-26001`" in new_content
+
+    def test_check_terms_scans_md_files_recursively(self, adr_env, monkeypatch):
+        """get_all_md_files should find .md files in subdirectories."""
+        from tools.scripts.check_adr import get_all_md_files
+
+        (adr_env.root / "README.md").write_text("# README", encoding="utf-8")
+        (adr_env.root / "docs").mkdir(exist_ok=True)
+        (adr_env.root / "docs" / "guide.md").write_text("# Guide", encoding="utf-8")
+
+        monkeypatch.chdir(adr_env.root)
+
+        files = get_all_md_files(adr_env.root)
+
+        filenames = {f.name for f in files}
+        assert "README.md" in filenames
+        assert "guide.md" in filenames
+
+
+class TestBrokenTermReferenceDataClass:
+    """Tests for BrokenTermReference dataclass."""
+
+    def test_stores_required_fields(self):
+        """Should store file path, line number, and ADR number."""
+        from tools.scripts.check_adr import BrokenTermReference
+
+        ref = BrokenTermReference(
+            file_path=Path("/test/file.md"),
+            line_number=42,
+            adr_number=26001,
+            original="{term}`ADR 26001`",
+        )
+
+        assert ref.file_path == Path("/test/file.md")
+        assert ref.line_number == 42
+        assert ref.adr_number == 26001
+
+    def test_provides_suggested_fix(self):
+        """Should provide the corrected hyphen format."""
+        from tools.scripts.check_adr import BrokenTermReference
+
+        ref = BrokenTermReference(
+            file_path=Path("/test/file.md"),
+            line_number=42,
+            adr_number=26001,
+            original="{term}`ADR 26001`",
+        )
+
+        # The fix should use hyphen instead of space
+        assert "-" in ref.suggested_fix
+        assert "26001" in ref.suggested_fix

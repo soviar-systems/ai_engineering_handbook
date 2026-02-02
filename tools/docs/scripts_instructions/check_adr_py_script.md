@@ -18,9 +18,9 @@ kernelspec:
 ---
 
 Owner: Vadim Rudakov, rudakow.wadim@gmail.com
-Version: 0.2.0
+Version: 0.3.0
 Birth: 2026-01-30
-Last Modified: 2026-02-01
+Last Modified: 2026-02-02
 
 ---
 
@@ -42,6 +42,7 @@ It ensures:
 - **Date Format**: Date field matches YYYY-MM-DD (ISO 8601)
 - **Valid Tags**: Tags are from predefined list in config
 - **Required Sections**: Document contains Context, Decision, Consequences, Alternatives, References, Participants
+- **Term References**: MyST `{term}` cross-references use correct hyphen format (`{term}`ADR-26001``)
 
 All validation rules are defined in [`adr_config.yaml`](/architecture/adr/adr_config.yaml) (Single Source of Truth).
 
@@ -123,6 +124,7 @@ ADR 26002
 | `invalid_tag` | Tag not in allowed list from config |
 | `empty_tags` | Tags list is empty (at least one required) |
 | `missing_section` | Required document section not found |
+| `broken_term_reference` | `{term}`ADR 26001`` should use hyphen: `{term}`ADR-26001`` |
 
 +++
 
@@ -198,6 +200,8 @@ status_corrections:
 | `--fix` | Automatically fix index and prompt to fix status/title issues |
 | `--migrate` | Add YAML frontmatter to legacy ADRs without it |
 | `--check-staged` | Only check staged ADR files (for pre-commit) |
+| `--check-terms` | Validate `{term}` references use hyphen format (ADR-26001) |
+| `--fix-terms` | Auto-fix broken term references (space → hyphen) |
 
 +++
 
@@ -293,6 +297,10 @@ The [test suite](/tools/tests/test_check_adr.py) provides 110+ tests with 98% co
 | `TestTitleMismatchHandling` | Title mismatch detection and fix |
 | `TestPartitionedIndex` | Status-based index partitioning |
 | `TestEdgeCases` | Special characters, whitespace, edge cases |
+| `TestTermReferenceDetection` | Broken term reference pattern matching |
+| `TestTermReferenceValidation` | Term reference error generation |
+| `TestTermReferenceFix` | Term reference auto-fix |
+| `TestTermReferenceCliFlags` | `--check-terms` and `--fix-terms` CLI |
 
 Run tests with:
 
@@ -535,6 +543,8 @@ git commit -m "feat: Add ADR 26018"
 | Auto-fix issues | `uv run tools/scripts/check_adr.py --fix` |
 | Migrate legacy ADRs | `uv run tools/scripts/check_adr.py --migrate` |
 | Check staged only | `uv run tools/scripts/check_adr.py --check-staged` |
+| Check term references | `uv run tools/scripts/check_adr.py --check-terms` |
+| Fix term references | `uv run tools/scripts/check_adr.py --fix-terms` |
 | Run tests | `uv run pytest tools/tests/test_check_adr.py -v` |
 | Run tests + coverage | `uv run pytest tools/tests/test_check_adr.py --cov=tools.scripts.check_adr` |
 

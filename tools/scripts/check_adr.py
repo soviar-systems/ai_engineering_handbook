@@ -20,6 +20,11 @@ from pathlib import Path
 
 import yaml
 
+# Note: BROKEN_LINKS_EXCLUDE_DIRS is a shared exclusion set used by multiple
+# validation scripts. The name is historical; see misc/plan/plan_20260202_refactor_paths_py_exclusions.md
+# for planned refactoring to VALIDATION_EXCLUDE_DIRS.
+from tools.scripts.paths import BROKEN_LINKS_EXCLUDE_DIRS
+
 # ======================
 # Configuration
 # ======================
@@ -41,6 +46,20 @@ GLOSSARY_BLOCK_PATTERN = re.compile(r":::\{glossary\}(.*?):::", re.DOTALL)
 FRONTMATTER_PATTERN = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 STATUS_SECTION_PATTERN = re.compile(r"^##\s+Status\s*\n+\s*(\w+)", re.MULTILINE)
 SECTION_HEADER_PATTERN = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
+
+# =============================================================================
+# Term Reference Patterns
+# =============================================================================
+# MyST glossary cross-references use {term}`ENTRY` syntax where ENTRY must
+# match the glossary definition exactly. Our glossary defines "ADR-26001"
+# (hyphen), so references must use {term}`ADR-26001` (hyphen), NOT
+# {term}`ADR 26001` (space).
+#
+# See adr_config.yaml term_reference section for the Single Source of Truth.
+# These defaults are fallbacks if config doesn't specify patterns.
+# =============================================================================
+DEFAULT_BROKEN_TERM_PATTERN = r"\{term\}`ADR (\d+)`"
+DEFAULT_TERM_SEPARATOR = "-"
 
 # Config file path
 ADR_CONFIG_PATH = Path("architecture/adr/adr_config.yaml")
@@ -107,6 +126,13 @@ VALID_TAGS: set[str] = set(_config.get("tags", []))
 REQUIRED_SECTIONS: list[str] = _config.get("required_sections", [])
 DATE_FORMAT_PATTERN: str = _config.get("date_format", r"^\d{4}-\d{2}-\d{2}$")
 
+# Term reference validation (from config or defaults)
+_term_config = _config.get("term_reference", {})
+TERM_SEPARATOR: str = _term_config.get("separator", DEFAULT_TERM_SEPARATOR)
+BROKEN_TERM_PATTERN: re.Pattern = re.compile(
+    _term_config.get("broken_pattern", DEFAULT_BROKEN_TERM_PATTERN)
+)
+
 
 # ======================
 # Data Classes
@@ -143,6 +169,24 @@ class ValidationError:
     number: int
     error_type: str
     message: str
+
+
+@dataclass
+class BrokenTermReference:
+    """Represents a broken MyST term reference.
+
+    Tracks {term}`ADR 26001` patterns that should use hyphen: {term}`ADR-26001`
+    """
+
+    file_path: Path
+    line_number: int
+    adr_number: int
+    original: str
+
+    @property
+    def suggested_fix(self) -> str:
+        """Return the corrected term reference with hyphen."""
+        return f"{{term}}`ADR-{self.adr_number}`"
 
 
 # ======================
@@ -651,6 +695,124 @@ def validate_sync(
     return errors
 
 
+# ======================
+# Term Reference Validation
+# ======================
+
+
+def get_all_md_files(root: Path) -> list[Path]:
+    """Find all markdown files in the repository.
+
+    Args:
+        root: Root directory to search from.
+
+    Returns:
+        List of paths to .md files, excluding directories from paths.py SSoT.
+    """
+    md_files = []
+
+    for filepath in root.rglob("*.md"):
+        # Skip files in excluded directories (SSoT: tools/scripts/paths.py)
+        if any(excluded in filepath.parts for excluded in BROKEN_LINKS_EXCLUDE_DIRS):
+            continue
+        md_files.append(filepath)
+
+    return sorted(md_files)
+
+
+def find_broken_term_references(files: list[Path]) -> list[BrokenTermReference]:
+    """Scan files for broken MyST term references.
+
+    Finds {term}`ADR 26001` patterns (space separator) that should use
+    {term}`ADR-26001` (hyphen separator) to match glossary entries.
+
+    Args:
+        files: List of markdown files to scan.
+
+    Returns:
+        List of BrokenTermReference objects describing each broken reference.
+    """
+    broken_refs = []
+
+    for filepath in files:
+        try:
+            content = filepath.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+
+        for line_num, line in enumerate(content.splitlines(), start=1):
+            for match in BROKEN_TERM_PATTERN.finditer(line):
+                adr_number = int(match.group(1))
+                broken_refs.append(
+                    BrokenTermReference(
+                        file_path=filepath,
+                        line_number=line_num,
+                        adr_number=adr_number,
+                        original=match.group(0),
+                    )
+                )
+
+    return broken_refs
+
+
+def validate_term_references(files: list[Path]) -> list[ValidationError]:
+    """Validate MyST term references in files.
+
+    Args:
+        files: List of markdown files to validate.
+
+    Returns:
+        List of ValidationError objects for broken term references.
+    """
+    broken_refs = find_broken_term_references(files)
+    errors = []
+
+    for ref in broken_refs:
+        errors.append(
+            ValidationError(
+                number=ref.adr_number,
+                error_type="broken_term_reference",
+                message=(
+                    f"{ref.file_path}:{ref.line_number}: "
+                    f"'{ref.original}' should be '{ref.suggested_fix}'"
+                ),
+            )
+        )
+
+    return errors
+
+
+def fix_term_references(files: list[Path]) -> list[Path]:
+    """Fix broken term references in files.
+
+    Replaces {term}`ADR 26001` with {term}`ADR-26001` to match glossary format.
+
+    Args:
+        files: List of markdown files to fix.
+
+    Returns:
+        List of paths to files that were modified.
+    """
+    modified_files = []
+
+    for filepath in files:
+        try:
+            content = filepath.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+
+        # Replace space with configured separator (hyphen by default)
+        new_content = BROKEN_TERM_PATTERN.sub(
+            rf"{{term}}`ADR{TERM_SEPARATOR}\1`", content
+        )
+
+        if new_content != content:
+            filepath.write_text(new_content, encoding="utf-8")
+            modified_files.append(filepath)
+
+    return modified_files
+
+
 def fix_invalid_status(adr_file: AdrFile) -> bool:
     """Fix invalid status by suggesting correction or prompting for input.
 
@@ -896,6 +1058,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Add YAML frontmatter to legacy ADRs without it",
     )
+    parser.add_argument(
+        "--check-terms",
+        action="store_true",
+        help="Validate {term}`ADR-XXXXX` references in all .md files",
+    )
+    parser.add_argument(
+        "--fix-terms",
+        action="store_true",
+        help="Fix broken term references ({term}`ADR 26001` -> {term}`ADR-26001`)",
+    )
 
     args = parser.parse_args(argv)
 
@@ -925,6 +1097,57 @@ def main(argv: list[str] | None = None) -> int:
             print("Run --fix to regenerate the index.")
         else:
             print("No legacy ADRs found to migrate.")
+
+        return 0
+
+    # Handle --fix-terms mode
+    if args.fix_terms:
+        if args.verbose:
+            print("Scanning for broken term references...")
+
+        # Get repository root (parent of architecture/)
+        repo_root = ADR_DIR.parent.parent
+        md_files = get_all_md_files(repo_root)
+
+        if args.verbose:
+            print(f"Found {len(md_files)} markdown files to scan.")
+
+        modified = fix_term_references(md_files)
+
+        if modified:
+            print(f"Fixed term references in {len(modified)} file(s):")
+            for filepath in modified:
+                print(f"  - {filepath.relative_to(repo_root)}")
+        else:
+            if args.verbose:
+                print("No broken term references found.")
+
+        return 0
+
+    # Handle --check-terms mode
+    if args.check_terms:
+        if args.verbose:
+            print("Validating term references...")
+
+        # Get repository root (parent of architecture/)
+        repo_root = ADR_DIR.parent.parent
+        md_files = get_all_md_files(repo_root)
+
+        if args.verbose:
+            print(f"Found {len(md_files)} markdown files to scan.")
+
+        errors = validate_term_references(md_files)
+
+        if errors:
+            print(f"Found {len(errors)} broken term reference(s):")
+            for error in errors:
+                print(f"  - {error.message}")
+            print()
+            print("Run with --fix-terms to fix automatically.")
+            return 1
+
+        if args.verbose:
+            print("All term references are valid.")
 
         return 0
 
