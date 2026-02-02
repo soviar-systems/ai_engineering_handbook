@@ -25,9 +25,9 @@ Proposed
 
 As the repository grows, documentation drift and untested utility scripts create significant maintenance debt. Developers often follow outdated instructions or encounter broken scripts that lack corresponding test cases.
 
-Current architectural decisions established Python as the standard for hooks {term}`ADR 26001` and `pre-commit` as the orchestration framework {term}`ADR 26002`. We now require a formal mechanism to ensure that no script is introduced or modified without its accompanying verification and instructional artifacts.
+Current architectural decisions established Python as the standard for hooks {term}`ADR-26001` and `pre-commit` as the orchestration framework {term}`ADR-26002`. We now require a formal mechanism to ensure that no script is introduced or modified without its accompanying verification and instructional artifacts.
 
-Here we are decoupling the **Script Suite Concept**—the mandatory 1:1:1 ratio of Code:Test:Doc—from the Tiered Commit Validation logic {term}`ADR 26003`. This ADR focuses exclusively on the structural integrity of the `tools/` directory and the automation required to enforce it.
+Here we are decoupling the **Script Suite Concept**—the mandatory 1:1:1 ratio of Code:Test:Doc—from the Tiered Commit Validation logic {term}`ADR-26003`. This ADR focuses exclusively on the structural integrity of the `tools/` directory and the automation required to enforce it.
 
 The challenge identified is **Knowledge Fragmentation**. When a script is updated but its test or documentation is not, the repository's "Smallest Viable Architecture" (SVA) degrades into technical debt. By formalizing the "Suite" as a single atomic unit, we move from passive documentation to **Active Specification Enforcement**.
 
@@ -55,7 +55,7 @@ We will enforce the **Script Suite** as a mandatory unit of development. A "Suit
 ### Negative
 
 * **Development Friction:** Small, one-off utility scripts now require the overhead of a test and a doc file. **Mitigation:** The naming convention allows for the exclusion of clearly marked "experimental" or "temp" directories if necessary.
-* **Latency:** The `pre-commit` hook adds a check for file existence/staging status. **Mitigation:** Python execution logic will be kept lean to stay within the 100-200ms window established in {term}`ADR 26001`.
+* **Latency:** The `pre-commit` hook adds a check for file existence/staging status. **Mitigation:** Python execution logic will be kept lean to stay within the 100-200ms window established in {term}`ADR-26001`.
 * **"Documentation Quality Decay."** While the system enforces the *existence* of a documentation file, it cannot easily enforce its *meaningfulness*. You may end up with "empty" documentation files just to satisfy the hook. * **Mitigation:** Incorporate a minimum word count or a template-matching check (e.g., must contain `# Purpose` and `# Usage` headers) within [check_script_suite.py](/tools/scripts/check_script_suite.py).
 
 ## Alternatives
@@ -65,8 +65,8 @@ We will enforce the **Script Suite** as a mandatory unit of development. A "Suit
 
 ## References
 
-* {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
-* {term}`ADR 26002`: Adoption of the Pre-commit Framework
+* {term}`ADR-26001`: Use of Python and OOP for Git Hook Scripts
+* {term}`ADR-26002`: Adoption of the Pre-commit Framework
 * [tools/docs/scripts_instructions/README.ipynb](/tools/docs/scripts_instructions/README.ipynb): Section on "Script and its Suite"
 
 ## Participants

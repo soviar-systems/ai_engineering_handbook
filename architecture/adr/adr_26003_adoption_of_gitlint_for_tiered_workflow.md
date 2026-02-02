@@ -27,14 +27,14 @@ The [Production Git Workflow Standards](/tools/docs/git/01_production_git_workfl
 
 * **Tier 2 (Intent):** Requires strict Conventional Commits formatting.
 * **Tier 3 (Justification):** Mandates an **Architectural Tag (ArchTag)** (e.g., `TECHDEBT-PAYMENT`) as the first line of the body **only if** the commit type is `refactor:`, `perf:`, or a `BREAKING CHANGE`.
-* **{term}`ADR 26001` & {term}`ADR 26002`** established a preference for Python-based, OOP-structured hooks managed by the `pre-commit` framework to avoid Node.js dependencies.
+* **{term}`ADR-26001` & {term}`ADR-26002`** established a preference for Python-based, OOP-structured hooks managed by the `pre-commit` framework to avoid Node.js dependencies.
 
 ## Decision
 
 We will adopt `gitlint` ([https://jorisroovers.com/gitlint/](https://jorisroovers.com/gitlint/)) as the primary engine for commit message enforcement.
 
 1. **Integration:** `gitlint` will be orchestrated via `.pre-commit-config.yaml` using the `pre-commit-msg` stage.
-2. **Custom Logic (Tier 3):** We will utilize `gitlint`'s **User Defined Rules** feature. Following the OOP standards of {term}`ADR 26001`, we will implement a Python class (e.g., `ArchTagRule`) that inspects the commit object and enforces the presence of tags based on the commit type.
+2. **Custom Logic (Tier 3):** We will utilize `gitlint`'s **User Defined Rules** feature. Following the OOP standards of {term}`ADR-26001`, we will implement a Python class (e.g., `ArchTagRule`) that inspects the commit object and enforces the presence of tags based on the commit type.
 3. **Branch Validation:** Since `gitlint` focuses on commits, Tier 1 (Branch Naming) will be handled by a separate `repo: local` hook or the native `pre-commit` `check-branch-name` hook to ensure full compliance with the `<prefix>/<ID>-<desc>` format.
 
 ## Consequences
@@ -48,7 +48,7 @@ We will adopt `gitlint` ([https://jorisroovers.com/gitlint/](https://jorisroover
 
 ### Negative
 
-* **Orchestration Complexity:** Requires maintaining a small Python script for custom rules. **Mitigation:** This aligns with {term}`ADR 26001`'s requirement for tested, maintainable hook logic.
+* **Orchestration Complexity:** Requires maintaining a small Python script for custom rules. **Mitigation:** This aligns with {term}`ADR-26001`'s requirement for tested, maintainable hook logic.
 * **Dual-Tooling for Branches:** `gitlint` does not validate branch names. **Mitigation:** Use the existing `pre-commit` framework to add a 10-line branch validator, keeping the SVA (Smallest Viable Architecture) intact.
 
 ## Alternatives
@@ -59,8 +59,8 @@ We will adopt `gitlint` ([https://jorisroovers.com/gitlint/](https://jorisroover
 ## References
 
 - [Production Git Workflow Standards](/tools/docs/git/01_production_git_workflow_standards.ipynb)
-- {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
-- {term}`ADR 26002`: Adoption of the Pre-commit Framework
+- {term}`ADR-26001`: Use of Python and OOP for Git Hook Scripts
+- {term}`ADR-26002`: Adoption of the Pre-commit Framework
 - [Gitlint User-defined Rules](https://www.google.com/search?q=https://jorisroovers.com/gitlint/user_defined_rules/)
 
 ## Participants

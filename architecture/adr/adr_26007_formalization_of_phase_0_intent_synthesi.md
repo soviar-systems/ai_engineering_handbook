@@ -23,7 +23,7 @@ Proposed
 
 ## Context
 
-The current `aidx` industrial framework ({term}`ADR 26005`) initiates with **Phase 1: Research**. However, this assumes that the initial problem statement is sufficiently specified and free of business-logic ambiguities. In practice, starting the automated "Research-Apply" pipeline with an underspecified prompt leads to:
+The current `aidx` industrial framework ({term}`ADR-26005`) initiates with **Phase 1: Research**. However, this assumes that the initial problem statement is sufficiently specified and free of business-logic ambiguities. In practice, starting the automated "Research-Apply" pipeline with an underspecified prompt leads to:
 
 * **Token Waste**: Local 14B editors and cloud architects re-rolling logic due to unclear goals.
 * **Cognitive Bottlenecks**: Local models failing to resolve multi-agent role definitions or complex business constraints.
@@ -57,7 +57,7 @@ We will implement a mandatory **Phase 0: Intent Synthesis** (Requirements Engine
 
 ## References
 
-* {term}`ADR 26005`: Formalization of Aider as Primary Agentic Orchestrator
+* {term}`ADR-26005`: Formalization of Aider as Primary Agentic Orchestrator
 * ISO 29148: Requirements Engineering
 
 ## Participants

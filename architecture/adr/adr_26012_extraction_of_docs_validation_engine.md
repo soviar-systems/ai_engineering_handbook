@@ -31,7 +31,7 @@ The `tools/scripts/` directory has evolved into a cohesive validation engine for
 - **Schema validation** (`check_json_files.py`)
 - **Development workflow enforcement** (`check_script_suite.py`)
 
-These scripts follow established patterns ({term}`ADR 26001`, {term}`ADR 26002`, {term}`ADR 26011`) and have comprehensive test suites. The codebase now represents a mature, battle-tested validation framework.
+These scripts follow established patterns ({term}`ADR-26001`, {term}`ADR-26002`, {term}`ADR-26011`) and have comprehensive test suites. The codebase now represents a mature, battle-tested validation framework.
 
 **The catalyst for extraction:** Multiple new documentation repositories are planned that would benefit from identical validation infrastructure. Copying scripts between repos leads to drift, duplicated maintenance, and inconsistent behavior.
 
@@ -116,9 +116,9 @@ repos:
 
 ## References
 
-- {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
-- {term}`ADR 26002`: Adoption of the Pre-commit Framework
-- {term}`ADR 26011`: Formalization of the Mandatory Script Suite Workflow
+- {term}`ADR-26001`: Use of Python and OOP for Git Hook Scripts
+- {term}`ADR-26002`: Adoption of the Pre-commit Framework
+- {term}`ADR-26011`: Formalization of the Mandatory Script Suite Workflow
 - [Development Plan: docs-validation-engine](/tools/docs/scripts_instructions/docs_validation_engine_development_plan.ipynb)
 
 ## Participants

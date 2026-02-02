@@ -28,7 +28,7 @@ There is a server configuration system that consists of a complex tree of 69 bas
 * **Lack of Idempotency:** Bash scripts require manual, error-prone logic (e.g., `grep` and `if` blocks) to ensure they can be re-run without causing side effects or duplicating configuration lines.
 * **Maintenance Debt:** Managing diverse services like Forgejo, Nextcloud, and Traefik through raw shell scripts leads to high cognitive load and violates the "Check vs. Fix" principle of SVA (Smallest Viable Architecture).
 * **State Drift:** There is no native mechanism to report or revert manual changes (drift) on the server that deviate from the version-controlled scripts.
-* **Alignment:** {term}`ADR 26001` and {term}`ADR 26002` established a preference for Python-standardized toolchains and version-controlled, automated logic.
+* **Alignment:** {term}`ADR-26001` and {term}`ADR-26002` established a preference for Python-standardized toolchains and version-controlled, automated logic.
 
 ## Decision
 
@@ -50,7 +50,7 @@ We will adopt **Ansible** as the primary engine for server configuration and Saa
 
 ### Negative
 
-* **Python Dependency:** Adds a requirement for Ansible and its dependencies in the local development environment. **Mitigation:** This is already consistent with the Python 3.13+ standard established in {term}`ADR 26001`.
+* **Python Dependency:** Adds a requirement for Ansible and its dependencies in the local development environment. **Mitigation:** This is already consistent with the Python 3.13+ standard established in {term}`ADR-26001`.
 * **Execution Overhead:** Ansible is generally slower than raw Bash due to SSH overhead and Python module execution. **Mitigation:** The gain in system integrity and reliability outweighs the millisecond-latency of deployment.
 
 ## Alternatives
@@ -61,8 +61,8 @@ We will adopt **Ansible** as the primary engine for server configuration and Saa
 
 ## References
 
-* {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
-* {term}`ADR 26002`: Adoption of the Pre-commit Framework
+* {term}`ADR-26001`: Use of Python and OOP for Git Hook Scripts
+* {term}`ADR-26002`: Adoption of the Pre-commit Framework
 
 ## Participants
 

@@ -23,9 +23,9 @@ Proposed
 
 ## Context
 
-With the adoption of Ansible {term}`ADR 26009`, we require a mechanism to verify that infrastructure changes are correct and idempotent before they are applied to production servers.
+With the adoption of Ansible {term}`ADR-26009`, we require a mechanism to verify that infrastructure changes are correct and idempotent before they are applied to production servers.
 
-* **Reliability:** {term}`ADR 26001` established that "every hook must have a corresponding test suite... to ensure automation reliability." This principle must extend to our infrastructure code.
+* **Reliability:** {term}`ADR-26001` established that "every hook must have a corresponding test suite... to ensure automation reliability." This principle must extend to our infrastructure code.
 * **Manual Bottlenecks:** Testing on live servers or manual VM snapshots is slow, non-disposable, and introduces "Human Debt."
 * **Environment Parity:** We need a way to simulate our Fedora/Debian targets locally using our existing Podman-based stack.
 
@@ -59,8 +59,8 @@ We will adopt **Molecule** as the primary testing harness for all Ansible roles.
 
 ## References
 
-* {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
-* {term}`ADR 26009`: Adoption of Ansible for Idempotent Configuration Management
+* {term}`ADR-26001`: Use of Python and OOP for Git Hook Scripts
+* {term}`ADR-26009`: Adoption of Ansible for Idempotent Configuration Management
 * [Molecule Documentation](https://ansible.readthedocs.io/projects/molecule/)
 
 ## Participants

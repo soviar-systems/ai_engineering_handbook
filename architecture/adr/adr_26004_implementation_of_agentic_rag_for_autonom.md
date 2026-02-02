@@ -50,7 +50,7 @@ We will implement an **Agentic RAG "Pre-Flight" Wrapper** (the `aidx` pattern). 
 ### Negative
 
 * **Execution Latency:** Adds 2–5 seconds of startup time per session to conduct the research phase.
-* **Orchestration Debt:** Requires maintaining a Python-based wrapper and a running vector service (Qdrant/PostgreSQL). **Mitigation:** Adhere to {term}`ADR 26001` (OOP Python standards) to ensure the wrapper is tested and maintainable.
+* **Orchestration Debt:** Requires maintaining a Python-based wrapper and a running vector service (Qdrant/PostgreSQL). **Mitigation:** Adhere to {term}`ADR-26001` (OOP Python standards) to ensure the wrapper is tested and maintainable.
 
 ## Alternatives
 
@@ -60,7 +60,7 @@ We will implement an **Agentic RAG "Pre-Flight" Wrapper** (the `aidx` pattern). 
 
 ## References
 
-* {term}`ADR 26001`: Use of Python and OOP for Git Hook Scripts
+* {term}`ADR-26001`: Use of Python and OOP for Git Hook Scripts
 * ISO 29148: Systems and Software Engineering — Life Cycle Processes
 * SWEBOK Guide V4.0 - Software Engineering Body of Knowledge
 * [Agentic Retrieval-Augmented Generation: A Survey](https://arxiv.org/abs/2501.09136)

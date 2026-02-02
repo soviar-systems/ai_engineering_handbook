@@ -23,7 +23,7 @@ Proposed
 
 ## Context
 
-As established in {term}`ADR 26006`, the **Phase 2 (Architect)** role requires **Agentic-Class** models optimized for "Workflow Adherence" and rigid instruction following. However, **Phase 0 (Intent Synthesis)** {term}`ADR 26007` represents a different cognitive requirement:
+As established in {term}`ADR-26006`, the **Phase 2 (Architect)** role requires **Agentic-Class** models optimized for "Workflow Adherence" and rigid instruction following. However, **Phase 0 (Intent Synthesis)** {term}`ADR-26007` represents a different cognitive requirement:
 
 * **Abstract Synthesis**: The model must synthesize vague human ideas into a cohesive, structured architectural plan.
 * **Reasoning Ceiling**: High-level logic (e.g., GPQA Diamond benchmarks) is required to identify hidden technical debt or architectural contradictions before they reach the local editor.
@@ -57,9 +57,9 @@ We mandate the use of **Reasoning-Class (Abstract Synthesis)** models for the Ph
 
 ## References
 
-* {term}`ADR 26005`: Formalization of Aider as Primary Agentic Orchestrator
-* {term}`ADR 26006`: Requirement for Agentic-Class Models for the Architect Phase
-* {term}`ADR 26007`: Formalization of Phase 0: Intent Synthesis (Requirements Engineering)
+* {term}`ADR-26005`: Formalization of Aider as Primary Agentic Orchestrator
+* {term}`ADR-26006`: Requirement for Agentic-Class Models for the Architect Phase
+* {term}`ADR-26007`: Formalization of Phase 0: Intent Synthesis (Requirements Engineering)
 * ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb)
 
 ## Participants

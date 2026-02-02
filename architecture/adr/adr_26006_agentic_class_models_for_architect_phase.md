@@ -23,13 +23,13 @@ Proposed
 
 ## Context
 
-As defined in {term}`ADR 26005`, the `aidx` framework utilizes a **Two-Pass Hybrid Bridge** pattern to decouple architectural planning from code implementation. This pattern relies on a high-reasoning "Cloud Architect" to generate a standalone `artifacts/plan.md` file, which is subsequently applied by a "Local Editor".
+As defined in {term}`ADR-26005`, the `aidx` framework utilizes a **Two-Pass Hybrid Bridge** pattern to decouple architectural planning from code implementation. This pattern relies on a high-reasoning "Cloud Architect" to generate a standalone `artifacts/plan.md` file, which is subsequently applied by a "Local Editor".
 
 The current implementation faces a critical quality bottleneck in the planning stage:
 
 * **Instruction Drift**: General-purpose models (optimized for abstract synthesis) often treat system-level instructions as "suggestions," leading to "Pro Polish" debt—recommending patterns that are too complex for local 14B editors to implement.
 * **Agentic Precision Requirement**: The Architect role is fundamentally an agentic task requiring strict adherence to templates and technical constraints to prevent the "Context Truncation Risk" during hand-off.
-* **Logic Rigidity**: The Architect must act as a logic gate, verifying the findings of the **Agentic RAG Researcher** ({term}`ADR 26004`) and translating them into a verifiable plan.
+* **Logic Rigidity**: The Architect must act as a logic gate, verifying the findings of the **Agentic RAG Researcher** ({term}`ADR-26004`) and translating them into a verifiable plan.
 
 General-purpose models prioritize creativity and conversational nuance, which introduces non-deterministic noise into the technical pipeline. Conversely, **Agentic-class models** (e.g., Gemini 3 Flash) are purpose-built for high instruction adherence and tool-use precision, making them the appropriate tool for this specific agentic purpose.
 
@@ -63,8 +63,8 @@ We mandate the use of **Agentic-Class models** (prioritizing **Instruction Adher
 
 ## References
 
-* {term}`ADR 26004`: Implementation of Agentic RAG for Autonomous Research
-* {term}`ADR 26005`: Formalization of Aider as Primary Agentic Orchestrator
+* {term}`ADR-26004`: Implementation of Agentic RAG for Autonomous Research
+* {term}`ADR-26005`: Formalization of Aider as Primary Agentic Orchestrator
 * ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb)
 * ISO 29148: Systems and Software Engineering — Requirements Engineering
 * SWEBOK Guide V4.0 - Software Engineering Body of Knowledge
