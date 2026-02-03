@@ -25,7 +25,7 @@ class TestDocument:
 
     def test_document_creation_with_all_fields(self, tmp_path: Path) -> None:
         """Document can be created with all fields."""
-        from vadoc.core.models import Document
+        from vadocs.core.models import Document
 
         path = tmp_path / "test.md"
         content = "# Test"
@@ -40,7 +40,7 @@ class TestDocument:
 
     def test_document_creation_minimal(self, tmp_path: Path) -> None:
         """Document can be created with minimal fields."""
-        from vadoc.core.models import Document
+        from vadocs.core.models import Document
 
         path = tmp_path / "test.md"
         content = "# Test"
@@ -64,7 +64,7 @@ class TestValidationError:
 
     def test_validation_error_creation(self) -> None:
         """ValidationError can be created with required fields."""
-        from vadoc.core.models import ValidationError
+        from vadocs.core.models import ValidationError
 
         error = ValidationError(
             identifier=26001,
@@ -78,7 +78,7 @@ class TestValidationError:
 
     def test_validation_error_with_string_identifier(self) -> None:
         """ValidationError accepts string identifier."""
-        from vadoc.core.models import ValidationError
+        from vadocs.core.models import ValidationError
 
         error = ValidationError(
             identifier="doc-001",
@@ -101,7 +101,7 @@ class TestSyncField:
 
     def test_sync_field_both_values_match(self) -> None:
         """SyncField is synced when both values match."""
-        from vadoc.core.models import SyncField
+        from vadocs.core.models import SyncField
 
         field = SyncField(name="title", yaml_value="Test", markdown_value="Test")
 
@@ -109,7 +109,7 @@ class TestSyncField:
 
     def test_sync_field_values_mismatch(self) -> None:
         """SyncField is not synced when values differ."""
-        from vadoc.core.models import SyncField
+        from vadocs.core.models import SyncField
 
         field = SyncField(name="title", yaml_value="Test1", markdown_value="Test2")
 
@@ -117,7 +117,7 @@ class TestSyncField:
 
     def test_sync_field_only_yaml(self) -> None:
         """SyncField is synced when only YAML value exists."""
-        from vadoc.core.models import SyncField
+        from vadocs.core.models import SyncField
 
         field = SyncField(name="title", yaml_value="Test", markdown_value=None)
 
@@ -125,7 +125,7 @@ class TestSyncField:
 
     def test_sync_field_only_markdown(self) -> None:
         """SyncField is synced when only markdown value exists."""
-        from vadoc.core.models import SyncField
+        from vadocs.core.models import SyncField
 
         field = SyncField(name="title", yaml_value=None, markdown_value="Test")
 
@@ -133,7 +133,7 @@ class TestSyncField:
 
     def test_sync_field_both_none(self) -> None:
         """SyncField is not synced when both values are None."""
-        from vadoc.core.models import SyncField
+        from vadocs.core.models import SyncField
 
         field = SyncField(name="title", yaml_value=None, markdown_value=None)
 
@@ -151,7 +151,7 @@ class TestSyncResult:
 
     def test_sync_result_no_changes(self) -> None:
         """SyncResult with no changes."""
-        from vadoc.core.models import SyncResult
+        from vadocs.core.models import SyncResult
 
         result = SyncResult(modified=False, changes=[], errors=[])
 
@@ -161,7 +161,7 @@ class TestSyncResult:
 
     def test_sync_result_with_changes(self) -> None:
         """SyncResult with changes."""
-        from vadoc.core.models import SyncResult
+        from vadocs.core.models import SyncResult
 
         result = SyncResult(
             modified=True,
@@ -174,7 +174,7 @@ class TestSyncResult:
 
     def test_sync_result_with_errors(self) -> None:
         """SyncResult with errors."""
-        from vadoc.core.models import SyncResult
+        from vadocs.core.models import SyncResult
 
         result = SyncResult(
             modified=False,

@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from vadoc import AdrValidator, Document, ValidationError
-from vadoc.core.parsing import parse_frontmatter
+from vadocs import AdrValidator, Document, ValidationError
+from vadocs.core.parsing import parse_frontmatter
 
 
 class TestAdrValidatorSupports:

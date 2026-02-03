@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from vadoc import Document, FrontmatterValidator, ValidationError
-from vadoc.core.parsing import parse_frontmatter
+from vadocs import Document, FrontmatterValidator, ValidationError
+from vadocs.core.parsing import parse_frontmatter
 
 
 class TestFrontmatterValidatorSupports:

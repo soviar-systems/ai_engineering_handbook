@@ -279,7 +279,7 @@ wheels = [
 ]
 
 [[package]]
-name = "vadoc"
+name = "vadocs"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

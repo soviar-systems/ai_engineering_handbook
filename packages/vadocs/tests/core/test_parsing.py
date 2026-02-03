@@ -19,7 +19,7 @@ class TestParseFrontmatter:
 
     def test_valid_frontmatter(self) -> None:
         """Parses valid YAML frontmatter."""
-        from vadoc.core.parsing import parse_frontmatter
+        from vadocs.core.parsing import parse_frontmatter
 
         content = """---
 title: Test Document
@@ -38,7 +38,7 @@ tags: [architecture]
 
     def test_no_frontmatter(self) -> None:
         """Returns None when no frontmatter present."""
-        from vadoc.core.parsing import parse_frontmatter
+        from vadocs.core.parsing import parse_frontmatter
 
         content = "# Just a heading\n\nSome content."
         result = parse_frontmatter(content)
@@ -47,7 +47,7 @@ tags: [architecture]
 
     def test_frontmatter_not_at_start(self) -> None:
         """Returns None when --- is not at file start."""
-        from vadoc.core.parsing import parse_frontmatter
+        from vadocs.core.parsing import parse_frontmatter
 
         content = """Some text first
 
@@ -61,7 +61,7 @@ title: Test
 
     def test_invalid_yaml(self) -> None:
         """Returns None for invalid YAML."""
-        from vadoc.core.parsing import parse_frontmatter
+        from vadocs.core.parsing import parse_frontmatter
 
         content = """---
 title: [invalid yaml
@@ -74,7 +74,7 @@ title: [invalid yaml
 
     def test_empty_frontmatter(self) -> None:
         """Handles empty frontmatter."""
-        from vadoc.core.parsing import parse_frontmatter
+        from vadocs.core.parsing import parse_frontmatter
 
         content = """---
 ---
@@ -98,7 +98,7 @@ class TestExtractStatus:
 
     def test_status_from_frontmatter(self) -> None:
         """Extracts status from YAML frontmatter."""
-        from vadoc.core.parsing import extract_status
+        from vadocs.core.parsing import extract_status
 
         content = """---
 status: Accepted
@@ -117,7 +117,7 @@ Different status here
 
     def test_status_from_markdown_section(self) -> None:
         """Extracts status from markdown section when no frontmatter."""
-        from vadoc.core.parsing import extract_status
+        from vadocs.core.parsing import extract_status
 
         content = """# Document
 
@@ -133,7 +133,7 @@ Proposed
 
     def test_no_status_found(self) -> None:
         """Returns None when no status found."""
-        from vadoc.core.parsing import extract_status
+        from vadocs.core.parsing import extract_status
 
         content = """# Document
 
@@ -147,7 +147,7 @@ Some context.
 
     def test_status_normalized_lowercase(self) -> None:
         """Status is normalized to lowercase."""
-        from vadoc.core.parsing import extract_status
+        from vadocs.core.parsing import extract_status
 
         content = """---
 status: ACCEPTED
@@ -167,7 +167,7 @@ class TestExtractSectionContent:
 
     def test_extract_existing_section(self) -> None:
         """Extracts content from existing section."""
-        from vadoc.core.parsing import extract_section_content
+        from vadocs.core.parsing import extract_section_content
 
         content = """# Document
 
@@ -189,7 +189,7 @@ This is the decision.
 
     def test_extract_last_section(self) -> None:
         """Extracts content from last section (no following header)."""
-        from vadoc.core.parsing import extract_section_content
+        from vadocs.core.parsing import extract_section_content
 
         content = """# Document
 
@@ -208,7 +208,7 @@ This is the final section.
 
     def test_section_not_found(self) -> None:
         """Returns None when section doesn't exist."""
-        from vadoc.core.parsing import extract_section_content
+        from vadocs.core.parsing import extract_section_content
 
         content = """# Document
 
@@ -222,7 +222,7 @@ Some content.
 
     def test_empty_section(self) -> None:
         """Handles empty section (header with no content before next header)."""
-        from vadoc.core.parsing import extract_section_content
+        from vadocs.core.parsing import extract_section_content
 
         content = """# Document
 
@@ -240,7 +240,7 @@ Content here.
 
     def test_section_name_case_sensitive(self) -> None:
         """Section name matching is case-sensitive."""
-        from vadoc.core.parsing import extract_section_content
+        from vadocs.core.parsing import extract_section_content
 
         content = """# Document
 

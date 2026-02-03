@@ -15,7 +15,7 @@ Configuration (from adr_config.yaml):
 - statuses: List of valid status values
 
 Usage:
-    from vadoc.fixers.adr_fixer import AdrFixer
+    from vadocs.fixers.adr_fixer import AdrFixer
 
     fixer = AdrFixer()
     config = load_config("adr_config.yaml")
@@ -25,9 +25,9 @@ Usage:
 import re
 from pathlib import Path
 
-from vadoc.core.models import Document, SyncResult
-from vadoc.core.parsing import FRONTMATTER_PATTERN, parse_frontmatter
-from vadoc.fixers.base import Fixer
+from vadocs.core.models import Document, SyncResult
+from vadocs.core.parsing import FRONTMATTER_PATTERN, parse_frontmatter
+from vadocs.fixers.base import Fixer
 
 
 class AdrFixer(Fixer):

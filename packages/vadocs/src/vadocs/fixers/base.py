@@ -1,5 +1,5 @@
 """
-Base class and protocol for vadoc fixers.
+Base class and protocol for vadocs fixers.
 
 Fixers are plugins that automatically correct documentation issues. They
 receive a Document and configuration, and return a SyncResult indicating
@@ -49,7 +49,7 @@ Protocol vs ABC:
 from abc import ABC, abstractmethod
 from typing import Protocol
 
-from vadoc.core.models import Document, SyncResult
+from vadocs.core.models import Document, SyncResult
 
 
 class FixerProtocol(Protocol):

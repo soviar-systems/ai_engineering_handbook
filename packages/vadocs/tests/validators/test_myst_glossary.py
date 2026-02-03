@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from vadoc import AdrTermValidator, Document, MystGlossaryValidator, ValidationError
+from vadocs import AdrTermValidator, Document, MystGlossaryValidator, ValidationError
 
 
 class TestMystGlossaryValidatorSupports:

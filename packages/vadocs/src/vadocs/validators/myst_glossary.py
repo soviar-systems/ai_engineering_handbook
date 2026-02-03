@@ -19,7 +19,7 @@ Configuration for AdrTermValidator:
 - term_reference.broken_pattern: Regex to match broken references
 
 Usage:
-    from vadoc.validators.myst_glossary import AdrTermValidator
+    from vadocs.validators.myst_glossary import AdrTermValidator
 
     validator = AdrTermValidator()
     config = {
@@ -38,8 +38,8 @@ Extension points:
 import re
 from abc import abstractmethod
 
-from vadoc.core.models import Document, ValidationError
-from vadoc.validators.base import Validator
+from vadocs.core.models import Document, ValidationError
+from vadocs.validators.base import Validator
 
 
 class MystGlossaryValidator(Validator):

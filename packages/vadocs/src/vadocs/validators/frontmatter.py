@@ -15,7 +15,7 @@ Configuration:
 - allowed_values: Dict mapping field names to lists of allowed values
 
 Usage:
-    from vadoc.validators.frontmatter import FrontmatterValidator
+    from vadocs.validators.frontmatter import FrontmatterValidator
 
     validator = FrontmatterValidator()
     config = {
@@ -25,9 +25,9 @@ Usage:
     errors = validator.validate(document, config)
 """
 
-from vadoc.core.models import Document, ValidationError
-from vadoc.core.parsing import parse_frontmatter
-from vadoc.validators.base import Validator
+from vadocs.core.models import Document, ValidationError
+from vadocs.core.parsing import parse_frontmatter
+from vadocs.validators.base import Validator
 
 
 class FrontmatterValidator(Validator):

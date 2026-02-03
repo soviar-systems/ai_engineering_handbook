@@ -18,7 +18,7 @@ If both sources have different values and mode is 'auto', sync reports an
 error and requires explicit direction choice.
 
 Usage:
-    from vadoc.fixers.sync_fixer import SyncFixer
+    from vadocs.fixers.sync_fixer import SyncFixer
 
     fixer = SyncFixer()
     config = {"sync_direction": "auto"}
@@ -28,14 +28,14 @@ Usage:
 import re
 from enum import Enum
 
-from vadoc.core.models import Document, SyncField, SyncResult
-from vadoc.core.parsing import (
+from vadocs.core.models import Document, SyncField, SyncResult
+from vadocs.core.parsing import (
     FRONTMATTER_PATTERN,
     SECTION_HEADER_PATTERN,
     extract_section_content,
     parse_frontmatter,
 )
-from vadoc.fixers.base import Fixer
+from vadocs.fixers.base import Fixer
 
 
 class SyncDirection(str, Enum):

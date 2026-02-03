@@ -1,5 +1,5 @@
 """
-Core data models for vadoc.
+Core data models for vadocs.
 
 This module defines the fundamental data structures used throughout vadoc:
 

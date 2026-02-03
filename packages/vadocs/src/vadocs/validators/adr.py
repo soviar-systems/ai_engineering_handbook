@@ -19,7 +19,7 @@ Configuration (from adr_config.yaml):
 This validator is the core of check_adr.py functionality, extracted for reuse.
 
 Usage:
-    from vadoc.validators.adr import AdrValidator
+    from vadocs.validators.adr import AdrValidator
 
     validator = AdrValidator()
     config = load_config("adr_config.yaml")
@@ -28,9 +28,9 @@ Usage:
 
 import re
 
-from vadoc.core.models import Document, ValidationError
-from vadoc.core.parsing import SECTION_HEADER_PATTERN, parse_frontmatter
-from vadoc.validators.base import Validator
+from vadocs.core.models import Document, ValidationError
+from vadocs.core.parsing import SECTION_HEADER_PATTERN, parse_frontmatter
+from vadocs.validators.base import Validator
 
 
 class AdrValidator(Validator):

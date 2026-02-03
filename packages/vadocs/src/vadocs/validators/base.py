@@ -1,5 +1,5 @@
 """
-Base class and protocol for vadoc validators.
+Base class and protocol for vadocs validators.
 
 Validators are plugins that check documentation for issues. They receive a
 Document and configuration, and return a list of ValidationErrors.
@@ -42,7 +42,7 @@ Protocol vs ABC:
 from abc import ABC, abstractmethod
 from typing import Protocol
 
-from vadoc.core.models import Document, ValidationError
+from vadocs.core.models import Document, ValidationError
 
 
 class ValidatorProtocol(Protocol):

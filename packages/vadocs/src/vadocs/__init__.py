@@ -1,5 +1,5 @@
 """
-vadoc - Documentation validation engine with YAML frontmatter sync.
+vadocs - Documentation validation engine with YAML frontmatter sync.
 
 A general-purpose Python package for validating structured documentation:
 - ADR validation
@@ -7,8 +7,8 @@ A general-purpose Python package for validating structured documentation:
 - Extensible for other doc types (RFCs, design docs, changelogs)
 
 Usage:
-    from vadoc import AdrValidator, SyncFixer, Document
-    from vadoc.core.parsing import parse_frontmatter
+    from vadocs import AdrValidator, SyncFixer, Document
+    from vadocs.core.parsing import parse_frontmatter
     from pathlib import Path
 
     # Load document
@@ -30,19 +30,20 @@ Usage:
     result = fixer.fix(doc, config, dry_run=True)
 """
 
-from vadoc.core.models import Document, SyncField, SyncResult, ValidationError
-from vadoc.core.parsing import (
+from vadocs.core.models import Document, SyncField, SyncResult, ValidationError
+from vadocs.core.parsing import (
     extract_section_content,
     extract_status,
     parse_frontmatter,
 )
-from vadoc.fixers.adr_fixer import AdrFixer
-from vadoc.fixers.base import Fixer
-from vadoc.fixers.sync_fixer import SyncFixer
-from vadoc.validators.adr import AdrValidator
-from vadoc.validators.base import Validator
-from vadoc.validators.frontmatter import FrontmatterValidator
-from vadoc.validators.myst_glossary import AdrTermValidator, MystGlossaryValidator
+from vadocs.fixers.adr_fixer import AdrFixer
+from vadocs.fixers.base import Fixer
+from vadocs.fixers.sync_fixer import SyncFixer
+from vadocs.validators.adr import AdrValidator
+from vadocs.validators.base import Validator
+from vadocs.validators.frontmatter import FrontmatterValidator
+from vadocs.validators.myst_glossary import AdrTermValidator, MystGlossaryValidator
+from vadocs.config import load_config
 
 __version__ = "0.1.0"
 
@@ -66,6 +67,8 @@ __all__ = [
     "Fixer",
     "AdrFixer",
     "SyncFixer",
+    # Config
+    "load_config",
     # Version
     "__version__",
 ]

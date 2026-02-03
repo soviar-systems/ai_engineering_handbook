@@ -1,12 +1,12 @@
-"""Core models and utilities for vadoc."""
+"""Core models and utilities for vadocs."""
 
-from vadoc.core.models import (
+from vadocs.core.models import (
     Document,
     SyncField,
     SyncResult,
     ValidationError,
 )
-from vadoc.core.parsing import (
+from vadocs.core.parsing import (
     extract_section_content,
     extract_status,
     parse_frontmatter,
