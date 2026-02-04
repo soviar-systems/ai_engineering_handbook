@@ -65,4 +65,7 @@ ADR-26018
 ADR-26019
 : [Mirroring YAML Metadata to Document Body for Human Verification](/architecture/adr/adr_26019_mirroring_yaml_metadata_to_document_body.md)
 
+ADR-26020
+: [Hub-and-Spoke Ecosystem Documentation Architecture](/architecture/adr/adr_26020_hub_spoke_ecosystem_documentation.md)
+
 :::
