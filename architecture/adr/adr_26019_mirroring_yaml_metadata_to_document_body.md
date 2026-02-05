@@ -9,13 +9,9 @@ tags: [governance, documentation, context_management]
 
 # ADR-26019: Mirroring YAML Metadata to Document Body for Human Verification
 
-## Title
-
-Mirroring YAML Metadata to Document Body for Human Verification
-
 ## Date
 
-2026-02-01
+2026-02-01 (revised 2026-02-05)
 
 ## Status
 
@@ -23,48 +19,119 @@ proposed
 
 ## Context
 
-Following the mandate for universal YAML frontmatter (ADR-26018), we face a critical usability gap for human engineers. While YAML is the Single Source of Truth (SSoT) for machines and AI agents, it is often rendered invisible or difficult to parse in standard CLI environments (e.g., `cat`), raw Git diffs, and basic Markdown viewers.
+Following the mandate for universal YAML frontmatter ({term}`ADR-26018`), we face a usability gap for human engineers. While YAML is the Single Source of Truth (SSoT) for machines and AI agents, it is rendered invisible in standard CLI environments (`cat`, `less`), raw Git diffs, and basic Markdown viewers that do not process frontmatter.
 
-Relying solely on YAML delimiters (`---`) for metadata creates a "blackout" during manual peer reviews or terminal-based navigation. Without a visible reflection of this state in the document body, the risk of "Metadata Drift" increases: a human may assume a document is current based on prose, while the machine-hidden YAML marks it as `superseded` or `deprecated`.
+Without a visible projection of metadata in the document body, **Metadata Drift** becomes undetectable during peer review: a human may assume a document is current based on prose, while the YAML marks it as `superseded` or `deprecated`.
+
+### Current State (Pre-ADR-26018)
+
+Every content article in the repo already uses a hand-written metadata block positioned immediately after the title:
+
+```markdown
+# Article Title
+
++++
+
+---
+
+Owner: Vadim Rudakov, lefthand67@gmail.com
+Version: 0.1.3
+Birth: 2026-01-14
+Last Modified: 2026-01-17
+
+---
+
++++
+```
+
+This pattern is consistent across all articles (early and Jan 2026 generations). The `+++` MyST cell breaks and `---` thematic breaks provide a visually distinct, positionally stable block. However, this block is **manually authored** — there is no YAML source backing it, and no automation ensures consistency.
+
+### Prerequisite
+
+This ADR is sequenced **after** {term}`ADR-26018` (Universal YAML Frontmatter Adoption). The reflection block requires a machine-readable YAML source to mirror from. Until content articles carry `owner`, `version`, `birth`, `last_modified` fields in their YAML frontmatter, there is nothing to automate.
 
 ## Decision
 
-We will implement an automated **Mirroring Pattern** that projects structured YAML metadata into a human-readable "Reflection Block" using specific HTML anchors to differentiate from standard Markdown thematic breaks.
+We will automate the existing reflection block pattern as a **positional projection** of YAML frontmatter into the document body.
 
-1. **YAML Delimiters**: We continue to use standard `---` triple-dashes for the YAML frontmatter block to maintain compatibility with `python-frontmatter` and MyST.
-2. **Reflection Anchors**: For the body-mirror, we will use HTML comments `and`.
-* **Why**: Unlike `---`, which is commonly used for thematic breaks in content (e.g., in `llm_usage_patterns.md`), HTML anchors provide a unique, collision-free namespace for automation scripts.
+1. **Reflection Block Format**: The block uses the established pattern — `---` thematic breaks wrapping key-value lines, enclosed in `+++` MyST cell breaks. This is the pattern already in use across all content articles; we formalize rather than replace it.
 
+2. **Positional Convention**: The reflection block is always the **first cell after the H1 title**. This positional stability makes it identifiable by both humans (visual scanning) and scripts (parse the first `+++`-delimited cell after `# Title`) without requiring special delimiters.
 
-3. **Automated Sync**: A `pre-commit` hook will parse the YAML and overwrite the content between these HTML anchors.
-4. **UI/UX Standard**: The mirrored block must be formatted as a human-friendly header (e.g., a bold list or blockquote) to serve as the primary UI for manual verification.
+3. **Automated Sync**: A `pre-commit` hook (`tools/scripts/sync_metadata.py`) will:
+   - Parse the YAML frontmatter via `python-frontmatter`
+   - Format the reflection block from `owner`, `version`, `birth`, `last_modified` fields
+   - Replace the content of the first post-title cell
+   - Run `jupytext --sync` if a paired `.ipynb` exists
+
+4. **Scope**: Content articles only (files under `ai_system/`, `tools/docs/`, etc.). ADRs use their own format defined in {term}`ADR-26016` and {term}`ADR-26017`.
+
+### Target State
+
+After {term}`ADR-26018` implementation, an article will have:
+
+```markdown
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+kernelspec:
+  name: python3
+owner: "Vadim Rudakov"
+version: "0.1.3"
+birth: 2026-01-14
+last_modified: 2026-01-17
+---
+
+# Article Title
+
++++
+
+---
+
+Owner: Vadim Rudakov
+Version: 0.1.3
+Birth: 2026-01-14
+Last Modified: 2026-01-17
+
+---
+
++++
+
+Technical content begins here...
+```
+
+The YAML block is the source; the `---` / prose / `---` block is the deterministic projection.
 
 ## Consequences
 
 ### Positive
 
-* **Visual Integrity**: Engineers can instantly verify "owner" and "status" in any environment, including Fedora/Debian terminals.
-* **Deterministic Ingestion**: By using HTML anchors, the RAG/Vector DB ingestion pipeline can easily identify and *strip* the redundant mirror block to optimize the **Signal-to-Noise Ratio (SNR)**.
-* **AI Efficiency**: Prevents "Context Contamination" in vector embeddings by ensuring only the technical logic is vectorized while metadata is stored in DB fields.
+* **Visual Integrity**: Engineers can instantly verify ownership and freshness in any environment — terminals, Git diffs, basic Markdown viewers.
+* **Zero New Syntax**: Formalizes the pattern already adopted by every content article. No migration required for existing files once YAML fields are added.
+* **RAG Compatibility**: The positional convention allows RAG ingestion pipelines to strip the reflection block (first post-title cell) before generating embeddings, preventing metadata from polluting the semantic space.
 
 ### Negative / Risks
 
-* **Anchor Fragility**: If an engineer deletes the HTML comments, the sync script will fail. **Mitigation**: The `pre-commit` hook will validate anchor presence in all non-ADR artifacts.
-* **Sync Overhead**: Requires local Python dependencies (`python-frontmatter`) and Jupytext for paired notebooks.
+* **Positional Fragility**: If an author inserts content between the title and the reflection block, the sync script will overwrite the wrong cell. **Mitigation**: The pre-commit hook validates that the first post-title cell matches the expected reflection format before overwriting.
+* **Sync Overhead**: Requires `python-frontmatter` and Jupytext as development dependencies. **Mitigation**: Both are already project dependencies.
+* **Prerequisite Dependency**: This ADR is inert until {term}`ADR-26018` is implemented. **Mitigation**: Explicit sequencing documented in this ADR.
 
 ## Alternatives
 
-* **Standard Markdown Breaks (`---`) for Mirroring**: Rejected. Causes parsing collisions with existing content separators in handbooks.
-* **Prose-only Metadata**: Rejected. Prevents the deterministic machine-readability required for AI agents like `aider`.
+* **HTML Comment Anchors** (`<!-- meta -->...<!-- /meta -->`): Rejected. Introduces a new delimiter syntax not present in any existing article. Adds parsing complexity without solving a real collision problem — the existing `+++` / `---` pattern has been used across 20+ articles without a single parsing ambiguity. Would require migrating all existing articles to a new format.
+* **Prose-only Metadata (No YAML Source)**: Rejected. Cannot be validated or synced by automation. Current manual approach — the very pattern we aim to automate.
+* **No Reflection Block (YAML Only)**: Rejected. YAML frontmatter is invisible in `cat`, `less`, and most Git diff viewers. Human verification of document state during peer review would require tooling that not all team members have.
 
 ## References
 
-* [ADR-26014: Semantic Notebook Pairing Strategy]
-* [ADR-26016: Metadata-Driven Architectural Records Lifecycle]
-* [ADR-26017: ADR Format Validation Workflow]
-* [ADR-26018: Universal YAML Frontmatter Adoption for Machine-Readable Documentation]
+* {term}`ADR-26016`: Metadata-Driven Architectural Records Lifecycle
+* {term}`ADR-26017`: ADR Format Validation Workflow
+* {term}`ADR-26018`: Universal YAML Frontmatter Adoption for Machine-Readable Documentation
 
 ## Participants
 
 1. Vadim Rudakov
-2. Principal Software Engineer (Gemini)
+2. Claude (AI Engineering Advisor)
