@@ -68,4 +68,7 @@ ADR-26019
 ADR-26020
 : [Hub-and-Spoke Ecosystem Documentation Architecture](/architecture/adr/adr_26020_hub_spoke_ecosystem_documentation.md)
 
+ADR-26021
+: [Content Lifecycle Policy for RAG-Consumed Repositories](/architecture/adr/adr_26021_content_lifecycle_policy_for_rag_consumed.md)
+
 :::
