@@ -19,9 +19,11 @@ proposed
 
 ## Context
 
-Following the mandate for universal YAML frontmatter ({term}`ADR-26018`), we face a usability gap for human engineers. While YAML is the Single Source of Truth (SSoT) for machines and AI agents, it is rendered invisible in standard CLI environments (`cat`, `less`), raw Git diffs, and basic Markdown viewers that do not process frontmatter.
+Following the mandate for universal YAML frontmatter ({term}`ADR-26018`), we face a usability gap on the **published documentation site**. While YAML is the Single Source of Truth (SSoT) for machines and AI agents, the MyST static site renderer (`myst build --html`) only renders well-known frontmatter fields (`title`, `authors`, `date`, `doi`). Custom fields such as `owner`, `version`, `birth`, and `last_modified` are **silently ignored** in the HTML output. Additionally, `mystmd` has no substitution syntax (e.g., `{{ frontmatter.owner }}`) — [Issue #852](https://github.com/jupyter-book/mystmd/issues/852) remains open.
 
-Without a visible projection of metadata in the document body, **Metadata Drift** becomes undetectable during peer review: a human may assume a document is current based on prose, while the YAML marks it as `superseded` or `deprecated`.
+Note: CLI tools (`cat`, `less`), JupyterLab, and raw Git diffs **do** display the full YAML block. The gap is specific to readers who consume the rendered static site.
+
+Without a visible projection of metadata in the document body, **Metadata Drift** becomes undetectable during peer review of the published site: a reader may assume a document is current based on prose, while the YAML marks it as `superseded` or `deprecated`.
 
 ### Current State (Pre-ADR-26018)
 
@@ -109,7 +111,7 @@ The YAML block is the source; the `---` / prose / `---` block is the determinist
 
 ### Positive
 
-* **Visual Integrity**: Engineers can instantly verify ownership and freshness in any environment — terminals, Git diffs, basic Markdown viewers.
+* **Visual Integrity**: Engineers can verify ownership and freshness on the rendered static site, where custom YAML fields would otherwise be invisible. The reflection block renders as normal Markdown content, making metadata visible in every output format.
 * **Zero New Syntax**: Formalizes the pattern already adopted by every content article. No migration required for existing files once YAML fields are added.
 * **RAG Compatibility**: The positional convention allows RAG ingestion pipelines to strip the reflection block (first post-title cell) before generating embeddings, preventing metadata from polluting the semantic space.
 
@@ -123,7 +125,7 @@ The YAML block is the source; the `---` / prose / `---` block is the determinist
 
 * **HTML Comment Anchors** (`<!-- meta -->...<!-- /meta -->`): Rejected. Introduces a new delimiter syntax not present in any existing article. Adds parsing complexity without solving a real collision problem — the existing `+++` / `---` pattern has been used across 20+ articles without a single parsing ambiguity. Would require migrating all existing articles to a new format.
 * **Prose-only Metadata (No YAML Source)**: Rejected. Cannot be validated or synced by automation. Current manual approach — the very pattern we aim to automate.
-* **No Reflection Block (YAML Only)**: Rejected. YAML frontmatter is invisible in `cat`, `less`, and most Git diff viewers. Human verification of document state during peer review would require tooling that not all team members have.
+* **No Reflection Block (YAML Only)**: Rejected. Custom YAML frontmatter fields are not rendered by the MyST book-theme on the static site (`myst build --html` silently ignores them). Readers of the published documentation would have no way to verify document ownership or freshness without accessing the raw source file.
 
 ## References
 
