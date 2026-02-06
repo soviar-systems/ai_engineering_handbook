@@ -3,9 +3,9 @@
 
 ---
 
-Version: 2.3.0  
-Birth: 2025-10-19  
-Last Modified: 2026-01-31
+Version: 2.4.0
+Birth: 2025-10-19
+Last Modified: 2026-02-06
 
 ---
 
@@ -19,22 +19,23 @@ All content is **generated, validated, and versioned** through a controlled Lang
 
 ## What's new?
 
+v2.4.0 — "The Governed Architecture"
+* **ADR Governance**: All 24 ADRs now carry machine-readable YAML frontmatter (status, date, tags), making the decision history searchable by AI agents and filterable in RAG pipelines. 7 new ADRs (26016–26022) formalize decisions from metadata-driven lifecycle to GitHub Pages hosting.
+* **Content Lifecycle**: Superseded articles are now deleted rather than left to mislead RAG retrieval (ADR-26021). `llm_usage_patterns` retired; `choosing_model_size` rewritten as a VRAM budgeting guide.
+* **Hub-Spoke Ecosystem**: This repo is now the standards hub; extracted packages like [vadocs](https://github.com/lefthand67/vadocs) are independent spokes with their own implementation decisions (ADR-26020).
+* **Validation Toolchain**: `check_adr.py` replaces `check_adr_index.py` — config-driven validation of frontmatter, sections, term references, and index partitioning (110 tests, 98% coverage).
+* **New Articles**: Two Layer 5 companion articles on reflected-metadata pattern and YAML frontmatter for AI-enabled engineering.
+
 v2.3.0
-* **Semantic Versioning**: Adopted Jupytext for pairing `.ipynb` with `.md` files, enabling clean git diffs and AI-friendly processing (ADR 26014).
-* **Script Suite Convention**: Formalized 1:1:1 rule (Script, Test, Doc) with automated `check_script_suite.py` enforcement (ADR 26011).
+* **Semantic Versioning**: Adopted Jupytext for pairing `.ipynb` with `.md` files, enabling clean git diffs and AI-friendly processing (ADR-26014).
+* **Script Suite Convention**: Formalized 1:1:1 rule (Script, Test, Doc) with automated `check_script_suite.py` enforcement (ADR-26011).
 * **Tooling Overhaul**: Refactored `prepare_prompt` and `configure_repo` from Bash to Python; added `check_adr_index.py` and `check_link_format.py` validators.
-* **JIT Prompts**: Implemented on-the-fly YAML generation from JSON source of truth to prevent artifact drift (ADR 26013).
+* **JIT Prompts**: Implemented on-the-fly YAML generation from JSON source of truth to prevent artifact drift (ADR-26013).
 
 v2.2.0
 * **Security**: Implemented automated API key detection and JSON validation scripts with CI integration.
-* **Infrastructure**: Adopted Ansible and Molecule for idempotent configuration management (ADR 26009, 26010).
+* **Infrastructure**: Adopted Ansible and Molecule for idempotent configuration management (ADR-26009, ADR-26010).
 * **Organization**: Relocated research materials to `misc/research/` and centralized prompt consultants in Layer 3.
-
-v2.1.0
-* **AI Strategy**: Formalized the [**aidx Industrial AI Orchestration Framework**](/ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.ipynb), including specialized model selection for Architect vs. Editor phases. 
-* **ADR Migration**: Transitioned to a new 2026 naming convention for ADRs and added a centralized index at `architecture/adr_index.md`. 
-* **Connectivity**: Added comprehensive setup guides for utilizing high-performance LLMs via API keys within agentic workflows. 
-* **Maintenance**: Enhanced repository stabilization through MyST-aware link validation and refined pre-commit hooks. 
 
 
 ## Authorship & Methodology

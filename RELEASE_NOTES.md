@@ -1,5 +1,65 @@
 # Release Notes
 
+## release v2.4.0 "The Governed Architecture"
+
+### Summary of Changes
+
+This release shifts the project from a curated knowledge base to a **self-governing documentation ecosystem**. Every architectural decision now carries machine-readable metadata, enabling automated quality gates, RAG-aware lifecycle management, and reproducible validation — the same rigor we apply to production code, now applied to the knowledge base itself.
+
+Three strategic themes define v2.4.0:
+
+1. **Governance** — 7 new ADRs (26016–26022) and a full migration of all existing records establish a metadata-driven lifecycle where decisions are queryable, filterable, and auditable by both humans and AI agents.
+2. **Ecosystem extraction** — The vadocs validation engine graduated from an in-repo prototype to a standalone package, proving the hub-spoke model where this repo serves as the standards hub and extracted tools become independent spokes.
+3. **Content quality** — A formal content lifecycle policy now ensures that outdated articles are retired rather than left to mislead RAG pipelines, while two new companion articles deepen the Context layer.
+
+### New Features and Articles Added
+
+*   **Machine-Readable ADR Governance**:
+    Every ADR now carries YAML frontmatter with status, date, and tags — making the entire decision history searchable by AI agents and filterable in RAG pipelines. The new `check_adr.py` enforces this standard automatically, catching formatting drift before it reaches the main branch.
+
+*   **Content Lifecycle Policy (ADR-26021)**:
+    Superseded articles are now deleted rather than accumulating as stale context. This directly improves RAG retrieval quality — AI agents no longer surface outdated patterns when querying the knowledge base. Git history serves as the archive.
+
+*   **Hub-Spoke Ecosystem (ADR-26020)**:
+    Establishes this repository as the architectural standards hub. Extracted packages (like vadocs) maintain their own implementation decisions while inheriting ecosystem-wide conventions. This enables teams to adopt individual tools without importing the entire monorepo.
+
+*   **vadocs — Documentation Validation Engine**:
+    Completed its full lifecycle within this release: designed, scaffolded, tested, and [extracted to its own repository](https://github.com/lefthand67/vadocs). Validates ADR structure, frontmatter completeness, and MyST cross-references — the same checks that protect this repo, now available to any documentation project.
+
+*   **GitHub Pages Hosting (ADR-26022)**:
+    Replaces the self-hosted Podman/Traefik/Nginx stack with GitHub Pages. Eliminates infrastructure maintenance, improves uptime, and simplifies the deployment pipeline to a single `myst build --html` step in CI.
+
+*   **Layer 5 — Context (New Articles)**:
+    *   `reflected_metadata_pattern.md` — Explains why custom YAML fields vanish from the published site and how the reflected-metadata pattern preserves them for both humans and machines.
+    *   `yaml_frontmatter_for_ai_enabled_engineering.md` — Practical guide to designing frontmatter schemas that serve documentation builds, RAG retrieval, and CI validation simultaneously.
+
+*   **Layer 2 — Model (Rewrite)**:
+    *   `choosing_model_size.md` rewritten as a VRAM budgeting guide — now covers KV Cache sizing, quantization trade-offs, and production deployment patterns (Verifier Cascade, Hybrid Routing) aligned with the `aidx` pipeline and Jan 2026 model landscape.
+
+### Updates in Existing Files
+
+*   **ADR Migration**: All 17 existing ADRs standardized with YAML frontmatter and consistent formatting. The ADR index is now partitioned by status (Active Architecture vs. Evolutionary Proposals), making it easier to distinguish proven decisions from proposals under evaluation.
+
+*   **Cross-Reference Integrity**: Fixed broken MyST `{term}` references across 14 files. These caused silent build errors — terms like `ADR 26001` failed to resolve because the glossary uses hyphenated `ADR-26001`. The new `--check-terms` flag prevents future regressions.
+
+*   **ADR-26019 Corrected**: The original decision described an HTML-anchor mechanism that was never implemented. Rewritten to formalize the positional pattern already in use across 20+ articles — documenting what actually works rather than aspirational infrastructure.
+
+*   **CI/CD Pipeline**: Updated for the `check_adr_index.py` → `check_adr.py` transition. `misc/` excluded from broken-link validation to prevent false positives on planning documents.
+
+*   **Development Standards (CLAUDE.md)**: Strengthened TDD guidance (tests-first, Red → Green → Refactor) and added non-brittle test quality standards — test the contract, not the implementation.
+
+*   **Onboarding**: Updated with metadata conventions section so new contributors understand the frontmatter requirements from day one.
+
+### Existing Files Moved or Renamed
+
+| Original Path | New Path |
+| :--- | :--- |
+| `tools/scripts/check_adr_index.py` | `tools/scripts/check_adr.py` (Rewritten) |
+| `tools/tests/test_check_adr_index.py` | `tools/tests/test_check_adr.py` (Rewritten) |
+| `tools/docs/scripts_instructions/check_adr_index_py_script.md` | `tools/docs/scripts_instructions/check_adr_py_script.md` (Rewritten) |
+| `packages/vadoc/*` | *Extracted to [github.com/lefthand67/vadocs](https://github.com/lefthand67/vadocs)* |
+| `ai_system/4_orchestration/patterns/llm_usage_patterns.md` | *Deleted per ADR-26021 content lifecycle policy* |
+
 ## release v2.3.0 "The Validated Ecosystem"
 
 ### Summary of Changes

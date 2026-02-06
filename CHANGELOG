@@ -1,3 +1,65 @@
+release 2.4.0
+* ADR Validation Toolchain:
+    - `check_adr_index.py` renamed to `check_adr.py` with expanded scope: config-driven
+      validation of required frontmatter fields, date format, tag allowlist, required sections,
+      hyphen-format standardization (ADR-NNNNN), legacy migration (`--migrate`), partitioned
+      index by status. 110 tests, 98% coverage.
+    - Term reference validation added (`--check-terms`, `--fix-terms`) — detects and fixes
+      broken `{term}` cross-references (e.g. `ADR 26001` → `ADR-26001`).
+    - New `adr_config.yaml` as single source of truth for required sections, term reference
+      patterns, and tag allowlists.
+* Architecture Decisions (ADRs) added:
+    - ADR-26016: Metadata-Driven Architectural Records Lifecycle.
+    - ADR-26017: ADR Format Validation Workflow.
+    - ADR-26018: Universal YAML Frontmatter Adoption for Machine-Readable Documentation.
+    - ADR-26019: Mirroring YAML Metadata to Document Body for Human Verification.
+    - ADR-26020: Hub-and-Spoke Ecosystem Documentation Architecture.
+    - ADR-26021: Content Lifecycle Policy for RAG-Consumed Repositories.
+    - ADR-26022: Standardization of Public Documentation Hosting on GitHub Pages.
+* ADR Migration:
+    - All 17 pre-existing ADRs (26001–26016) migrated to standardized format with YAML
+      frontmatter (`id`, `title`, `date`, `status`, `tags`), hyphen-style headers, and
+      Title/Date/Status body sections.
+    - ADR index reorganized into Active Architecture / Evolutionary Proposals partitions.
+* Hub-Spoke Ecosystem:
+    - `architecture/packages/` directory created for ecosystem-wide package specifications.
+    - vadocs package specification added (`architecture/packages/vadocs.md`).
+    - Ecosystem development workflow guide added
+      (`tools/docs/packages/ecosystem_package_development_workflow.md`).
+* vadocs Package Lifecycle (v0.1.0):
+    - Scaffolded as `vadoc` with core models, validators (ADR, Frontmatter, MystGlossary),
+      fixers (ADR, Sync), 26 tests passing.
+    - Renamed `vadoc` → `vadocs`, added config module, integration tests, PoC docs.
+    - Extracted to dedicated repository (github.com/lefthand67/vadocs) after successful PoC;
+      all package sources removed from monorepo.
+* New Articles:
+    - ai_system/5_context/reflected_metadata_pattern.md — reflected-metadata pattern
+      explaining why `myst build --html` ignores custom YAML fields.
+    - ai_system/5_context/yaml_frontmatter_for_ai_enabled_engineering.md — YAML frontmatter
+      guide with real `aidx` examples and corrected MyST-build framing.
+* Rewritten Articles:
+    - ai_system/2_model/selection/choosing_model_size.md rewritten as VRAM budgeting guide —
+      KV Cache, quantization, production patterns (Verifier Cascade, Hybrid Routing),
+      `aidx` pipeline roles, Jan 2026 model zoo.
+* Deleted Articles:
+    - ai_system/4_orchestration/patterns/llm_usage_patterns.md deleted per ADR-26021 —
+      superseded by `aidx` framework; 101-level taxonomy below repo quality bar.
+* Bug Fixes:
+    - MyST term references fixed across 11 ADR files and 3 content files
+      (`{term}\`ADR 26001\`` → `{term}\`ADR-26001\``).
+    - ADR-26019: dropped phantom HTML-anchor mechanism (never implemented), corrected
+      CLI-invisibility claim to the actual gap (myst build ignoring custom YAML fields).
+* CI/CD & Quality:
+    - `quality.yml` and `.pre-commit-config.yaml` updated for `check_adr.py`.
+    - `misc/` added to broken-links exclusion list in `paths.py`.
+    - ADR template updated with Date/Status sections and YAML frontmatter schema.
+* Development Workflow (CLAUDE.md):
+    - TDD approach clarified (Red → Green → Refactor, tests-first emphasis).
+    - Non-brittle test quality standards added (test contracts, semantic assertions).
+* Documentation:
+    - Onboarding (`00_onboarding.md`) updated with metadata conventions section.
+    - 12 implementation plans added to `misc/plan/`.
+
 release 2.3.0
 * Architecture Decisions (ADRs) added:
     - ADR 26011: Formalization of Mandatory Script Suite (Script + Test + Doc).
