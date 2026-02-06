@@ -71,4 +71,7 @@ ADR-26020
 ADR-26021
 : [Content Lifecycle Policy for RAG-Consumed Repositories](/architecture/adr/adr_26021_content_lifecycle_policy_for_rag_consumed.md)
 
+ADR-26022
+: [Standardization of Public Documentation Hosting on GitHub Pages](/architecture/adr/adr_26022_standardization_of_public_documentation_hosting.md)
+
 :::
