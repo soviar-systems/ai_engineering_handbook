@@ -1,5 +1,4 @@
-Before starting to make changes to files
-    Always write a plan to misc/plan.md.
+When you implemented a plan in /architect mode and handle it to editor, save this plan to misc/plan/plan_<date_hash>.md. This is needed to save the history of the decisions made between context switch. 
 
 The repo is configured for working with uv
     when you run tests or Python scripts, use uv run command,
@@ -21,3 +20,5 @@ When editing configuration files
 When you commit changes
     Prefer atomic commits - each task should have its own commit so if it contains a bug it can be reverted as a whole feature or fix in one git revert command,
     Always commit telegram posts in the dedicated commit with pr prefix, they must be filtered during the release notes generation.
+
+Save chat history to the .aider.chat.history/ directory - each new session you start a new history file with the name of form "<date_hash>_<time_hash>.md"
