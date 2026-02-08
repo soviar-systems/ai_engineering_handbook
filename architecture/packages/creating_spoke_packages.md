@@ -104,3 +104,8 @@ Then install a specific version:
 ```bash
 uv add "<package_name> @ git+https://github.com/<USERNAME>/<package_name>.git@v0.1.0"
 ```
+
+## Next Steps
+
+- [Transfer the repo to the GitHub organization](/tools/docs/git/transferring_repo_to_github_org.md)
+- [Set up GitHub Pages for documentation hosting](/tools/docs/git/github_pages_setup.md) (per {term}`ADR-26022`)

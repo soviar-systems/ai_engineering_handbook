@@ -14,6 +14,15 @@ See {term}`ADR-26020` for the full architectural rationale.
 |---------|---------|--------|
 | [vadocs](vadocs.md) | Documentation validation engine | v0.1.0 PoC |
 
+## Guides
+
+| Guide | Location |
+|-------|----------|
+| [Creating a spoke package](creating_spoke_packages.md) | Extracting a package into its own repo |
+| [Development workflow](/tools/docs/packages/ecosystem_package_development_workflow.md) | Editable installs, testing, Claude Code workflow |
+| [Transferring to GitHub org](/tools/docs/git/transferring_repo_to_github_org.md) | Moving any repo to the ecosystem's org |
+| [GitHub Pages setup](/tools/docs/git/github_pages_setup.md) | Deploying docs per {term}`ADR-26022` |
+
 ## What Belongs Here
 
 - **Package specifications** - What a package should do (capabilities, interfaces)

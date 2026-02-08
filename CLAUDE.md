@@ -43,7 +43,7 @@ The repository is organized around a six-layer AI system architecture:
 
 ## Critical Conventions
 
-When you implemented a plan in /plan mode, save it to misc/plan/plan_<date_hash>.md, ONLY then start implementation. This is needed to save the history of the decisions made between context switch. 
+When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_<descriptive_slug>.md, ONLY then start implementation. This is needed to save the history of the decisions made between context switch.
 
 **MyST Notebooks:**
 - Never convert `{code-cell}` blocks to standard markdown code blocks
