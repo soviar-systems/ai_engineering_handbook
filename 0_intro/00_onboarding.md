@@ -11,17 +11,13 @@ kernelspec:
   name: python3
 ---
 
-# Onboarding
-
-+++
-
 ---
-
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.4.0  
-Birth: 2026-01-03  
-Last Modified: 2026-01-26
-
+title: Onboarding
+author: Vadim Rudakov, rudakow.wadim@gmail.com
+date: 2026-02-08
+options:
+  version: 0.4.1
+  birth: 2026-01-03
 ---
 
 +++
@@ -76,12 +72,10 @@ bash ./tools/scripts/configure_repo.sh
 
 +++
 
-Every content article must include a **YAML frontmatter** block and a **reflected metadata block** (the first cell after the H1 title). The reflection block makes ownership and freshness visible on the rendered static site, where custom YAML fields are otherwise ignored by `myst build --html`.
+Every content article must include a **YAML frontmatter** block with MyST-native field names (`title`, `author`/`authors`, `date`) so that ownership and freshness are rendered directly on the static site. Custom fields (`version`, `birth`) go under `options.*` for RAG/tooling use.
 
 1. ["YAML Frontmatter for AI-Enabled Engineering"](/ai_system/5_context/yaml_frontmatter_for_ai_enabled_engineering.ipynb) — the frontmatter schema and why it matters for RAG
-1. ["The Reflected Metadata Pattern"](/ai_system/5_context/reflected_metadata_pattern.ipynb) — how to project YAML metadata into the document body
-1. {term}`ADR-26018` — the mandate for universal YAML frontmatter
-1. {term}`ADR-26019` — the positional convention for the reflection block
+1. {term}`ADR-26023` — the MyST-aligned frontmatter standard
 
 +++
 

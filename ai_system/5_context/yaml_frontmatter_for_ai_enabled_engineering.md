@@ -14,15 +14,13 @@ kernelspec:
 
 # YAML Frontmatter for AI-Enabled Engineering
 
-+++
-
 ---
-
-Owner: Vadim Rudakov, rudakow.wadim@gmail.com
-Version: 0.2.0
-Birth: 2026-02-05
-Last Modified: 2026-02-06
-
+title: YAML Frontmatter for AI-Enabled Engineering
+author: Vadim Rudakov, rudakow.wadim@gmail.com
+date: 2026-02-08
+options:
+  version: 0.3.0
+  birth: 2026-02-05
 ---
 
 +++
@@ -30,9 +28,7 @@ Last Modified: 2026-02-06
 In the current era of LLM-Ops and RAG (Retrieval-Augmented Generation), frontmatter is no longer optional — it is the structural backbone of your knowledge base. YAML frontmatter provides a deterministic "header" that decouples document state (metadata) from document logic (content), serving both human engineers and AI agents.
 
 :::{seealso}
-> 1. {term}`ADR-26018`: Universal YAML Frontmatter Adoption for Machine-Readable Documentation
-> 2. {term}`ADR-26019`: Mirroring YAML Metadata to Document Body for Human Verification
-> 3. [The Reflected Metadata Pattern](/ai_system/5_context/reflected_metadata_pattern.ipynb) — companion article on projecting YAML into the document body
+> 1. {term}`ADR-26023`: MyST-Aligned Frontmatter Standard
 :::
 
 +++
@@ -83,9 +79,9 @@ To ensure worldwide adoption compatibility, we utilize a schema derived from sta
 
 +++
 
-### Real-World Example: `aidx` Framework Article
+### The MyST-Aligned Frontmatter Schema ({term}`ADR-26023`)
 
-The [`aidx` Industrial AI Orchestration Framework](/ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.ipynb) article demonstrates the pattern in production use:
+Content articles use **two YAML blocks** in the `.md` file. The first block is Jupytext sync config (auto-generated), the second is the content frontmatter visible to MyST:
 
 ```yaml
 ---
@@ -100,30 +96,18 @@ kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
 ---
-```
-
-The Jupytext header serves double duty: it enables notebook synchronization **and** provides the YAML block that AI agents and RAG pipelines parse. After {term}`ADR-26018` implementation, this header will be extended with `owner`, `version`, `birth`, and `last_modified` fields.
-
-The corresponding reflection block (first cell after the H1 title) already exists in the `aidx` article:
-
-```markdown
-# The `aidx` Industrial AI Orchestration Framework
-
-+++
 
 ---
-
-Owner: Vadim Rudakov, lefthand67@gmail.com
-Version: 0.1.3
-Birth: 2026-01-14
-Last Modified: 2026-01-17
-
+title: Article Title
+author: Vadim Rudakov, rudakow.wadim@gmail.com
+date: 2026-02-08
+options:
+  version: 0.1.0
+  birth: 2026-01-03
 ---
-
-+++
 ```
 
-This is the positional convention formalized in {term}`ADR-26019` and detailed in [The Reflected Metadata Pattern](/ai_system/5_context/reflected_metadata_pattern.ipynb).
+MyST renders `title`, `author`, and `date` natively on the static site. The `options.*` fields (`version`, `birth`) are not rendered by the default theme but remain available for RAG pipelines and CLI tooling (`yq`).
 
 +++
 
@@ -152,13 +136,11 @@ In our stack (Fedora/Debian with Jupytext), we maintain metadata in the paired `
 
 +++
 
-1. **Metadata Drift:** The biggest risk is the frontmatter becoming out of sync with the body. *Mitigation:* Use `pre-commit` hooks (`tools/scripts/sync_metadata.py`, planned per {term}`ADR-26019`) to validate that the reflection block matches the YAML source. For `last_modified`, validate against the actual Git commit date.
+1. **Over-Engineering:** Do not add fields that are not actionable. If you don't have a tool that filters by `priority`, don't include a `priority` field. Follow the **Simplicity First** principle.
 
-2. **Over-Engineering:** Do not add fields that are not actionable. If you don't have a tool that filters by `priority`, don't include a `priority` field. Follow the **Simplicity First** principle.
+2. **Vendor Lock-in:** Avoid platform-specific frontmatter (e.g., proprietary Obsidian or Notion tags). Stick to standard YAML and MyST-native field names ({term}`ADR-26023`).
 
-3. **Vendor Lock-in:** Avoid platform-specific frontmatter (e.g., proprietary Obsidian or Notion tags). Stick to standard YAML.
-
-4. **Positional Fragility:** The reflection block ({term}`ADR-26019`) must remain the first cell after the H1 title. If an author inserts content between the title and the reflection block, the sync script will target the wrong cell. *Mitigation:* The pre-commit hook validates cell format before overwriting, failing with a diagnostic message rather than silently corrupting content.
+3. **Two-Block Structure:** The `.md` file must have two separate `---` blocks — Jupytext config and content frontmatter. Merging them into one block causes metadata loss in the paired `.ipynb` file during sync.
 
 +++
 
@@ -168,7 +150,7 @@ In our stack (Fedora/Debian with Jupytext), we maintain metadata in the paired `
 
 For new engineers joining this repository:
 
-1. **Use Existing Templates:** Every new notebook or handbook must include the Jupytext YAML header. After {term}`ADR-26018`, this header will include the mandatory `owner`, `version`, `birth`, `last_modified` fields.
-2. **Add the Reflection Block:** Place the metadata mirror as the first cell after the H1 title, using the `+++` / `---` / prose / `---` / `+++` pattern documented in [The Reflected Metadata Pattern](/ai_system/5_context/reflected_metadata_pattern.ipynb).
-3. **Validate on Commit:** The pre-commit hook pipeline (`python-frontmatter` + `jupytext --sync`) blocks commits that lack required metadata or have drifted reflection blocks.
-4. **Index for RAG:** The `catalog.json` generation script (planned) will parse YAML blocks to serve as the metadata layer for the local RAG system, enabling hard filtering by `owner`, `status`, or `last_modified`.
+1. **Add MyST-Aligned Frontmatter:** Every new notebook must include the content frontmatter block with `title`, `author`/`authors`, `date`, and `options` (containing `version` and `birth`). See Section 3 for the schema defined in {term}`ADR-26023`.
+2. **Maintain the Two-Block Structure:** The `.md` file has two `---` blocks — do not merge them. Edit metadata in the first markdown cell of the `.ipynb` file, then run `uv run jupytext --sync`.
+3. **Validate on Commit:** Pre-commit hooks run `jupytext --sync` to ensure `.md` and `.ipynb` remain synchronized.
+4. **Index for RAG:** YAML frontmatter fields serve as the metadata layer for RAG pipelines, enabling hard filtering by `author`, `date`, or `status`.

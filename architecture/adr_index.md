@@ -18,6 +18,9 @@ ADR-26014
 ADR-26016
 : [Metadata-Driven Architectural Records Lifecycle](/architecture/adr/adr_26016_metadata_driven_architectural_records_life.md)
 
+ADR-26023
+: [MyST-Aligned Frontmatter Standard](/architecture/adr/adr_26023_myst_aligned_frontmatter_standard.md)
+
 :::
 
 ## Evolutionary Proposals
@@ -59,12 +62,6 @@ ADR-26015
 ADR-26017
 : [ADR Format Validation Workflow](/architecture/adr/adr_26017_adr_format_validation_workflow.md)
 
-ADR-26018
-: [Universal YAML Frontmatter Adoption for Machine-Readable Documentation](/architecture/adr/adr_26018_universal_yaml_frontmatter_adoption.md)
-
-ADR-26019
-: [Mirroring YAML Metadata to Document Body for Human Verification](/architecture/adr/adr_26019_mirroring_yaml_metadata_to_document_body.md)
-
 ADR-26020
 : [Hub-and-Spoke Ecosystem Documentation Architecture](/architecture/adr/adr_26020_hub_spoke_ecosystem_documentation.md)
 
@@ -73,5 +70,16 @@ ADR-26021
 
 ADR-26022
 : [Standardization of Public Documentation Hosting on GitHub Pages](/architecture/adr/adr_26022_standardization_of_public_documentation_hosting.md)
+
+:::
+
+## Historical Context
+
+:::{glossary}
+ADR-26018
+: [Universal YAML Frontmatter Adoption for Machine-Readable Documentation](/architecture/adr/adr_26018_universal_yaml_frontmatter_adoption.md) — superseded by {term}`ADR-26023`
+
+ADR-26019
+: [Mirroring YAML Metadata to Document Body for Human Verification](/architecture/adr/adr_26019_mirroring_yaml_metadata_to_document_body.md) — superseded by {term}`ADR-26023`
 
 :::

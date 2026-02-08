@@ -2,8 +2,8 @@
 id: 26019
 title: "Mirroring YAML Metadata to Document Body for Human Verification"
 date: 2026-02-01
-status: proposed
-superseded_by: null
+status: superseded
+superseded_by: ADR-26023
 tags: [governance, documentation, context_management]
 ---
 
@@ -15,7 +15,9 @@ tags: [governance, documentation, context_management]
 
 ## Status
 
-proposed
+superseded
+
+Superseded by: {term}`ADR-26023`
 
 ## Context
 

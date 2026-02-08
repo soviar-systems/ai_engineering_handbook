@@ -2,8 +2,8 @@
 id: 26018
 title: "Universal YAML Frontmatter Adoption for Machine-Readable Documentation"
 date: 2026-02-01
-status: proposed
-superseded_by: null
+status: superseded
+superseded_by: ADR-26023
 tags: [governance, documentation, context_management]
 ---
 
@@ -18,7 +18,10 @@ Universal YAML Frontmatter Adoption for Machine-Readable Documentation
 2026-02-02
 
 ## Status
-proposed
+
+superseded
+
+Superseded by: {term}`ADR-26023`
 
 ## Context
 Our repository contains heterogeneous documentation formats, including MyST Markdown handbooks (`.md`) and Jupytext-paired notebooks (`.ipynb`). Currently, metadata such as ownership, versioning, and status are often embedded as unstructured markdown text in the document body.
