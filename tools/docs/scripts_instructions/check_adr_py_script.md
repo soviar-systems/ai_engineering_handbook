@@ -16,12 +16,12 @@ kernelspec:
 +++
 
 ---
-
-Owner: Vadim Rudakov, rudakow.wadim@gmail.com
-Version: 0.3.0
-Birth: 2026-01-30
-Last Modified: 2026-02-02
-
+title: Instruction on check_adr.py script
+author: Vadim Rudakov, rudakow.wadim@gmail.com
+date: 2026-02-08
+options:
+  version: 0.4.0
+  birth: 2026-01-30
 ---
 
 +++
@@ -138,9 +138,10 @@ When run with `--fix`, the script:
    - *Active Architecture*: accepted ADRs
    - *Evolutionary Proposals*: proposed ADRs
    - *Historical Context*: rejected, superseded, deprecated ADRs
-4. **Sorts entries** by ADR number within each section
-5. **Removes orphan entries** pointing to non-existent files
-6. **Reports all changes** made
+4. **Annotates superseded entries**: Adds " — superseded by {term}`ADR-XXXXX`" to index entries for ADRs with `superseded_by` set in frontmatter
+5. **Sorts entries** by ADR number within each section
+6. **Removes orphan entries** pointing to non-existent files
+7. **Reports all changes** made
 
 ### E. Migration Mode (`--migrate`)
 

@@ -263,6 +263,7 @@ def create_adr_file_full(
     adr_id: str | None = None,
     sections: list[str] | None = None,
     include_subsections: bool = False,
+    superseded_by: str | None = None,
 ) -> Path:
     """Create an ADR file with full YAML frontmatter and optional sections.
 
@@ -279,6 +280,7 @@ def create_adr_file_full(
         sections: Optional list of section names to include. If None, uses
                   REQUIRED_SECTIONS from the module (loaded from config).
         include_subsections: Whether to include recommended subsections
+        superseded_by: Optional ADR reference (e.g., "ADR-26023") for superseded ADRs
 
     Returns:
         Path to created file
@@ -298,7 +300,7 @@ def create_adr_file_full(
         f"date: {date}",
         f"status: {status}",
         f"tags: [{', '.join(fm_tags)}]",
-        "superseded_by: null",
+        f"superseded_by: {superseded_by}" if superseded_by else "superseded_by: null",
         "---",
     ]
 
@@ -846,6 +848,40 @@ class TestAutoFixIndex:
         assert adr_env.index_path.exists()
         entries = parse_index()
         assert len(entries) == 1
+
+    def test_superseded_entry_has_annotation(self, adr_env):
+        """Superseded ADRs should include 'superseded by' annotation in index."""
+        from tools.scripts.check_adr import fix_index, parse_index
+
+        create_adr_file_full(
+            adr_env.adr_dir, 26001, "Old Decision", "old_decision",
+            status="superseded", superseded_by="ADR-26002",
+        )
+        create_adr_file_full(
+            adr_env.adr_dir, 26002, "New Decision", "new_decision",
+            status="accepted",
+        )
+
+        fix_index()
+
+        content = adr_env.index_path.read_text(encoding="utf-8")
+        # Superseded entry should have annotation
+        assert "superseded by" in content.lower()
+        assert "ADR-26002" in content
+
+    def test_non_superseded_entry_has_no_annotation(self, adr_env):
+        """Non-superseded ADRs should NOT have 'superseded by' annotation."""
+        from tools.scripts.check_adr import fix_index
+
+        create_adr_file_full(
+            adr_env.adr_dir, 26001, "Active Decision", "active_decision",
+            status="accepted",
+        )
+
+        fix_index()
+
+        content = adr_env.index_path.read_text(encoding="utf-8")
+        assert "superseded by" not in content.lower()
 
 
 # ======================

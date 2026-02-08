@@ -973,8 +973,14 @@ def fix_index() -> list[str]:
             title = adr.title
             link = f"/architecture/adr/{adr.path.name}"
 
+            # Build annotation for superseded ADRs
+            annotation = ""
+            if adr.frontmatter and adr.frontmatter.get("superseded_by"):
+                successor = adr.frontmatter["superseded_by"]
+                annotation = f" — superseded by {{term}}`{successor}`"
+
             lines.append(f"ADR-{adr.number}\n")
-            lines.append(f": [{title}]({link})\n")
+            lines.append(f": [{title}]({link}){annotation}\n")
             lines.append("\n")
 
             # Track changes
