@@ -19,7 +19,7 @@ Proposed
 
 ## Context
 
-As the ecosystem expands into multiple standalone repositories, we require a unified, scalable, and low-maintenance strategy for publishing technical documentation. Historically, some projects utilized a [self-hosted stack involving Podman, Traefik, and Nginx](/tools/docs/website/mystmd_website_deployment_instruction.ipynb). While robust, this "private server" approach introduces several risks for **open-source** projects:
+As the ecosystem expands into multiple standalone repositories, we require a unified, scalable, and low-maintenance strategy for publishing technical documentation. Historically, some projects utilized a [self-hosted stack involving Podman, Traefik, and Nginx](/tools/docs/website/02_self_hosted_deployment.ipynb). While robust, this "private server" approach introduces several risks for **open-source** projects:
 
 * **Maintenance Tax:** Managing server security, SSL certificates, and container runtimes adds "unjustified orchestration layers" to the development lifecycle.
 * **Single Point of Failure:** Documentation availability is tied to the uptime of a personal server rather than a globally distributed CDN.
@@ -64,7 +64,8 @@ We will standardize **GitHub Pages (GH Pages)** as the canonical hosting platfor
 - {term}`ADR-26012`: Extraction of Documentation Validation Engine
 - {term}`ADR-26015`: Mandatory Sync-Guard & Diff Suppression
 - {term}`ADR-26020`: Hub-and-Spoke Ecosystem Documentation Architecture
-- [MystMD Website Deployment Instruction](/tools/docs/website/mystmd_website_deployment_instruction.ipynb)
+- [GitHub Pages Deployment Guide](/tools/docs/website/01_github_pages_deployment.ipynb)
+- [Self-Hosted Website Deployment](/tools/docs/website/02_self_hosted_deployment.ipynb) (deprecated for public repos)
 
 ## Participants
 

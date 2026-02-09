@@ -21,7 +21,7 @@ See {term}`ADR-26020` for the full architectural rationale.
 | [Creating a spoke package](creating_spoke_packages.md) | Extracting a package into its own repo |
 | [Development workflow](/tools/docs/packages/ecosystem_package_development_workflow.md) | Editable installs, testing, Claude Code workflow |
 | [Transferring to GitHub org](/tools/docs/git/transferring_repo_to_github_org.md) | Moving any repo to the ecosystem's org |
-| [GitHub Pages setup](/tools/docs/git/github_pages_setup.md) | Deploying docs per {term}`ADR-26022` |
+| [GitHub Pages setup](/tools/docs/website/01_github_pages_deployment.ipynb) | Deploying docs per {term}`ADR-26022` |
 
 ## What Belongs Here
 

@@ -4,25 +4,29 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
   language: python
 ---
 
-# MystMD Website Deployment Instruction
+---
+title: "Self-Hosted Website Deployment (Podman / Nginx / Traefik)"
+author: Vadim Rudakov, rudakow.wadim@gmail.com
+date: 2026-02-09
+options:
+  version: 1.0.0
+  birth: 2025-12-17
+---
 
 +++
 
----
+:::{warning} Deprecated for public repositories
+Per {term}`ADR-26022`, **GitHub Pages** is now the canonical hosting method for all public documentation. Use the [GitHub Pages Deployment guide](/tools/docs/website/01_github_pages_deployment.ipynb) instead.
 
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.4.0  
-Birth: 2025-12-17  
-Modified: 2026-01-09
-
----
+This guide is retained for **private infrastructure** or air-gapped environments only.
+:::
 
 +++
 
@@ -64,62 +68,7 @@ The list of files used for configuration:
 
 +++
 
-### 1.1 Initialize MyST Locally
-
-+++
-
-Before the automation can work, your repository needs to be recognized as a MyST project.
-
-1. Open your terminal in the root of your local repository.
-2. Run `myst init`. Follow the prompts if there are any.
-3. **Crucial:** Open your `.gitignore` file. If `myst.yml` was added there, **remove it**. You must track `myst.yml` in Git, while keeping the `_build/` folder ignored.
-4. Commit and push the `myst.yml` to your repo.
-
-+++
-
-### 1.2 Edit 'myst.yml'
-
-+++
-
-This file is an entry point for rendering your repo to html. Here you can:
-- set the project's and site's title,
-- set the link to the github project,
-- set logo and favicon,
-- **exclude some repo's paths** for rendering.
-
-+++
-
-:::{tip} `myst.yml` example
-:class: dropdown
-```yaml
-# See docs at: https://mystmd.org/guide/frontmatter
-version: 1
-project:
-  id: <any_id>
-  title: <your_project_title>
-  description: <your_website_description>
-  # keywords: []
-  # authors: []
-  github: <link_to_github>
-  exclude:
-    - "RELEASE_NOTES.*"
-    - "in_progress/*"
-    - "pr/*"
-    # jupytext pairs md to ipynb
-    - "*/**/*.md"
-site:
-  template: book-theme
-  title: <your_site_title>
-  options:
-    logo: /path/to/logo.png
-    logo_text: <test_for_logo>
-    favicon: /path/to/favicon.png
-```
-:::
-
-+++
-
-As you can see, we exclude all `.md` files from rendering because we use [*jupytext ipynb-md pairing*](/tools/docs/jupyter_and_markdown/semantic_notebook_versioning_ai_ready_jupyter_docs.ipynb).
+For MyST initialization (`myst init`), `myst.yml` configuration, and local testing instructions, see the [GitHub Pages Deployment guide — Section 1](/tools/docs/website/01_github_pages_deployment.ipynb). Those steps are identical regardless of hosting target.
 
 +++
 
@@ -157,8 +106,13 @@ Your workflow file (`.github/workflows/deploy.yml`) automates the "Build and Syn
 
 +++
 
-:::{tip} `.github/workflows/deploy.yml` example
+:::{tip} `.github/workflows/deploy.yml` example (superseded)
 :class: dropdown
+
+:::{warning}
+This SSH/rsync workflow is **superseded** by the GitHub Actions + `actions/deploy-pages` workflow described in the [GitHub Pages Deployment guide — Section 3](/tools/docs/website/01_github_pages_deployment.ipynb) (see {term}`ADR-26022`). It is preserved here for private-infrastructure deployments that require `rsync` to a self-managed server.
+:::
+
 ```yaml
 name: build-and-deploy
 
@@ -481,24 +435,7 @@ http:
 
 +++
 
-```bash
-$ uv tool install mystmd
-$ uv run myst start
-```
-
-`uv tool install` ensures that the installed mystmd is not the project dependency but the global tool.
-
-You do not need to initialize the myst project because you are testing the existing project - the repo's `myst.yml`.
-
-That's it: now you have a locally running website of the repo with all the files in your working directory, i.e. all the local files you have in the directory, including unstaged and in `.gitignore`. Here you can test all the changes you have made to the website or your notebooks.
-
-When testing is done, you can safely remove `_build` directory with the rendered files.
-
-You can also remove mystmd, optionally:
-
-```bash
-$ uv tool uninstall mystmd
-```
+See the [GitHub Pages Deployment guide — Section 1.3](/tools/docs/website/01_github_pages_deployment.ipynb) for local testing with `myst start`.
 
 +++
 
