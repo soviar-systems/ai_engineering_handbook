@@ -54,6 +54,11 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Use `pathlib.Path`, never `os` library
 - Follow top-down design: main function at the top
 
+**Content Frontmatter (ADR-26023):**
+- Use MyST-native fields: `title`, `author`, `date`, `options.version`, `options.birth`
+- Author email: `rudakow.wadim@gmail.com` (not `lefthand67@gmail.com`)
+- Docs already in production use version `1.0.0`+, not `0.x`
+
 **Configuration:**
 - Use placeholders like `[IP_ADDRESS]` or `[DOMAIN]` instead of real values
 
@@ -65,7 +70,7 @@ Two GitHub Actions workflows:
    - Runs check_broken_links tests when script, tests, or `paths.py` change
    - Runs jupytext tests when sync/verify scripts, tests, or `paths.py` change
    - Validates links in changed `.md` files
-2. **deploy.yml** - Validates notebook sync on all branches, deploys to server on main only
+2. **deploy.yml** - Validates notebook sync on all branches, deploys to GitHub Pages on main only
 
 The pipeline verifies that .md and .ipynb pairs are synchronized before allowing deployment.
 
