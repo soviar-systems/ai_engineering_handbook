@@ -89,7 +89,7 @@ Two workflows provide CI protection:
 | Step | Condition | Check |
 |------|-----------|-------|
 | Notebook sync verify | **All branches** | `jupytext_sync.py --all --test` |
-| Build + Deploy | Main only | MyST build + RSYNC |
+| Build + Deploy | Main only | MyST build + GitHub Pages |
 
 +++
 

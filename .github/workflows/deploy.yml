@@ -13,17 +13,27 @@ on:
   # Allows you to trigger the build manually from the Actions tab
   workflow_dispatch:
 
+env:
+  BASE_URL: /${{ github.event.repository.name }}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
 jobs:
-  validate-and-deploy:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          # Fetches all history so jupytext can compare timestamps if needed
           fetch-depth: 0
 
-      # --- 1. INTEGRITY CHECK (Enforced on all branches) ---
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -37,29 +47,35 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run tools/scripts/jupytext_sync.py --all --test
 
-      # --- 2. DEPLOYMENT STEPS (Only runs on Main) ---
+  build-deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
       - name: Setup Node.js
-        if: github.ref == 'refs/heads/main'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install MyST and Build
-        if: github.ref == 'refs/heads/main'
         run: |
           npm install -g mystmd
           myst build --html
 
-      - name: Deploy to Server via RSYNC
-        if: github.ref == 'refs/heads/main'
-        uses: easingthemes/ssh-deploy@main
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          # -v (verbose) and -i (itemize-changes) provide good logs in
-          # GitHub Actions
-          ARGS: "-rlgoDzvc -i --delete"
-          SOURCE: "_build/html/"
-          REMOTE_HOST: ${{ secrets.SERVER_IP }}
-          REMOTE_USER: ${{ secrets.SERVER_USER }}
-          REMOTE_PORT: ${{ secrets.SERVER_SSH_PORT }}
-          TARGET: "/home/containers/website/book/html"
+          path: './_build/html'
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        id: deployment
+        uses: actions/deploy-pages@v4
