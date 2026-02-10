@@ -3,7 +3,7 @@ id: 26002
 title: Adoption of the Pre-commit Framework
 date: 2026-01-31
 status: accepted
-tags: [architecture]
+tags: [architecture, git]
 superseded_by: null
 ---
 

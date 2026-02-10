@@ -3,7 +3,7 @@ id: 26001
 title: Use of Python and OOP for Git Hook Scripts
 date: 2026-01-24
 status: accepted
-tags: [architecture]
+tags: [architecture, git]
 superseded_by: null
 ---
 

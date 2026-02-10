@@ -4,31 +4,29 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.0
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
   language: python
 ---
 
+---
+title: Production Git Workflow Standards
+author: rudakow.wadim@gmail.com
+date: 2026-02-10
+options:
+  version: 1.0.0
+  birth: 2025-11-29
+---
+
 # Production Git Workflow Standards
-
-+++
-
----
-
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.1  
-Birth: 2025-11-29  
-Last Modified: 2026-01-14
-
----
 
 +++
 
 This handbook establishes mandatory, professional-grade conventions for Git branching and committing. Adherence to these standards is essential for achieving traceability, enabling automated MLOps gates, ensuring accurate changelogs, and streamlining architectural reviews.
 
-The workflow is enforced through a Three-Tier Naming Structure and a strict Conventional Commits policy, culminating in an Atomic Commit merge strategy.
+The workflow is enforced through a Three-Tier Naming Structure, a strict Conventional Commits policy with structured body bullets, and a Squash-and-Merge strategy that produces one atomic commit per PR on trunk.
 
 +++
 
@@ -96,6 +94,8 @@ The commit title **MUST** start with `<type>: <description>`. The description mu
 | **Routine**| `docs:` | Changes to documentation only. | NO| None  |
 || `test:` | Adding or correcting tests.| NO| None  |
 || `chore:`| Routine maintenance, dependency updates, minor clean-up.   | NO| None  |
+|| `ci:`| Changes to CI/CD configuration and workflows.   | NO| None  |
+|| `pr:`| Promotional or announcement posts (e.g., Telegram channel).   | NO| None  |
 | **Internal/Temporary** | `WIP:`  | **Incomplete work. Must be squashed/rebased before merging.**  | NO| None  |
 
 :::{important}
@@ -145,9 +145,9 @@ For commits of type
 
 the architectural intent **MUST** be provided as an ArchTag (Architectural Tag).
 
-- **Format:** The tag **MUST** be the **first line** of the commit body: `ArchTag:TAG-NAME` (one tag only).
+- **Format:** The tag **MUST** be the **first line** of the commit body: `ArchTag:TAG-NAME` (one tag only). Structured body bullets (see [Structured Commit Body Format](#structured-commit-body-format)) follow after the ArchTag line.
 - **Syntax Rules:** The tag **MUST NOT** include the `#` symbol or any spaces.
-- **Validation:** CI/CD automation tools will validate the tag’s presence and correctness.
+- **Validation:** CI/CD automation tools will validate the tag's presence and correctness.
 
 | Tag Name  | Intent   | Heuristic / Automation Gate |
 |:-----------------------|:-----------------------|:-----------------------|
@@ -158,12 +158,13 @@ the architectural intent **MUST** be provided as an ArchTag (Architectural Tag).
 
 +++
 
-:::{tip} Example of a full commit with `ArchTag`
+:::{tip} Example of a full commit with `ArchTag` and structured body bullets
 ```
 refactor: Simplify model loading logic
 
 ArchTag:TECHDEBT-PAYMENT
-Reduced cyclomatic complexity from 15 to 8, improving maintainability.
+- Refactored: `model_loader.py` — cyclomatic complexity was 15, causing test failures on edge cases; reduced to 8 by extracting format-specific loaders
+- Deleted: `legacy_loader.py` — its ONNX path was the only unique logic; moved into the main loader to eliminate a 200-line file with no test coverage
 ```
 :::
 
@@ -189,20 +190,123 @@ flowchart TB
 
 +++
 
-## **"WIP" Commits: Interactive Rebase**
+## **Structured Commit Body Format**
 
 +++
 
-Before opening a Pull Request (PR), all intermediate commits like `WIP` **MUST** be consolidated (squashed) into one or more **atomic commits** using a valid semantic type (`feat:`, `fix:`, etc.).
+Every commit on trunk (the squashed commit produced by Squash-and-Merge) **MUST** have a structured body with at least one changelog bullet. This extends Tier 2 (Intent) with detailed change manifests that enable automated CHANGELOG extraction.
 
-1.  **Start Interactive Rebase:** Execute `git rebase -i <target-branch>` (e.g., `git rebase -i develop`).
-2.  **Edit Commit List:** Change the action for every `WIP:` commit from `pick` to **`squash` (`s`)** or **`fixup` (`f`)**.
-3.  **Finalize Message:** Ensure the final, consolidated commit message is a single, valid, semantic commit title and body.
++++
 
-A `WIP:` type is useful only if its temporary nature is strictly enforced. Allowing `WIP:` commits to pollute the final, merged history defeats the purpose of Conventional Commits and introduces unnecessary noise and technical debt.
+### Body Convention
+
++++
+
+```
+<type>[(<scope>)]: <subject line>
+
+- <Verb>: <target> — <why/impact>
+- <Verb>: <target> — <why/impact>
+
+Co-Authored-By: ...
+```
+
+The `<why/impact>` portion explains the motivation or effect of the change, not just what was mechanically done.
+
+**Rules:**
+
+1. Body **MUST** contain at least one line starting with `- ` (a changelog bullet).
+2. Each bullet is a self-contained changelog entry. **No line length limit** — one bullet = one line, regardless of length. Commits are primarily read in Git host UIs which wrap automatically.
+3. Optional verb prefix before `:` — `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`.
+4. Git trailers (after blank line, `Key: Value` format) are excluded from parsing.
+5. Non-bullet lines in the body (prose context) are ignored by the parser but allowed for human context.
+6. `ArchTag:TAG-NAME` line (Tier 3) is preserved for justification validation but excluded from changelog output.
+
++++
+
+### Examples
+
++++
+
+:::{dropdown} Complex commit (docs) — real commit `3e652bc`
+```
+docs: Restructure website deployment documentation
+
+- Created: `tools/docs/website/01_github_pages_deployment.(md|ipynb)` — the GitHub Pages guide was invisible on the website because it lacked a Jupytext pair; new canonical guide consolidates scattered setup instructions
+- Renamed: `mystmd_website_deployment_instruction.(md|ipynb)` → `02_self_hosted_deployment.(md|ipynb)` — clear numbering signals the active guide (01) vs deprecated alternative (02)
+- Refactored: `02_self_hosted_deployment.md` — duplicated MyST init/config/testing sections diverged from the canonical guide; replaced with cross-references to eliminate drift
+- Deleted: `tools/docs/git/github_pages_setup.md` — content fully absorbed into `01_github_pages_deployment`; keeping both would cause conflicting instructions
+- Updated: `architecture/adr/adr_26022...md` — self-hosted link pointed to a renamed file; split single reference into two entries (active + deprecated) for clarity
+- Updated: `architecture/packages/README.md` — GitHub Pages setup link pointed to the deleted file
+- Updated: `architecture/packages/creating_spoke_packages.md` — same dead link fix in Next Steps section
+- Fixed: `configs/mutli-site/` → `configs/multi-site/` directory typo
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+```
+:::
+
+:::{dropdown} Simple commit (fix)
+```
+fix: Correct broken MyST term reference in ADR-26019
+
+- Fixed: `{term}`ADR 26001`` → `{term}`ADR-26001`` across 11 ADR files — missing hyphen caused unresolved glossary references, breaking cross-linking in the rendered site
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+```
+:::
+
+:::{dropdown} Refactor with ArchTag (Tier 3 + structured body coexist)
+```
+refactor: Simplify model loading logic
+
+ArchTag:TECHDEBT-PAYMENT
+- Refactored: `model_loader.py` — cyclomatic complexity was 15, causing test failures on edge cases; reduced to 8 by extracting format-specific loaders
+- Deleted: `legacy_loader.py` — its ONNX path was the only unique logic; moved into the main loader to eliminate a 200-line file with no test coverage
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+```
+:::
+
+:::{seealso}
+> {term}`ADR-26024`: Structured Commit Bodies for Automated CHANGELOG Generation
+:::
+
++++
+
+## **Release-Time CHANGELOG Generation**
+
++++
+
+The CHANGELOG is a **generated artifact**, not a manually curated document. It is produced at release time by `generate_changelog.py`, which extracts structured body bullets from git history.
+
+**The "Ingredients-First" pattern:**
+
+1. **At commit time**: `validate_commit_msg.py` (pre-commit hook, `commit-msg` stage) ensures every commit body contains parseable bullets — the "ingredients" are validated continuously.
+2. **At release time**: `generate_changelog.py` runs once on the frozen release branch, extracting all structured bullets since the last tag — "cooking" the CHANGELOG from validated ingredients.
+
+```bash
+# Generate changelog between two refs
+uv run tools/scripts/generate_changelog.py v2.4.0..HEAD --version 2.5.0
+```
+
+The generator uses `git log --first-parent` to scan only squashed trunk commits, ignoring noise from deleted feature branches. Legacy commits (pre-standard, no body bullets) are included with subject line only — graceful degradation, not failure.
+
+:::{seealso}
+> {term}`ADR-26024`: Structured Commit Bodies for Automated CHANGELOG Generation
+:::
+
++++
+
+## **"WIP" Commits: Handling Intermediate Work**
+
++++
+
+The `WIP:` commit type is strictly for **personal backup and context switching** on feature branches. Since the repository enforces **Squash-and-Merge** (see [Merge Strategy](#merge-strategy-atomic-change-submission)), `WIP:` commits are automatically eliminated when the PR is merged — the Git host produces a single squashed commit on trunk.
+
+**Optional local hygiene:** Developers *may* use `git rebase -i` to clean up their branch history before opening a PR. This improves PR reviewability but is not required — the squash at merge time handles consolidation.
 
 :::{important}
-The `WIP:` commit type is strictly for **personal backup and context switching** on feature branches. It **MUST NOT** be present in the final commit history of any main branch (e.g., `main`, `develop`).
+The `WIP:` commit type **MUST NOT** be present in the final commit history of any main branch (e.g., `main`). The Squash-and-Merge policy enforces this automatically.
 :::
 
 +++
@@ -211,29 +315,17 @@ The `WIP:` commit type is strictly for **personal backup and context switching**
 
 +++
 
-- **CI/CD Block:** The CI/CD pipeline is to be configured to automatically **fail a Pull Request** if any commit in the branch’s history contains the prefix `WIP:`. This is a **hard technical gate**.
-- **Mandatory Merge Strategy:** The repository is configured to **enforce “Squash and Merge”** for all feature branches into mainline branches. This guarantees that the final history is composed of single, clean, semantic commits.
+- **CI/CD Block:** The CI/CD pipeline is to be configured to automatically **fail a Pull Request** if any commit in the branch's history contains the prefix `WIP:`. This is a **hard technical gate**.
+- **Mandatory Merge Strategy:** The repository is configured to **enforce "Squash and Merge"** for all feature branches into mainline branches. The Git host must populate the squash commit message from the PR description, ensuring structured body bullets flow into the final commit. This guarantees that the final history is composed of single, clean, semantic commits.
 
-The most effective enforcement mechanism is at the code review and merge gate.
+The most effective enforcement mechanism is layered: automated hooks catch structural issues, reviewers assess semantic quality.
 
 | Policy   | Implementation | Rationale  |
 |:-----|:--------|:------|
-| **PR Status Check**  | Configure your CI/CD system (e.g., GitHub Actions, GitLab CI, Azure DevOps Pipelines) to run a script that **fails the build** if any commit in the PR history (prior to merge) contains the regex pattern `^WIP:` in its title. | This is a **hard gate**. It prevents developer oversight from reaching the main codebase, forcing the immediate correction of the branch history. |
-| **Reviewer Responsibility** | Peer reviewers are explicitly tasked with a **quick history audit**. The reviewer must verbally confirm that the history is clean and semantic before approving the PR. | Provides a human layer of quality control, ensuring the final commit message correctly reflects the change’s semantic intent and is well-written. |
-| **Enforce `merge --ff-only`**    | Set the default merge strategy on your repository to fast-forward only.  | The history should be linear and any change should be atomic so reverts can be made instantly if the bug found. The developer must rebase their work on main before initiating PR |
-
-The dev's workflow on topic branch:
-
-```bash
-$ git switch topic-branch
-$ git rebase -i main
-
-# squash intermediate commits, fix any conflicts
-# then
-$ git push origin topic-branch
-
-# and initiate a PR
-```
+| **PR Status Check**  | CI/CD system runs a script that **fails the build** if any commit in the PR history contains the regex pattern `^WIP:` in its title. | **Hard gate.** Prevents developer oversight from reaching the main codebase, forcing the immediate correction of the branch history. |
+| **Commit Message Validation** | `validate_commit_msg.py` runs as a `commit-msg` pre-commit hook locally. CI repeats the check on the PR's squash commit candidate. | **Hard gate.** Enforces Conventional Commits subject format and structured body bullets at both commit time and merge time. See {term}`ADR-26024`. |
+| **Reviewer Responsibility** | Peer reviewers assess the **semantic quality** of the PR description (which becomes the squash commit body): are the bullets accurate, complete, and meaningful? | Structural validation is automated. Humans focus on whether the message correctly reflects the change's intent — a judgment that cannot be automated. |
+| **Enforce Squash-and-Merge** | Set the repository merge policy to "Squash and Merge" only. Configure the Git host to populate the squash commit message from the PR description template. | Each PR becomes exactly one commit on trunk. The squash commit body contains the structured changelog bullets. Reverts are atomic (one commit = one revert). |
 
 +++
 
@@ -268,27 +360,26 @@ The goal of every feature branch’s final history is **logical atomicity**. An 
 +++
 
 - **Rule 1: One Goal Per Commit.** A commit must achieve one objective only (e.g., *refactor logic*, *add unit tests*, *fix a bug*).
-- **Rule 2: Commits Must Be Stable.** Every commit in the final, merged history **MUST** be buildable and pass all tests. This is mandatory for advanced diagnostic tools like `git bisect`. **Broken commits are technical debt.**
-- **Rule 3: Cohesive Narrative.** The sequence of commits in a Pull Request (PR) must tell a clear story of how the feature was developed, making it easy for reviewers to follow the logic.
+- **Rule 2: The Squashed Commit Must Be Stable.** The final squashed commit on trunk **MUST** be buildable and pass all tests. Intermediate feature branch commits are transient development artifacts — they are eliminated by Squash-and-Merge and need not individually pass CI.
+- **Rule 3: Cohesive Narrative.** The sequence of commits in a Pull Request (PR) should tell a clear story for reviewers. However, only the squashed commit matters for trunk history and changelog extraction.
 
 +++
 
-### The “Commit by Logic” Workflow
+### The "Commit by Logic" Workflow
 
 +++
 
-To create atomic commits, **DO NOT** use `git add .` indiscriminately.
+Granular atomic commits on feature branches are **recommended for PR reviewability** but are not required. Only the squashed commit on trunk matters for history and changelog extraction — internal feature branch history is invisible after Squash-and-Merge.
+
+To create clean commits on your feature branch, **DO NOT** use `git add .` indiscriminately.
 
 | Step  | Action   | Tool | Goal|
 |:-----------------|:-----------------|:-----------------|:-----------------|
 | **Stage Selectively** | Use the patch utility to stage only changes relevant to a single logical task.  | `git add -p`  | **Group changes by function and purpose,** not by file or timing.|
 | **Review and Commit** | Review the staged changes (`git diff --staged`). If they represent one complete, stable, logical step, commit them with a semantic type. | `git commit -m "feat: implement X interface"` | Ensure the commit is **atomic**. |
-| **Iterate and Clean** | Perform the rebase and squashing procedure (Section 4).  | `git rebase -i` | Produce a clean, coherent history ready for review and final merge. |
-
-This disciplined approach ensures that your contributions are professionally structured, easily maintainable, and maximally effective for the long-term health of our engineering systems.
 
 :::{seealso} Read more
-> - [“Pro Git”, Chapter 7: Git Tools - Rewriting History’](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History) by Scott Chacon and Ben Straub
+> - ["Pro Git", Chapter 7: Git Tools - Rewriting History'](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History) by Scott Chacon and Ben Straub
 :::
 
 +++
@@ -320,27 +411,29 @@ In professional code review systems:
 
 +++
 
-Fine-grained bisect on noisy history is **not the primary debugging tool** in production systems. Instead, rely on:
+`git bisect` is **formally deprioritized** as a debugging tool in this workflow. In ML-heavy systems, regressions are more frequently caused by data/config drift or high-level logic errors, not single-line syntax bugs. Unit tests and evaluation suites catch logic bugs faster than history-walking.
+
+Maintaining perfect stacked-diff history for `bisect` represents "Process Debt" — especially without specialized wrappers like Graphite or Sapling.
+
+**Primary debugging tools:**
+- **Unit and evaluation tests** (catch regressions at the logic level),
 - **Structured logging** (with trace IDs),
 - **Metrics and alerting** (e.g., latency, error rates),
-- **Atomic revert** (if a change breaks, revert the **entire unit**—not part of it).
+- **Atomic revert** (if a change breaks, revert the **entire squashed commit** — not part of it).
 
-If a change is **too large to debug or revert safely**, it **violates atomicity** and should have been split **before submission**.
-
-+++
-
-### (To Consider) Advanced Strategy: The Stacked Diff Exception
+If a change is **too large to debug or revert safely**, it **violates atomicity** and should have been split into separate PRs **before submission**.
 
 +++
 
-The **Stacked Diff** workflow is permitted as an **advanced implementation** of Atomic Change Submission, enabling high velocity and rapid peer review. This methodology involves breaking a large feature into a **series of small, dependent, atomic CLs** (Change Lists or Diffs) .
+### (Not Recommended) Stacked Diff Workflow
 
-1.  **Scope:** The entire feature remains **one logical change** to the system.
-2.  **Integration Method:** The default **Squash and Merge** is overridden. The stack is integrated using a specialized tool (e.g., Sapling, Graphite) that executes an atomic **Rebase and Merge** or **Fast-Forward Merge** for each sequential diff.
-3.  **Strict Condition:** This exception is **only** permitted if:
-    -   The work is managed through an approved Stacked Diff platform.
-    -   **Every single commit in the stack** must be independently reviewed, CI-verified, and comply with all Tier 1, 2, and 3 policies.
-4.  **Benefit:** The resulting mainline history is linear, atomic, and preserves the clean narrative of the feature’s development, thus **restoring the utility of `git bisect`** for diagnostics.
++++
+
+:::{caution}
+Stacked Diffs are **not recommended** for this ecosystem. They were evaluated (WRC 0.68) and rejected due to high rebase toil and tooling requirements (Graphite/Sapling). Since `git bisect` is formally deprioritized, the primary benefit of stacked diffs — preserving line-level bisect granularity — no longer justifies the overhead. See {term}`ADR-26024` for the full alternatives analysis.
+:::
+
+If a large feature needs decomposition, split it into **separate PRs** (each squash-merged independently) rather than stacking dependent diffs within a single branch.
 
 +++
 
@@ -350,8 +443,9 @@ The **Stacked Diff** workflow is permitted as an **advanced implementation** of 
 
 | Guardrail | Implementation |
 |:-----------------------------------|:-----------------------------------|
-| **Reviewer Gate**  | Reviewers **reject PRs** that are not logically atomic (e.g., mix refactor + feature).         |
-| **Merge Policy**| Repository settings **enforce “Merge --ff-only”** as the only allowed method. |
+| **Reviewer Gate**  | Reviewers **reject PRs** that are not logically atomic (e.g., mix refactor + feature) or lack structured body bullets in the PR description. |
+| **Merge Policy**| Repository settings **enforce "Squash and Merge"** as the only allowed merge method. The Git host populates the squash commit message from the PR description. |
+| **Commit Message Validation** | `validate_commit_msg.py` (pre-commit hook, `commit-msg` stage) validates both the subject line format and structured body bullets. |
 
 :::{caution} No Rebase on `main`
 Rebase operations create new commits with their own hashes, so such operation can break the monitoring systems if they configured on commit hash change detection.

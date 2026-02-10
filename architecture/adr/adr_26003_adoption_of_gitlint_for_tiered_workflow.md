@@ -3,7 +3,7 @@ id: 26003
 title: Adoption of `gitlint` for Tiered Workflow Enforcement
 date: 2026-01-24
 status: proposed
-tags: [architecture]
+tags: [architecture, git]
 superseded_by: null
 ---
 

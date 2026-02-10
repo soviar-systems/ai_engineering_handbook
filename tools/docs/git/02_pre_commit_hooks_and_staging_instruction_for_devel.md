@@ -11,18 +11,16 @@ kernelspec:
   language: bash
 ---
 
+---
+title: "Pre-Commit Hooks and Staging: Instruction for Developers"
+author: rudakow.wadim@gmail.com
+date: 2026-02-10
+options:
+  version: 1.0.0
+  birth: 2026-01-04
+---
+
 # Pre-Commit Hooks and Staging: Instruction for Developers
-
-+++
-
----
-
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.2.2  
-Birth: 2026-01-04  
-Last Modified: 2026-01-14
-
----
 
 +++
 
@@ -110,3 +108,29 @@ Run the [repo configuration script](/tools/scripts/configure_repo.py), it will a
 ```bash
 $ uv run pre-commit [<hook_id>] [--all-files]
 ```
+
++++
+
+## **4. Commit Message Validation**
+
++++
+
+The `validate_commit_msg.py` script runs as a `commit-msg` stage pre-commit hook, enforcing both the [Conventional Commits](https://www.conventionalcommits.org/) subject format (Tier 2) and the [Structured Commit Body](/tools/docs/git/01_production_git_workflow_standards.ipynb) convention.
+
+**What it validates:**
+
+| Check | Severity | Description |
+|:------|:---------|:------------|
+| Subject format | **Hard fail** | Must match `<type>[(<scope>)]: <description>` with a valid type prefix (`feat:`, `fix:`, `docs:`, etc.) |
+| Body bullets | **Hard fail** | Body must contain at least one line starting with `- ` (a changelog bullet) |
+| ArchTag presence | **Hard fail** | For `refactor:`, `perf:`, or `BREAKING CHANGE` commits, `ArchTag:TAG-NAME` must be present (Tier 3) |
+
+**Merge commits and fixup commits** are automatically skipped.
+
+**With Squash-and-Merge**, intermediate commit messages during development are less critical — the squash commit message (derived from the PR description) is the one that must pass validation. However, the hook runs on all local commits to build good habits and catch formatting issues early.
+
+:::{seealso}
+> - {term}`ADR-26003`: Adoption of gitlint for Tiered Workflow Enforcement
+> - {term}`ADR-26024`: Structured Commit Bodies for Automated CHANGELOG Generation
+> - [Production Git Workflow Standards — Structured Commit Body Format](/tools/docs/git/01_production_git_workflow_standards.ipynb)
+:::

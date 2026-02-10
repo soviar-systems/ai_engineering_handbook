@@ -71,6 +71,9 @@ ADR-26021
 ADR-26022
 : [Standardization of Public Documentation Hosting on GitHub Pages](/architecture/adr/adr_26022_standardization_of_public_documentation_hosting.md)
 
+ADR-26024
+: [Structured Commit Bodies for Automated CHANGELOG Generation](/architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md)
+
 ADR-26025
 : [RFC→ADR Workflow Formalization](/architecture/adr/adr_26025_rfc_adr_workflow_formalization.md)
 

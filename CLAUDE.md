@@ -97,10 +97,15 @@ Package manager: `uv` (never use pip directly)
 - **Parameterize inputs**: Test varied scenarios (edge cases, empty inputs, multiple items) without duplicating test logic
 - **Document the contract**: Each test class should have a docstring explaining what contract it verifies
 
-**Commit Conventions:**
-- Use conventional commits with prefixes: `feat:`, `fix:`, `docs:`, `ci:`, `chore:`, `pr:`
+**Commit Conventions (ADR-26024):**
+- Use conventional commits with prefixes: `feat:`, `fix:`, `docs:`, `ci:`, `chore:`, `pr:`, `refactor:`, `perf:`, `test:`
 - `pr:` prefix is for promotional/announcement posts
-- Keep commit messages concise, focusing on the "why"
+- Keep commit subjects concise (50 chars max), focusing on the "why"
+- Commit bodies **MUST** contain structured bullets: `- <Verb>: <target> — <why/impact>`
+- One bullet = one line, no line length limit
+- Verbs: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`
+- CHANGELOG is generated from commit history, not manually curated
+- Merge policy: Squash-and-Merge (1 PR = 1 Commit on trunk)
 
 **Pre-commit Hooks:**
 - Extensive validation runs before each commit (see `.pre-commit-config.yaml`)
