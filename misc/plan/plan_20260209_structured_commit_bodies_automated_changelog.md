@@ -18,6 +18,29 @@ The [Production Git Workflow Standards](/tools/docs/git/01_production_git_workfl
 
 The merge strategy (`--ff-only` / Squash-and-Merge) means each feature branch becomes **one atomic commit** on main. Each commit body therefore represents one complete changelog topic — ideal for automated extraction.
 
+### Foundational architectural decisions
+
+These decisions were evaluated through competing hypothesis analysis (Gemini session, 2026-02-09) and form the non-negotiable foundation of this plan:
+
+**1. `git bisect` is formally deprioritized as a debugging tool.**
+- **Motivation**: In ML-heavy systems, regressions are more frequently caused by data/config drift or high-level logic errors, not single-line syntax bugs. Unit/eval tests catch logic bugs faster than history-walking. Maintaining perfect stacked-diff history for `bisect` represents "Process Debt" that violates SVA (Smallest Viable Architecture) principles — especially without specialized wrappers like Graphite or Sapling.
+- **Consequence**: We do not need atomic commit history within feature branches. The topic branch is a transient development workspace. Only the squashed commit on trunk matters.
+
+**2. Rich-Body Squash is the merge strategy — 1 PR = 1 Commit = 1 Logical Change.**
+- **Motivation**: Squashing moves the system from *Micro-Atomic History* (line-level changes) to *Macro-Atomic History* (intent-level changes). This reduces history noise by 70-90% while preserving 100% of the semantic metadata needed for changelogs. Each squashed commit body contains the structured bullets that describe all sub-tasks — no metadata is lost, it's *relocated* from individual commits into a single rich body.
+- **Consequence**: The merge policy must be set to Squash-and-Merge. The Git host must be configured to include the PR description in the squash commit message template. `generate_changelog.py` must use `git log --first-parent` to scan only trunk commits and ignore noise from deleted feature branches.
+
+**3. Release-Time Batch Generation — the "Ingredients-First" pattern.**
+- **Motivation**: Running changelog extraction on every commit adds unnecessary latency to the local dev cycle. Generating the changelog only when the release branch is frozen ensures the artifact reflects the final, immutable state of the release candidate. A single generation event is easier to audit. However, batch generation at release time *requires* that input data (commit bodies) was validated continuously — otherwise the generator will fail when needed most.
+- **Consequence**: Two decoupled concerns: (a) `validate_commit_msg.py` runs as a hard gate at every commit, ensuring "ingredients" are parseable; (b) `generate_changelog.py` runs once at release time, "cooking" the CHANGELOG from validated ingredients. The validator is the critical path protector.
+
+**4. Debian `dch` (stateful metadata buffer) is rejected.**
+- **Motivation**: The `dch` approach introduces a changelog buffer file (`UNRELEASED.md` or `debian/changelog`) as a staging area. While it provides editorial control, it creates "Double-Entry Bookkeeping" — the delta between what was committed and what was recorded in the buffer can drift. The buffer file is notorious for merge conflicts. It requires a manual CLI step (SVA C1 violation) and adds a persistent state-tracking layer (SVA C4 violation). The `--amend` problem is unsolvable without idempotent hash-checking. In modern Git-centric workflows, the Git log itself is the single source of truth.
+- **Mitigation adopted**: The "Unreleased Stanza" concept is preserved — `generate_changelog.py` can output commits since the last tag, providing the same "what's pending" visibility without a separate file.
+
+**5. LLM-based generation is superseded.**
+- **Motivation**: The existing `ai_system/4_orchestration/workflows/release_notes_generation/` approach uses LLMs to compose RELEASE_NOTES.md from a diff file. This introduces non-determinism and "hallucination" risks in technical documentation. With structured commit bodies, a deterministic regex parser produces identical output every time — traceability from commit to changelog entry is 1:1.
+
 ## Competing Hypothesis Analysis
 
 ### The Problem Statement
@@ -259,19 +282,107 @@ release X.Y.Z
         - Fixed: `{term}`ADR 26001`` → `{term}`ADR-26001`` across 11 ADR files
 ```
 
-## Steps
+## Where the alternatives analysis lives
 
-### 1. Write ADR-26024
+The detailed alternatives analysis (5 hypotheses with WRC scoring, Debian `dch` evaluation, Stacked Diffs vs Rich-Body Squash evaluation) is substantial — too large for an ADR alternatives section, but too decision-focused for a standalone RFC.
+
+**Decision: Split into two artifacts:**
+
+1. **Primary source**: `misc/plan/gemini_20260209_changelog_alternatives_analysis.md` — the full Gemini conversation transcript with WRC calculations, methodology comparisons, assumption interrogation, and validation gap analysis. This is the analytical record that future readers can audit.
+2. **ADR-26024 alternatives section**: A condensed summary referencing the primary source. Each rejected alternative gets 2-3 sentences of rationale + the WRC score, with a pointer to the full analysis. This keeps the ADR readable while preserving traceability.
+
+**Why not a separate RFC?** The RFC→ADR workflow makes sense when a proposal needs cross-team review before a decision is made. Here, the decision is already made — the analytical work *justifies* the ADR, it doesn't precede it as a separate governance stage. The Gemini transcript *is* the RFC equivalent, and the ADR is the ratified decision.
+
+---
+
+## Steps — Phase A: Analytical Foundation (must complete before any implementation)
+
+This is a large analytical task. The git workflow standards, the ADR, and the commit convention need to be theoretically sound and internally consistent *before* any script is written. A script suite built on a shaky doctrinal foundation will need to be rewritten when the conventions change.
+
+### A1. Revise `01_production_git_workflow_standards.md`
+
+**File**: `tools/docs/git/01_production_git_workflow_standards.md`
+
+The current document contains several contradictions with the decisions formalized above. These must be resolved first because the ADR and all tooling reference this document as the authoritative source.
+
+**Contradictions to resolve:**
+
+| Section | Current state | Required change | Motivation |
+|---------|--------------|-----------------|------------|
+| "WIP" Commits: Interactive Rebase | Recommends `git rebase -i` to squash WIPs before PR | Remove or downgrade to "optional local hygiene". The Git host handles squashing at merge time. | Rich-Body Squash makes developer-side rebase unnecessary — the squash happens at merge, not before. |
+| PR System Guardrails | Recommends both `--ff-only` (line 223) and "Squash and Merge" (line 215) | Remove `--ff-only` — it's incompatible with Squash-and-Merge. Squash creates a new commit, not a fast-forward. | These are mutually exclusive merge strategies. The document currently contradicts itself. |
+| PR System Guardrails | Developer rebase workflow code block (lines 226-236) | Remove. Developers don't manually squash — the Git host UI does it. | Obsolete with Rich-Body Squash. |
+| Atomic Commits: Guiding Principle | Rule 2: "mandatory for `git bisect`" (line 271) | Reframe: "The final squashed commit on trunk must be buildable. Intermediate feature branch commits are transient." | `git bisect` is formally deprioritized. Atomicity applies to the squashed commit, not feature branch WIPs. |
+| The "Commit by Logic" Workflow | Promotes granular atomic commits on feature branches | Reframe as "recommended for PR reviewability" but explicitly state: only the squashed commit matters for history and changelog extraction. | Internal feature branch history is invisible to trunk — it's a development aid, not a historical record. |
+| Merge Strategy: Enforcement | "enforce 'Merge --ff-only'" (line 354) | Replace with: "enforce Squash-and-Merge. The Git host must populate the squash commit message from the PR description." | `--ff-only` contradicts squash. The merge policy must guarantee that PR descriptions flow into commit bodies. |
+| Debugging Without "git bisect" Granularity | States bisect is not primary — already partially aligned | Strengthen language: formally deprioritize `git bisect`. In ML-heavy systems, regressions stem from data/config drift, caught by unit/eval tests, not line-level history-walking. | Makes the existing section match the formal decision. |
+| Stacked Diff Exception | Allows multiple commits to preserve bisect utility | Mark as "Not Recommended" or remove. If kept: clarify that each diff = separate PR, each PR still gets squashed. | Stacked Diffs rejected (WRC 0.68) due to rebase toil and tooling requirements (Graphite/Sapling). |
+
+**New sections to add:**
+
+1. **Structured Commit Body Format** — The `- Verb: target — description` convention, with examples. This is the Tier 2 extension that makes automated CHANGELOG extraction possible.
+2. **Release-Time CHANGELOG Generation** — When and how the CHANGELOG is produced: batch extraction on a frozen release branch using `generate_changelog.py` with `git log --first-parent`. References the "Ingredients-First" pattern.
+
+**Frontmatter**: Update from old `Owner/Version` format to ADR-26023 standard. Version bumps to `1.0.0` (production document).
+
+### A2. Revise `02_pre_commit_hooks_and_staging_instruction_for_developers.md`
+
+**File**: `tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.md`
+
+**Changes:**
+- **Frontmatter**: Update from old format (`lefthand67@gmail.com`, Version 0.2.2) to ADR-26023 standard. Version `1.0.0`.
+- **New section**: "Commit Message Validation" — explain how `validate_commit_msg.py` (the `commit-msg` stage hook) enforces Tier 2 (Conventional Commits subject) and structured body bullets. Reference ADR-26003 and ADR-26024. Note that with Squash-and-Merge, intermediate commit messages during development are less critical — the squash commit message (derived from the PR description) is the one that must pass validation.
+
+### A3. Write ADR-26024
 
 **File**: `architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md`
 
-Content:
-- **Context**: Manual CHANGELOG curation doesn't scale; LLM-based generation adds complexity and non-determinism (see `ai_system/4_orchestration/workflows/release_notes_generation/`). Conventional commits already provide type classification — extending this with structured bodies enables fully automated CHANGELOG generation. Existing tools (git-cliff, git-changelog, commitizen) cannot produce hierarchical changelogs (section → topic → sub-items) without hacks or post-processing.
-- **Decision**: Mandate structured bullet bodies in all commits. Build a parser as a spoke package (per ADR-26020) to extract them into CHANGELOG format. This extends the Three-Tier Naming Structure from the Production Git Workflow Standards by adding detailed change manifests to Tier 2.
-- **Alternatives section**: Must include the competing hypothesis analysis — git-cliff (Rust, rejected: non-Python, flat output), git-changelog (Python, strained body handling), commitizen (opinionated framework, fragile multiline), hybrid (dependency on third-party data model). Document that the body convention is an ecosystem-specific extension of Conventional Commits.
-- **References**: ADR-26003 (gitlint, Tier 2/3 enforcement), ADR-26020 (hub-spoke ecosystem), Production Git Workflow Standards (`tools/docs/git/01_production_git_workflow_standards.md`), existing CHANGELOG/RELEASE_NOTES patterns.
+This ADR codifies the decisions made in the Gemini analysis session. It is the ratified decision document; the full analysis lives in `misc/plan/gemini_20260209_changelog_alternatives_analysis.md`.
 
-### 2. Write tests (TDD — tests first)
+Content:
+- **Context**: Manual CHANGELOG curation doesn't scale; LLM-based generation (see `ai_system/4_orchestration/workflows/release_notes_generation/`) adds non-determinism. Conventional commits already provide type classification — extending this with structured bodies enables fully automated, deterministic CHANGELOG generation. The CHANGELOG transitions from a narrative/descriptive artifact to a computational/traceable artifact [ISO 29148: Traceability].
+- **Decision**: Mandate structured bullet bodies in all commits. Build a custom Python parser as a spoke package (per ADR-26020) to extract them into hierarchical CHANGELOG format. This extends the Three-Tier Naming Structure from the Production Git Workflow Standards by adding detailed change manifests to Tier 2.
+- **Architectural pillars** (reference the foundational decisions from this plan):
+  1. `git bisect` deprioritized — tests over history-walking
+  2. Rich-Body Squash — 1 PR = 1 Commit = 1 Logical Change
+  3. Release-Time Batch Generation — "Ingredients-First" pattern
+  4. Git log as single source of truth — no stateful buffers
+- **Alternatives section** (condensed, with WRC scores and pointers to full analysis):
+  - git-cliff (WRC n/a — Rust, rejected: non-Python, flat output)
+  - git-changelog (WRC n/a — Python, but body bullet extraction is not first-class)
+  - Commitizen (WRC n/a — opinionated framework, fragile multiline `changelog_message_builder_hook`)
+  - Hybrid git-changelog + custom Jinja2 filter (viable but creates dependency on third-party data model)
+  - Debian `dch` stateful buffer (WRC 0.70 — rejected: SVA violations C1/C4, merge conflict risk, double-entry bookkeeping)
+  - Stacked Diffs (WRC 0.68 — rejected: rebase toil, requires Graphite/Sapling, bisect deprioritized)
+  - LLM-Based Generation (WRC 0.62 — rejected: non-deterministic, no audit trail)
+  - Custom Python parser (WRC 0.91 — **selected**: only approach achieving full hierarchical output fidelity within Python-only ecosystem constraints)
+  - Full analysis: `misc/plan/gemini_20260209_changelog_alternatives_analysis.md`
+- **Key risk**: The body convention (`- Verb: target — description`) is an ecosystem-specific extension of Conventional Commits, not an industry standard. The parser is portable to any project adopting the same format, but the format itself is bespoke.
+- **References**: ADR-26003 (gitlint), ADR-26020 (hub-spoke ecosystem), Production Git Workflow Standards, existing CHANGELOG/RELEASE_NOTES patterns, Gemini analysis transcript.
+
+### A4. Update CLAUDE.md
+
+Add to "Commit Conventions" section:
+- Commit bodies MUST contain structured bullets (per ADR-26024)
+- Format: `- <Verb>: <target> — <description>`
+- CHANGELOG is generated from commit history, not manually curated
+- Merge policy: Squash-and-Merge (1 PR = 1 Commit on trunk)
+
+### A5. Review internal consistency
+
+Before proceeding to implementation, verify that all four documents (01_production, 02_pre_commit, ADR-26024, CLAUDE.md) are internally consistent:
+- No contradictions between merge strategy references
+- The structured body convention is described identically everywhere
+- Cross-references between documents are correct
+- Frontmatter on all revised docs follows ADR-26023
+
+---
+
+## Steps — Phase B: Implementation (only after Phase A is complete and reviewed)
+
+Phase B implements the tooling that *operationalizes* the standards established in Phase A. No script should be written until the conventions it enforces are finalized and documented.
+
+### B1. Write tests for the changelog generator (TDD — tests first)
 
 **File**: `tools/tests/test_generate_changelog.py`
 
@@ -280,12 +391,15 @@ Test contracts:
 - **Grouping**: Commits grouped by type into correct CHANGELOG sections
 - **Ordering**: Sections appear in a consistent order (feat → fix → docs → ci → ...)
 - **Trailer exclusion**: `Co-Authored-By` and other trailers not included in bullets
-- **Body-less commits**: Rejected (the validator, not the generator, handles this)
+- **Body-less commits**: Handled gracefully (the validator prevents these, but the generator should not crash)
 - **Non-bullet body lines**: Prose context lines are ignored, only `- ` lines extracted
+- **ArchTag exclusion**: `ArchTag:TAG-NAME` lines excluded from changelog output
 - **Edge cases**: Empty ref range, single commit, scope in subject `feat(auth):`
 - **Output format**: Matches existing CHANGELOG indentation (4-space sub-items)
+- **`--first-parent` behavior**: Only trunk commits are processed, not feature branch noise
+- **Legacy handling**: Commits before the standard (no body bullets) are included with subject only, no sub-items
 
-### 3. Write the parser script
+### B2. Write the changelog generator script
 
 **File**: `tools/scripts/generate_changelog.py`
 
@@ -304,18 +418,26 @@ uv run tools/scripts/generate_changelog.py v2.4.0..HEAD --version 2.5.0 --prepen
 Implementation (top-down design per CLAUDE.md):
 1. `main()` — argparse, call generate, output
 2. `generate_changelog(ref_range, version)` → str
-3. `parse_commits(ref_range)` → list[Commit] — runs `git log`, parses output
+3. `parse_commits(ref_range)` → list[Commit] — runs `git log --first-parent`, parses output
 4. `parse_single_commit(raw)` → Commit dataclass (type, scope, subject, bullets, hash)
 5. `group_by_type(commits)` → dict[str, list[Commit]]
 6. `format_changelog(groups, version)` → str
 
 Key details:
+- **MUST use `git log --first-parent`** to scan only squashed trunk commits and ignore noise from deleted feature branches
 - Uses `subprocess.run` for `git log` with format `%H%n%s%n%b%nEND_COMMIT_MARKER`
 - Trailer detection: lines matching `^[\w-]+: .+` after a blank line
 - Bullet detection: lines matching `^\s*- .+`
+- ArchTag detection: lines matching `^ArchTag:.+` — preserved for Tier 3 but excluded from changelog
 - Uses `pathlib.Path` throughout
+- **Legacy commits** (pre-standard, no body bullets): included with subject line only, no sub-items — graceful degradation, not failure
+- **Clean state check**: warn (not fail) if `git status` is not clean when running
 
-### 4. Write the commit-msg validation hook
+### B3. Write tests for the commit-msg validator (TDD)
+
+**File**: `tools/tests/test_validate_commit_msg.py`
+
+### B4. Write the commit-msg validation hook
 
 **File**: `tools/scripts/validate_commit_msg.py`
 
@@ -329,7 +451,7 @@ A pre-commit hook (stage: `commit-msg`) that:
 
 This implements the commit-msg validation envisioned in ADR-26003 without the external gitlint dependency — a single-purpose Python script following ADR-26001 (Python + OOP for hooks).
 
-### 5. Write script documentation
+### B5. Write script documentation
 
 **Files**:
 - `tools/docs/scripts_instructions/generate_changelog_py_script.md` (+ `.ipynb` via jupytext)
@@ -337,7 +459,7 @@ This implements the commit-msg validation envisioned in ADR-26003 without the ex
 
 Following existing doc pattern: purpose, usage, examples, contract.
 
-### 6. Register in pre-commit config
+### B6. Register in pre-commit config
 
 Add to `.pre-commit-config.yaml`:
 ```yaml
@@ -359,18 +481,24 @@ Also add the test hook:
     pass_filenames: false
 ```
 
-### 7. Update CLAUDE.md
-
-Add to "Commit Conventions" section:
-- Commit bodies MUST contain structured bullets (per ADR-26024)
-- Format: `- <Verb>: <target> — <description>`
-- CHANGELOG is generated from commit history, not manually curated
+---
 
 ## Files involved
 
+### Phase A — Analytical Foundation
+
 | Action | File |
 |--------|------|
+| **Created** | `misc/plan/gemini_20260209_changelog_alternatives_analysis.md` — full Gemini analysis transcript |
+| **Edit** | `tools/docs/git/01_production_git_workflow_standards.md` — resolve contradictions, add structured body & release-time sections, frontmatter |
+| **Edit** | `tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.md` — add commit-msg validation section, frontmatter |
 | **Create** | `architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md` |
+| **Edit** | `CLAUDE.md` — update commit conventions |
+
+### Phase B — Implementation
+
+| Action | File |
+|--------|------|
 | **Create** | `tools/tests/test_generate_changelog.py` |
 | **Create** | `tools/scripts/generate_changelog.py` |
 | **Create** | `tools/tests/test_validate_commit_msg.py` |
@@ -378,10 +506,15 @@ Add to "Commit Conventions" section:
 | **Create** | `tools/docs/scripts_instructions/generate_changelog_py_script.md` |
 | **Create** | `tools/docs/scripts_instructions/validate_commit_msg_py_script.md` |
 | **Edit** | `.pre-commit-config.yaml` — add commit-msg hook + test hook |
-| **Edit** | `CLAUDE.md` — update commit conventions |
 
 ## Verification
 
+### Phase A
+1. All four documents (01_production, 02_pre_commit, ADR-26024, CLAUDE.md) reference the same merge strategy, body convention, and generation timing — no contradictions
+2. Cross-references between documents resolve correctly
+3. Frontmatter on all revised docs follows ADR-26023
+
+### Phase B
 1. `uv run pytest tools/tests/test_generate_changelog.py` — all tests pass
 2. `uv run pytest tools/tests/test_validate_commit_msg.py` — all tests pass
 3. `uv run tools/scripts/generate_changelog.py HEAD~5..HEAD` — generates output from recent commits
