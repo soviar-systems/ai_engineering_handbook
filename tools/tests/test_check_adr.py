@@ -327,6 +327,16 @@ def create_adr_file_full(
             content_lines.append("")
             content_lines.append("Some negative consequence.")
             content_lines.append("")
+        elif section == "Alternatives" and status == "accepted":
+            # Accepted ADRs must pass the promotion gate (ADR-26025):
+            # ≥2 alternative entries in "- **Name**: Reason." format.
+            content_lines.append("- **Option A**: Rejected. First alternative.")
+            content_lines.append("- **Option B**: Rejected. Second alternative.")
+            content_lines.append("")
+        elif section == "Participants" and status == "accepted":
+            # Accepted ADRs must have non-empty Participants (ADR-26025).
+            content_lines.append("1. Test Author")
+            content_lines.append("")
         else:
             content_lines.append(f"Content for {section.lower()} section.")
             content_lines.append("")
@@ -2990,3 +3000,294 @@ class TestBrokenTermReferenceDataClass:
         # The fix should use hyphen instead of space
         assert "-" in ref.suggested_fix
         assert "26001" in ref.suggested_fix
+
+
+# ======================
+# Unit Tests: Promotion Gate Validation (ADR-26025)
+# ======================
+#
+# ADR-26025 formalizes that `status: proposed` ADRs serve as RFCs.
+# The "promotion gate" prevents an ADR from being accepted without
+# sufficient analysis. validate_promotion_gate() returns (errors, warnings):
+#
+#   - accepted ADRs: errors if ## Alternatives < 2 entries or ## Participants empty
+#   - proposed ADRs: warnings (not errors) if ## Alternatives is empty
+#
+# Tests assert on error_type strings (structured contract) and exit codes,
+# never on human-readable messages — messages may change without breaking contracts.
+#
+# Entry detection patterns (all found in real ADRs in this repo):
+#   "- **Name**: ..."   → dash bullet + bold  (ADR-26016)
+#   "* **Name**: ..."   → asterisk bullet + bold  (ADR-26001, 26002, 26023)
+#   "### Name"          → subheading per alternative  (ADR-26013, 26014)
+#   "1. **Name**: ..."  → numbered list
+
+
+def _make_adr_content(
+    number: int,
+    status: str,
+    alternatives_body: str = "",
+    participants_body: str = "",
+    references_body: str = "",
+) -> str:
+    """Build minimal ADR content string for promotion gate tests.
+
+    Args:
+        number: ADR number.
+        status: ADR status (proposed, accepted, etc.).
+        alternatives_body: Raw text under ## Alternatives.
+        participants_body: Raw text under ## Participants.
+        references_body: Raw text under ## References.
+
+    Returns:
+        Full ADR content string with all required sections.
+    """
+    return (
+        f"---\nid: ADR-{number}\ntitle: Test\ndate: 2026-01-01\n"
+        f"status: {status}\ntags: [architecture]\nsuperseded_by: null\n---\n\n"
+        f"# ADR-{number}: Test\n\n"
+        f"## Title\n\nTest\n\n"
+        f"## Date\n\n2026-01-01\n\n"
+        f"## Status\n\n{status}\n\n"
+        f"## Context\n\nSome context.\n\n"
+        f"## Decision\n\nSome decision.\n\n"
+        f"## Consequences\n\nSome consequences.\n\n"
+        f"## Alternatives\n\n{alternatives_body}\n\n"
+        f"## References\n\n{references_body}\n\n"
+        f"## Participants\n\n{participants_body}\n"
+    )
+
+
+class TestPromotionGateAlternatives:
+    """Contract: accepted ADRs MUST have ≥2 entries in ## Alternatives.
+
+    An 'entry' is a line starting with '- **' or a numbered item (e.g. '1.').
+    Proposed ADRs get a warning (not error) if empty.
+
+    Boundary: 0 → error, 1 → error, 2 → pass. Status determines severity.
+    """
+
+    # --- accepted: hard errors ---
+
+    def test_accepted_with_zero_alternatives_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        content = _make_adr_content(26099, "accepted", alternatives_body="")
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="accepted", content=content)
+        errors, _warnings = validate_promotion_gate(adr)
+        assert len(errors) > 0
+        assert any(e.error_type == "insufficient_alternatives" for e in errors)
+
+    def test_accepted_with_one_alternative_fails(self, adr_env):
+        # 1 < 2, still below the gate threshold
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        alt = "- **Option A**: Rejected. Some reason."
+        content = _make_adr_content(26099, "accepted", alternatives_body=alt)
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="accepted", content=content)
+        errors, _warnings = validate_promotion_gate(adr)
+        assert len(errors) > 0
+        assert any(e.error_type == "insufficient_alternatives" for e in errors)
+
+    def test_accepted_with_two_alternatives_passes(self, adr_env):
+        # Exactly at the boundary — should pass
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        alt = (
+            "- **Option A**: Rejected. Some reason.\n"
+            "- **Option B**: Rejected. Another reason."
+        )
+        content = _make_adr_content(26099, "accepted", alternatives_body=alt)
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="accepted", content=content)
+        errors, _warnings = validate_promotion_gate(adr)
+        assert not any(e.error_type == "insufficient_alternatives" for e in errors)
+
+    def test_accepted_with_numbered_alternatives_passes(self, adr_env):
+        # Numbered list format ("1. **...") is a valid alternative entry
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        alt = (
+            "1. **Option A**: Rejected.\n"
+            "2. **Option B**: Rejected."
+        )
+        content = _make_adr_content(26099, "accepted", alternatives_body=alt)
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="accepted", content=content)
+        errors, _warnings = validate_promotion_gate(adr)
+        assert not any(e.error_type == "insufficient_alternatives" for e in errors)
+
+    def test_accepted_with_asterisk_bullet_alternatives_passes(self, adr_env):
+        # Asterisk bullet format ("* **...") used by ADR-26001, 26002, 26023
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        alt = (
+            "* **Shell/Bash:** Rejected due to poor testability.\n"
+            "* **Functional Python:** Rejected because shared state."
+        )
+        content = _make_adr_content(26099, "accepted", alternatives_body=alt)
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="accepted", content=content)
+        errors, _warnings = validate_promotion_gate(adr)
+        assert not any(e.error_type == "insufficient_alternatives" for e in errors)
+
+    def test_accepted_with_subheading_alternatives_passes(self, adr_env):
+        # Subheading format ("### Name (Rejected)") used by ADR-26013, 26014
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        alt = (
+            "### Persistent Artifact Storage (Rejected)\n\n"
+            "Some analysis paragraph.\n\n"
+            "### YAML as Source of Truth (Rejected)\n\n"
+            "Another analysis paragraph."
+        )
+        content = _make_adr_content(26099, "accepted", alternatives_body=alt)
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="accepted", content=content)
+        errors, _warnings = validate_promotion_gate(adr)
+        assert not any(e.error_type == "insufficient_alternatives" for e in errors)
+
+    # --- proposed: soft warnings ---
+
+    def test_proposed_with_empty_alternatives_warns(self, adr_env):
+        # Proposed ADRs are still in RFC phase — no hard failure, just a nudge
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        content = _make_adr_content(26099, "proposed", alternatives_body="")
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="proposed", content=content)
+        errors, warnings = validate_promotion_gate(adr)
+        assert len(errors) == 0
+        assert len(warnings) > 0
+
+    def test_proposed_with_alternatives_no_warning(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        alt = "- **Option A**: Rejected.\n- **Option B**: Rejected."
+        content = _make_adr_content(26099, "proposed", alternatives_body=alt)
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="proposed", content=content)
+        errors, warnings = validate_promotion_gate(adr)
+        assert len(errors) == 0
+        assert len(warnings) == 0
+
+
+class TestPromotionGateParticipants:
+    """Contract: accepted ADRs MUST have non-empty ## Participants.
+
+    'Non-empty' means the section body has any non-whitespace text.
+    Proposed ADRs are exempt — the Participants section may be empty
+    while the ADR is still in RFC phase.
+    """
+
+    def test_accepted_with_empty_participants_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        # Alternatives pass the gate so the only error is empty participants
+        alt = "- **A**: Rejected.\n- **B**: Rejected."
+        content = _make_adr_content(26099, "accepted", alternatives_body=alt, participants_body="")
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="accepted", content=content)
+        errors, _warnings = validate_promotion_gate(adr)
+        assert any(e.error_type == "empty_participants" for e in errors)
+
+    def test_accepted_with_participants_passes(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        alt = "- **A**: Rejected.\n- **B**: Rejected."
+        participants = "1. Test Author\n2. Test Reviewer"
+        content = _make_adr_content(26099, "accepted", alternatives_body=alt,
+                                     participants_body=participants)
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="accepted", content=content)
+        errors, _warnings = validate_promotion_gate(adr)
+        assert not any(e.error_type == "empty_participants" for e in errors)
+
+    def test_proposed_with_empty_participants_no_error(self, adr_env):
+        # Proposed ADRs are exempt from the participants requirement
+        from tools.scripts.check_adr import AdrFile, validate_promotion_gate
+
+        content = _make_adr_content(26099, "proposed", participants_body="")
+        adr = AdrFile(path=adr_env.adr_dir / "test.md", number=26099, title="Test",
+                      status="proposed", content=content)
+        errors, _warnings = validate_promotion_gate(adr)
+        assert not any(e.error_type == "empty_participants" for e in errors)
+
+
+class TestPromotionGateCLIIntegration:
+    """Contract: promotion gate feeds into main() exit code.
+
+    - Gate errors (accepted ADR failing criteria) → exit 1
+    - Gate warnings (proposed ADR missing alternatives) → exit 0
+    - Gate pass (all criteria met) → exit 0
+
+    These tests use create_adr_file_full + create_index to set up
+    a synced environment, so only the promotion gate determines the exit code.
+    Tests assert solely on exit codes — never on output text.
+    """
+
+    def test_accepted_adr_failing_gate_causes_exit_1(self, adr_env):
+        """Synced but under-analyzed accepted ADR → exit 1."""
+        from tools.scripts.check_adr import main
+
+        # Write ADR content directly — no dependency on helper placeholder strings.
+        # This accepted ADR has no "- **" entries and empty participants.
+        content = _make_adr_content(
+            26090, "accepted",
+            alternatives_body="No real alternatives analyzed.",
+            participants_body="",
+        )
+        filepath = adr_env.adr_dir / "adr_26090_gate_fail_test.md"
+        filepath.write_text(content, encoding="utf-8")
+
+        create_index(
+            adr_env.index_path,
+            [(26090, "Gate Fail Test", "/architecture/adr/adr_26090_gate_fail_test.md")],
+        )
+
+        assert main([]) == 1
+
+    def test_proposed_adr_with_empty_alternatives_still_exits_0(self, adr_env):
+        """Synced proposed ADR with no alternatives → warnings only, exit 0."""
+        from tools.scripts.check_adr import main
+
+        # Write directly — proposed with empty alternatives should only warn.
+        content = _make_adr_content(
+            26091, "proposed",
+            alternatives_body="",
+            participants_body="",
+        )
+        filepath = adr_env.adr_dir / "adr_26091_proposed_warning_test.md"
+        filepath.write_text(content, encoding="utf-8")
+
+        create_index(
+            adr_env.index_path,
+            [(26091, "Proposed Warning Test", "/architecture/adr/adr_26091_proposed_warning_test.md")],
+        )
+
+        assert main([]) == 0
+
+    def test_accepted_adr_passing_gate_exits_0(self, adr_env):
+        """Synced accepted ADR with ≥2 alternatives + participants → exit 0."""
+        from tools.scripts.check_adr import main
+
+        # Write directly — this accepted ADR satisfies all gate criteria.
+        content = _make_adr_content(
+            26092, "accepted",
+            alternatives_body=(
+                "- **Option A**: Rejected. Reason.\n"
+                "- **Option B**: Rejected. Reason."
+            ),
+            participants_body="1. Author A\n2. Author B",
+        )
+        filepath = adr_env.adr_dir / "adr_26092_gate_pass_test.md"
+        filepath.write_text(content, encoding="utf-8")
+
+        create_index(
+            adr_env.index_path,
+            [(26092, "Gate Pass Test", "/architecture/adr/adr_26092_gate_pass_test.md")],
+        )
+
+        assert main([]) == 0

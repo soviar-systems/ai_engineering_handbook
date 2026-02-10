@@ -2,10 +2,12 @@
 
 ---
 
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.1.1  
-Birth: 2026-01-06  
-Last Modified: 2026-01-14
+title: "What is an ADR?"
+author: rudakow.wadim@gmail.com
+date: 2026-02-10
+options:
+  version: 1.1.0
+  birth: 2026-01-06
 
 ---
 
@@ -24,36 +26,28 @@ ADR helps to:
 
 Each ADR is a separate file dedicated to one significant architectural topic (e.g., choice of database, integration pattern, framework, etc.).
 
-Maintaining and approving ADRs is often the responsibility of Tech Leads or Senior Developers.
+## Creating an ADR
 
-# Organizational Approach
+All ADRs live in `architecture/adr/` as a flat directory — files are never moved to an archive folder ({term}`ADR-26016`).
 
-* **Allocate a dedicated folder** (`docs/adr/` or `architecture/decisions/`) in the repository to store all ADR files.
-* **Use a template**: Create all records using a single structured template for transparency and ease of searching.
-* **One architectural decision per ADR**: If a decision changes, create a new ADR and mark the old one as obsolete (`Superseded`, `Replaced`).
-* **Immutability**: Once created, an ADR is not edited — changes are only made via a new ADR.
-* **Decision Status**: Mark all files with the current status: `Proposed`, `Accepted`, `Rejected`, `Deprecated`, `Superseded`.
-* **Discussion via Pull Request**: Format all ADRs as pull requests; they should be discussed and approved by colleagues similarly to code.
-* **Revision**: Review ADRs for relevance at least once a quarter — if a decision has changed, create a new ADR.
-* **Responsibility**: The Tech Lead or an experienced developer is responsible for drafting the ADR, while the team participates in preparing and verifying the content.
+To create a new ADR:
 
-## ADR Template in Russian
+1. Copy the [ADR template](/architecture/adr/adr_template.md).
+2. Follow the structure, required fields, valid statuses, and tags defined in [`adr_config.yaml`](/architecture/adr/adr_config.yaml) — this file is the Single Source of Truth for all ADR validation rules.
+3. The `check_adr.py` script validates ADRs against the config automatically.
 
-Use the [template](/architecture/adr/adr_template.md) for new ADRs.
+## The RFC→ADR Workflow
 
-## Best Practices for Using ADR in Git
+In this project, `proposed` ADRs serve as RFCs (Requests for Comments). There is no separate RFC document type — the ADR itself is the living design document that collects discourse before promotion. See {term}`ADR-26025` for the full specification.
 
-* Store ADRs as Markdown files in a separate folder — for example, `architecture/adr/` within the repository.
-* The filename should start with a number (with leading YY - year, i.e. 26) and contain a brief description of the decision, e.g., `adr_26001_use_of_python_and_oop_for_git_hook_scripts.md`.
-* Treat an ADR as an immutable historical document; if a decision changes, create a new ADR, referencing the previous one as "superseded."
-* Leverage Git capabilities: discuss, review, and approve ADRs via pull requests, just like regular code.
-* Indicate the decision status (Proposed, Accepted, Deprecated, Superseded) to track its lifecycle stage.
-* Each ADR should contain only one architectural decision — this simplifies understanding and searching.
-* Regularly (e.g., once a month) review ADRs to check the relevance of assumptions and document new decisions in separate files.
+**Key points:**
 
-# For Further Study
+* **RFC = Proposed ADR.** Draft a new ADR with `status: proposed`. Iterate on `## Alternatives` and `## Context` as analysis progresses.
+* **Promotion gate** (proposed → accepted). The `check_adr.py` script enforces criteria that must be met before an ADR can transition to `accepted` — see {term}`ADR-26025` for the full list.
+* **AI consultation records.** Raw Gemini/Claude transcripts are working files — not committed to the repo. All analytical value is absorbed into the ADR's `## Alternatives` section (Fat ADR pattern).
+* **Stale proposals.** ADRs remaining `proposed` >90 days without updates trigger a CI warning.
 
-* **Book:** “Documenting Software Architectures: Views and Beyond” — Clements et al.
-*Why:* Provides a systematic approach to architectural documentation and decision rationale.
-* **Documentation:** Michael Nygard's [adr.github.io](https://adr.github.io/)
-*Why:* Describes the classic ADR format — recognized as an industry standard.
+## For Further Study
+
+* **Book:** "Documenting Software Architectures: Views and Beyond" — Clements et al. Provides a systematic approach to architectural documentation and decision rationale.
+* **Documentation:** Michael Nygard's [adr.github.io](https://adr.github.io/). Describes the classic ADR format — recognized as an industry standard.

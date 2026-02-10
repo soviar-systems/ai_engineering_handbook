@@ -382,6 +382,102 @@ def validate_sections(adr_file: AdrFile) -> list[ValidationError]:
     return errors
 
 
+# Pattern to detect alternative entries in ## Alternatives section.
+# Matches three real-world formats found in this repo:
+#   - "- **Name**: ..."   (dash bullet + bold)
+#   - "* **Name**: ..."   (asterisk bullet + bold)
+#   - "### Name"          (subheading per alternative)
+#   - "1. **Name**: ..."  (numbered list)
+_ALTERNATIVE_ENTRY_PATTERN = re.compile(
+    r"^(?:[-*]\s+\*\*|\d+\.\s+|###\s+)", re.MULTILINE
+)
+
+
+def _extract_section_body(content: str, section_name: str) -> str:
+    """Extract the body text of a named ## section.
+
+    Returns text between the section header and the next ## header (or EOF).
+
+    Args:
+        content: Full ADR content string.
+        section_name: Section name without '## ' prefix.
+
+    Returns:
+        Section body text, or empty string if section not found.
+    """
+    pattern = re.compile(
+        rf"^##\s+{re.escape(section_name)}\s*$\n(.*?)(?=^##\s|\Z)",
+        re.MULTILINE | re.DOTALL,
+    )
+    match = pattern.search(content)
+    return match.group(1).strip() if match else ""
+
+
+def validate_promotion_gate(
+    adr_file: AdrFile,
+) -> tuple[list[ValidationError], list[ValidationError]]:
+    """Validate promotion gate criteria (ADR-26025).
+
+    For accepted ADRs, checks are hard errors:
+      - ## Alternatives must have ≥2 entries
+      - ## Participants must be non-empty
+
+    For proposed ADRs, empty Alternatives is a warning (not error).
+
+    Args:
+        adr_file: ADR file to validate.
+
+    Returns:
+        Tuple of (errors, warnings). Both are lists of ValidationError.
+    """
+    errors: list[ValidationError] = []
+    warnings: list[ValidationError] = []
+
+    if adr_file.content is None or adr_file.status is None:
+        return errors, warnings
+
+    alternatives_body = _extract_section_body(adr_file.content, "Alternatives")
+    participants_body = _extract_section_body(adr_file.content, "Participants")
+
+    alt_count = len(_ALTERNATIVE_ENTRY_PATTERN.findall(alternatives_body))
+
+    if adr_file.status == "accepted":
+        if alt_count < 2:
+            errors.append(
+                ValidationError(
+                    number=adr_file.number,
+                    error_type="insufficient_alternatives",
+                    message=(
+                        f"ADR {adr_file.number} is accepted but has {alt_count} alternative(s) "
+                        f"(promotion gate requires ≥2)"
+                    ),
+                )
+            )
+        if not participants_body:
+            errors.append(
+                ValidationError(
+                    number=adr_file.number,
+                    error_type="empty_participants",
+                    message=f"ADR {adr_file.number} is accepted but has empty ## Participants",
+                )
+            )
+
+    elif adr_file.status == "proposed":
+        if alt_count == 0:
+            warnings.append(
+                ValidationError(
+                    number=adr_file.number,
+                    error_type="no_alternatives_proposed",
+                    message=(
+                        f"ADR {adr_file.number} is proposed with no alternatives listed "
+                        f"(consider adding alternatives before promotion)"
+                    ),
+                )
+            )
+
+    return errors, warnings
+
+
 def migrate_legacy_adr(filepath: Path) -> bool:
     """Add YAML frontmatter to legacy ADR file without it.
 
@@ -1257,6 +1353,25 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.verbose:
         print("All ADRs are synchronized with the index.")
+
+    # Promotion gate validation (ADR-26025)
+    gate_errors: list[ValidationError] = []
+    gate_warnings: list[ValidationError] = []
+    for adr in adr_files:
+        errs, warns = validate_promotion_gate(adr)
+        gate_errors.extend(errs)
+        gate_warnings.extend(warns)
+
+    if gate_warnings:
+        print("Promotion gate warnings:")
+        for warning in gate_warnings:
+            print(f"  ⚠ {warning.message}")
+
+    if gate_errors:
+        print("Promotion gate errors:")
+        for error in gate_errors:
+            print(f"  - {error.message}")
+        return 1
 
     return 0
 
