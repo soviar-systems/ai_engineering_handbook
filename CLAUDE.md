@@ -43,7 +43,7 @@ The repository is organized around a six-layer AI system architecture:
 
 ## Critical Conventions
 
-When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_<descriptive_slug>.md, ONLY then start implementation. This is needed to save the history of the decisions made between context switch.
+When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_<descriptive_slug>.md, ONLY then start implementation. After the plan is fully implemented, move it to misc/plan/implemented/. This is needed to save the history of the decisions made between context switches.
 
 **MyST Notebooks:**
 - Never convert `{code-cell}` blocks to standard markdown code blocks
@@ -101,7 +101,8 @@ Package manager: `uv` (never use pip directly)
 - Use conventional commits with prefixes: `feat:`, `fix:`, `docs:`, `ci:`, `chore:`, `pr:`, `refactor:`, `perf:`, `test:`
 - `pr:` prefix is for promotional/announcement posts
 - Keep commit subjects concise (50 chars max), focusing on the "why"
-- Commit bodies **MUST** contain structured bullets: `- <Verb>: <target> — <why/impact>`
+- Commit bodies **MUST** contain structured bullets: `- <Verb>: \`<file-path>\` — <what/why>`
+- `<file-path>` is relative to repo root, in backticks (e.g., `` `tools/scripts/check_adr.py` ``). No abstract targets — every change lives in a file
 - One bullet = one line, no line length limit
 - Verbs: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`
 - CHANGELOG is generated from commit history, not manually curated

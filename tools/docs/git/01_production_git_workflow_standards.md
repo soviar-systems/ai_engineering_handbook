@@ -6,9 +6,9 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.19.0
 kernelspec:
-  name: python3
   display_name: Python 3 (ipykernel)
   language: python
+  name: python3
 ---
 
 ---
@@ -145,7 +145,7 @@ For commits of type
 
 the architectural intent **MUST** be provided as an ArchTag (Architectural Tag).
 
-- **Format:** The tag **MUST** be the **first line** of the commit body: `ArchTag:TAG-NAME` (one tag only). Structured body bullets (see [Structured Commit Body Format](#structured-commit-body-format)) follow after the ArchTag line.
+- **Format:** The tag **MUST** be the **first line** of the commit body: `ArchTag:TAG-NAME` (one tag only). Structured body bullets (see [Structured Commit Body Format](#structured-commit-body-format)) follow after the ArchTag line. Each bullet uses the format `- <Verb>: \`<file-path>\` — <what/why>`.
 - **Syntax Rules:** The tag **MUST NOT** include the `#` symbol or any spaces.
 - **Validation:** CI/CD automation tools will validate the tag's presence and correctness.
 
@@ -205,22 +205,23 @@ Every commit on trunk (the squashed commit produced by Squash-and-Merge) **MUST*
 ```
 <type>[(<scope>)]: <subject line>
 
-- <Verb>: <target> — <why/impact>
-- <Verb>: <target> — <why/impact>
+- <Verb>: `<file-path>` — <what/why>
+- <Verb>: `<file-path>` — <what/why>
 
 Co-Authored-By: ...
 ```
 
-The `<why/impact>` portion explains the motivation or effect of the change, not just what was mechanically done.
+The `<what/why>` portion explains what changed in the file and why — this is a changelog, so each bullet should capture both the substance and the motivation.
 
 **Rules:**
 
 1. Body **MUST** contain at least one line starting with `- ` (a changelog bullet).
 2. Each bullet is a self-contained changelog entry. **No line length limit** — one bullet = one line, regardless of length. Commits are primarily read in Git host UIs which wrap automatically.
-3. Optional verb prefix before `:` — `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`.
-4. Git trailers (after blank line, `Key: Value` format) are excluded from parsing.
-5. Non-bullet lines in the body (prose context) are ignored by the parser but allowed for human context.
-6. `ArchTag:TAG-NAME` line (Tier 3) is preserved for justification validation but excluded from changelog output.
+3. Verb prefix before `:` — `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`.
+4. **`<file-path>` is a path relative to the repo root, wrapped in backticks.** Single file: `` `check_adr.py` ``. Glob/pair: `` `01_guide.(md|ipynb)` ``. Rename: `` `old.py` → `new.py` ``. Every change lives in a file — always use the nearest file path, no abstract targets.
+5. Git trailers (after blank line, `Key: Value` format) are excluded from parsing.
+6. Non-bullet lines in the body (prose context) are ignored by the parser but allowed for human context.
+7. `ArchTag:TAG-NAME` line (Tier 3) is preserved for justification validation but excluded from changelog output.
 
 +++
 

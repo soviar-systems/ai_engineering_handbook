@@ -53,10 +53,18 @@ Every commit on trunk must contain at least one changelog bullet in the body:
 ```
 <type>[(<scope>)]: <subject line>
 
-- <Verb>: <target> — <why/impact>
+- <Verb>: `<file-path>` — <what/why>
 ```
 
-The `<why/impact>` portion explains the motivation or effect of the change, not just what was mechanically done. Verb prefixes: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`. No line length limit — one bullet = one line. Git trailers and `ArchTag:` lines are excluded from changelog parsing.
+The `<what/why>` portion explains what changed in the file and why — this is a changelog, so each bullet should capture both the substance and the motivation. Verb prefixes: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`. No line length limit — one bullet = one line. Git trailers and `ArchTag:` lines are excluded from changelog parsing.
+
+**Target Rules** — `<file-path>` is a path relative to the repo root, wrapped in backticks:
+
+1. **Single file**: `` `tools/scripts/check_adr.py` ``
+2. **Glob or Jupytext pair**: `` `tools/docs/website/01_github_pages_deployment.(md|ipynb)` ``
+3. **Multiple related files** (same verb, same reason): `` `adr_26001.md`, `adr_26002.md` `` — or use a glob `` `architecture/adr/adr_260{01,02}.md` ``
+4. **Rename/move**: `` `old_name.py` → `new_name.py` ``
+5. **Every change lives in a file** — always use the nearest file path. Dependencies → `` `pyproject.toml` ``, CI variables → `` `deploy.yml` ``, config keys → `` `myst.yml` ``. No conceptual or abstract targets allowed.
 
 ### 2. Enforce via pre-commit hook and CI
 
@@ -70,15 +78,15 @@ The `<why/impact>` portion explains the motivation or effect of the change, not 
 
 1 PR = 1 Commit = 1 Logical Change. The repository enforces Squash-and-Merge. The Git host populates the squash commit message from the PR description, which contains the structured body bullets. This moves the system from *Micro-Atomic History* (line-level changes) to *Macro-Atomic History* (intent-level changes), reducing history noise by 70-90% while preserving 100% of the semantic metadata needed for changelogs.
 
-## Architectural Pillars
+### Architectural Pillars
 
-### Pillar 1: `git bisect` is formally deprioritized
+#### Pillar 1: `git bisect` is formally deprioritized
 
 In ML-heavy systems, regressions are more frequently caused by data/config drift or high-level logic errors, not single-line syntax bugs. Unit/eval tests catch logic bugs faster than history-walking. Maintaining perfect stacked-diff history for `bisect` represents "Process Debt" that violates SVA (Smallest Viable Architecture) principles — especially without specialized wrappers like Graphite or Sapling.
 
 **Consequence:** We do not need atomic commit history within feature branches. The topic branch is a transient development workspace. Only the squashed commit on trunk matters.
 
-### Pillar 2: Release-Time Batch Generation ("Ingredients-First")
+#### Pillar 2: Release-Time Batch Generation ("Ingredients-First")
 
 Running changelog extraction on every commit adds unnecessary latency to the local dev cycle. Generating the changelog only when the release branch is frozen ensures the artifact reflects the final, immutable state of the release candidate. A single generation event is easier to audit.
 
@@ -86,13 +94,13 @@ However, batch generation at release time *requires* that input data (commit bod
 
 **Consequence:** Two decoupled concerns: (a) `validate_commit_msg.py` runs as a hard gate at every commit, ensuring "ingredients" are parseable; (b) `generate_changelog.py` runs once at release time, "cooking" the CHANGELOG from validated ingredients.
 
-### Pillar 3: Git log as single source of truth
+#### Pillar 3: Git log as single source of truth
 
 No stateful changelog buffer file (`UNRELEASED.md` or `debian/changelog`). The Git log itself is the single source of truth.
 
 **Consequence:** No "double-entry bookkeeping" risk, no merge conflicts on a buffer file, no manual CLI step.
 
-### Pillar 4: LLM-based generation is superseded
+#### Pillar 4: LLM-based generation is superseded
 
 The previous approach used LLMs to compose RELEASE_NOTES.md from a diff file. This introduces non-determinism and "hallucination" risks in technical documentation. With structured commit bodies, a deterministic regex parser produces identical output every time — traceability from commit to changelog entry is 1:1.
 
@@ -107,7 +115,7 @@ The previous approach used LLMs to compose RELEASE_NOTES.md from a diff file. Th
 
 ### Negative
 
-- **Adoption friction**: Contributors must learn the `- Verb: target — description` body convention.
+- **Adoption friction**: Contributors must learn the `- Verb: \`file-path\` — what/why` body convention.
 - **Maintenance burden**: We own the parser (~200 lines) and validator. But scope is small and follows the established script suite pattern ({term}`ADR-26011`).
 - **Bespoke convention**: The body format is an ecosystem-specific extension of Conventional Commits, not an industry standard. The parser is portable to any project adopting the same format, but the format itself is bespoke.
 - **History rewrite risk**: If the parsing rules change, generating a changelog for older commits may produce different output.
@@ -201,7 +209,7 @@ Uses LLMs to compose RELEASE_NOTES.md from a diff file. Zero effort for develope
 
 ### 8. Custom Python Parser (spoke package) — SELECTED
 
-A custom Python package published as a spoke package in the ecosystem. Understands the structured body convention natively. First-class bullet extraction. Knows that `- Verb: target — description` lines are changelog sub-items. Ignores prose lines. Excludes ArchTag and trailers.
+A custom Python package published as a spoke package in the ecosystem. Understands the structured body convention natively. First-class bullet extraction. Knows that `- Verb: \`file-path\` — what/why` lines are changelog sub-items. Ignores prose lines. Excludes ArchTag and trailers.
 
 **The only approach that can produce the exact hierarchical CHANGELOG format natively** — all others require hacks or post-processing. Fits the ecosystem model perfectly: a spoke package that any repo can install via `uv add`. Full control means it can evolve with the ecosystem.
 
