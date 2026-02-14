@@ -20,5 +20,14 @@ When editing configuration files
 When you commit changes
     Prefer atomic commits - each task should have its own commit so if it contains a bug it can be reverted as a whole feature or fix in one git revert command,
     Always commit telegram posts in the dedicated commit with pr prefix, they must be filtered during the release notes generation.
+    **Follow these guidelines for commit bodies:**
+    - Every commit must contain at least one changelog bullet in the body.
+    - Use the following format for each bullet:
+      ```
+      - Verb: `file-path` — what/why
+      ```
+    - Verb prefixes: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Added`, `Removed`, `Refactored`, `Configured`.
+    - `file-path` should be a path relative to the repo root, wrapped in backticks (e.g., `` `tools/scripts/check_adr.py` ``).
+    - Explain *what* changed in the file and *why* it changed.
 
 Save chat history to the .aider.chat.history/ directory - each new session you start a new history file with the name of form "<date_hash>_<time_hash>.md"
