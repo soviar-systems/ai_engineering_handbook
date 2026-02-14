@@ -31,6 +31,7 @@ project:
     API: Application Programming Interface
     ASIC: Application-Specific Integrated Circuit
     BLAS: Basic Linear Algebra Subprograms
+    DVC: Data Version Control
     FIM: Fill-in-the-Middle
     FLOPS: Floating Point Operations per Second
     FPGA: Field-Programmable Gate Arrays

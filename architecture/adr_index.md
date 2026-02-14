@@ -21,6 +21,9 @@ ADR-26016
 ADR-26023
 : [MyST-Aligned Frontmatter Standard](/architecture/adr/adr_26023_myst_aligned_frontmatter_standard.md)
 
+ADR-26026
+: [Dedicated Research Monorepo for Volatile Experimental Projects](/architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md)
+
 :::
 
 ## Evolutionary Proposals
