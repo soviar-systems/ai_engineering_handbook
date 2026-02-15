@@ -20,7 +20,7 @@ title: Instruction on check_adr.py script
 author: Vadim Rudakov, rudakow.wadim@gmail.com
 date: 2026-02-08
 options:
-  version: 0.4.0
+  version: 0.5.0
   birth: 2026-01-30
 ---
 
@@ -42,6 +42,7 @@ It ensures:
 - **Date Format**: Date field matches YYYY-MM-DD (ISO 8601)
 - **Valid Tags**: Tags are from predefined list in config
 - **Required Sections**: Document contains Context, Decision, Consequences, Alternatives, References, Participants
+- **Duplicate Sections**: No `##` section header appears more than once in the same ADR
 - **Term References**: MyST `{term}` cross-references use correct hyphen format (`{term}`ADR-26001``)
 
 All validation rules are defined in [`adr_config.yaml`](/architecture/adr/adr_config.yaml) (Single Source of Truth).
@@ -61,7 +62,59 @@ SVA isn't about minimal *code* — it's about **minimal *cognitive and operation
 
 +++
 
-## **2. Key Capabilities & Logic**
+## **2. Quick Reference**
+
++++
+
+### Command Cheat Sheet
+
+| Task | Command |
+|------|---------|
+| Validate all ADRs | `uv run tools/scripts/check_adr.py` |
+| Verbose validation | `uv run tools/scripts/check_adr.py --verbose` |
+| Auto-fix issues | `uv run tools/scripts/check_adr.py --fix` |
+| Migrate legacy ADRs | `uv run tools/scripts/check_adr.py --migrate` |
+| Check staged only | `uv run tools/scripts/check_adr.py --check-staged` |
+| Check term references | `uv run tools/scripts/check_adr.py --check-terms` |
+| Fix term references | `uv run tools/scripts/check_adr.py --fix-terms` |
+| Run tests | `uv run pytest tools/tests/test_check_adr.py -v` |
+| Run tests + coverage | `uv run pytest tools/tests/test_check_adr.py --cov=tools.scripts.check_adr` |
+
++++
+
+### Typical Workflow
+
+```bash
+# 1. Create/edit ADR
+cp architecture/adr/adr_template.md architecture/adr/adr_NNNNN_slug.md
+# Edit the file...
+
+# 2. Validate
+uv run tools/scripts/check_adr.py --verbose
+
+# 3. Fix any issues
+uv run tools/scripts/check_adr.py --fix
+
+# 4. Commit
+git add architecture/adr/ architecture/adr_index.md
+git commit -m "feat: Add ADR NNNNN"
+```
+
++++
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `tools/scripts/check_adr.py` | Main validation script |
+| `tools/tests/test_check_adr.py` | Test suite (150+ tests, 98% coverage) |
+| `architecture/adr/adr_config.yaml` | SSoT for validation rules |
+| `architecture/adr/adr_template.md` | Template for new ADRs |
+| `architecture/adr_index.md` | Partitioned index (auto-generated) |
+
++++
+
+## **3. Key Capabilities & Logic**
 
 +++
 
@@ -124,6 +177,7 @@ ADR 26002
 | `invalid_tag` | Tag not in allowed list from config |
 | `empty_tags` | Tags list is empty (at least one required) |
 | `missing_section` | Required document section not found |
+| `duplicate_section` | Same `##` header appears more than once in the ADR |
 | `broken_term_reference` | `{term}`ADR 26001`` should use hyphen: `{term}`ADR-26001`` |
 
 +++
@@ -134,14 +188,16 @@ When run with `--fix`, the script:
 
 1. **Fixes invalid statuses**: Prompts to correct typos (e.g., "prposed" → "proposed")
 2. **Fixes title mismatches**: Prompts to update frontmatter title to match header
-3. **Regenerates partitioned index**: Groups ADRs by status into sections:
+3. **Fixes duplicate sections**: Prompts to merge duplicate `##` headers (keeps first, concatenates bodies)
+4. **Regenerates partitioned index**: Groups ADRs by status into sections:
    - *Active Architecture*: accepted ADRs
    - *Evolutionary Proposals*: proposed ADRs
    - *Historical Context*: rejected, superseded, deprecated ADRs
-4. **Annotates superseded entries**: Adds " — superseded by {term}`ADR-XXXXX`" to index entries for ADRs with `superseded_by` set in frontmatter
-5. **Sorts entries** by ADR number within each section
-6. **Removes orphan entries** pointing to non-existent files
-7. **Reports all changes** made
+5. **Annotates superseded entries**: Adds " — superseded by {term}`ADR-XXXXX`" to index entries for ADRs with `superseded_by` set in frontmatter
+6. **Sorts entries** by ADR number within each section
+7. **Removes orphan entries** pointing to non-existent files
+8. **Runs promotion gate validation**: Same checks as `--verbose` mode (accepted ADRs must have ≥2 alternatives and non-empty Participants)
+9. **Reports all changes** made
 
 ### E. Migration Mode (`--migrate`)
 
@@ -189,7 +245,7 @@ status_corrections:
 
 +++
 
-## **3. Operational Guide**
+## **4. Operational Guide**
 
 +++
 
@@ -241,7 +297,7 @@ env -u VIRTUAL_ENV uv run tools/scripts/check_adr.py --check-staged --verbose
 
 +++
 
-## **4. Validation Layers**
+## **5. Validation Layers**
 
 +++
 
@@ -273,13 +329,19 @@ adr-index:
       run: uv run tools/scripts/check_adr.py --verbose
 ```
 
+:::{important} **Pre-commit / CI desync pattern**
+Pre-commit hooks typically run in "fix and move on" mode (`--fix`), while CI runs in "validate everything" mode (`--verbose`). If these two modes have different validation coverage, a gap emerges: pre-commit passes locally, but CI fails on the same commit.
+
+The fix: `--fix` mode must run the same validation gates as `--verbose` before returning exit 0. In this script, both modes now run promotion gate validation (ADR-26025) after sync checks.
+:::
+
 +++
 
-## **5. Test Suite**
+## **6. Test Suite**
 
 +++
 
-The [test suite](/tools/tests/test_check_adr.py) provides 110+ tests with 98% coverage:
+The [test suite](/tools/tests/test_check_adr.py) provides 150+ tests with 96% coverage:
 
 | Test Class | Coverage |
 |------------|----------|
@@ -302,6 +364,12 @@ The [test suite](/tools/tests/test_check_adr.py) provides 110+ tests with 98% co
 | `TestTermReferenceValidation` | Term reference error generation |
 | `TestTermReferenceFix` | Term reference auto-fix |
 | `TestTermReferenceCliFlags` | `--check-terms` and `--fix-terms` CLI |
+| `TestPromotionGateAlternatives` | Accepted ADRs require ≥2 alternatives |
+| `TestPromotionGateParticipants` | Accepted ADRs require non-empty Participants |
+| `TestPromotionGateCLIIntegration` | Promotion gate feeds into exit code |
+| `TestDuplicateSections` | Duplicate `##` header detection |
+| `TestFixDuplicateSections` | Duplicate section merge with user confirmation |
+| `TestPromotionGateInFixMode` | `--fix` mode runs promotion gate validation |
 
 Run tests with:
 
@@ -317,7 +385,7 @@ env -u VIRTUAL_ENV uv run pytest tools/tests/test_check_adr.py -q
 env -u VIRTUAL_ENV uv run pytest tools/tests/test_check_adr.py --cov=tools.scripts.check_adr --cov-report=term-missing -q
 ```
 
-## **6. Common Scenarios**
+## **7. Common Scenarios**
 
 +++
 
@@ -529,54 +597,28 @@ git add architecture/adr_index.md
 git commit -m "feat: Add ADR 26018"
 ```
 
-+++
+### Scenario 9: Fixing Duplicate Sections
 
-## **7. Quick Reference**
-
-+++
-
-### Command Cheat Sheet
-
-| Task | Command |
-|------|---------|
-| Validate all ADRs | `uv run tools/scripts/check_adr.py` |
-| Verbose validation | `uv run tools/scripts/check_adr.py --verbose` |
-| Auto-fix issues | `uv run tools/scripts/check_adr.py --fix` |
-| Migrate legacy ADRs | `uv run tools/scripts/check_adr.py --migrate` |
-| Check staged only | `uv run tools/scripts/check_adr.py --check-staged` |
-| Check term references | `uv run tools/scripts/check_adr.py --check-terms` |
-| Fix term references | `uv run tools/scripts/check_adr.py --fix-terms` |
-| Run tests | `uv run pytest tools/tests/test_check_adr.py -v` |
-| Run tests + coverage | `uv run pytest tools/tests/test_check_adr.py --cov=tools.scripts.check_adr` |
-
-+++
-
-### Typical Workflow
+**Goal**: Merge duplicate `##` headers in an ADR file.
 
 ```bash
-# 1. Create/edit ADR
-cp architecture/adr/adr_template.md architecture/adr/adr_NNNNN_slug.md
-# Edit the file...
-
-# 2. Validate
+# 1. Validation shows duplicate section
 uv run tools/scripts/check_adr.py --verbose
 
-# 3. Fix any issues
+# Output:
+# - ADR 26026 has duplicate section: '## Participants' (2 occurrences)
+
+# 2. Run fix mode (will prompt for confirmation)
 uv run tools/scripts/check_adr.py --fix
 
-# 4. Commit
-git add architecture/adr/ architecture/adr_index.md
-git commit -m "feat: Add ADR NNNNN"
+# Interactive prompt:
+# ADR 26026 has 2 '## Participants' sections:
+#   1. (empty)
+#   2. 1. Test Author
+# Merged result under single '## Participants':
+#   1. Test Author
+# Apply merge? [Y/n]: y
+
+# 3. Stage the fixed file
+git add architecture/adr/adr_26026_*.md
 ```
-
-+++
-
-### Key Files
-
-| File | Purpose |
-|------|---------|
-| `tools/scripts/check_adr.py` | Main validation script |
-| `tools/tests/test_check_adr.py` | Test suite (110+ tests, 98% coverage) |
-| `architecture/adr/adr_config.yaml` | SSoT for validation rules |
-| `architecture/adr/adr_template.md` | Template for new ADRs |
-| `architecture/adr_index.md` | Partitioned index (auto-generated) |

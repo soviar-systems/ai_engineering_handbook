@@ -3269,6 +3269,279 @@ class TestPromotionGateCLIIntegration:
 
         assert main([]) == 0
 
+
+# ======================
+# Duplicate Section Detection Tests
+# ======================
+
+
+class TestDuplicateSections:
+    """Contract: validate_sections() must detect duplicate ## headers.
+
+    A section name appearing more than once produces a 'duplicate_section' error.
+    The set-based approach silently collapsed duplicates — this catches them.
+    """
+
+    def test_duplicate_section_produces_error(self, adr_env):
+        """ADR with two ## Participants headers should produce duplicate_section error."""
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = (
+            "---\nid: 26099\ntitle: Test\ndate: 2026-01-01\n"
+            "status: proposed\ntags: [architecture]\nsuperseded_by: null\n---\n\n"
+            "# ADR-26099: Test\n\n"
+            "## Context\n\nSome context.\n\n"
+            "## Decision\n\nSome decision.\n\n"
+            "## Consequences\n\nSome consequences.\n\n"
+            "## Alternatives\n\nSome alternatives.\n\n"
+            "## References\n\nSome references.\n\n"
+            "## Participants\n\n"
+            "## Participants\n\n1. Test Author\n"
+        )
+        adr = AdrFile(
+            path=adr_env.adr_dir / "test.md",
+            number=26099,
+            title="Test",
+            content=content,
+        )
+        errors = validate_sections(adr)
+        assert any(e.error_type == "duplicate_section" for e in errors)
+
+    def test_no_duplicates_passes(self, adr_env):
+        """ADR with unique sections should not produce duplicate_section error."""
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = _make_adr_content(26099, "proposed", participants_body="1. Author")
+        adr = AdrFile(
+            path=adr_env.adr_dir / "test.md",
+            number=26099,
+            title="Test",
+            content=content,
+        )
+        errors = validate_sections(adr)
+        assert not any(e.error_type == "duplicate_section" for e in errors)
+
+    def test_three_duplicates_produce_single_error(self, adr_env):
+        """Three ## Participants headers should produce exactly one duplicate_section error."""
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = (
+            "---\nid: 26099\ntitle: Test\ndate: 2026-01-01\n"
+            "status: proposed\ntags: [architecture]\nsuperseded_by: null\n---\n\n"
+            "# ADR-26099: Test\n\n"
+            "## Context\n\nSome context.\n\n"
+            "## Decision\n\nSome decision.\n\n"
+            "## Consequences\n\nSome consequences.\n\n"
+            "## Alternatives\n\nSome alternatives.\n\n"
+            "## References\n\nSome references.\n\n"
+            "## Participants\n\n"
+            "## Participants\n\n1. Author\n"
+            "## Participants\n\n2. Another Author\n"
+        )
+        adr = AdrFile(
+            path=adr_env.adr_dir / "test.md",
+            number=26099,
+            title="Test",
+            content=content,
+        )
+        errors = validate_sections(adr)
+        dup_errors = [e for e in errors if e.error_type == "duplicate_section"]
+        # One error per duplicated section name, not per occurrence
+        assert len(dup_errors) == 1
+
+
+class TestFixDuplicateSections:
+    """Contract: fix_duplicate_sections() merges duplicate ## headers.
+
+    Keeps the first header, concatenates all bodies (preserving order).
+    Returns True if any file was modified.
+    """
+
+    def test_merges_two_duplicate_sections(self, adr_env):
+        """Two ## Participants should merge into one with combined body."""
+        from tools.scripts.check_adr import AdrFile, fix_duplicate_sections
+
+        content = (
+            "---\nid: 26099\ntitle: Test\ndate: 2026-01-01\n"
+            "status: accepted\ntags: [architecture]\nsuperseded_by: null\n---\n\n"
+            "# ADR-26099: Test\n\n"
+            "## Context\n\nSome context.\n\n"
+            "## Decision\n\nSome decision.\n\n"
+            "## Consequences\n\nSome consequences.\n\n"
+            "## Alternatives\n\n"
+            "- **Option A**: Rejected.\n"
+            "- **Option B**: Rejected.\n\n"
+            "## References\n\nSome references.\n\n"
+            "## Participants\n\n"
+            "## Participants\n\n1. Test Author\n"
+        )
+        filepath = adr_env.adr_dir / "adr_26099_test.md"
+        filepath.write_text(content, encoding="utf-8")
+
+        adr = AdrFile(
+            path=filepath,
+            number=26099,
+            title="Test",
+            status="accepted",
+            content=content,
+        )
+
+        with patch("builtins.input", return_value="y"):
+            modified = fix_duplicate_sections([adr])
+        assert modified is True
+
+        result = filepath.read_text(encoding="utf-8")
+        # Should have exactly one ## Participants
+        assert result.count("## Participants") == 1
+        # The merged body should contain the actual content
+        assert "1. Test Author" in result
+
+    def test_no_duplicates_returns_false(self, adr_env):
+        """When no duplicates exist, should return False (no changes)."""
+        from tools.scripts.check_adr import AdrFile, fix_duplicate_sections
+
+        content = _make_adr_content(26099, "proposed", participants_body="1. Author")
+        filepath = adr_env.adr_dir / "adr_26099_test.md"
+        filepath.write_text(content, encoding="utf-8")
+
+        adr = AdrFile(
+            path=filepath,
+            number=26099,
+            title="Test",
+            status="proposed",
+            content=content,
+        )
+
+        modified = fix_duplicate_sections([adr])
+        assert modified is False
+
+    def test_merges_preserves_body_content(self, adr_env):
+        """Merged section should contain content from all duplicate bodies."""
+        from tools.scripts.check_adr import AdrFile, fix_duplicate_sections
+
+        content = (
+            "---\nid: 26099\ntitle: Test\ndate: 2026-01-01\n"
+            "status: accepted\ntags: [architecture]\nsuperseded_by: null\n---\n\n"
+            "# ADR-26099: Test\n\n"
+            "## Context\n\nSome context.\n\n"
+            "## Decision\n\nSome decision.\n\n"
+            "## Consequences\n\nSome consequences.\n\n"
+            "## Alternatives\n\n"
+            "- **Option A**: Rejected.\n"
+            "- **Option B**: Rejected.\n\n"
+            "## References\n\nSome references.\n\n"
+            "## Participants\n\nFirst body content.\n\n"
+            "## Participants\n\n1. Test Author\n"
+        )
+        filepath = adr_env.adr_dir / "adr_26099_test.md"
+        filepath.write_text(content, encoding="utf-8")
+
+        adr = AdrFile(
+            path=filepath,
+            number=26099,
+            title="Test",
+            status="accepted",
+            content=content,
+        )
+
+        with patch("builtins.input", return_value="y"):
+            fix_duplicate_sections([adr])
+
+        result = filepath.read_text(encoding="utf-8")
+        assert result.count("## Participants") == 1
+        assert "First body content." in result
+        assert "1. Test Author" in result
+
+    def test_rejected_merge_returns_false(self, adr_env):
+        """User rejecting merge should return False and not modify file."""
+        from tools.scripts.check_adr import AdrFile, fix_duplicate_sections
+
+        content = (
+            "---\nid: 26099\ntitle: Test\ndate: 2026-01-01\n"
+            "status: accepted\ntags: [architecture]\nsuperseded_by: null\n---\n\n"
+            "# ADR-26099: Test\n\n"
+            "## Context\n\nSome context.\n\n"
+            "## Decision\n\nSome decision.\n\n"
+            "## Consequences\n\nSome consequences.\n\n"
+            "## Alternatives\n\n"
+            "- **Option A**: Rejected.\n"
+            "- **Option B**: Rejected.\n\n"
+            "## References\n\nSome references.\n\n"
+            "## Participants\n\n"
+            "## Participants\n\n1. Test Author\n"
+        )
+        filepath = adr_env.adr_dir / "adr_26099_test.md"
+        filepath.write_text(content, encoding="utf-8")
+
+        adr = AdrFile(
+            path=filepath,
+            number=26099,
+            title="Test",
+            status="accepted",
+            content=content,
+        )
+
+        with patch("builtins.input", return_value="n"):
+            modified = fix_duplicate_sections([adr])
+        assert modified is False
+
+        # File should be unchanged
+        result = filepath.read_text(encoding="utf-8")
+        assert result.count("## Participants") == 2
+
+
+class TestPromotionGateInFixMode:
+    """Contract: --fix mode must run promotion gate validation.
+
+    Previously, --fix exited at line 1313 before reaching the promotion
+    gate block (line 1357). This caused pre-commit (--fix) to pass while
+    CI (--verbose) failed on the same ADR.
+    """
+
+    def test_fix_mode_returns_exit_1_for_empty_participants(self, adr_env):
+        """--fix mode should fail when accepted ADR has empty ## Participants."""
+        from tools.scripts.check_adr import main
+
+        content = _make_adr_content(
+            26090, "accepted",
+            alternatives_body=(
+                "- **Option A**: Rejected.\n"
+                "- **Option B**: Rejected."
+            ),
+            participants_body="",
+        )
+        filepath = adr_env.adr_dir / "adr_26090_gate_fix_test.md"
+        filepath.write_text(content, encoding="utf-8")
+
+        create_index(
+            adr_env.index_path,
+            [(26090, "Gate Fix Test", "/architecture/adr/adr_26090_gate_fix_test.md")],
+        )
+
+        assert main(["--fix"]) == 1
+
+    def test_fix_mode_returns_exit_0_when_gate_passes(self, adr_env):
+        """--fix mode should succeed when accepted ADR passes promotion gate."""
+        from tools.scripts.check_adr import main
+
+        content = _make_adr_content(
+            26090, "accepted",
+            alternatives_body=(
+                "- **Option A**: Rejected.\n"
+                "- **Option B**: Rejected."
+            ),
+            participants_body="1. Test Author",
+        )
+        filepath = adr_env.adr_dir / "adr_26090_gate_pass_test.md"
+        filepath.write_text(content, encoding="utf-8")
+
+        create_index(
+            adr_env.index_path,
+            [(26090, "Gate Pass Test", "/architecture/adr/adr_26090_gate_pass_test.md")],
+        )
+
+        assert main(["--fix"]) == 0
+
     def test_accepted_adr_passing_gate_exits_0(self, adr_env):
         """Synced accepted ADR with ≥2 alternatives + participants → exit 0."""
         from tools.scripts.check_adr import main

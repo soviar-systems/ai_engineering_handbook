@@ -307,3 +307,4 @@ gh api repos/<ORG>/<REPO>/pages --jq '.html_url'
 | `Failed to spawn: pytest` | Test deps not installed | Use `uv sync --frozen --dev` (not just `--frozen`) |
 | Assets/CSS broken on site | Missing base URL for subpath | Ensure `BASE_URL` env var is set and `configure-pages` runs before build |
 | Org Pages settings only shows "Verified domains" | Looking at org-level settings | Go to the **repository** settings instead |
+| `deployment was rejected` on non-main branches | `environment: github-pages` enforces protection rules at *job* level, not step level | Add `if: github.ref == 'refs/heads/main'` to the entire `build-deploy` job, not just the deploy step |
