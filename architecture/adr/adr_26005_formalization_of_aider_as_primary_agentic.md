@@ -2,8 +2,8 @@
 id: 26005
 title: Formalization of Aider as the Primary Agentic Orchestrator
 date: 2026-01-24
-status: proposed
-tags: [architecture]
+status: rejected
+tags: [architecture, workflow]
 superseded_by: null
 ---
 
@@ -15,7 +15,18 @@ Standardizing AI-assisted development and automation using the `aider` orchestra
 
 ## Status
 
-Proposed
+Rejected
+
+## Rejection Rationale
+
+This ADR formalizes `aider` as the primary agentic orchestrator via the Hybrid Bridge pattern. The repository's methodology has since evolved toward **tool-agnostic** AI engineering principles — mandating a specific CLI tool as the orchestration backbone contradicts this goal, and the author plans to build custom agentic systems.
+
+The underlying concepts remain valid:
+
+* **Hybrid Bridge pattern**: Decoupling cloud-based planning from local execution to manage VRAM constraints is a sound architectural pattern applicable to any tool pairing.
+* **State isolation**: Launching the execution agent with a clean context (receiving only the plan artifact) prevents context overload regardless of the specific tool used.
+
+These patterns are documented elsewhere in the repository without tool-specific coupling.
 
 ## Date
 

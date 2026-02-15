@@ -15,7 +15,11 @@ tags: [architecture]  # Valid tags defined in adr_config.yaml
 ## Status
 
 {{ status }}
-{% if status == "superseded" %}Superseded: {{ superseded_by }}{% endif %}
+{% if status == "superseded" %}Superseded by: {{ superseded_by }}{% endif %}
+{% if status == "rejected" %}
+## Rejection Rationale
+Explain why this ADR was rejected. Reference tool-agnostic principles, methodology evolution, or other factors that led to rejection. Note any underlying concepts that remain valid and where they are documented.
+{% endif %}
 
 ## Context
 Describe the problem or situation that necessitates a decision. 

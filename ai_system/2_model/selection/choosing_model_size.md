@@ -30,10 +30,9 @@ Last Modified: 2026-02-05
 Deploying language models locally — whether as the **Editor** in the [`aidx` pipeline](/ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.ipynb) or as a standalone inference endpoint — requires engineering three interrelated budgets: **model weights**, **KV cache memory**, and **quantization loss**. This article provides the sizing rationale that complements the [model classification](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb) (Agentic / General Purpose / Thinking tiers) with concrete VRAM arithmetic.
 
 :::{seealso}
-> 1. {term}`ADR-26005`: Formalization of Aider as the Primary Agentic Orchestrator
-> 2. {term}`ADR-26006`: Requirement for Agentic-Class Models for the Architect Phase
-> 3. {term}`ADR-26021`: Content Lifecycle Policy for RAG-Consumed Repositories
-> 4. [Hybrid Execution and KV Cache Offloading](/ai_system/1_execution/hybrid_execution_and_kv_cache_offloading.ipynb) — deep dive on Host/Device memory architecture
+> 1. {term}`ADR-26027`: Model Taxonomy: Reasoning-Class vs Agentic-Class Selection Heuristic
+> 2. {term}`ADR-26021`: Content Lifecycle Policy for RAG-Consumed Repositories
+> 3. [Hybrid Execution and KV Cache Offloading](/ai_system/1_execution/hybrid_execution_and_kv_cache_offloading.ipynb) — deep dive on Host/Device memory architecture
 :::
 
 +++
@@ -64,7 +63,7 @@ When you load a model, you are not just paying for the **weights** (the "brain")
 * **The Problem:** A model that fits in VRAM at initialization can **OOM** (Out of Memory) mid-conversation as the KV cache grows with each turn.
 * **The Rule of Thumb:** For a 14B model at Q4 quantization, budget **~2 GB of VRAM per 8,192 tokens** of active context.
 
-This is why the `aidx` framework enforces a **Hard Reset** at the Architect→Editor transition ({term}`ADR-26005`):
+This is why the hybrid bridge pattern enforces a **Hard Reset** at the Architect→Editor transition:
 
 > The Editor instance is launched without the Architect's message history. It receives only `artifacts/plan.md` as input, keeping KV cache usage below 4 GB and leaving maximum headroom for model weights.
 

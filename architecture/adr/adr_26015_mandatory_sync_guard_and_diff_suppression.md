@@ -35,7 +35,7 @@ We will enforce repository integrity through a three-tier synchronization and su
 * The commit will be blocked if synchronization results in file modifications.
 
 
-2. **Diff Suppression via `.gitattributes**`:
+2. **Diff Suppression via `.gitattributes`**:
 * Configure `*.ipynb -diff` and `*.ipynb linguist-generated=true` to de-emphasize the notebook JSON.
 * Configure `*.md diff=markdown` to treat the Markdown pair as the primary human-readable source for reviews.
 

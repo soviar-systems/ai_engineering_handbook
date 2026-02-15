@@ -24,6 +24,12 @@ ADR-26023
 ADR-26026
 : [Dedicated Research Monorepo for Volatile Experimental Projects](/architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md)
 
+ADR-26027
+: [Model Taxonomy: Reasoning-Class vs Agentic-Class Selection Heuristic](/architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md)
+
+ADR-26028
+: [Tool-Agnostic Phase 0: Intent Synthesis](/architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md)
+
 :::
 
 ## Evolutionary Proposals
@@ -31,21 +37,6 @@ ADR-26026
 :::{glossary}
 ADR-26003
 : [Adoption of `gitlint` for Tiered Workflow Enforcement](/architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md)
-
-ADR-26004
-: [Implementation of Agentic RAG for Autonomous Research](/architecture/adr/adr_26004_implementation_of_agentic_rag_for_autonom.md)
-
-ADR-26005
-: [Formalization of Aider as the Primary Agentic Orchestrator](/architecture/adr/adr_26005_formalization_of_aider_as_primary_agentic.md)
-
-ADR-26006
-: [Requirement for Agentic-Class Models for the Architect Phase](/architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md)
-
-ADR-26007
-: [Formalization of Phase 0: Intent Synthesis (Requirements Engineering)](/architecture/adr/adr_26007_formalization_of_phase_0_intent_synthesi.md)
-
-ADR-26008
-: [Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)](/architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md)
 
 ADR-26009
 : [Adoption of Ansible for Idempotent Configuration Management](/architecture/adr/adr_26009_adoption_of_ansible_for_idempotent_confi.md)
@@ -85,6 +76,21 @@ ADR-26025
 ## Historical Context
 
 :::{glossary}
+ADR-26004
+: [Implementation of Agentic RAG for Autonomous Research](/architecture/adr/adr_26004_implementation_of_agentic_rag_for_autonom.md)
+
+ADR-26005
+: [Formalization of Aider as the Primary Agentic Orchestrator](/architecture/adr/adr_26005_formalization_of_aider_as_primary_agentic.md)
+
+ADR-26006
+: [Requirement for Agentic-Class Models for the Architect Phase](/architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md) — superseded by {term}`ADR-26027`
+
+ADR-26007
+: [Formalization of Phase 0: Intent Synthesis (Requirements Engineering)](/architecture/adr/adr_26007_formalization_of_phase_0_intent_synthesi.md) — superseded by {term}`ADR-26028`
+
+ADR-26008
+: [Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)](/architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md) — superseded by {term}`ADR-26027`
+
 ADR-26018
 : [Universal YAML Frontmatter Adoption for Machine-Readable Documentation](/architecture/adr/adr_26018_universal_yaml_frontmatter_adoption.md) — superseded by {term}`ADR-26023`
 
