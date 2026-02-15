@@ -6,23 +6,23 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.19.0
 kernelspec:
-  name: bash
   display_name: Bash
   language: bash
+  name: bash
 ---
 
-# Instruction on format_string.py script
+---
+title: Instruction on format_string.py script
+author: Vadim Rudakov, rudakow.wadim@gmail.com
+date: 2026-02-14
+options:
+  version: 0.2.1
+  birth: 2026-01-07
+---
 
 +++
 
----
-
-Owner: Vadim Rudakov, rudakow.wadim@gmail.com
-Version: 0.2.0
-Birth: 2026-01-07
-Last Modified: 2026-01-26
-
----
+# Instruction on format_string.py script
 
 +++
 

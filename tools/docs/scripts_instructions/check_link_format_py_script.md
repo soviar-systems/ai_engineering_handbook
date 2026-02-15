@@ -128,7 +128,7 @@ The script is organized into specialized classes:
 +++
 
 * **Primary Script**: `tools/scripts/check_link_format.py`
-* **Exclusion Logic**: Managed via `tools/scripts/paths.py` (reuses `BROKEN_LINKS_EXCLUDE_*` constants)
+* **Exclusion Logic**: Managed via `tools/scripts/paths.py` (reuses `VALIDATION_EXCLUDE_DIRS` and `BROKEN_LINKS_EXCLUDE_FILES` constants)
 * **Pre-commit Config**: `.pre-commit-config.yaml`
 * **CI Config**: `.github/workflows/quality.yml`
 

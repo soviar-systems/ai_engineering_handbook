@@ -13,17 +13,17 @@ from tools.scripts.check_broken_links import (
     LinkValidator,
     Reporter,
 )
-from tools.scripts.paths import BROKEN_LINKS_EXCLUDE_DIRS, BROKEN_LINKS_EXCLUDE_FILES, BROKEN_LINKS_EXCLUDE_LINK_STRINGS
+from tools.scripts.paths import VALIDATION_EXCLUDE_DIRS, BROKEN_LINKS_EXCLUDE_FILES, BROKEN_LINKS_EXCLUDE_LINK_STRINGS
 
 
 @pytest.fixture(autouse=True)
 def mock_paths_module():
-    """Patch the import of BROKEN_LINKS_EXCLUDE_*."""
+    """Patch the import of paths module exclusions."""
     with patch.dict(
         sys.modules,
         {
             "tools.scripts.paths": MagicMock(
-                BROKEN_LINKS_EXCLUDE_DIRS=BROKEN_LINKS_EXCLUDE_DIRS,
+                VALIDATION_EXCLUDE_DIRS=VALIDATION_EXCLUDE_DIRS,
                 BROKEN_LINKS_EXCLUDE_FILES=BROKEN_LINKS_EXCLUDE_FILES,
                 BROKEN_LINKS_EXCLUDE_LINK_STRINGS=BROKEN_LINKS_EXCLUDE_LINK_STRINGS,
             )
@@ -267,7 +267,7 @@ class TestFileFinder:
         (root_test_dir / "valid_dir_not_node_modules" / "some_file.ipynb").mkdir(parents=True)
         (root_test_dir / "valid_dir_not_node_modules" / "some_file.ipynb" / "good_3.ipynb").touch()
 
-        # Files that should be excluded by directory name (from BROKEN_LINKS_EXCLUDE_DIRS)
+        # Files excluded by VALIDATION_EXCLUDE_DIRS
         (root_test_dir / "misc" / "in_progress" / "temp_folder").mkdir(parents=True)
         (root_test_dir / "misc" / "in_progress" / "temp_folder" / "bad_1.ipynb").touch()  # Excluded by misc/in_progress
         (root_test_dir / "src" / "my_module" / "__pycache__").mkdir(parents=True)
@@ -280,7 +280,7 @@ class TestFileFinder:
         (root_test_dir / "nested_build" / "build" / "another_bad.py" / "bad_5.txt").touch()  # Excluded by build
 
         finder = FileFinder(
-            exclude_dirs=list(BROKEN_LINKS_EXCLUDE_DIRS),
+            exclude_dirs=list(VALIDATION_EXCLUDE_DIRS),
             exclude_files=list(BROKEN_LINKS_EXCLUDE_FILES),
             verbose=False,  # Set to True for debugging if needed
         )
@@ -309,7 +309,7 @@ class TestFileFinder:
         (root_test_dir / "sub" / "excluded_dir_for_file_test" / ".aider.chat.history.md").touch()  # The file itself has the excluded name
 
         finder = FileFinder(
-            exclude_dirs=list(BROKEN_LINKS_EXCLUDE_DIRS),
+            exclude_dirs=list(VALIDATION_EXCLUDE_DIRS),
             exclude_files=list(BROKEN_LINKS_EXCLUDE_FILES),
             verbose=False,
         )

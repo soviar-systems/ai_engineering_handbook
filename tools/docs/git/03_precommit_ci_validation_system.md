@@ -6,9 +6,9 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.19.0
 kernelspec:
-  name: bash
   display_name: Bash
   language: bash
+  name: bash
 ---
 
 # Pre-commit Hooks and CI Validation System
@@ -89,7 +89,7 @@ Two workflows provide CI protection:
 | Step | Condition | Check |
 |------|-----------|-------|
 | Notebook sync verify | **All branches** | `jupytext_sync.py --all --test` |
-| Build + Deploy | Main only | MyST build + GitHub Pages |
+| Build + Deploy | Main only | MyST build + RSYNC |
 
 +++
 
@@ -158,7 +158,7 @@ This means out-of-sync notebooks are caught before they can be deployed, regardl
 All scripts import exclusion patterns from `tools/scripts/paths.py`, ensuring consistent behavior:
 
 ```python
-from tools.scripts.paths import is_excluded, BROKEN_LINKS_EXCLUDE_DIRS
+from tools.scripts.paths import is_excluded, VALIDATION_EXCLUDE_DIRS
 ```
 
 This centralization means:

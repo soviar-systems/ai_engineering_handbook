@@ -11,10 +11,6 @@ kernelspec:
   language: bash
 ---
 
-# Instruction on check_adr.py script
-
-+++
-
 ---
 title: Instruction on check_adr.py script
 author: Vadim Rudakov, rudakow.wadim@gmail.com

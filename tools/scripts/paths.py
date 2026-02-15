@@ -2,8 +2,8 @@
 Centralized path configurations for the toolkit.
 """
 
-# Directories that should always be excluded from notebook/link scans
-BROKEN_LINKS_EXCLUDE_DIRS = {
+# Directories excluded from all validation scripts (links, jupytext, ADR, etc.)
+VALIDATION_EXCLUDE_DIRS = {
     ".git",
     ".ipynb_checkpoints",
     ".pytest_cache",
@@ -29,8 +29,6 @@ BROKEN_LINKS_EXCLUDE_LINK_STRINGS = {
 
 BROKEN_LINKS_EXCLUDE_FILES = [".aider.chat.history.md"]
 
-# Reuse for jupytext - same directories should be excluded
-JUPYTEXT_EXCLUDE_DIRS = BROKEN_LINKS_EXCLUDE_DIRS
 
 # API key scanning configuration - placeholder indicators for false positive detection
 API_KEYS_PLACEHOLDER_INDICATORS = {
@@ -47,4 +45,4 @@ API_KEYS_EXCLUDE_FILES = {
 
 def is_excluded(path: str) -> bool:
     """Check if path should be excluded from jupytext processing."""
-    return any(excl in path for excl in JUPYTEXT_EXCLUDE_DIRS)
+    return any(excl in path for excl in VALIDATION_EXCLUDE_DIRS)

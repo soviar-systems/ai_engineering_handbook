@@ -117,7 +117,7 @@ The script is organized into specialized classes to maintain clarity:
 +++
 
 * **Primary Script**: `tools/scripts/check_broken_links.py`
-* **Exclusion Logic**: Managed via `tools/scripts/paths.py` (e.g., ignoring `.venv`, `in_progress/`, and `.ipynb_checkpoints`).
+* **Exclusion Logic**: Managed via `tools/scripts/paths.py` (`VALIDATION_EXCLUDE_DIRS`, e.g., `.venv`, `in_progress/`, `.ipynb_checkpoints`).
 * **Pre-commit Config**: `.pre-commit-config.yaml`
 * **CI Config**: `.github/workflows/quality.yml`
 

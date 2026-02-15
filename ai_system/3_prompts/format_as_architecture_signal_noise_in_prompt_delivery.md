@@ -11,16 +11,12 @@ kernelspec:
   language: bash
 ---
 
-# Format as Architecture: Signal-to-Noise in Prompt Delivery
-
-+++
-
 ---
 title: "Format as Architecture: Signal-to-Noise in Prompt Delivery"
 author: Vadim Rudakov, rudakow.wadim@gmail.com
 date: 2026-02-15
 options:
-  version: 0.1.0
+  version: 0.1.1
   birth: 2026-02-15
 ---
 

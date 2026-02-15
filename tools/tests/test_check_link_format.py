@@ -14,7 +14,7 @@ from tools.scripts.check_link_format import (
     Reporter,
 )
 from tools.scripts.paths import (
-    BROKEN_LINKS_EXCLUDE_DIRS,
+    VALIDATION_EXCLUDE_DIRS,
     BROKEN_LINKS_EXCLUDE_FILES,
     BROKEN_LINKS_EXCLUDE_LINK_STRINGS,
 )
@@ -22,12 +22,12 @@ from tools.scripts.paths import (
 
 @pytest.fixture(autouse=True)
 def mock_paths_module():
-    """Patch the import of BROKEN_LINKS_EXCLUDE_*."""
+    """Patch the import of paths module exclusions."""
     with patch.dict(
         sys.modules,
         {
             "tools.scripts.paths": MagicMock(
-                BROKEN_LINKS_EXCLUDE_DIRS=BROKEN_LINKS_EXCLUDE_DIRS,
+                VALIDATION_EXCLUDE_DIRS=VALIDATION_EXCLUDE_DIRS,
                 BROKEN_LINKS_EXCLUDE_FILES=BROKEN_LINKS_EXCLUDE_FILES,
                 BROKEN_LINKS_EXCLUDE_LINK_STRINGS=BROKEN_LINKS_EXCLUDE_LINK_STRINGS,
             )
@@ -211,7 +211,7 @@ class TestFileFinder:
         (root / ".venv" / "bad.md").touch()
 
         finder = FileFinder(
-            exclude_dirs=list(BROKEN_LINKS_EXCLUDE_DIRS),
+            exclude_dirs=list(VALIDATION_EXCLUDE_DIRS),
             exclude_files=list(BROKEN_LINKS_EXCLUDE_FILES),
             verbose=False,
         )

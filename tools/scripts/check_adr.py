@@ -20,10 +20,7 @@ from pathlib import Path
 
 import yaml
 
-# Note: BROKEN_LINKS_EXCLUDE_DIRS is a shared exclusion set used by multiple
-# validation scripts. The name is historical; see misc/plan/plan_20260202_refactor_paths_py_exclusions.md
-# for planned refactoring to VALIDATION_EXCLUDE_DIRS.
-from tools.scripts.paths import BROKEN_LINKS_EXCLUDE_DIRS
+from tools.scripts.paths import VALIDATION_EXCLUDE_DIRS
 
 # ======================
 # Configuration
@@ -899,7 +896,7 @@ def get_all_md_files(root: Path) -> list[Path]:
 
     for filepath in root.rglob("*.md"):
         # Skip files in excluded directories (SSoT: tools/scripts/paths.py)
-        if any(excluded in filepath.parts for excluded in BROKEN_LINKS_EXCLUDE_DIRS):
+        if any(excluded in filepath.parts for excluded in VALIDATION_EXCLUDE_DIRS):
             continue
         md_files.append(filepath)
 

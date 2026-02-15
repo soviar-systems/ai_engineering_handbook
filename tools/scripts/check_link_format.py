@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from tools.scripts.paths import (
-    BROKEN_LINKS_EXCLUDE_DIRS,
+    VALIDATION_EXCLUDE_DIRS,
     BROKEN_LINKS_EXCLUDE_FILES,
     BROKEN_LINKS_EXCLUDE_LINK_STRINGS,
 )
@@ -66,7 +66,7 @@ Default pattern: *.md""",
         parser.add_argument(
             "--exclude-dirs",
             nargs="*",
-            default=BROKEN_LINKS_EXCLUDE_DIRS,
+            default=VALIDATION_EXCLUDE_DIRS,
             help="Directory names to exclude from the check",
         )
         parser.add_argument(

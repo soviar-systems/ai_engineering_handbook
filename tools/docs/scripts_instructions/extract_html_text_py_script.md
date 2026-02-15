@@ -16,14 +16,12 @@ kernelspec:
 +++
 
 ---
-
 title: "Instruction on extract_html_text.py script"
 author: rudakow.wadim@gmail.com
 date: 2026-02-10
 options:
   version: 1.0.0
   birth: 2026-02-10
-
 ---
 
 +++
