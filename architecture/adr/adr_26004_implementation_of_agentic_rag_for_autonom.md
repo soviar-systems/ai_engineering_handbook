@@ -2,8 +2,8 @@
 id: 26004
 title: Implementation of Agentic RAG for Autonomous Research
 date: 2026-02-01
-status: proposed
-tags: [architecture]
+status: rejected
+tags: [architecture, workflow, context_management]
 superseded_by: null
 ---
 
@@ -15,7 +15,18 @@ Standardizing Autonomous Knowledge Retrieval via an Agentic RAG "Pre-Flight" Wor
 
 ## Status
 
-Proposed
+Rejected
+
+## Rejection Rationale
+
+This ADR prescribes `aider`/`aidx` as the orchestration backbone for an Agentic RAG workflow. The repository's methodology has since evolved toward **tool-agnostic** AI engineering principles — binding the methodology to any specific CLI tool contradicts this goal.
+
+The underlying concepts remain valid:
+
+* **Research-Apply pipeline**: Decoupling knowledge retrieval from code generation is a sound architectural pattern, applicable to any orchestration approach.
+* **Namespace partitioning**: Separating global workflows from project-specific context is a general RAG best practice.
+
+These patterns are documented elsewhere in the repository without tool-specific coupling.
 
 ## Date
 

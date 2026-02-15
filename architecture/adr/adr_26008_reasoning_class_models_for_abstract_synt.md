@@ -2,9 +2,9 @@
 id: 26008
 title: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
 date: 2026-01-24
-status: proposed
-tags: [architecture]
-superseded_by: null
+status: superseded
+tags: [architecture, model, workflow]
+superseded_by: ADR-26027
 ---
 
 # ADR-26008: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
@@ -15,7 +15,9 @@ Mandating the use of General-Purpose "Reasoning-Class" LLMs for Phase 0 to ensur
 
 ## Status
 
-Proposed
+Superseded
+
+Superseded by: {term}`ADR-26027`
 
 ## Date
 

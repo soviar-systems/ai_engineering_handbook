@@ -2,9 +2,9 @@
 id: 26007
 title: "Formalization of Phase 0: Intent Synthesis (Requirements Engineering)"
 date: 2026-01-24
-status: proposed
-tags: [architecture]
-superseded_by: null
+status: superseded
+tags: [architecture, model, workflow]
+superseded_by: ADR-26028
 ---
 
 # ADR-26007: Formalization of Phase 0: Intent Synthesis (Requirements Engineering)
@@ -15,7 +15,9 @@ Standardizing a "Human-Lead + Reasoning LLM" Requirements Engineering phase (Pha
 
 ## Status
 
-Proposed
+Superseded
+
+Superseded by: {term}`ADR-26028`
 
 ## Date
 

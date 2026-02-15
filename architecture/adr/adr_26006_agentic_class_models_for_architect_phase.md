@@ -2,9 +2,9 @@
 id: 26006
 title: Requirement for Agentic-Class Models for the Architect Phase
 date: 2026-01-24
-status: proposed
-tags: [architecture]
-superseded_by: null
+status: superseded
+tags: [architecture, model, workflow]
+superseded_by: ADR-26027
 ---
 
 # ADR-26006: Requirement for Agentic-Class Models for the Architect Phase
@@ -15,7 +15,9 @@ Standardizing the use of Agentic-Class LLMs for the `aidx` Architect Phase to En
 
 ## Status
 
-Proposed
+Superseded
+
+Superseded by: {term}`ADR-26027`
 
 ## Date
 

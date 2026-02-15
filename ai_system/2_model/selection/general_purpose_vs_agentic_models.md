@@ -42,8 +42,7 @@ Using a "General Purpose" model for an "Agentic" task (like generating execution
 :::
 
 :::{seealso}
-> 1. {term}`ADR-26006`: Requirement for Agentic-Class Models for the Architect Phase
-> 2. {term}`ADR-26008`: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
+> 1. {term}`ADR-26027`: Model Taxonomy: Reasoning-Class vs Agentic-Class Selection Heuristic
 :::
 
 +++
@@ -53,7 +52,7 @@ Using a "General Purpose" model for an "Agentic" task (like generating execution
 +++
 
 :::{warning}
-As stated in {term}`ADR-26008`, this list is the Single Source of Truth for choosing the model for the Requirements Engineering step - General Purpose models are only allowed.
+As stated in {term}`ADR-26027`, this list is the Single Source of Truth for choosing the model for the Requirements Engineering step - General Purpose models are only allowed.
 :::
 
 | Tier | Models | Primary Capability | Architectural "Why" |
@@ -81,5 +80,5 @@ As stated in {term}`ADR-26008`, this list is the Single Source of Truth for choo
 | Task Type | Recommended Tier | Justification |
 | --- | --- | --- |
 | **Unstructured Brainstorming** | General Purpose | Highest "Reasoning Ceiling" for abstract problems. |
-| **Plan Serialization (`plan.md`)** | Agentic | High-fidelity adherence to ADR 26006 templates. |
+| **Plan Serialization (`plan.md`)** | Agentic | High-fidelity adherence to {term}`ADR-26027` selection heuristic. |
 | **Security/Logic Audit** | Thinking | Self-verifying logic gates for high-stakes code. |
