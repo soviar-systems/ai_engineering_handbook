@@ -364,10 +364,23 @@ def validate_sections(adr_file: AdrFile) -> list[ValidationError]:
     if adr_file.content is None:
         return errors
 
-    # Find all section headers (## SectionName)
-    found_sections = set()
+    # Find all section headers (## SectionName) and detect duplicates
+    section_counts: dict[str, int] = {}
     for match in SECTION_HEADER_PATTERN.finditer(adr_file.content):
-        found_sections.add(match.group(1))
+        name = match.group(1)
+        section_counts[name] = section_counts.get(name, 0) + 1
+
+    for name, count in section_counts.items():
+        if count > 1:
+            errors.append(
+                ValidationError(
+                    number=adr_file.number,
+                    error_type="duplicate_section",
+                    message=f"ADR {adr_file.number} has duplicate section: '## {name}' ({count} occurrences)",
+                )
+            )
+
+    found_sections = set(section_counts)
 
     for required_section in REQUIRED_SECTIONS:
         if required_section not in found_sections:
@@ -411,6 +424,83 @@ def _extract_section_body(content: str, section_name: str) -> str:
     )
     match = pattern.search(content)
     return match.group(1).strip() if match else ""
+
+
+def fix_duplicate_sections(adr_files: list[AdrFile]) -> bool:
+    """Merge duplicate ## section headers in ADR files.
+
+    For each ADR with duplicate section headers, shows the user what will
+    be merged and prompts for confirmation. Keeps the first header and
+    concatenates all bodies (preserving order).
+
+    Args:
+        adr_files: List of ADR files to check and fix.
+
+    Returns:
+        True if any file was modified, False otherwise.
+    """
+    any_modified = False
+
+    for adr in adr_files:
+        if adr.content is None:
+            continue
+
+        # Count section occurrences
+        section_counts: dict[str, int] = {}
+        for match in SECTION_HEADER_PATTERN.finditer(adr.content):
+            name = match.group(1)
+            section_counts[name] = section_counts.get(name, 0) + 1
+
+        duplicates = {name for name, count in section_counts.items() if count > 1}
+        if not duplicates:
+            continue
+
+        content = adr.content
+        for section_name in duplicates:
+            # Find all occurrences of this section and their bodies
+            pattern = re.compile(
+                rf"^##\s+{re.escape(section_name)}\s*$\n(.*?)(?=^##\s|\Z)",
+                re.MULTILINE | re.DOTALL,
+            )
+            matches = list(pattern.finditer(content))
+            if len(matches) <= 1:
+                continue
+
+            # Collect all bodies
+            bodies = [m.group(1).strip() for m in matches]
+            merged_body = "\n\n".join(b for b in bodies if b)
+
+            # Show user what will be merged and ask for confirmation
+            print(f"\nADR {adr.number} has {len(matches)} '## {section_name}' sections:")
+            for i, body in enumerate(bodies, 1):
+                preview = body[:80] if body else "(empty)"
+                print(f"  {i}. {preview}")
+            print(f"\nMerged result under single '## {section_name}':")
+            preview = merged_body[:120] if merged_body else "(empty)"
+            print(f"  {preview}")
+
+            response = input("Apply merge? [Y/n]: ").strip().lower()
+            if response not in ("", "y"):
+                print("Merge rejected. Please fix duplicate sections manually.")
+                return False
+
+            # Remove all occurrences after the first
+            # Process in reverse order to preserve offsets
+            for m in reversed(matches[1:]):
+                content = content[:m.start()] + content[m.end():]
+
+            # Replace the first occurrence's body with the merged body
+            first = pattern.search(content)
+            if first:
+                replacement = f"## {section_name}\n\n{merged_body}\n\n"
+                content = content[:first.start()] + replacement + content[first.end():]
+
+        if content != adr.content:
+            adr.path.write_text(content, encoding="utf-8")
+            any_modified = True
+            print(f"  Fixed duplicate sections in ADR {adr.number}")
+
+    return any_modified
 
 
 def validate_promotion_gate(
@@ -1275,6 +1365,12 @@ def main(argv: list[str] | None = None) -> int:
                     if adr.path.name not in files_modified:
                         files_modified.append(adr.path.name)
 
+        # Fix duplicate sections (with user confirmation)
+        if fix_duplicate_sections(adr_files):
+            for adr in adr_files:
+                if adr.path.name not in files_modified:
+                    files_modified.append(adr.path.name)
+
         # Re-read ADR files after fixes to get updated data
         if files_modified:
             print(f"\nFixed {len(files_modified)} ADR file(s).")
@@ -1307,6 +1403,25 @@ def main(argv: list[str] | None = None) -> int:
         if errors:
             print("\nErrors remain after fix (manual intervention required):")
             for error in errors:
+                print(f"  - {error.message}")
+            return 1
+
+        # Promotion gate validation (same as --verbose mode)
+        gate_errors: list[ValidationError] = []
+        gate_warnings: list[ValidationError] = []
+        for adr in adr_files:
+            errs, warns = validate_promotion_gate(adr)
+            gate_errors.extend(errs)
+            gate_warnings.extend(warns)
+
+        if gate_warnings:
+            print("Promotion gate warnings:")
+            for warning in gate_warnings:
+                print(f"  ⚠ {warning.message}")
+
+        if gate_errors:
+            print("Promotion gate errors:")
+            for error in gate_errors:
                 print(f"  - {error.message}")
             return 1
 

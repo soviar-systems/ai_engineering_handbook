@@ -83,7 +83,6 @@ Move all volatile research subprojects to a dedicated `research` monorepo with t
 
 ## Participants
 
-## Participants
-
 1. Vadim Rudakov
 2. Qwen3-Max
+
