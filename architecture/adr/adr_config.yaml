@@ -68,6 +68,25 @@ required_sections:
   - References
   - Participants
 
+# Allowed sections (superset of required_sections)
+# Any ## header not in this list will be flagged as unexpected.
+allowed_sections:
+  - Title
+  - Date
+  - Status
+  - Rejection Rationale  # conditional: only for rejected ADRs
+  - Context
+  - Decision
+  - Consequences
+  - Alternatives
+  - References
+  - Participants
+
+# Sections only allowed for specific statuses
+conditional_sections:
+  rejected:
+    - Rejection Rationale
+
 # Optional subsections (warn if missing, don't fail)
 recommended_subsections:
   Consequences:

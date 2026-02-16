@@ -125,84 +125,18 @@ def create_empty_index(path: Path) -> None:
 
 
 def create_adr_config(path: Path) -> None:
-    """Create ADR config file with standard settings.
+    """Copy real ADR config to test directory.
+
+    Sources from the production adr_config.yaml (Single Source of Truth)
+    to avoid maintaining a duplicate hardcoded config in tests.
 
     Args:
-        path: Path to config file
+        path: Path to write config file
     """
-    config_content = """# ADR Configuration - Test
-required_fields:
-  - id
-  - title
-  - date
-  - status
-  - tags
+    import shutil
 
-date_format: "^\\\\d{4}-\\\\d{2}-\\\\d{2}$"
-
-tags:
-  - architecture
-  - ci
-  - context_management
-  - devops
-  - documentation
-  - governance
-  - hardware
-  - model
-  - security
-  - testing
-  - workflow
-
-required_sections:
-  - Title
-  - Date
-  - Status
-  - Context
-  - Decision
-  - Consequences
-  - Alternatives
-  - References
-  - Participants
-
-recommended_subsections:
-  Consequences:
-    - Positive
-    - "Negative / Risks"
-
-statuses:
-  - proposed
-  - accepted
-  - rejected
-  - superseded
-  - deprecated
-
-sections:
-  Active Architecture:
-    - accepted
-  Evolutionary Proposals:
-    - proposed
-  Historical Context:
-    - rejected
-    - superseded
-    - deprecated
-
-default_status: proposed
-
-status_corrections:
-  proposed:
-    - prposed
-    - draft
-  accepted:
-    - acepted
-    - approved
-  rejected:
-    - rejectd
-  superseded:
-    - superceded
-  deprecated:
-    - deprected
-"""
-    path.write_text(config_content, encoding="utf-8")
+    real_config = Path(__file__).resolve().parent.parent.parent / "architecture" / "adr" / "adr_config.yaml"
+    shutil.copy2(real_config, path)
 
 
 def create_legacy_adr_file(
@@ -374,6 +308,8 @@ def adr_env(tmp_path, monkeypatch):
     monkeypatch.setattr(module, "SECTION_ORDER", list(config.get("sections", {}).keys()))
     monkeypatch.setattr(module, "STATUS_CORRECTIONS", module._build_status_corrections(config))
     monkeypatch.setattr(module, "REQUIRED_SECTIONS", config.get("required_sections", []))
+    monkeypatch.setattr(module, "ALLOWED_SECTIONS", set(config.get("allowed_sections", [])))
+    monkeypatch.setattr(module, "CONDITIONAL_SECTIONS", config.get("conditional_sections", {}))
 
     return AdrTestEnv(adr_dir=adr_dir, index_path=index_path, root=tmp_path)
 
@@ -3564,3 +3500,304 @@ class TestPromotionGateInFixMode:
         )
 
         assert main([]) == 0
+
+
+# ======================
+# Section Whitelist Validation
+# ======================
+
+
+class TestSectionWhitelist:
+    """Contract: validate_sections() must reject sections not in allowed_sections.
+
+    Allowed sections are defined in adr_config.yaml as the Single Source of Truth.
+    Any ## header not in that list should produce an 'unexpected_section' error.
+    """
+
+    def test_unexpected_section_produces_error(self, adr_env):
+        """ADR with a ## section not in allowed_sections should fail."""
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = """---
+id: 26050
+title: Test Unexpected Section
+date: 2024-01-15
+status: proposed
+tags: [architecture]
+---
+
+# ADR-26050: Test Unexpected Section
+
+## Date
+2024-01-15
+
+## Status
+proposed
+
+## Context
+Some context.
+
+## Decision
+Some decision.
+
+## Consequences
+Some consequences.
+
+## CustomBogusSection
+This should be flagged.
+
+## Alternatives
+Some alternatives.
+
+## References
+Some references.
+
+## Participants
+1. Author
+"""
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26050_test.md",
+            number=26050,
+            title="Test Unexpected Section",
+            status="proposed",
+            content=content,
+        )
+
+        errors = validate_sections(adr)
+        unexpected_errors = [e for e in errors if e.error_type == "unexpected_section"]
+        assert len(unexpected_errors) == 1
+        assert 26050 == unexpected_errors[0].number
+
+    def test_all_allowed_sections_pass(self, adr_env):
+        """ADR with only allowed sections should produce no unexpected_section errors."""
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = """---
+id: 26051
+title: All Allowed Sections
+date: 2024-01-15
+status: proposed
+tags: [architecture]
+---
+
+# ADR-26051: All Allowed Sections
+
+## Title
+All Allowed Sections
+
+## Date
+2024-01-15
+
+## Status
+proposed
+
+## Context
+Some context.
+
+## Decision
+Some decision.
+
+## Consequences
+Some consequences.
+
+## Alternatives
+Some alternatives.
+
+## References
+Some references.
+
+## Participants
+1. Author
+"""
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26051_test.md",
+            number=26051,
+            title="All Allowed Sections",
+            status="proposed",
+            content=content,
+        )
+
+        errors = validate_sections(adr)
+        unexpected_errors = [e for e in errors if e.error_type == "unexpected_section"]
+        assert len(unexpected_errors) == 0
+
+
+class TestConditionalSections:
+    """Contract: conditional sections are only allowed for specific statuses.
+
+    ## Rejection Rationale is only valid in ADRs with status: rejected.
+    """
+
+    def test_rejection_rationale_in_proposed_adr_produces_error(self, adr_env):
+        """## Rejection Rationale in a proposed ADR should fail."""
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = """---
+id: 26052
+title: Wrong Rationale
+date: 2024-01-15
+status: proposed
+tags: [architecture]
+---
+
+# ADR-26052: Wrong Rationale
+
+## Date
+2024-01-15
+
+## Status
+proposed
+
+## Rejection Rationale
+Should not be here in a proposed ADR.
+
+## Context
+Some context.
+
+## Decision
+Some decision.
+
+## Consequences
+Some consequences.
+
+## Alternatives
+Some alternatives.
+
+## References
+Some references.
+
+## Participants
+1. Author
+"""
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26052_test.md",
+            number=26052,
+            title="Wrong Rationale",
+            status="proposed",
+            content=content,
+        )
+
+        errors = validate_sections(adr)
+        conditional_errors = [e for e in errors if e.error_type == "conditional_section_violation"]
+        assert len(conditional_errors) == 1
+        assert 26052 == conditional_errors[0].number
+
+    def test_rejection_rationale_in_rejected_adr_passes(self, adr_env):
+        """## Rejection Rationale in a rejected ADR should pass."""
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = """---
+id: 26053
+title: Proper Rejection
+date: 2024-01-15
+status: rejected
+tags: [architecture]
+---
+
+# ADR-26053: Proper Rejection
+
+## Date
+2024-01-15
+
+## Status
+rejected
+
+## Rejection Rationale
+Valid rationale for rejection.
+
+## Context
+Some context.
+
+## Decision
+Some decision.
+
+## Consequences
+Some consequences.
+
+## Alternatives
+Some alternatives.
+
+## References
+Some references.
+
+## Participants
+1. Author
+"""
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26053_test.md",
+            number=26053,
+            title="Proper Rejection",
+            status="rejected",
+            content=content,
+        )
+
+        errors = validate_sections(adr)
+        conditional_errors = [e for e in errors if e.error_type == "conditional_section_violation"]
+        assert len(conditional_errors) == 0
+
+
+class TestCodeFencedSectionsIgnored:
+    """Contract: ## headers inside fenced code blocks must not be treated as sections.
+
+    The regex ^## with re.MULTILINE matches inside code fences. The parser
+    must strip code blocks before extracting section headers.
+    """
+
+    def test_section_inside_code_block_is_ignored(self, adr_env):
+        """## headers inside ```markdown fences should not be counted as sections."""
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = '''---
+id: 26054
+title: Code Block Sections
+date: 2024-01-15
+status: proposed
+tags: [architecture]
+---
+
+# ADR-26054: Code Block Sections
+
+## Date
+2024-01-15
+
+## Status
+proposed
+
+## Context
+Some context.
+
+## Decision
+
+Example of what an ARCHITECTURE.md looks like:
+
+```markdown
+## Governing ADRs (in hub)
+- ADR-001: Example
+
+## Implementation ADRs (in this repo)
+- ADR-002: Example
+```
+
+## Consequences
+Some consequences.
+
+## Alternatives
+Some alternatives.
+
+## References
+Some references.
+
+## Participants
+1. Author
+'''
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26054_test.md",
+            number=26054,
+            title="Code Block Sections",
+            status="proposed",
+            content=content,
+        )
+
+        errors = validate_sections(adr)
+        unexpected_errors = [e for e in errors if e.error_type == "unexpected_section"]
+        assert len(unexpected_errors) == 0

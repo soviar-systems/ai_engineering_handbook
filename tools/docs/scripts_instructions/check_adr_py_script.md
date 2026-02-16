@@ -16,7 +16,7 @@ title: Instruction on check_adr.py script
 author: Vadim Rudakov, rudakow.wadim@gmail.com
 date: 2026-02-08
 options:
-  version: 0.5.0
+  version: 0.6.0
   birth: 2026-01-30
 ---
 
@@ -39,6 +39,9 @@ It ensures:
 - **Valid Tags**: Tags are from predefined list in config
 - **Required Sections**: Document contains Context, Decision, Consequences, Alternatives, References, Participants
 - **Duplicate Sections**: No `##` section header appears more than once in the same ADR
+- **Section Whitelist**: Only sections from `allowed_sections` in config are permitted; unexpected `##` headers are flagged
+- **Conditional Sections**: Status-dependent sections (e.g., `## Rejection Rationale` only for rejected ADRs) are enforced
+- **Code Fence Awareness**: `##` headers inside fenced code blocks (` ``` `) are ignored during section extraction
 - **Term References**: MyST `{term}` cross-references use correct hyphen format (`{term}`ADR-26001``)
 
 All validation rules are defined in [`adr_config.yaml`](/architecture/adr/adr_config.yaml) (Single Source of Truth).
@@ -174,6 +177,8 @@ ADR 26002
 | `empty_tags` | Tags list is empty (at least one required) |
 | `missing_section` | Required document section not found |
 | `duplicate_section` | Same `##` header appears more than once in the ADR |
+| `unexpected_section` | `##` header not in `allowed_sections` whitelist from config |
+| `conditional_section_violation` | Status-dependent section used with wrong status (e.g., `## Rejection Rationale` in a proposed ADR) |
 | `broken_term_reference` | `{term}`ADR 26001`` should use hyphen: `{term}`ADR-26001`` |
 
 +++
@@ -220,8 +225,11 @@ date_format: "^\\d{4}-\\d{2}-\\d{2}$"
 # Valid tags
 tags: [architecture, documentation, hardware, model, workflow, ...]
 
-# Required document sections
-required_sections: [Context, Decision, Consequences, Alternatives, References, Participants]
+# Required/allowed sections and conditional rules
+# Full SSoT: [adr_config.yaml](/architecture/adr/adr_config.yaml)
+required_sections: [Context, Decision, Consequences, ...]
+allowed_sections: [Title, Date, Status, Rejection Rationale, ...]
+conditional_sections: { rejected: [Rejection Rationale] }
 
 # Valid statuses
 statuses: [proposed, accepted, rejected, superseded, deprecated]
@@ -366,6 +374,9 @@ The [test suite](/tools/tests/test_check_adr.py) provides 150+ tests with 96% co
 | `TestDuplicateSections` | Duplicate `##` header detection |
 | `TestFixDuplicateSections` | Duplicate section merge with user confirmation |
 | `TestPromotionGateInFixMode` | `--fix` mode runs promotion gate validation |
+| `TestSectionWhitelist` | Unexpected sections flagged via `allowed_sections` whitelist |
+| `TestConditionalSections` | Status-dependent section enforcement (e.g., Rejection Rationale) |
+| `TestCodeFencedSectionsIgnored` | `##` headers inside fenced code blocks are not treated as sections |
 
 Run tests with:
 

@@ -43,6 +43,11 @@ GLOSSARY_BLOCK_PATTERN = re.compile(r":::\{glossary\}(.*?):::", re.DOTALL)
 FRONTMATTER_PATTERN = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 STATUS_SECTION_PATTERN = re.compile(r"^##\s+Status\s*\n+\s*(\w+)", re.MULTILINE)
 SECTION_HEADER_PATTERN = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
+# Strips fenced code blocks before section extraction. SECTION_HEADER_PATTERN
+# uses re.MULTILINE so ^## matches inside code fences too (e.g. example
+# ARCHITECTURE.md snippets). Removing fences first is a lightweight alternative
+# to a full markdown parser — we only need headers from the real document body.
+CODE_FENCE_PATTERN = re.compile(r"```.*?```", re.DOTALL)
 
 # =============================================================================
 # Term Reference Patterns
@@ -121,6 +126,8 @@ STATUS_CORRECTIONS: dict[str, str] = _build_status_corrections(_config)
 REQUIRED_FIELDS: list[str] = _config.get("required_fields", [])
 VALID_TAGS: set[str] = set(_config.get("tags", []))
 REQUIRED_SECTIONS: list[str] = _config.get("required_sections", [])
+ALLOWED_SECTIONS: set[str] = set(_config.get("allowed_sections", []))
+CONDITIONAL_SECTIONS: dict[str, list[str]] = _config.get("conditional_sections", {})
 DATE_FORMAT_PATTERN: str = _config.get("date_format", r"^\d{4}-\d{2}-\d{2}$")
 
 # Term reference validation (from config or defaults)
@@ -348,22 +355,31 @@ def validate_tags(adr_file: AdrFile) -> list[ValidationError]:
 
 
 def validate_sections(adr_file: AdrFile) -> list[ValidationError]:
-    """Check required sections are present in document body.
+    """Check required/allowed sections and conditional section rules.
+
+    Validates:
+    1. Required sections are present
+    2. No duplicate sections
+    3. No unexpected sections (not in allowed_sections)
+    4. Conditional sections only appear for matching statuses
 
     Args:
         adr_file: ADR file to validate.
 
     Returns:
-        List of ValidationError for missing required sections.
+        List of ValidationError for section violations.
     """
     errors = []
 
     if adr_file.content is None:
         return errors
 
+    # Strip fenced code blocks so ## headers inside them are not counted
+    content_without_fences = CODE_FENCE_PATTERN.sub("", adr_file.content)
+
     # Find all section headers (## SectionName) and detect duplicates
     section_counts: dict[str, int] = {}
-    for match in SECTION_HEADER_PATTERN.finditer(adr_file.content):
+    for match in SECTION_HEADER_PATTERN.finditer(content_without_fences):
         name = match.group(1)
         section_counts[name] = section_counts.get(name, 0) + 1
 
@@ -388,6 +404,40 @@ def validate_sections(adr_file: AdrFile) -> list[ValidationError]:
                     message=f"ADR {adr_file.number} missing required section: '## {required_section}'",
                 )
             )
+
+    # Check for unexpected sections (not in allowed_sections whitelist)
+    if ALLOWED_SECTIONS:
+        unexpected = found_sections - ALLOWED_SECTIONS
+        for section in sorted(unexpected):
+            errors.append(
+                ValidationError(
+                    number=adr_file.number,
+                    error_type="unexpected_section",
+                    message=f"ADR {adr_file.number} has unexpected section: '## {section}' (not in allowed_sections)",
+                )
+            )
+
+    # Check conditional sections (e.g. Rejection Rationale only for rejected)
+    if CONDITIONAL_SECTIONS:
+        # Build reverse map: section_name -> set of statuses that allow it
+        allowed_statuses: dict[str, set[str]] = {}
+        for status, sections in CONDITIONAL_SECTIONS.items():
+            for section in sections:
+                allowed_statuses.setdefault(section, set()).add(status)
+
+        effective_status = adr_file.status or ""
+        for section_name, valid_statuses in allowed_statuses.items():
+            if section_name in found_sections and effective_status not in valid_statuses:
+                errors.append(
+                    ValidationError(
+                        number=adr_file.number,
+                        error_type="conditional_section_violation",
+                        message=(
+                            f"ADR {adr_file.number} has '## {section_name}' but status is "
+                            f"'{effective_status}' (only allowed for: {', '.join(sorted(valid_statuses))})"
+                        ),
+                    )
+                )
 
     return errors
 
