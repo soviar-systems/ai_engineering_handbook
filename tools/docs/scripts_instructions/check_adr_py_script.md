@@ -16,7 +16,7 @@ title: Instruction on check_adr.py script
 author: Vadim Rudakov, rudakow.wadim@gmail.com
 date: 2026-02-08
 options:
-  version: 0.6.0
+  version: 0.6.1
   birth: 2026-01-30
 ---
 

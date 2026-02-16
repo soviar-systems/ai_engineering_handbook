@@ -2,7 +2,7 @@
 id: ADR-26025
 title: "RFC→ADR Workflow Formalization"
 date: 2026-02-10
-status: proposed
+status: accepted
 superseded_by: null
 tags: [governance, documentation, workflow]
 ---

@@ -2,7 +2,7 @@
 id: 26022
 title: "Standardization of Public Documentation Hosting on GitHub Pages" 
 date: 2026-02-06
-status: proposed
+status: accepted
 superseded_by: null
 tags: [architecture, documentation, devops] 
 ---

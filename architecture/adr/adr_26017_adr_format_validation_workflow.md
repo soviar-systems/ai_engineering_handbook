@@ -2,7 +2,7 @@
 id: 26017
 title: ADR Format Validation Workflow
 date: 2026-02-01
-status: proposed
+status: accepted
 superseded_by: null
 tags: [governance, documentation, ci]
 ---

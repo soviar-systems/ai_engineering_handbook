@@ -2,7 +2,7 @@
 id: 26020
 title: Hub-and-Spoke Ecosystem Documentation Architecture
 date: 2026-02-04
-status: proposed
+status: accepted
 tags: [architecture, documentation]
 superseded_by: null
 ---

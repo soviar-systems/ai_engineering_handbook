@@ -2,7 +2,7 @@
 id: 26015
 title: Mandatory Sync-Guard & Diff Suppression
 date: 2026-02-01
-status: proposed
+status: accepted
 tags: [architecture]
 superseded_by: null
 ---

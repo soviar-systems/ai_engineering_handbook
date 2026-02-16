@@ -2,7 +2,7 @@
 id: ADR-26021
 title: "Content Lifecycle Policy for RAG-Consumed Repositories"
 date: 2026-02-05
-status: proposed
+status: accepted
 superseded_by: null
 tags: [governance, documentation, context_management]
 ---
