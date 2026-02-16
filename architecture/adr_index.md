@@ -30,6 +30,9 @@ ADR-26027
 ADR-26028
 : [Tool-Agnostic Phase 0: Intent Synthesis](/architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md)
 
+ADR-26029
+: [pyproject.toml as Tool Configuration Hub](/architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md)
+
 :::
 
 ## Evolutionary Proposals
