@@ -30,7 +30,7 @@ Last Modified: 2026-01-17
 
 +++
 
-In the Q1 2026 landscape, the "One Model to Rule Them All" paradigm is deprecated. For the **Hybrid Bridge Pattern** defined in the [`aidx` framework](/ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.ipynb), the selection of a Cloud Architect depends on the bifurcation of model utility:
+In the Q1 2026 landscape, the "One Model to Rule Them All" paradigm is deprecated. For the **Hybrid Bridge Pattern** defined in the [Multi-Phase AI Pipeline](/ai_system/4_orchestration/workflows/multi_phase_ai_pipeline.ipynb), the selection of a Cloud Architect depends on the bifurcation of model utility:
 
 > The problem is not just "which model is best," but the **Bifurcation of LLM Utility**. We are no longer in the era of the "one model to rule them all."
 
@@ -57,7 +57,7 @@ As stated in {term}`ADR-26027`, this list is the Single Source of Truth for choo
 
 | Tier | Models | Primary Capability | Architectural "Why" |
 | --- | --- | --- | --- |
-| **Agentic (Instruction-Locked)** | **Claude 4.0 Sonnet**, **Gemini 3 Flash**, **DeepSeek-V3** | **Logic Rigidity.** These models minimize "chatty" drift and follow system prompts as strict code. | Best for the **Architect role** in `aidx`. They produce a clean `plan.md` that a local model can execute without confusion. |
+| **Agentic (Instruction-Locked)** | **Claude 4.0 Sonnet**, **Gemini 3 Flash**, **DeepSeek-V3** | **Logic Rigidity.** These models minimize "chatty" drift and follow system prompts as strict code. | Best for the **Architect role** in the [pipeline](/ai_system/4_orchestration/workflows/multi_phase_ai_pipeline.ipynb). They produce a clean execution plan that a local model can apply without confusion. |
 | **General Purpose (Synthesis)** | **GPT-5**, **Claude 4.5 Opus**, **Gemini 3 Pro** | **Abstract Depth.** These models excel at "Step 0" where the problem is not yet technical. | Best for **Human-led exploration.** They can challenge your stack choice by recalling niche historical failures of specific libraries. |
 | **Thinking (Verification)** | **OpenAI o2**, **Gemini 3 (DeepThink)**, **DeepSeek-R1** | **System 2 Reasoning.** These models use "Chain of Thought" to self-verify logic. | Best for **Pre-flight verification.** Use them to check if your `plan.md` has security race conditions before hitting the editor. |
 
@@ -69,7 +69,7 @@ As stated in {term}`ADR-26027`, this list is the Single Source of Truth for choo
 
 * **The "General Purpose" Hallucination:** GPT-level models often produce "creative" code that local SLMs (Small Language Models) like `qwen2.5-coder:14b` cannot interpret, resulting in an **Execution Gap**.
 * **Persona Drift:** General-purpose models may ignore rigid "Senior Architect" constraints to be "helpful," violating the **Smallest Viable Architecture (SVA)** principle.
-* **Model Version Drift:** All `aidx` configurations must pin specific versions (e.g., `gemini-3-flash-001`) to ensure logic stability.
+* **Model Version Drift:** All pipeline configurations must pin specific versions (e.g., `gemini-3-flash-preview`) to ensure logic stability.
 
 +++
 

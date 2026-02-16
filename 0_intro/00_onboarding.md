@@ -83,8 +83,8 @@ Every content article must include a **YAML frontmatter** block with MyST-native
 
 +++
 
-1. ["The aidx Industrial AI Orchestration Framework"](/ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.ipynb) - the high level description of our agentic approach. 
-1. ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb) - what models to use for different types of tasks, see the aidx description above for more details.
+1. ["Multi-Phase AI Pipeline"](/ai_system/4_orchestration/workflows/multi_phase_ai_pipeline.ipynb) - the Research-Apply pipeline for AI-assisted engineering.
+1. ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb) - what models to use for different types of tasks.
 1. ["VIM in AI Era: Hybrid Setup with Ollama and Aider"](/tools/docs/ai_agents/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.ipynb)
 
 +++

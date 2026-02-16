@@ -27,7 +27,7 @@ Last Modified: 2026-02-05
 
 +++
 
-Deploying language models locally — whether as the **Editor** in the [`aidx` pipeline](/ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.ipynb) or as a standalone inference endpoint — requires engineering three interrelated budgets: **model weights**, **KV cache memory**, and **quantization loss**. This article provides the sizing rationale that complements the [model classification](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb) (Agentic / General Purpose / Thinking tiers) with concrete VRAM arithmetic.
+Deploying language models locally — whether as the **Editor** in the [Multi-Phase AI Pipeline](/ai_system/4_orchestration/workflows/multi_phase_ai_pipeline.ipynb) or as a standalone inference endpoint — requires engineering three interrelated budgets: **model weights**, **KV cache memory**, and **quantization loss**. This article provides the sizing rationale that complements the [model classification](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb) (Agentic / General Purpose / Thinking tiers) with concrete VRAM arithmetic.
 
 :::{seealso}
 > 1. {term}`ADR-26027`: Model Taxonomy: Reasoning-Class vs Agentic-Class Selection Heuristic
@@ -37,13 +37,13 @@ Deploying language models locally — whether as the **Editor** in the [`aidx` p
 
 +++
 
-## 1. Model Size Tiers and the `aidx` Role Map
+## 1. Model Size Tiers and Pipeline Role Map
 
 +++
 
-The `aidx` framework assigns models to specific pipeline phases based on their capability tier. Size alone does not determine role — **instruction adherence** and **reasoning depth** matter more (see [General Purpose vs Agentic Models](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb)).
+The [Multi-Phase AI Pipeline](/ai_system/4_orchestration/workflows/multi_phase_ai_pipeline.ipynb) assigns models to specific pipeline phases based on their capability tier. Size alone does not determine role — **instruction adherence** and **reasoning depth** matter more (see [General Purpose vs Agentic Models](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb)).
 
-| Tier | Parameter Range | `aidx` Role | Representative Models | Hardware Target |
+| Tier | Parameter Range | Pipeline Role | Representative Models | Hardware Target |
 | --- | --- | --- | --- | --- |
 | **Micro** | 125M – 3B | Researcher (RAG retrieval), classifier, router | `ministral`, `phi-3-mini` | CPU / mobile / edge |
 | **Editor** | 7B – 14B | **Editor** (Phase 3: Execution) | `qwen2.5-coder:14b-instruct-q4_K_M` | Consumer GPU (8–16 GB VRAM) |
@@ -67,7 +67,7 @@ This is why the hybrid bridge pattern enforces a **Hard Reset** at the Architect
 
 > The Editor instance is launched without the Architect's message history. It receives only `artifacts/plan.md` as input, keeping KV cache usage below 4 GB and leaving maximum headroom for model weights.
 
-The `max-chat-history-tokens: 2048` setting in the `aidx` configuration is a **Context Gate** — it caps the Editor's KV cache growth to prevent the OOM crash that long aider sessions would otherwise produce.
+A **Context Gate** (e.g., capping chat history tokens) limits the Editor's KV cache growth to prevent the OOM crash that long interactive sessions would otherwise produce.
 
 :::{seealso}
 > [Hybrid Execution and KV Cache Offloading](/ai_system/1_execution/hybrid_execution_and_kv_cache_offloading.ipynb) — for detailed Host/Device memory split, KV cache offloading strategies, and Mermaid diagrams of the memory lifecycle.
@@ -91,7 +91,7 @@ Quantization reduces model weights from 16-bit floats to lower-bit integers, shr
 **Practical example:** `qwen2.5-coder:14b` at FP16 requires ~28 GB VRAM. At Q4_K_M, it fits in ~8 GB, leaving headroom for KV cache on a 12 GB consumer GPU.
 
 :::{important}
-The `aidx` Editor configuration uses Q4_K_M explicitly: `ollama_chat/qwen2.5-coder:14b-instruct-q4_K_M`. This is not arbitrary — it's the quantization level validated for code editing tasks with acceptable logic retention.
+The recommended Editor configuration uses Q4_K_M explicitly (e.g., `qwen2.5-coder:14b-instruct-q4_K_M`). This is not arbitrary — it's the quantization level validated for code editing tasks with acceptable logic retention.
 :::
 
 +++
@@ -109,7 +109,7 @@ Instead of routing everything to a large cloud model, use a two-stage local pipe
 1. **The Drafter (7B):** Produces a fast, rough answer.
 2. **The Verifier (14B):** Checks the draft against your rules/schema.
 
-This maps naturally to the `aidx` Architect→Editor flow: the Architect drafts the plan (cloud), and the Editor executes against the codebase (local). The Verifier Cascade extends this to fully local pipelines where cloud access is unavailable.
+This maps naturally to the [pipeline's](/ai_system/4_orchestration/workflows/multi_phase_ai_pipeline.ipynb) Architect→Editor flow: the Architect drafts the plan (cloud), and the Editor executes against the codebase (local). The Verifier Cascade extends this to fully local pipelines where cloud access is unavailable.
 
 +++
 
@@ -122,7 +122,7 @@ Use a micro model (≤3B) as a **gatekeeper** to classify incoming requests:
 * **Simple requests** (greetings, FAQ lookups) → local Editor model.
 * **Complex requests** (multi-file refactors, architectural decisions) → cloud Architect API.
 
-In the `aidx` context, this is the **Researcher** role (Phase 1): `ministral` performs lightweight RAG retrieval to determine what context the Architect needs, avoiding expensive cloud API calls for work that can be handled locally.
+In the [pipeline](/ai_system/4_orchestration/workflows/multi_phase_ai_pipeline.ipynb) context, this is the **Researcher** role (Phase 1): a lightweight local model performs RAG retrieval to determine what context the Architect needs, avoiding expensive cloud API calls for work that can be handled locally.
 
 +++
 
