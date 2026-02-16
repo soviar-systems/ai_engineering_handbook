@@ -6,8 +6,6 @@ Pre-commit hook (stage: commit-msg) that enforces:
 2. Structured body with at least one changelog bullet (- Verb: target — desc)
 3. ArchTag presence for refactor/perf types and breaking changes (Tier 3)
 
-Merge, fixup, squash, and WIP commits are skipped (exit 0).
-
 Usage:
     # As pre-commit hook (automatic — git passes the file path)
     uv run --active tools/scripts/validate_commit_msg.py .git/COMMIT_EDITMSG
@@ -16,7 +14,7 @@ Usage:
     uv run tools/scripts/validate_commit_msg.py path/to/commit_msg_file
 
 Exit codes:
-    0 — valid commit message (or skipped commit type)
+    0 — valid commit message
     1 — validation failure (errors printed to stderr)
 """
 
@@ -141,21 +139,6 @@ def validate_archtag(
     return []
 
 
-def is_skip_commit(subject: str) -> bool:
-    """Check if this commit type should skip validation.
-
-    Merge, fixup, squash, and WIP commits are transient — they will be
-    eliminated by Squash-and-Merge and don't need structured bodies.
-    """
-    subject_stripped = subject.strip()
-    return (
-        subject_stripped.startswith("Merge ")
-        or subject_stripped.startswith("fixup! ")
-        or subject_stripped.startswith("squash! ")
-        or subject_stripped.startswith("WIP:")
-    )
-
-
 # ---------------------------------------------------------------------------
 # Commit message parsing helper
 # ---------------------------------------------------------------------------
@@ -228,10 +211,6 @@ Examples:
         text = msg_path.read_text(encoding="utf-8")
 
         subject, body_lines = _parse_commit_message(text)
-
-        # Skip transient commit types
-        if is_skip_commit(subject):
-            return
 
         # Collect all validation errors
         errors: list[str] = []

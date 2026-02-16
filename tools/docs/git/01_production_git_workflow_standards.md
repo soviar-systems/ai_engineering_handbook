@@ -96,7 +96,6 @@ The commit title **MUST** start with `<type>: <description>`. The description mu
 || `chore:`| Routine maintenance, dependency updates, minor clean-up.   | NO| None  |
 || `ci:`| Changes to CI/CD configuration and workflows.   | NO| None  |
 || `pr:`| Promotional or announcement posts (e.g., Telegram channel).   | NO| None  |
-| **Internal/Temporary** | `WIP:`  | **Incomplete work. Must be squashed/rebased before merging.**  | NO| None  |
 
 :::{important}
 Commit types inform SemVer, but do not dictate it. Final SemVer must be validated against API/behavior contracts.
@@ -308,17 +307,21 @@ The type → CHANGELOG section mapping (e.g., `feat:` → "New Features") and se
 
 +++
 
-## **"WIP" Commits: Handling Intermediate Work**
+## **Local Checkpoint Commits: Handling Intermediate Work**
 
 +++
 
-The `WIP:` commit type is strictly for **personal backup and context switching** on feature branches. Since the repository enforces **Squash-and-Merge** (see [Merge Strategy](#merge-strategy-atomic-change-submission)), `WIP:` commits are automatically eliminated when the PR is merged — the Git host produces a single squashed commit on trunk.
+`WIP:` is **not a valid commit type** — the validator rejects it. For local checkpoint saves (end of day, switching machines), use `--no-verify` to bypass the pre-commit hook:
+
+```bash
+git commit --no-verify -m "WIP: save work before switching context"
+```
+
+This is an explicit opt-out: the developer consciously bypasses validation, and CI will reject the commit if it reaches a PR without being squash-merged into a proper commit.
+
+Since the repository enforces **Squash-and-Merge** (see [Merge Strategy](#merge-strategy-atomic-change-submission)), local checkpoint commits are automatically eliminated when the PR is merged — the Git host produces a single squashed commit on trunk.
 
 **Optional local hygiene:** Developers *may* use `git rebase -i` to clean up their branch history before opening a PR. This improves PR reviewability but is not required — the squash at merge time handles consolidation.
-
-:::{important}
-The `WIP:` commit type **MUST NOT** be present in the final commit history of any main branch (e.g., `main`). The Squash-and-Merge policy enforces this automatically.
-:::
 
 +++
 
@@ -326,34 +329,32 @@ The `WIP:` commit type **MUST NOT** be present in the final commit history of an
 
 +++
 
-- **CI/CD Block:** The CI/CD pipeline is to be configured to automatically **fail a Pull Request** if any commit in the branch's history contains the prefix `WIP:`. This is a **hard technical gate**.
 - **Mandatory Merge Strategy:** The repository is configured to **enforce "Squash and Merge"** for all feature branches into mainline branches. The Git host must populate the squash commit message from the PR description, ensuring structured body bullets flow into the final commit. This guarantees that the final history is composed of single, clean, semantic commits.
 
 The most effective enforcement mechanism is layered: automated hooks catch structural issues, reviewers assess semantic quality.
 
 | Policy   | Implementation | Rationale  |
 |:-----|:--------|:------|
-| **PR Status Check**  | CI/CD system runs a script that **fails the build** if any commit in the PR history contains the regex pattern `^WIP:` in its title. | **Hard gate.** Prevents developer oversight from reaching the main codebase, forcing the immediate correction of the branch history. |
-| **Commit Message Validation** | `validate_commit_msg.py` runs as a `commit-msg` pre-commit hook locally. CI repeats the check on the PR's squash commit candidate. | **Hard gate.** Enforces Conventional Commits subject format and structured body bullets at both commit time and merge time. See {term}`ADR-26024`. |
+| **Commit Message Validation** | `validate_commit_msg.py` runs as a `commit-msg` pre-commit hook locally. CI repeats the check on the PR's squash commit candidate. | **Hard gate.** Enforces Conventional Commits subject format and structured body bullets at both commit time and merge time. Rejects all non-conforming commits including `WIP:`, `Merge `, `fixup!`, `squash!`. The only bypass is `--no-verify`. See {term}`ADR-26024`. |
 | **Reviewer Responsibility** | Peer reviewers assess the **semantic quality** of the PR description (which becomes the squash commit body): are the bullets accurate, complete, and meaningful? | Structural validation is automated. Humans focus on whether the message correctly reflects the change's intent — a judgment that cannot be automated. |
 | **Enforce Squash-and-Merge** | Set the repository merge policy to "Squash and Merge" only. Configure the Git host to populate the squash commit message from the PR description template. | Each PR becomes exactly one commit on trunk. The squash commit body contains the structured changelog bullets. Reverts are atomic (one commit = one revert). |
 
 +++
 
-### Guidance: When to Use "WIP:" vs. Standard Commit Types
+### Guidance: Checkpoint Saves vs. Standard Commit Types
 
 +++
 
-New engineers must understand the difference to avoid misusing `WIP:`.
+New engineers must understand the difference to avoid misusing checkpoint saves.
 
-| Scenario  | Recommended Type  | Rationale   |
+| Scenario  | Recommended Approach  | Rationale   |
 |:-------|:-----|:--------|
-| **Saving work** at the end of the day or switching machines. | `WIP: short summary of current state`  | Work is incomplete, not ready for review, and exists purely for personal continuity. Must be squashed later. |
+| **Saving work** at the end of the day or switching machines. | `git commit --no-verify -m "WIP: current state"`  | Work is incomplete, not ready for review. `--no-verify` explicitly bypasses validation. Must be squash-merged later. |
 | **Completing a logical unit** of work (e.g., finishing the utility function signature, adding a new test). | `test: add unit test for X service` or `refactor: extract Z function from module A` | The change is coherent, stable, and useful, even if the overall feature is unfinished. It improves branch history readability *before* the final squash. |
 | **Fixing a minor bug** discovered while working on a feature. | `fix: prevent divide by zero in function Y` | This is a small, atomic fix that is technically correct and may be valuable on its own. It can be squashed later or kept as a separate atomic commit. |
 
 :::{important} **Key Takeaway**
-If the commit is stable, complete, and describes an atomic, logical change that could stand on its own in the history, use a standard type. If the code is broken, half-finished, or purely a checkpoint, use `WIP:`.
+If the commit is stable, complete, and describes an atomic, logical change that could stand on its own in the history, use a standard type with a proper structured body. If the code is broken, half-finished, or purely a checkpoint, use `git commit --no-verify` — the validator does not make exceptions.
 :::
 
 +++

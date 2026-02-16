@@ -13,14 +13,11 @@ The validation has three layers:
 2. Body: must contain at least one changelog bullet (line starting with '- ')
 3. ArchTag: required for refactor/perf types and breaking changes (Tier 3)
 
-Merge, fixup, squash, and WIP commits are skipped (exit 0 without validation).
-
 ## Test contracts
 
 - validate_subject: subject line → list[str] errors (empty = valid)
 - validate_body: body lines → list[str] errors (empty = valid)
 - validate_archtag: type + body + breaking flag → list[str] errors
-- is_skip_commit: subject → bool (True = skip validation)
 - CLI: reads file, validates, exits 0 or raises SystemExit(1)
 
 ## Non-brittleness strategy
@@ -36,7 +33,6 @@ from tools.scripts.validate_commit_msg import (
     validate_subject,
     validate_body,
     validate_archtag,
-    is_skip_commit,
     ValidateCommitMsgCLI,
     VALID_TYPES,
     ARCHTAG_REQUIRED_TYPES,
@@ -266,44 +262,6 @@ class TestValidateArchTag:
 
 
 # ---------------------------------------------------------------------------
-# is_skip_commit
-#
-# Contract: subject line → bool.
-# True = skip validation entirely (exit 0 without checking).
-# These commit types are transient and will be eliminated by Squash-and-Merge:
-#   - Merge commits (git auto-generated)
-#   - fixup!/squash! commits (git rebase artifacts)
-#   - WIP: commits (developer transient saves)
-# ---------------------------------------------------------------------------
-
-
-class TestIsSkipCommit:
-    """Contract: merge/fixup/squash/WIP commits → True (skip validation)."""
-
-    def test_merge_branch(self):
-        assert is_skip_commit("Merge branch 'feature' into main") is True
-
-    def test_merge_pull_request(self):
-        assert is_skip_commit("Merge pull request #123 from user/branch") is True
-
-    def test_fixup_commit(self):
-        assert is_skip_commit("fixup! feat: add login") is True
-
-    def test_squash_commit(self):
-        assert is_skip_commit("squash! feat: add login") is True
-
-    def test_wip_commit(self):
-        """WIP commits are transient saves — skipped per git workflow standards."""
-        assert is_skip_commit("WIP: work in progress") is True
-
-    def test_normal_feat_not_skipped(self):
-        assert is_skip_commit("feat: add login page") is False
-
-    def test_normal_fix_not_skipped(self):
-        assert is_skip_commit("fix: correct bug") is False
-
-
-# ---------------------------------------------------------------------------
 # Constants validation
 #
 # These tests anchor the constants to the type list defined in:
@@ -394,20 +352,6 @@ class TestValidateCommitMsgCLI:
             cli.run(argv=[str(msg_file)])
         assert exc_info.value.code == 1
 
-    def test_merge_commit_skipped(self, tmp_path):
-        """Merge commits bypass all validation → no error."""
-        msg_file = tmp_path / "COMMIT_EDITMSG"
-        msg_file.write_text("Merge branch 'feature' into main\n")
-        cli = ValidateCommitMsgCLI()
-        cli.run(argv=[str(msg_file)])  # Should not raise SystemExit
-
-    def test_fixup_commit_skipped(self, tmp_path):
-        """Fixup commits bypass all validation → no error."""
-        msg_file = tmp_path / "COMMIT_EDITMSG"
-        msg_file.write_text("fixup! feat: add login\n")
-        cli = ValidateCommitMsgCLI()
-        cli.run(argv=[str(msg_file)])  # Should not raise SystemExit
-
     def test_missing_file_arg_exits_nonzero(self):
         """No positional argument → argparse error (exit code 2)."""
         cli = ValidateCommitMsgCLI()
@@ -437,3 +381,52 @@ class TestValidateCommitMsgCLI:
         )
         cli = ValidateCommitMsgCLI()
         cli.run(argv=[str(msg_file)])  # Should not raise SystemExit
+
+
+# ---------------------------------------------------------------------------
+# Formerly skipped commits now fail
+#
+# Contract: WIP, Merge, fixup, squash commits → exit 1 (no longer skipped).
+# is_skip_commit() was removed — all commits go through validation.
+# The only escape hatch is --no-verify.
+# ---------------------------------------------------------------------------
+
+
+class TestFormerlySkippedCommitsFail:
+    """Contract: WIP, Merge, fixup, squash commits → exit 1 (no longer skipped)."""
+
+    def test_wip_commit_fails_validation(self, tmp_path):
+        """WIP: prefix is not a valid CC type → exit 1."""
+        msg_file = tmp_path / "COMMIT_EDITMSG"
+        msg_file.write_text("WIP: work in progress\n")
+        cli = ValidateCommitMsgCLI()
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(argv=[str(msg_file)])
+        assert exc_info.value.code == 1
+
+    def test_merge_commit_fails_validation(self, tmp_path):
+        """Merge commits are not valid CC format → exit 1."""
+        msg_file = tmp_path / "COMMIT_EDITMSG"
+        msg_file.write_text("Merge branch 'feature' into main\n")
+        cli = ValidateCommitMsgCLI()
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(argv=[str(msg_file)])
+        assert exc_info.value.code == 1
+
+    def test_fixup_commit_fails_validation(self, tmp_path):
+        """fixup! prefix is not a valid CC type → exit 1."""
+        msg_file = tmp_path / "COMMIT_EDITMSG"
+        msg_file.write_text("fixup! feat: add login\n")
+        cli = ValidateCommitMsgCLI()
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(argv=[str(msg_file)])
+        assert exc_info.value.code == 1
+
+    def test_squash_commit_fails_validation(self, tmp_path):
+        """squash! prefix is not a valid CC type → exit 1."""
+        msg_file = tmp_path / "COMMIT_EDITMSG"
+        msg_file.write_text("squash! feat: add login\n")
+        cli = ValidateCommitMsgCLI()
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(argv=[str(msg_file)])
+        assert exc_info.value.code == 1
