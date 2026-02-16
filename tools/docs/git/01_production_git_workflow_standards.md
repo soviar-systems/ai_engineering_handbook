@@ -104,6 +104,10 @@ Commit types inform SemVer, but do not dictate it. Final SemVer must be validate
 See: [SemVer: Artifact Versioning Policy (AVP)](/tools/docs/git/semver_artifact_versioning_policy_avp.ipynb)
 :::
 
+:::{tip} Machine-readable configuration
+The valid types, ArchTag-required types, and CHANGELOG section mappings are configured in `pyproject.toml` under `[tool.commit-convention]`. Both `validate_commit_msg.py` and `generate_changelog.py` read from this single source of truth — update the table above and `pyproject.toml` together.
+:::
+
 +++
 
 #### **BREAKING CHANGE** Footer
@@ -292,8 +296,14 @@ uv run tools/scripts/generate_changelog.py v2.4.0..HEAD --version 2.5.0
 
 The generator uses `git log --first-parent` to scan only squashed trunk commits, ignoring noise from deleted feature branches. Legacy commits (pre-standard, no body bullets) are included with subject line only — graceful degradation, not failure.
 
+The type → CHANGELOG section mapping (e.g., `feat:` → "New Features") and section ordering are configured in `pyproject.toml` under `[tool.commit-convention.changelog-sections]`.
+
 :::{seealso}
 > {term}`ADR-26024`: Structured Commit Bodies for Automated CHANGELOG Generation
+>
+> Script documentation:
+> - [validate_commit_msg.py](/tools/docs/scripts_instructions/validate_commit_msg_py_script.ipynb) — commit-msg hook (ingredients validation)
+> - [generate_changelog.py](/tools/docs/scripts_instructions/generate_changelog_py_script.ipynb) — release-time CHANGELOG generation
 :::
 
 +++

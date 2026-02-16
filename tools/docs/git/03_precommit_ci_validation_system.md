@@ -55,34 +55,33 @@ This architecture provides:
 
 +++
 
-### Pre-commit Hooks Summary
+### Validation Matrix
 
-The `.pre-commit-config.yaml` defines these validation hooks:
+The table below maps each validation concern to its pre-commit hook and CI job. Both layers use the same scripts — pre-commit gives fast local feedback, CI acts as the safety net.
 
-| Hook | Script | File Pattern | Purpose |
-|------|--------|--------------|---------|
-| `check-broken-links` | `check_broken_links.py` | `\.md$` | Validate markdown links |
-| `jupytext-sync` | `jupytext_sync.py` | `\.(md\|ipynb)$` | Sync paired notebooks |
-| `jupytext-verify-pair` | `jupytext_verify_pair.py` | `\.(md\|ipynb)$` | Ensure both files staged |
-| `check-api-keys` | `check_api_keys.py` | all files | Detect leaked API keys |
-| `check-json-files` | `check_json_files.py` | `\.json$` | Validate JSON syntax |
+| Validation | Pre-commit Hook | CI Job (`quality.yml`) | CI Trigger |
+|------------|----------------|----------------------|------------|
+| **Content Validation** | | | |
+| Markdown links | `check-broken-links` | `broken-links` | `.md` or script changes |
+| Link format | `check-link-format` | `link-format` | `.md` or script changes |
+| Notebook sync | `jupytext-sync`, `jupytext-verify-pair` | `jupytext` | `.md`/`.ipynb` or script changes |
+| JSON syntax | `check-json-files` | `json-validation` | `.json` or script changes |
+| **Security** | | | |
+| API key detection | `check-api-keys` | `api-keys` | Any file or script changes |
+| **Commit & Release** | | | |
+| Commit message | `validate-commit-msg` (commit-msg stage) | `validate-commit-msg` | Script, test, or `pyproject.toml` changes |
+| CHANGELOG generation | — | `generate-changelog` | Script, test, or `pyproject.toml` changes |
+| **Architecture** | | | |
+| Script suite (1:1:1) | `check-script-suite` | `script-suite` | Script, test, or doc changes |
+| ADR index | `check-adr-index` | `adr-index` | Script, test, or ADR changes |
+| **User Tools** | | | |
+| Prompt builder | — | `prepare-prompt` | Script or test changes |
 
-Additionally, **five test hooks** run pytest when their corresponding scripts change, ensuring the validation tools themselves remain correct.
+Additionally, **test hooks** in `.pre-commit-config.yaml` run pytest when their corresponding scripts change, ensuring the validation tools themselves remain correct.
 
 +++
 
-### GitHub Actions Summary
-
-Two workflows provide CI protection:
-
-**`quality.yml`** - Runs on all pushes and PRs:
-
-| Job | Trigger Condition | Checks |
-|-----|-------------------|--------|
-| `broken-links` | `.md` changes OR script changes | pytest + link validation |
-| `jupytext` | Script changes OR `.md`/`.ipynb` changes | pytest + sync validation |
-| `api-keys` | Any file changes OR script changes | pytest + API key scan |
-| `json-validation` | `.json` changes OR script changes | pytest + JSON validation |
+### Deploy Workflow
 
 **`deploy.yml`** - Runs on all pushes:
 
@@ -184,6 +183,26 @@ For local development, `pyproject.toml` configures pytest:
 [tool.pytest.ini_options]
 pythonpath = ["."]
 ```
+
++++
+
+### Expression Injection Prevention
+
+`${{ }}` expressions in `run:` blocks are shell-interpolated and vulnerable to injection from user-controllable inputs (PR titles, commit messages, branch names). The safe pattern is to pass values through `env:` first.
+
+**This repository follows these rules:**
+
+| Expression context | Safe? | Reason |
+|--------------------|-------|--------|
+| `env:` block | Yes | Not shell-interpolated |
+| `if:` condition | Yes | Evaluated by GitHub, not the shell |
+| `run:` block | **No** | Shell-interpolated — attacker-controlled input can execute arbitrary commands |
+
+All `${{ github.workspace }}` references are placed in `env:`, and `${{ steps.changed.outputs.* }}` references are used only in `if:` conditions. No `${{ }}` expression appears in any `run:` command.
+
+:::{seealso}
+[How to catch GitHub Actions workflow injections before attackers do](https://github.blog/security/vulnerability-research/how-to-catch-github-actions-workflow-injections-before-attackers-do/)
+:::
 
 +++
 

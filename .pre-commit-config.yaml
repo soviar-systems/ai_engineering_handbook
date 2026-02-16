@@ -69,6 +69,13 @@ repos:
         pass_filenames: false
         stages: [pre-commit, manual]
 
+      - id: validate-commit-msg
+        name: Validate Commit Body
+        entry: uv run --active tools/scripts/validate_commit_msg.py
+        language: python
+        stages: [commit-msg]
+        pass_filenames: true
+
       # ---TESTS of HOOK SCRIPTS---
       # Trigger this whenever any script or test in the scripts
       # directory changes
@@ -126,6 +133,20 @@ repos:
         entry: uv run --active pytest tools/tests/test_check_script_suite.py
         language: python
         files: ^tools/(scripts/check_script_suite\.py|scripts/paths\.py|tests/test_check_script_suite\.py)$
+        pass_filenames: false
+
+      - id: test-validate-commit-msg
+        name: Test Validate Commit Msg script
+        entry: uv run --active pytest tools/tests/test_validate_commit_msg.py
+        language: python
+        files: ^(tools/(scripts/validate_commit_msg\.py|tests/test_validate_commit_msg\.py)|pyproject\.toml)$
+        pass_filenames: false
+
+      - id: test-generate-changelog
+        name: Test Generate Changelog script
+        entry: uv run --active pytest tools/tests/test_generate_changelog.py
+        language: python
+        files: ^(tools/(scripts/generate_changelog\.py|tests/test_generate_changelog\.py)|pyproject\.toml)$
         pass_filenames: false
 
       - id: test-check-adr-index
