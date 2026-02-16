@@ -21,6 +21,15 @@ uv run pytest tools/tests/test_file.py --cov=tools.tests.test_file --cov-report=
 # Check broken links in markdown files
 uv run tools/scripts/check_broken_links.py --pattern "*.md"
 
+# Validate all ADRs and auto-fix index
+uv run tools/scripts/check_adr.py --fix
+
+# Validate a commit message (used by commit-msg hook)
+uv run tools/scripts/validate_commit_msg.py .git/COMMIT_EDITMSG
+
+# Generate CHANGELOG from git history
+uv run tools/scripts/generate_changelog.py
+
 # Build documentation site
 npm install -g mystmd && myst build --html
 ```
@@ -59,6 +68,15 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Author email: `rudakow.wadim@gmail.com` (not `lefthand67@gmail.com`)
 - Docs already in production use version `1.0.0`+, not `0.x`
 
+**Tool Configuration (ADR-26029):**
+- Machine-readable tool config goes in `pyproject.toml [tool.X]` sections, loaded via `tomllib` (stdlib)
+- Path constants stay in `tools/scripts/paths.py`; ADR validation rules stay in `adr_config.yaml`
+
+**ADRs:**
+- Never manually edit `architecture/adr_index.md` — run `uv run tools/scripts/check_adr.py --fix` to auto-update it
+- `check_adr.py` operates on all ADRs at once (no file arguments)
+- ADR frontmatter `status` determines index section placement (see `adr_config.yaml`)
+
 **Configuration:**
 - Use placeholders like `[IP_ADDRESS]` or `[DOMAIN]` instead of real values
 
@@ -76,7 +94,7 @@ The pipeline verifies that .md and .ipynb pairs are synchronized before allowing
 
 ## Development Workflow
 
-This project uses Aider as the primary AI editor with Jupytext sync as a lint step. The `.aider.conf.yml` configures auto-linting to run `uv run jupytext --sync` after edits.
+Jupytext sync runs as a pre-commit lint step. The `.aider.conf.yml` also configures auto-linting for Aider sessions.
 
 Python version: 3.13+ (locked in `.python-version`)
 Package manager: `uv` (never use pip directly)
