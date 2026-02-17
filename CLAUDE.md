@@ -58,6 +58,7 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Never convert `{code-cell}` blocks to standard markdown code blocks
 - Always preserve MyST directive syntax exactly
 - Notebooks (.ipynb) and markdown (.md) files are paired via Jupytext - editing one requires syncing
+- **Always read `.md` files, never `.ipynb`** — `.ipynb` is JSON and expensive to parse; the `.md` Jupytext pair contains the same content
 
 **Python:**
 - Use `pathlib.Path`, never `os` library
