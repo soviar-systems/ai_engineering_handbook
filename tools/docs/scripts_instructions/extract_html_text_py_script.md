@@ -26,9 +26,9 @@ options:
 
 +++
 
-This [script](/tools/scripts/extract_html_text.py) extracts readable plain text from HTML files by stripping all markup, scripts, styles, and non-content elements.
+This [script](/tools/scripts/extract_html_text.py) extracts readable plain text from HTML and MHTML files by stripping all markup, scripts, styles, SVG, and non-content elements.
 
-It uses only the Python standard library (`html.parser`), requiring zero external dependencies.
+It auto-detects MHTML (multipart MIME with quoted-printable encoding) and handles it transparently. Uses only the Python standard library (`html.parser`, `email`, `quopri`), requiring zero external dependencies.
 
 +++
 
@@ -61,10 +61,11 @@ extract_html_text.py INPUT_FILE --output OUTPUT_FILE
 
 The script processes HTML using a SAX-style parser that:
 
-1. **Discards non-content tags**: `<script>`, `<style>`, `<noscript>` tags and all their nested content are stripped completely.
-2. **Preserves text from all other elements**: Paragraph text, headings, list items, table cells, and inline elements are collected.
-3. **Decodes HTML entities**: `&amp;` → `&`, `&lt;` → `<`, character references like `&#8212;` → `—`.
-4. **Normalizes whitespace**: Collapses runs of 3+ blank lines into 2.
+1. **Auto-detects MHTML**: If the file starts with email-style headers (`From:`, `MIME-Version:`), extracts the `text/html` part and decodes quoted-printable encoding.
+2. **Discards non-content tags**: `<script>`, `<style>`, `<noscript>`, `<svg>` tags and all their nested content are stripped completely.
+3. **Preserves text from all other elements**: Paragraph text, headings, list items, table cells, and inline elements are collected.
+4. **Decodes HTML entities**: `&amp;` → `&`, `&lt;` → `<`, character references like `&#8212;` → `—`.
+5. **Normalizes whitespace**: Collapses runs of 3+ blank lines into 2.
 
 +++
 
@@ -97,6 +98,10 @@ The [test suite](/tools/tests/test_extract_html_text.py) covers the full extract
 | `TestExtractText` | Unit tests: tag stripping, entity decoding, Unicode, nested tags, empty input |
 | `TestCLISuccessPath` | Integration: stdout output, file output, empty files, Unicode files |
 | `TestCLIErrorPath` | Error handling: missing files, no arguments, directories |
+| `TestIsMhtml` | MHTML detection: headers, plain HTML rejection, edge cases |
+| `TestExtractHtmlFromMhtml` | MHTML parsing: HTML extraction, quoted-printable decoding, non-HTML filtering |
+| `TestSvgAndBase64Stripping` | Noise removal: SVG path data, base64 image sources |
+| `TestMainMhtml` | Integration: MHTML files with various extensions, output to file |
 
 Run tests with:
 
@@ -106,4 +111,8 @@ uv run pytest tools/tests/test_extract_html_text.py -v
 
 ```{code-cell}
 env -u VIRTUAL_ENV uv run pytest tools/tests/test_extract_html_text.py -q
+```
+
+```{code-cell}
+env -u VIRTUAL_ENV uv run pytest tools/tests/test_extract_html_text.py --cov=tools.scripts.extract_html_text --cov-report=term-missing
 ```
