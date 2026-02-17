@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: "Instruction on generate_changelog.py script"
 author: Vadim Rudakov, rudakow.wadim@gmail.com
-date: 2026-02-16
+date: 2026-02-17
 options:
-  version: 1.0.0
+  version: 1.0.1
   birth: 2026-02-16
 ---
 
@@ -156,18 +156,34 @@ generate_changelog.py REF_RANGE [--version VERSION] [--prepend FILE]
 
 ### Usage Examples
 
+```{code-cell}
+cd ../../..
+```
+
+#### Generate changelog from last tag to HEAD - dry run
+
+```{code-cell}
+env -u VIRTUAL_ENV uv run tools/scripts/generate_changelog.py v2.4.0..HEAD | head -n10
+```
+
+#### With version label - dry run
+
+```{code-cell}
+env -u VIRTUAL_ENV uv run tools/scripts/generate_changelog.py v2.4.0..HEAD --version 2.5.0 | head -n5
+```
+
+#### Generate from concrete 3 commits - dry run
+
+```{code-cell}
+env -u VIRTUAL_ENV uv run tools/scripts/generate_changelog.py HEAD~10..HEAD~7 | head -n10
+```
+
+#### Prepend to existing CHANGELOG
+
++++
+
 ```bash
-# Generate changelog from last tag to HEAD
-uv run tools/scripts/generate_changelog.py v2.4.0..HEAD
-
-# With version label
-uv run tools/scripts/generate_changelog.py v2.4.0..HEAD --version 2.5.0
-
-# Prepend to existing CHANGELOG
 uv run tools/scripts/generate_changelog.py v2.4.0..HEAD --version 2.5.0 --prepend CHANGELOG
-
-# Generate from last 5 commits
-uv run tools/scripts/generate_changelog.py HEAD~5..HEAD
 ```
 
 +++
