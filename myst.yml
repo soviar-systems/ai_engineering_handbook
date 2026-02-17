@@ -13,12 +13,12 @@ project:
     - "CLAUDE.md"
     - "architecture/adr/0001-template.md"
     - "misc/in_progress/*"
+    - "misc/in_progress/*"
+    - "misc/plan/*"
     - "misc/pr/*"
-    - "misc/research/slm_from_scratch/old/*"
     # jupytext pairs md to ipynb
     - "0_intro/**/*.md"
     - "ai_system/**/*.md"
-    - "misc/**/*.md"
     - "mlops/**/*.md"
     - "security/**/*.md"
     - "tools/**/*.md"
@@ -40,14 +40,17 @@ project:
     HDL: Hardware Description Languages
     HLS: High-Level Synthesis
     HPC: High-Performance Computing
+    JSON: JavaScript Object Notation
     KV: Key-Value Cache
     LLM: Large Language Model
     LM: Language Model
+    RAG: Retrieval Augmented Generation
     SLM: Small Language Model
     SRAM: Shared Memory
     SVA: Smallest Viable Architecture
     TPU: Tensor Processing Unit
     WMMA: Warp-level matrix operations
+    YAML: YAML Ain't Markup Language
   contributors:
     - id: https://github.com/lefthand67
       name: Vadim Rudakov
