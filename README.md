@@ -19,6 +19,13 @@ Content is **generated through a hybrid LLM methodology**, **cross-validated by 
 
 ## What's new?
 
+v2.5.0 — "The Self-Documenting System"
+* **Automated CHANGELOG**: `validate_commit_msg.py` enforces structured commits at commit time; `generate_changelog.py` transforms that history into hierarchical CHANGELOG entries — no manual curation needed.
+* **Tool-Agnostic Architecture**: ADR-26004..26008 (tool-specific) superseded by ADR-26027/26028 (cognitive roles); `aidx` rewritten as the generic Multi-Phase AI Pipeline.
+* **Promotion Gate**: ADR-26025 formalizes RFC→ADR workflow; `check_adr.py` enforces promotion criteria. 6 ADRs promoted to accepted.
+* **Ecosystem Cleanup**: Research extracted to dedicated monorepo (ADR-26026); `pyproject.toml` formalized as tool config SSoT (ADR-26029).
+* **Validation Expansion**: `check_adr.py` gains section whitelist, conditional sections, duplicate detection, promotion gate (154 tests, 96% coverage).
+
 v2.4.0 — "The Governed Architecture"
 * **ADR Governance**: All 24 ADRs now carry machine-readable YAML frontmatter (status, date, tags), making the decision history searchable by AI agents and filterable in RAG pipelines. 7 new ADRs (26016–26022) formalize decisions from metadata-driven lifecycle to GitHub Pages hosting.
 * **Content Lifecycle**: Superseded articles are now deleted rather than left to mislead RAG retrieval (ADR-26021). `llm_usage_patterns` retired; `choosing_model_size` rewritten as a VRAM budgeting guide.
@@ -31,11 +38,6 @@ v2.3.0
 * **Script Suite Convention**: Formalized 1:1:1 rule (Script, Test, Doc) with automated `check_script_suite.py` enforcement (ADR-26011).
 * **Tooling Overhaul**: Refactored `prepare_prompt` and `configure_repo` from Bash to Python; added `check_adr_index.py` and `check_link_format.py` validators.
 * **JIT Prompts**: Implemented on-the-fly YAML generation from JSON source of truth to prevent artifact drift (ADR-26013).
-
-v2.2.0
-* **Security**: Implemented automated API key detection and JSON validation scripts with CI integration.
-* **Infrastructure**: Adopted Ansible and Molecule for idempotent configuration management (ADR-26009, ADR-26010).
-* **Organization**: Relocated research materials to `misc/research/` and centralized prompt consultants in Layer 3.
 
 
 ## Live Documentation Site

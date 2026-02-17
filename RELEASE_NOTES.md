@@ -1,5 +1,81 @@
 # Release Notes
 
+## release v2.5.0 "The Self-Documenting System"
+
+### Summary of Changes
+
+This release closes the loop on commit governance: the system now **validates its own commits, generates its own CHANGELOG, and installs its own hooks**. What began in v2.4.0 as metadata-driven ADR governance now extends to the entire commit lifecycle — from message validation at commit time to automated CHANGELOG generation from structured commit history.
+
+The release also crystallizes the project's identity. The **Documentation-as-Code Manifesto** (`architecture/manifesto.md`) declares what this project has been converging toward since v1.0: documentation is source code for AI systems — versioned, tested, lifecycle-managed, and machine-readable. The README was rewritten around this principle.
+
+Three strategic themes define v2.5.0:
+
+1. **Automated Commit Governance** — `validate_commit_msg.py` enforces conventional commit format with structured body bullets at commit time; `generate_changelog.py` transforms that structured history into hierarchical CHANGELOG entries; `configure_repo.py` auto-installs the commit-msg hook during setup. Together, they form a self-documenting commit lifecycle where no manual CHANGELOG curation is needed.
+2. **Tool-Agnostic Architecture** — [ADR-26004: Agentic RAG](architecture/adr/adr_26004_implementation_of_agentic_rag_for_autonom.md) through [ADR-26008: Reasoning-Class Models for Abstract Synthesis](architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md) were written around specific tools (Aider, Gemini Flash). As the project matured, it became clear that cognitive roles matter more than tool names. [ADR-26027: Model Taxonomy](architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md) and [ADR-26028: Tool-Agnostic Phase 0](architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md) replace them with tool-independent definitions: reasoning-class models for synthesis, agentic-class for execution. The `aidx` framework was rewritten as the generic Multi-Phase AI Pipeline.
+3. **Ecosystem Consolidation** — Research projects that added noise to the main repo were extracted to a dedicated monorepo ([ADR-26026: Dedicated Research Monorepo](architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md)). The RFC-to-ADR promotion gate ([ADR-26025: RFC→ADR Workflow Formalization](architecture/adr/adr_26025_rfc_adr_workflow_formalization.md)) prevents premature decisions from becoming authoritative. `pyproject.toml` was formalized as the single source of truth for tool configuration ([ADR-26029: pyproject.toml as Tool Config Hub](architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md)), eliminating scattered config files.
+
+### Architecture Decisions
+
+*   **[ADR-26025: RFC→ADR Workflow Formalization](architecture/adr/adr_26025_rfc_adr_workflow_formalization.md) — Promotion Gate**:
+    Without a formal gate, proposed ADRs could be silently accepted without review. This ADR formalizes the workflow where proposed ADRs serve as living RFCs, and `check_adr.py` enforces promotion criteria before a status change is allowed. The feature was dogfooded during this very release: the promotion gate validated its own ADR-26025 alongside 5 other ADRs being promoted from proposed to accepted.
+
+*   **[ADR-26027: Model Taxonomy](architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md), [ADR-26028: Tool-Agnostic Phase 0](architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md) — Tool-Agnostic Model Taxonomy**:
+    The original ADRs (26004–26008) named specific tools — Aider as the editor, Gemini Flash as the architect model. This coupling meant every tool change required an ADR amendment. ADR-26027 defines cognitive roles instead: reasoning-class models handle synthesis and planning, agentic-class models handle execution and structure. ADR-26028 redefines Phase 0 (Intent Synthesis) as tool-agnostic human-led discovery. The tools change; the cognitive model stays.
+
+*   **[ADR-26029: pyproject.toml as Tool Configuration Hub](architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md)**:
+    Tool configuration was scattered across individual config files. ADR-26029 formalizes `pyproject.toml [tool.X]` sections as the canonical location for machine-readable tool configuration, loaded via `tomllib` (stdlib). This is the SSoT for commit conventions, validation rules, and script parameters.
+
+*   **[ADR-26026: Dedicated Research Monorepo](architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md)**:
+    Research projects (e.g., `slm_from_scratch`) added volatility and noise to the main repository. This ADR extracts them to a dedicated monorepo — only distilled insights are retained in the hub.
+
+*   **ADR Triage (26004–26008)**:
+    [ADR-26004: Agentic RAG](architecture/adr/adr_26004_implementation_of_agentic_rag_for_autonom.md) and [ADR-26005: Aider as Primary Orchestrator](architecture/adr/adr_26005_formalization_of_aider_as_primary_agentic.md) rejected — too tool-specific for an evolving ecosystem. [ADR-26006: Agentic-Class Models for Architect Phase](architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md), [ADR-26007: Phase 0 Intent Synthesis](architecture/adr/adr_26007_formalization_of_phase_0_intent_synthesi.md), [ADR-26008: Reasoning-Class Models for Abstract Synthesis](architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md) superseded by ADR-26027 and ADR-26028, preserving the cognitive model while removing tool coupling.
+
+*   **ADR Promotions**:
+    6 ADRs promoted from proposed to accepted — [ADR-26015: Mandatory Sync-Guard & Diff Suppression](architecture/adr/adr_26015_mandatory_sync_guard_and_diff_suppression.md), [ADR-26017: ADR Format Validation Workflow](architecture/adr/adr_26017_adr_format_validation_workflow.md), [ADR-26020: Hub-and-Spoke Ecosystem](architecture/adr/adr_26020_hub_spoke_ecosystem_documentation.md), [ADR-26021: Content Lifecycle Policy](architecture/adr/adr_26021_content_lifecycle_policy_for_rag_consumed.md), [ADR-26022: GitHub Pages Hosting](architecture/adr/adr_26022_standardization_of_public_documentation_hosting.md), [ADR-26025: RFC→ADR Workflow](architecture/adr/adr_26025_rfc_adr_workflow_formalization.md) — marking the transition from exploratory proposals to authoritative architecture.
+
+### New Features and Articles Added
+
+*   **Documentation-as-Code Manifesto**:
+    `architecture/manifesto.md` — the foundational document that articulates what this project is: a system where documentation is the primary input for AI agents, and therefore must be treated with the same engineering rigor as production code. This is not a new idea — it is the formalization of the principle the project has been building toward since v1.0. The README was fully rewritten to reflect this identity.
+
+*   **Automated Commit Validation & CHANGELOG Generation**:
+    Before this release, commit messages were unstructured and CHANGELOG was manually curated — a process that doesn't scale and produces inconsistent results. `validate_commit_msg.py` enforces conventional commit format with structured body bullets as a commit-msg hook (68 tests). `generate_changelog.py` parses that structured history into hierarchical, grouped CHANGELOG entries (56 tests). Both read configuration from `pyproject.toml [tool.commit-convention]`, making the commit convention machine-readable and centrally managed.
+
+*   **Format-as-Architecture v0.2.0**:
+    The original article established that serialization format affects LLM attention budget. v0.2.0 adds empirical evidence: runnable `{code-cell}` blocks measuring actual BPE token costs across 4 formats with `cl100k_base` and `o200k_base` tokenizers. Now the claims are verifiable, not theoretical.
+
+*   **ADR Section Whitelist Enforcement**:
+    As the ADR count grew, inconsistent section naming crept in (e.g., "Rationale" vs. "Decision Rationale"). The whitelist (defined in `adr_config.yaml`) enforces a canonical set of section names, with conditional support (e.g., "Rejection Rationale" only for rejected ADRs) and code-fence awareness to avoid false positives on example sections inside fenced blocks.
+
+*   **HTML/MHTML Text Extraction**:
+    Working with AI models means accumulating web chat transcripts (Gemini, Qwen, ChatGPT sessions saved as HTML/MHTML). `extract_html_text.py` extracts clean text from these files — a token-saving mechanism that lets you feed conversation history to another model without the HTML overhead (36 tests, 85% coverage).
+
+*   **Superseded Annotation in ADR Index**:
+    When [ADR-26006: Agentic-Class Models](architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md) is superseded by [ADR-26027: Model Taxonomy](architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md), the generated index now shows this relationship explicitly. Without this, readers had to open each ADR to discover its status — breaking the "index as overview" contract.
+
+### Updates in Existing Files
+
+*   **check_adr.py**: Gains section whitelist validation, conditional section checks, duplicate section detection, and promotion gate enforcement (154 tests, 96% coverage). The most significant evolution of this script since its creation in v2.4.0.
+
+*   **configure_repo.py**: Now auto-installs the commit-msg hook via `--hook-type commit-msg` during repository setup. This ensures new contributors get commit validation from the first commit — no manual hook installation required.
+
+*   **README.md**: Full structural rewrite with Documentation-as-Code framing, Architectural Governance section, Hub-and-Spoke Ecosystem description, and tool-agnostic Methodology. All tool/model name references removed in favor of cognitive-role language.
+
+*   **CLAUDE.md**: Updated with new scripts (`validate_commit_msg.py`, `generate_changelog.py`), tool configuration conventions ([ADR-26029: pyproject.toml as Tool Config Hub](architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md)), ADR index management rules, and de-emphasized tool-specific references.
+
+*   **CI/CD**: `deploy.yml` gated to `main` branch only — previously, pushes to any branch could trigger deployment. `quality.yml` gains dedicated test jobs for `validate_commit_msg.py` and `generate_changelog.py`.
+
+### Existing Files Moved or Renamed
+
+| Original | New |
+| :--- | :--- |
+| `ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.md` | `multi_phase_ai_pipeline.md` (rewritten as tool-agnostic) |
+| `misc/research/slm_from_scratch/` | Extracted to dedicated research monorepo ([ADR-26026: Dedicated Research Monorepo](architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md)) |
+| `BROKEN_LINKS_EXCLUDE_DIRS` (in `paths.py` + 10 files) | `VALIDATION_EXCLUDE_DIRS` |
+| [ADR-26004: Agentic RAG](architecture/adr/adr_26004_implementation_of_agentic_rag_for_autonom.md), [ADR-26005: Aider as Primary Orchestrator](architecture/adr/adr_26005_formalization_of_aider_as_primary_agentic.md) | Rejected (tool-agnostic shift) |
+| [ADR-26006: Agentic-Class Models](architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md), [ADR-26007: Phase 0 Intent Synthesis](architecture/adr/adr_26007_formalization_of_phase_0_intent_synthesi.md), [ADR-26008: Reasoning-Class Models](architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md) | Superseded by [ADR-26027: Model Taxonomy](architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md), [ADR-26028: Tool-Agnostic Phase 0](architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md) |
+
 ## release v2.4.0 "The Governed Architecture"
 
 ### Summary of Changes
