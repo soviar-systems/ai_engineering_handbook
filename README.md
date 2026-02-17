@@ -1,20 +1,20 @@
-# About
-
-
+---
+title: "AI Engineering Handbook"
+author: rudakow.wadim@gmail.com
+date: 2026-02-16
+options:
+  version: 2.5.0
+  birth: 2025-10-19
 ---
 
-Version: 2.4.0  
-Birth: 2025-10-19  
-Last Modified: 2026-02-06
-
----
+# AI Engineering Handbook
 
 
-This repository provides a **systematized, AI-engineered knowledge base** for building production-grade AI systems. It is the practical manifestation of a **hybrid methodology** that orchestrates capable **Large Language Models (LLM)** alongside local **Small Language Models (SLM)**.
+This repository is a **Documentation-as-Code hub** for building production-grade AI systems. In the era of AI-backed development, AI systems — RAG pipelines, coding agents, AI assistants — consume documentation as their primary input. Poor documentation produces poor AI outputs. This repository treats documentation with the same rigor as production source code: versioned, tested, lifecycle-managed, and machine-readable.
 
-All content is **generated, validated, and versioned** through a controlled Language Model (LM) workflow—treating documentation as executable, testable artifacts rather than static prose.
+Content is **generated through a hybrid LLM methodology**, **cross-validated by multiple models**, and **reviewed by a human** before promotion. Architectural decisions are governed by ADRs with machine-readable YAML frontmatter, enabling AI agents to filter and retrieve decisions by status, date, and scope.
 
-> **Mission**: To enable MLOps engineers and AI architects to construct **reliable, audit-ready** AI infrastructure. We prioritize a **hybrid approach**: using high-reasoning cloud LLMs for architecture and planning, while utilizing local SLMs for secure, resource-efficient coding and execution.
+> **Mission**: To build reliable, machine-readable documentation infrastructure that AI systems can trust as authoritative input — while enabling MLOps engineers and AI architects to construct audit-ready AI systems using a hybrid LLM+SLM methodology.
 
 
 ## What's new?
@@ -38,122 +38,142 @@ v2.2.0
 * **Organization**: Relocated research materials to `misc/research/` and centralized prompt consultants in Layer 3.
 
 
-## Authorship & Methodology
+## Live Documentation Site
+
+The rendered knowledge base is published on GitHub Pages (ADR-26022). GitHub is the **source of truth**; the site is the **rendered view** for reading.
 
 
-My name is Vadim Rudakov, I am a **Systems Engineer and AI Methodology Architect** from Sverdlovsk oblast, Russia. This repository is a "practitioner-focused" engineering hub designed to solve a specific problem: the fragility of AI prototypes and the risk of institutional "tribal knowledge".
+## Documentation as Source Code for AI
 
-- **The Architect**: I design the knowledge-generation systems and validation protocols.
-- **Hybrid Synergy**: By integrating tools like **Aider**, I utilize capable models (e.g., Gemini 3 Flash) as "Architects" to handle large context windows, while local models (e.g., Qwen 2.5 Coder) act as "Editors" to perform hardware-aware coding and testing on local GPUs.
-- **Institutional Resilience**: I document systems so thoroughly that they survive staff turnover. When key members leave, the project doesn't collapse because the methodology is encoded in the system itself.
+Traditional documentation is written for humans to read after the fact. In AI-backed development, documentation is the **primary input** that AI systems consume to produce outputs. This makes documentation quality a first-class engineering concern: stale docs produce hallucinations, unstructured metadata makes retrieval blind, missing lifecycle allows noise to accumulate.
 
-The repository is licensed under **GPLv3** for its core assets and **CC-BY-SA 4.0** for the article content.
+This repository implements the Documentation-as-Code paradigm:
 
+- **Docs = source code**: versioned, diffed, tested via Jupytext pairing (ADR-26014)
+- **Metadata = API contract**: MyST-native frontmatter makes every document machine-queryable (ADR-26023, ADR-26016)
+- **Lifecycle = garbage collection**: superseded content is deleted to prevent RAG noise; ADRs are preserved as negative knowledge (ADR-26021)
+- **Structure = architecture**: repository layout is deliberate design, not accumulation; restructuring is governed by ADRs like refactoring is governed by tests (ADR-26020, ADR-26026)
+- **ADRs = development backbone**: every major decision is an ADR; proposed ADRs serve as living RFCs (ADR-26025)
+- **CI/CD = deployment**: automated validation, sync-guard, broken-link checks (ADR-26015)
 
-## Coverage
+This stands in direct opposition to pre-AI knowledge bases — collections of articles with no enforced structure, no traceability, and no automated verification.
 
+See the full rationale in [architecture/manifesto.md](/architecture/manifesto.md).
 
-Content is organized around the six layers of LLM systems:
-
-1. **Execution & Optimization**: CPU/GPU hybrid pipelines, memory (VRAM/RAM) management, NVIDIA tuning
-2. **Model Development**: SLM selection, tokenization, embedding, security
-3. **Prompt Engineering**: Modular design, XML schemas, template lifecycle
-4. **Orchestration**: RAG, workflow chaining, structured output control
-5. **Context Management**: Vector stores, hybrid retrieval, indexing strategies
-6. **Security & Quality**: Bias detection, access control, validation templates  (spread across all other layers)
-
-All materials are **LM-generated**, then **cross-validated by multiple models**, and deeply **reviewed before promotion** from draft to final by me. The production of one handbook may take tens of manual and AI-backed iterations before I am ready to put it into the main branch, but I understand it can still have problems, so feel free to leave issues.
-
-
-## Generation Workflow: Hybrid Orchestration
-
-
-All content follows a reproducible pipeline mirroring software CI/CD, specifically leveraging hybrid LLM/SLM capabilities:
-
-1. **Capable LLM step:**
-    1. **Idea elaboration:** [local_ai_systems_consultant.json](/ai_system/3_prompts/consultants/local_ai_systems_consultant.json) helps to peer-review the ideas and solutions in the chat form to stress-test concepts before they're adopted as a methodological tool.
-    1. **Draft generation**: [handbook_consultant.json](/ai_system/3_prompts/consultants/handbook_consultant.json) produces articles and diagrams.
-    1. **Cross-validation:** Multiple models critique and refine outputs.
-1. **Human review step:**
-   - Final sanity check before promotion to published directories
-1. **CI/CD:**
-   - **Version control:** Every file is tracked, diffed, and tested like source code with the help of the pre-coomit hooks, GH actions, and local SLM.
-  
 > In this paradigm: prompts = source code, articles = build artifacts, reviews = QA gates.
+
+
+## Architectural Governance
+
+ADRs are the **main context for development** in this repository. Every structural, methodological, or tooling decision is recorded as an ADR before implementation.
+
+- **16 active ADRs** govern the repo — see the full list in [architecture/adr_index.md](/architecture/adr_index.md)
+- **RFC→ADR workflow**: proposed ADRs serve as living RFCs; accepted ADRs are authoritative (ADR-26025)
+- **Machine-readable metadata**: YAML frontmatter with status, date, tags enables AI filtering (ADR-26016, ADR-26017)
+- **Automated validation**: `check_adr.py` enforces format, required sections, term references, and index partitioning (ADR-26017)
+- **Asymmetric lifecycle**: articles are deleted when superseded; ADRs are preserved as negative knowledge — decision history is never lost (ADR-26021)
+
+
+## Hub-and-Spoke Ecosystem
+
+This repository is the **standards hub** — it holds conventions, specifications, and ecosystem ADRs (ADR-26020). Implementation lives in independent spokes:
+
+- **Extracted packages** (e.g., [vadocs](https://github.com/lefthand67/vadocs)) are independent spokes with their own implementation decisions
+- **Research** is extracted to a dedicated monorepo (ADR-26026) — only distilled insights are retained in the hub
+- The hub holds the **"why"**; spokes hold the **"how"**
+
+
+## Methodology
+
+Content generation follows a tool-agnostic, cognitive-model approach:
+
+- **Model taxonomy**: reasoning-class models (synthesis, requirements) vs. agentic-class models (execution, structure) — selected by capability, not by name (ADR-26027)
+- **Phase 0: Intent Synthesis**: human-led discovery with a reasoning-class model before any automated execution (ADR-26028)
+- **Consultant prompts** in `ai_system/3_prompts/consultants/` encode methodology as JIT-transformable JSON (ADR-26013)
 
 ```mermaid
 graph LR
-B[Idea elaboration: slm_system_consultant.json] --> C[Draft generation: handbook_consultant.json]
-C --> D[Cross-validation by multiple models]
-D --> E[Human review]
-E --> F[CI/CD gates]
-F --> G[Promotion to published directories]
+A[Phase 0: Intent synthesis] --> B[Draft generation]
+B --> C[Cross-validation by multiple models]
+C --> D[Human review]
+D --> E[CI/CD gates]
+E --> F[Promotion to published directories]
 
+style A fill:#fff,stroke:#333,stroke-width:2px
 style B fill:#fff,stroke:#333,stroke-width:2px
 style C fill:#fff,stroke:#333,stroke-width:2px
 style D fill:#fff,stroke:#333,stroke-width:2px
 style E fill:#fff,stroke:#333,stroke-width:2px
 style F fill:#fff,stroke:#333,stroke-width:2px
-style G fill:#fff,stroke:#333,stroke-width:2px
 ```
+
+
+## Coverage
+
+Content is organized around five layers of AI systems. Security is a **cross-cutting concern** woven into all layers, not a separate layer.
+
+1. **Execution & Optimization**: CPU/GPU hybrid pipelines, VRAM/RAM management, NVIDIA tuning
+2. **Model Development**: SLM selection, tokenization, embeddings
+3. **Prompt Engineering**: Modular design, XML schemas, template lifecycle, consultant prompts
+4. **Orchestration**: RAG, workflow chaining, agent specialization, structured output
+5. **Context Management**: Vector stores, hybrid retrieval, indexing strategies
+
+Read more in [A Multi-Layered AI System Architecture](/0_intro/a_multi_layered_ai_system_architecture.ipynb).
 
 
 ## Repository Structure
 
-
-The core part of the repository is the `ai_system` directory which introduces 5 layers of AI system. Read more about this approach in ["A Multi-Layered AI System Architecture"](/0_intro/a_multi_layered_ai_system_architecture.ipynb).
-
 ```text
 .
-├── 0_intro/                # Introductory material, high‑level overviews, background resources
-├── ai_system/              # Core implementation of the six LLM‑system layers
-│   ├── 1_execution/        # Latency control (<100ms), CUDA optimization, etc.
-│   ├── 2_model/            # Model selection, adaptation, fine-tuning, etc.
-│   ├── 3_prompts/          # Prompt-as-Infrastructure: formatting and transportation, GitOps versioning, etc.
-│   ├── 4_orchestration/    # Wrokflow, agent specialization, etc.
-│   ├── 5_context/          # RAG, knowledge bases, etc.
-│   └── security/           # Centralized policy hub: adversarial threat modeling, RBAC, and OWASP LLM risk mitigationtools
-├── architecture/           # Architectural decision records & post‑mortems
-│   ├── adr/                # Formal ADR documents describing major design choices
+├── 0_intro/                # Introductory material, high-level overviews
+├── ai_system/              # Core content organized by layer
+│   ├── 1_execution/        # CPU/GPU optimization, CUDA, VRAM management
+│   ├── 2_model/            # Model selection, tokenization, embeddings
+│   ├── 3_prompts/          # Prompt-as-Infrastructure: formatting, versioning, consultants
+│   ├── 4_orchestration/    # Workflow, agent specialization, structured output
+│   └── 5_context/          # RAG, knowledge bases, hybrid retrieval
+├── architecture/           # Architectural governance
+│   ├── adr/                # Formal ADR documents (YAML frontmatter, machine-readable)
+│   ├── packages/           # Spoke package documentation and PoCs
 │   └── post-mortems/       # Retrospectives on failures and lessons learned
-├── misc/                   # Miscellaneous, non‑core work
-│   ├── in_progress/        # Drafts, experiments, work‑in‑progress artifacts
-│   └── pr/                 # Pull‑request notes, review checklists, temporary files
-├── mlops/                  # MLOps‑focused tooling and pipelines
-│   ├── ci_cd/              # CI/CD configs, GitHub Actions, quality‑gate scripts (broken‑link checks, Jupytext verification)
-│   └── security/           # MLOps‑specific security tooling, secret‑scanning, compliance checks
-├── research/               # Experimental research code & notebooks
-│   └── slm_from_scratch/   # Tokenizers, model‑training loops, low‑level SLM experiments
-└── tools/                  # Supporting utilities for the repo
-    ├── docs/               # Documentation generation helpers, style guides, reference material
-    ├── prompt_helpers/     # Prompt libraries, system‑prompt JSON files, validation scripts
-    ├── scripts/            # General‑purpose automation (link checking, formatting, Jupytext sync, etc.)
-    └── tests/              # Test suites for tools & research code
+├── misc/                   # Non-core work
+│   ├── in_progress/        # Drafts, experiments, work-in-progress
+│   ├── plan/               # Implementation plans (saved between context switches)
+│   └── pr/                 # Telegram channel posts, review checklists
+├── mlops/                  # MLOps tooling and pipelines
+│   ├── ci_cd/              # GitHub Actions, quality-gate scripts
+│   └── security/           # Secret scanning, compliance checks
+├── security/               # Centralized security policy hub (placeholder)
+└── tools/                  # Supporting utilities
+    ├── configs/            # Tool configuration files
+    ├── docs/               # Documentation generation helpers, style guides
+    ├── scripts/            # Automation: link checking, ADR validation, Jupytext sync
+    └── tests/              # Test suites for scripts
 ```
 
 
-### Research & Foundations (`/research`)
+## Toolchain & CI/CD
+
+The repository uses automated validation to enforce documentation quality:
+
+- **Pre-commit hooks** in OOP Python style (ADR-26001) within the pre-commit framework (ADR-26002)
+- **Jupytext pairing** with sync-guard: `.ipynb` and `.md` files stay synchronized; CI blocks unsynced changes (ADR-26014, ADR-26015)
+- **Tool configuration** centralized in `pyproject.toml [tool.X]` sections (ADR-26029)
+- **CI/CD pipelines**: `quality.yml` (broken links, jupytext sync, script tests) + `deploy.yml` (GitHub Pages deployment)
+- **Validation scripts**: `check_adr.py`, `check_broken_links.py`, `validate_commit_msg.py`, `check_link_format.py`
 
 
-While the core layers of this repository focus on the **systemic orchestration** of AI, the `research/` directory is dedicated to the **first principles** of Small Language Models. We treat the transition from a single neuron to a production-grade Transformer not as a "black box," but as a verifiable engineering stack.
+## Authorship & Contact
 
-In this repository, "Research" is not academic—it is **forensic**. By building the model from scratch:
-1. **Security is Hardened**: We understand exactly how data flows through the weights, making it easier to identify points of failure for prompt injection or data leakage.
-2. **Optimization is Precise**: Hardware-aware tuning (Layer 1) is more effective when you understand the computational graph of the model (Research Layer).
-3. **Validation is Absolute**: We use manual gradient checks in research to ensure that our automated validation protocols in the MLOps layer are mathematically sound.
+My name is Vadim Rudakov, I am a **Systems Engineer and AI Methodology Architect** from Sverdlovsk oblast, Russia. This repository solves a specific problem: the fragility of AI prototypes and the risk of institutional "tribal knowledge."
 
+- **The Architect**: I design the knowledge-generation systems, validation protocols, and the Documentation-as-Code methodology.
+- **Cognitive Roles**: Reasoning-class models handle architecture and planning; agentic-class models handle execution and structure. The tools change — the cognitive model stays.
+- **Institutional Resilience**: Systems are documented so thoroughly that they survive staff turnover. The methodology is encoded in the system itself.
 
-## Motivation: Sustainable AI Engineering
-
-
-My goal is to build AI solutions maintainable as ordinary software. Every problem documented here was confronted while developing local SLM stacks under resource constraints. I share this repository to:
-
-* **Prove Hybrid Viability**: Demonstrate that combining cloud-based reasoning with local SLM execution is the optimal path for production-grade reliability.
-* **Hardened Security**: By understanding the computational graph of SLMs (Research Layer), we identify points of failure for prompt injection, data leakage, or resources utilization bottlenecks more precisely.
-* **Efficiency through Systems**: Human-led, AI-accelerated process allows for the generation of audit-ready technical documentation in days rather than months.
+The repository is licensed under **GPLv3** for its core assets and **CC-BY-SA 4.0** for the article content.
 
 
 ## Contact Information
 
-
-Vadim Rudakov, lefthand67@gmail.com
+Vadim Rudakov, rudakow.wadim@gmail.com
