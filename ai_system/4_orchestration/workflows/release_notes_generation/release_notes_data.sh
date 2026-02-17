@@ -10,7 +10,7 @@ main() {
     #git --no-pager diff --name-status "${start}" "${end}"
 
     echo "Commits messages between ${start} and ${end}:"
-    git log "${start}..${end}" --format="%B" --name-status | grep -v "^pr:" | grep -v '/pr/' | grep -v '^$' | grep -v 'Co-Authored-By:'
+    git log "${start}..${end}" --format="%B" --name-status | grep -v "^pr:" | grep -v '/pr/' | grep -v '^$' | grep -v 'Co-Authored-By:' | grep -v 'misc/plan/' | grep -v 'CLAUDE.md'
 }
 
 
