@@ -68,18 +68,58 @@ class TestUvSyncRunner:
             result = runner.run_precommit_install()
             assert result is False
 
+    def test_run_precommit_install_commit_msg_success(self, runner):
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            result = runner.run_precommit_install_commit_msg()
+            assert result is True
+            mock_run.assert_called_once()
+            args = mock_run.call_args[0][0]
+            assert "pre-commit" in args
+            assert "install" in args
+            assert "--hook-type" in args
+            assert "commit-msg" in args
+
+    def test_run_precommit_install_commit_msg_failure(self, runner):
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=1)
+            result = runner.run_precommit_install_commit_msg()
+            assert result is False
+
     def test_run_all_success(self, runner):
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0)
             result = runner.run()
             assert result is True
-            assert mock_run.call_count == 2
+            assert mock_run.call_count == 3
 
     def test_run_all_uv_sync_fails(self, runner):
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=1)
             result = runner.run()
             assert result is False
+            assert mock_run.call_count == 1
+
+    def test_run_all_precommit_install_fails(self, runner):
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = [
+                MagicMock(returncode=0),  # uv sync succeeds
+                MagicMock(returncode=1),  # pre-commit install fails
+            ]
+            result = runner.run()
+            assert result is False
+            assert mock_run.call_count == 2
+
+    def test_run_all_commit_msg_hook_fails(self, runner):
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = [
+                MagicMock(returncode=0),  # uv sync succeeds
+                MagicMock(returncode=0),  # pre-commit install succeeds
+                MagicMock(returncode=1),  # commit-msg hook install fails
+            ]
+            result = runner.run()
+            assert result is False
+            assert mock_run.call_count == 3
 
     def test_dry_run_skips_execution(self):
         runner = UvSyncRunner(verbose=False, dry_run=True)

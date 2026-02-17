@@ -11,18 +11,16 @@ kernelspec:
   language: bash
 ---
 
+---
+title: "Instruction on configure_repo.py script"
+author: rudakow.wadim@gmail.com
+date: 2026-02-17
+options:
+  version: 0.2.0
+  birth: 2026-01-27
+---
+
 # Instruction on configure_repo.py script
-
-+++
-
----
-
-Owner: Vadim Rudakov, rudakow.wadim@gmail.com
-Version: 0.1.0
-Birth: 2026-01-27
-Last Modified: 2026-01-27
-
----
 
 +++
 
@@ -53,12 +51,13 @@ SVA isn't about minimal *code* — it's about **minimal *cognitive and operation
 
 ### A. Setup Operations
 
-The script performs four sequential operations:
+The script performs five sequential operations:
 
 | Operation | Description |
 |-----------|-------------|
 | **UV Sync** | Runs `uv sync` to install/update dependencies from lockfile |
-| **Pre-commit Install** | Runs `uv run pre-commit install` to configure git hooks |
+| **Pre-commit Install** | Runs `uv run pre-commit install` to configure pre-commit hooks |
+| **Commit-msg Hook** | Runs `uv run pre-commit install --hook-type commit-msg` to enable commit message validation |
 | **Aider Config** | Copies `tools/configs/aider.conf.yml` to `.aider.conf.yml` if target missing |
 | **Script Permissions** | Makes all `.sh` and `.py` files executable recursively |
 | **Symlinks** | Creates symlinks in `~/bin` for all files in `tools/scripts/` |
@@ -84,7 +83,7 @@ The script is organized into specialized classes to maintain clarity:
 
 | Class | Responsibility |
 |-------|----------------|
-| `UvSyncRunner` | Execute `uv sync` and `pre-commit install` commands |
+| `UvSyncRunner` | Execute `uv sync`, `pre-commit install`, and `commit-msg` hook install |
 | `AiderConfigCopier` | Copy aider configuration file with existence checks |
 | `ScriptPermissions` | Find and make `.sh`/`.py` files executable |
 | `SymlinkCreator` | Create symlinks in target bin directory |
@@ -150,20 +149,27 @@ Run these from the repository root using `uv` for consistent environment resolut
 
 ```{code-cell}
 cd ../../../
-ls
 ```
 
-1. Preview what would be done:
+#### Preview what would be done:
 
-```{code-cell}
-env -u VIRTUAL_ENV uv run tools/scripts/configure_repo.py --dry-run --verbose
+```bash
+uv run tools/scripts/configure_repo.py --dry-run --verbose
 ```
 
-2. Run setup skipping symlinks:
-
 ```{code-cell}
+env -u VIRTUAL_ENV uv run tools/scripts/configure_repo.py --dry-run
+```
+
+#### Run setup skipping symlinks:
+
++++
+
+```bash
 env -u VIRTUAL_ENV uv run tools/scripts/configure_repo.py --skip-symlinks --skip-uv-sync --verbose
 ```
+
++++
 
 ## **5. Test Suite Documentation**
 

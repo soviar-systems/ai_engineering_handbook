@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: "Pre-Commit Hooks and Staging: Instruction for Developers"
 author: rudakow.wadim@gmail.com
-date: 2026-02-10
+date: 2026-02-17
 options:
-  version: 1.0.0
+  version: 1.1.0
   birth: 2026-01-04
 ---
 
@@ -86,18 +86,23 @@ Git’s staging area reflects the developer’s intentional choice about what be
 
 We use a Python package `pre-commit` for handling local hooks (see ["ADR 26002: Adoption of the Pre-commit Framework"](/architecture/adr/adr_26002_adoption_of_pre_commit_framework.md)).
 
-The `.pre-commit-config.yaml` file is already configured in the repo, so the developer needs to install pre-commit and install the config to `.git/hooks` repo: 
+The `.pre-commit-config.yaml` file is already configured in the repo, so the developer needs to install pre-commit and install the config to `.git/hooks` repo:
 
 ```bash
 $ uv add pre-commit
 $ uv run pre-commit install
+$ uv run pre-commit install --hook-type commit-msg
 ```
 
 ```{code-cell}
-ls ../../../.git/hooks | grep 'pre-commit$'
+ls ../../../.git/hooks | grep -E '^(pre-commit|commit-msg)$'
 ```
 
-Run the [repo configuration script](/tools/scripts/configure_repo.py), it will automatically handle this.
+:::{warning} **Hook stages require separate installation**
+`pre-commit install` only installs the default `pre-commit` stage hook. Each additional stage (`commit-msg`, `pre-push`, `prepare-commit-msg`, etc.) requires its own `--hook-type` install call. If you add hooks at new stages in `.pre-commit-config.yaml`, the corresponding `--hook-type` install must happen in your setup — otherwise the hooks exist in config but never fire.
+:::
+
+Run the [repo configuration script](/tools/scripts/configure_repo.py), it will automatically handle both hook types.
 
 +++
 

@@ -11,18 +11,16 @@ kernelspec:
   name: bash
 ---
 
+---
+title: "Pre-commit Hooks and CI Validation System"
+author: rudakow.wadim@gmail.com
+date: 2026-02-17
+options:
+  version: 1.1.0
+  birth: 2026-01-22
+---
+
 # Pre-commit Hooks and CI Validation System
-
-+++
-
----
-
-Owner: Vadim Rudakov, lefthand67@gmail.com
-Version: 1.0.0
-Birth: 2026-01-22
-Last Modified: 2026-01-22
-
----
 
 +++
 
@@ -418,9 +416,14 @@ flowchart TB
 # Install pre-commit (if not already installed)
 uv add pre-commit
 
-# Install the hooks
+# Install the pre-commit stage hooks
 uv run pre-commit install
+
+# Install the commit-msg stage hook (for commit message validation)
+uv run pre-commit install --hook-type commit-msg
 ```
+
+See [Pre-Commit Hooks and Staging: Instruction for Developers](/tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.ipynb) for details on hook stage installation.
 
 +++
 
