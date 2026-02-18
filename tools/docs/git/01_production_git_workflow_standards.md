@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: Production Git Workflow Standards
 author: rudakow.wadim@gmail.com
-date: 2026-02-10
+date: 2026-02-18
 options:
-  version: 1.0.0
+  version: 1.0.1
   birth: 2025-11-29
 ---
 
@@ -208,20 +208,19 @@ Every commit on trunk (the squashed commit produced by Squash-and-Merge) **MUST*
 ```
 <type>[(<scope>)]: <subject line>
 
-- <Verb>: `<file-path>` — <what/why>
-- <Verb>: `<file-path>` — <what/why>
+- <Verb>: <file-path> — <what_and_why>
 
 Co-Authored-By: ...
 ```
 
-The `<what/why>` portion explains what changed in the file and why — this is a changelog, so each bullet should capture both the substance and the motivation.
+The `<what_and_why>` portion explains what changed in the file and why — this is a changelog, so each bullet should capture both the substance and the motivation.
 
 **Rules:**
 
 1. Body **MUST** contain at least one line starting with `- ` (a changelog bullet).
 2. Each bullet is a self-contained changelog entry. **No line length limit** — one bullet = one line, regardless of length. Commits are primarily read in Git host UIs which wrap automatically.
 3. Verb prefix before `:` — `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`.
-4. **`<file-path>` is a path relative to the repo root, wrapped in backticks.** Single file: `` `check_adr.py` ``. Glob/pair: `` `01_guide.(md|ipynb)` ``. Rename: `` `old.py` → `new.py` ``. Every change lives in a file — always use the nearest file path, no abstract targets.
+4. **`<file-path>` is a path relative to the repo root.** Single file: `check_adr.py`. Glob/pair: `01_guide.(md|ipynb)`. Rename: `old.py` → `new.py`. Every change lives in a file — always use the nearest file path, no abstract targets.
 5. Git trailers (after blank line, `Key: Value` format) are excluded from parsing.
 6. Non-bullet lines in the body (prose context) are ignored by the parser but allowed for human context.
 7. `ArchTag:TAG-NAME` line (Tier 3) is preserved for justification validation but excluded from changelog output.
@@ -236,14 +235,14 @@ The `<what/why>` portion explains what changed in the file and why — this is a
 ```
 docs: Restructure website deployment documentation
 
-- Created: `tools/docs/website/01_github_pages_deployment.(md|ipynb)` — the GitHub Pages guide was invisible on the website because it lacked a Jupytext pair; new canonical guide consolidates scattered setup instructions
-- Renamed: `mystmd_website_deployment_instruction.(md|ipynb)` → `02_self_hosted_deployment.(md|ipynb)` — clear numbering signals the active guide (01) vs deprecated alternative (02)
-- Refactored: `02_self_hosted_deployment.md` — duplicated MyST init/config/testing sections diverged from the canonical guide; replaced with cross-references to eliminate drift
-- Deleted: `tools/docs/git/github_pages_setup.md` — content fully absorbed into `01_github_pages_deployment`; keeping both would cause conflicting instructions
-- Updated: `architecture/adr/adr_26022...md` — self-hosted link pointed to a renamed file; split single reference into two entries (active + deprecated) for clarity
-- Updated: `architecture/packages/README.md` — GitHub Pages setup link pointed to the deleted file
-- Updated: `architecture/packages/creating_spoke_packages.md` — same dead link fix in Next Steps section
-- Fixed: `configs/mutli-site/` → `configs/multi-site/` directory typo
+- Created: tools/docs/website/01_github_pages_deployment.(md|ipynb) — the GitHub Pages guide was invisible on the website because it lacked a Jupytext pair; new canonical guide consolidates scattered setup instructions
+- Renamed: mystmd_website_deployment_instruction.(md|ipynb) → 02_self_hosted_deployment.(md|ipynb) — clear numbering signals the active guide (01) vs deprecated alternative (02)
+- Refactored: 02_self_hosted_deployment.md — duplicated MyST init/config/testing sections diverged from the canonical guide; replaced with cross-references to eliminate drift
+- Deleted: tools/docs/git/github_pages_setup.md — content fully absorbed into 01_github_pages_deployment; keeping both would cause conflicting instructions
+- Updated: architecture/adr/adr_26022...md — self-hosted link pointed to a renamed file; split single reference into two entries (active + deprecated) for clarity
+- Updated: architecture/packages/README.md — GitHub Pages setup link pointed to the deleted file
+- Updated: architecture/packages/creating_spoke_packages.md — same dead link fix in Next Steps section
+- Fixed: configs/mutli-site/ → configs/multi-site/ directory typo
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```
@@ -264,8 +263,8 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 refactor: Simplify model loading logic
 
 ArchTag:TECHDEBT-PAYMENT
-- Refactored: `model_loader.py` — cyclomatic complexity was 15, causing test failures on edge cases; reduced to 8 by extracting format-specific loaders
-- Deleted: `legacy_loader.py` — its ONNX path was the only unique logic; moved into the main loader to eliminate a 200-line file with no test coverage
+- Refactored: model_loader.py — cyclomatic complexity was 15, causing test failures on edge cases; reduced to 8 by extracting format-specific loaders
+- Deleted: legacy_loader.py — its ONNX path was the only unique logic; moved into the main loader to eliminate a 200-line file with no test coverage
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```

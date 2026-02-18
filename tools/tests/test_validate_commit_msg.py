@@ -24,7 +24,7 @@ The validation has three layers:
 
 Tests assert on error list LENGTH (empty vs non-empty), not error message content.
 This means the implementation can freely change error wording without breaking tests.
-Parametrized inputs cover all valid types from CLAUDE.md without duplicating logic.
+Parametrized inputs derive from VALID_TYPES/ARCHTAG_REQUIRED_TYPES (loaded from pyproject.toml).
 """
 
 import pytest
@@ -54,25 +54,10 @@ from tools.scripts.validate_commit_msg import (
 class TestValidateSubject:
     """Contract: subject line → list of error strings (empty = valid)."""
 
-    @pytest.mark.parametrize(
-        "subject",
-        [
-            "feat: add login page",
-            "fix: correct token expiry",
-            "docs: update README",
-            "ci: add deploy workflow",
-            "chore: bump version",
-            "refactor: simplify loader",
-            "perf: optimize query",
-            "pr: announce release",
-            "test: add unit tests",
-        ],
-    )
-    def test_valid_cc_subjects_produce_no_errors(self, subject):
-        """All types from ADR-26024 with valid format → no errors.
-
-        If VALID_TYPES is updated, add the new type here.
-        """
+    @pytest.mark.parametrize("commit_type", sorted(VALID_TYPES))
+    def test_valid_cc_subjects_produce_no_errors(self, commit_type):
+        """All types from pyproject.toml [tool.commit-convention] with valid format → no errors."""
+        subject = f"{commit_type}: test description"
         errors = validate_subject(subject)
         assert errors == []
 
@@ -143,14 +128,14 @@ class TestValidateBody:
     """
 
     def test_single_bullet_passes(self):
-        lines = ["- Created: `file.py` — new file"]
+        lines = ["- Created: file.py — new file"]
         errors = validate_body(lines)
         assert errors == []
 
     def test_multiple_bullets_pass(self):
         lines = [
-            "- Created: `file.py` — new file",
-            "- Updated: `other.py` — modified",
+            "- Created: file.py — new file",
+            "- Updated: other.py — modified",
         ]
         errors = validate_body(lines)
         assert errors == []
@@ -170,14 +155,14 @@ class TestValidateBody:
         """Prose lines are allowed alongside bullets — only bullets matter."""
         lines = [
             "Some context about this change.",
-            "- Created: `file.py` — new file",
+            "- Created: file.py — new file",
         ]
         errors = validate_body(lines)
         assert errors == []
 
     def test_indented_bullet_passes(self):
         """Bullets with leading whitespace ('  - ...') are still valid bullets."""
-        lines = ["  - Updated: `file.py` — thing"]
+        lines = ["  - Updated: file.py — thing"]
         errors = validate_body(lines)
         assert errors == []
 
@@ -219,44 +204,44 @@ class TestValidateArchTag:
     """Contract: types in ARCHTAG_REQUIRED_TYPES + breaking changes need ArchTag."""
 
     def test_refactor_with_archtag_passes(self):
-        lines = ["ArchTag:TECHDEBT-PAYMENT", "- Updated: `f.py` — simplified"]
+        lines = ["ArchTag:TECHDEBT-PAYMENT", "- Updated: f.py — simplified"]
         errors = validate_archtag("refactor", lines, breaking=False)
         assert errors == []
 
     def test_perf_with_archtag_passes(self):
-        lines = ["ArchTag:PERF-OPTIMIZATION", "- Updated: `f.py` — faster"]
+        lines = ["ArchTag:PERF-OPTIMIZATION", "- Updated: f.py — faster"]
         errors = validate_archtag("perf", lines, breaking=False)
         assert errors == []
 
     def test_refactor_without_archtag_fails(self):
-        lines = ["- Updated: `f.py` — simplified"]
+        lines = ["- Updated: f.py — simplified"]
         errors = validate_archtag("refactor", lines, breaking=False)
         assert len(errors) > 0
 
     def test_perf_without_archtag_fails(self):
-        lines = ["- Updated: `f.py` — faster"]
+        lines = ["- Updated: f.py — faster"]
         errors = validate_archtag("perf", lines, breaking=False)
         assert len(errors) > 0
 
     def test_feat_without_archtag_passes(self):
         """Non-refactor/perf types don't need ArchTag."""
-        lines = ["- Created: `f.py` — new"]
+        lines = ["- Created: f.py — new"]
         errors = validate_archtag("feat", lines, breaking=False)
         assert errors == []
 
     def test_fix_without_archtag_passes(self):
-        lines = ["- Fixed: `f.py` — bug"]
+        lines = ["- Fixed: f.py — bug"]
         errors = validate_archtag("fix", lines, breaking=False)
         assert errors == []
 
     def test_breaking_change_without_archtag_fails(self):
         """Breaking changes (! in subject) also require ArchTag."""
-        lines = ["- Updated: `f.py` — breaking"]
+        lines = ["- Updated: f.py — breaking"]
         errors = validate_archtag("feat", lines, breaking=True)
         assert len(errors) > 0
 
     def test_breaking_change_with_archtag_passes(self):
-        lines = ["ArchTag:BREAKING-CHANGE", "- Updated: `f.py` — breaking"]
+        lines = ["ArchTag:BREAKING-CHANGE", "- Updated: f.py — breaking"]
         errors = validate_archtag("feat", lines, breaking=True)
         assert errors == []
 
@@ -275,13 +260,11 @@ class TestValidateArchTag:
 
 
 class TestValidTypes:
-    """Contract: all types from Production Git Workflow Standards are in VALID_TYPES."""
+    """Contract: all types from pyproject.toml [tool.commit-convention] are in VALID_TYPES."""
 
-    @pytest.mark.parametrize(
-        "commit_type",
-        ["feat", "fix", "docs", "ci", "chore", "refactor", "perf", "pr", "test"],
-    )
-    def test_all_claude_md_types_recognized(self, commit_type):
+    @pytest.mark.parametrize("commit_type", sorted(VALID_TYPES))
+    def test_all_config_types_recognized(self, commit_type):
+        """Every type in pyproject.toml valid-types is in VALID_TYPES constant."""
         assert commit_type in VALID_TYPES
 
 
@@ -293,9 +276,10 @@ class TestArchTagRequiredTypes:
         assert commit_type in ARCHTAG_REQUIRED_TYPES
 
     @pytest.mark.parametrize(
-        "commit_type", ["feat", "fix", "docs", "ci", "chore", "pr", "test"]
+        "commit_type", sorted(VALID_TYPES - ARCHTAG_REQUIRED_TYPES)
     )
     def test_does_not_require_archtag(self, commit_type):
+        """Types outside ARCHTAG_REQUIRED_TYPES don't need ArchTag."""
         assert commit_type not in ARCHTAG_REQUIRED_TYPES
 
 
@@ -319,7 +303,7 @@ class TestValidateCommitMsgCLI:
         msg_file = tmp_path / "COMMIT_EDITMSG"
         msg_file.write_text(
             "feat: add login page\n\n"
-            "- Created: `auth/login.py` — new login page\n\n"
+            "- Created: auth/login.py — new login page\n\n"
             "Co-Authored-By: Claude <noreply@anthropic.com>\n"
         )
         cli = ValidateCommitMsgCLI()
@@ -364,7 +348,7 @@ class TestValidateCommitMsgCLI:
         msg_file = tmp_path / "COMMIT_EDITMSG"
         msg_file.write_text(
             "refactor: simplify loader\n\n"
-            "- Updated: `loader.py` — simplified\n"
+            "- Updated: loader.py — simplified\n"
         )
         cli = ValidateCommitMsgCLI()
         with pytest.raises(SystemExit) as exc_info:
@@ -377,7 +361,7 @@ class TestValidateCommitMsgCLI:
         msg_file.write_text(
             "refactor: simplify loader\n\n"
             "ArchTag:TECHDEBT-PAYMENT\n"
-            "- Updated: `loader.py` — simplified\n"
+            "- Updated: loader.py — simplified\n"
         )
         cli = ValidateCommitMsgCLI()
         cli.run(argv=[str(msg_file)])  # Should not raise SystemExit

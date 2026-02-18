@@ -28,7 +28,7 @@ formats = "ipynb,md:myst"
 # Defined in: tools/docs/git/01_production_git_workflow_standards.md
 # Decision record: architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md
 [tool.commit-convention]
-valid-types = ["feat", "fix", "docs", "ci", "chore", "refactor", "perf", "pr", "test"]
+valid-types = ["feat", "fix", "docs", "adr", "ci", "refactor", "perf", "chore", "pr"]
 archtag-required-types = ["refactor", "perf"]
 
 [tool.commit-convention.changelog-sections]
@@ -36,9 +36,9 @@ archtag-required-types = ["refactor", "perf"]
 feat = "New Features"
 fix = "Bug Fixes"
 docs = "Documentation"
+adr = "Architectural Decisions"
 ci = "CI/CD & Quality"
 chore = "Maintenance"
 refactor = "Refactoring"
 perf = "Performance"
 pr = "Public Relations"
-test = "Tests"

@@ -1,7 +1,7 @@
 ---
 id: ADR-26024
 title: "Structured Commit Bodies for Automated CHANGELOG Generation"
-date: 2026-02-10
+date: 2026-02-18
 status: proposed
 superseded_by: null
 tags: [workflow, ci, documentation, git]
@@ -53,18 +53,18 @@ Every commit on trunk must contain at least one changelog bullet in the body:
 ```
 <type>[(<scope>)]: <subject line>
 
-- <Verb>: `<file-path>` — <what/why>
+- <Verb>: <file-path> — <what_and_why>
 ```
 
-The `<what/why>` portion explains what changed in the file and why — this is a changelog, so each bullet should capture both the substance and the motivation. Verb prefixes: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`. No line length limit — one bullet = one line. Git trailers and `ArchTag:` lines are excluded from changelog parsing.
+The `<what_and_why>` portion explains what changed in the file and why — this is a changelog, so each bullet should capture both the substance and the motivation. Verb prefixes: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`. No line length limit — one bullet = one line. Git trailers and `ArchTag:` lines are excluded from changelog parsing.
 
-**Target Rules** — `<file-path>` is a path relative to the repo root, wrapped in backticks:
+**Target Rules** — `<file-path>` is a path relative to the repo root:
 
-1. **Single file**: `` `tools/scripts/check_adr.py` ``
-2. **Glob or Jupytext pair**: `` `tools/docs/website/01_github_pages_deployment.(md|ipynb)` ``
-3. **Multiple related files** (same verb, same reason): `` `adr_26001.md`, `adr_26002.md` `` — or use a glob `` `architecture/adr/adr_260{01,02}.md` ``
-4. **Rename/move**: `` `old_name.py` → `new_name.py` ``
-5. **Every change lives in a file** — always use the nearest file path. Dependencies → `` `pyproject.toml` ``, CI variables → `` `deploy.yml` ``, config keys → `` `myst.yml` ``. No conceptual or abstract targets allowed.
+1. **Single file**: `tools/scripts/check_adr.py`
+2. **Glob or Jupytext pair**: `tools/docs/website/01_github_pages_deployment.(md|ipynb)`
+3. **Multiple related files** (same verb, same reason): `adr_26001.md`, `adr_26002.md` — or use a glob `architecture/adr/adr_260{01,02}.md`
+4. **Rename/move**: `old_name.py` → `new_name.py`
+5. **Every change lives in a file** — always use the nearest file path. Dependencies → `pyproject.toml`, CI variables → `deploy.yml`, config keys → `myst.yml`. No conceptual or abstract targets allowed.
 
 ### 2. Enforce via pre-commit hook and CI
 
@@ -115,7 +115,7 @@ The previous approach used LLMs to compose RELEASE_NOTES.md from a diff file. Th
 
 ### Negative
 
-- **Adoption friction**: Contributors must learn the `- Verb: \`file-path\` — what/why` body convention.
+- **Adoption friction**: Contributors must learn the `- Verb: file-path — what_and_why` body convention.
 - **Maintenance burden**: We own the parser (~200 lines) and validator. But scope is small and follows the established script suite pattern ({term}`ADR-26011`).
 - **Bespoke convention**: The body format is an ecosystem-specific extension of Conventional Commits, not an industry standard. The parser is portable to any project adopting the same format, but the format itself is bespoke.
 - **History rewrite risk**: If the parsing rules change, generating a changelog for older commits may produce different output.
@@ -209,7 +209,7 @@ Uses LLMs to compose RELEASE_NOTES.md from a diff file. Zero effort for develope
 
 ### 8. Custom Python Parser (spoke package) — SELECTED
 
-A custom Python package published as a spoke package in the ecosystem. Understands the structured body convention natively. First-class bullet extraction. Knows that `- Verb: \`file-path\` — what/why` lines are changelog sub-items. Ignores prose lines. Excludes ArchTag and trailers.
+A custom Python package published as a spoke package in the ecosystem. Understands the structured body convention natively. First-class bullet extraction. Knows that `- Verb: file-path — what_and_why` lines are changelog sub-items. Ignores prose lines. Excludes ArchTag and trailers.
 
 **The only approach that can produce the exact hierarchical CHANGELOG format natively** — all others require hacks or post-processing. Fits the ecosystem model perfectly: a spoke package that any repo can install via `uv add`. Full control means it can evolve with the ecosystem.
 

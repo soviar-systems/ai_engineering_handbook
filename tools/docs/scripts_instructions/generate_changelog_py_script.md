@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: "Instruction on generate_changelog.py script"
 author: Vadim Rudakov, rudakow.wadim@gmail.com
-date: 2026-02-17
+date: 2026-02-18
 options:
-  version: 1.0.1
+  version: 1.0.2
   birth: 2026-02-16
 ---
 
@@ -65,11 +65,11 @@ The script produces the project's hierarchical CHANGELOG format:
 release 2.5.0
 * New Features:
     - Add login page
-        - Created: `auth/login.py` — new login page
-        - Updated: `auth/urls.py` — added login route
+        - Created: auth/login.py — new login page
+        - Updated: auth/urls.py — added login route
 * Bug Fixes:
     - Correct token expiry
-        - Fixed: `auth/token.py` — expiry was off by one
+        - Fixed: auth/token.py — expiry was off by one
 ```
 
 **Hierarchy:**

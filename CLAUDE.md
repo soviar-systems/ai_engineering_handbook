@@ -114,14 +114,15 @@ Package manager: `uv` (never use pip directly)
 - **Test behavior boundaries**: One broken ref → exit 1, zero broken refs → exit 0. Don't test message content
 - **Use semantic assertions**: `assert len(errors) > 0` or `assert adr_number in {found_numbers}` instead of exact counts when the exact count isn't the contract
 - **Parameterize inputs**: Test varied scenarios (edge cases, empty inputs, multiple items) without duplicating test logic
+- **Parametrize from config, not hardcoded lists**: Import `VALID_TYPES`, `TYPE_TO_SECTION`, etc. from scripts — they load from `pyproject.toml` SSoT
 - **Document the contract**: Each test class should have a docstring explaining what contract it verifies
 
 **Commit Conventions (ADR-26024):**
-- Use conventional commits with prefixes: `feat:`, `fix:`, `docs:`, `ci:`, `chore:`, `pr:`, `refactor:`, `perf:`, `test:`
+- Use conventional commits with prefixes from `pyproject.toml [tool.commit-convention]` `valid-types`
 - `pr:` prefix is for promotional/announcement posts
-- Keep commit subjects concise (50 chars max), focusing on the "why"
-- Commit bodies **MUST** contain structured bullets: `- <Verb>: \`<file-path>\` — <what/why>`
-- `<file-path>` is relative to repo root, in backticks (e.g., `` `tools/scripts/check_adr.py` ``). No abstract targets — every change lives in a file
+- Keep commit subjects concise (50 chars max), focusing on the "what"
+- Commit bodies **MUST** contain structured bullets: `- <Verb>: <file-path> — <what and why>`
+- `<file-path>` is relative to repo root (e.g., `tools/scripts/check_adr.py`). No abstract targets — every change lives in a file
 - One bullet = one line, no line length limit
 - Verbs: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`
 - CHANGELOG is generated from commit history, not manually curated
@@ -132,8 +133,10 @@ Package manager: `uv` (never use pip directly)
 - Includes: broken links check, link format check, jupytext sync/verify, API key detection, JSON validation, script tests
 - All hooks use `uv run` for Python execution
 
-Script suite:
+**Script Suite (ADR-26011):**
 - Use architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md convention when developing Python scripts.
+- Pre-commit hook enforces the triad: when modifying a script or its tests, the corresponding doc in `tools/docs/scripts_instructions/` must also be staged
+- Bump `options.version` (patch) and `date` in frontmatter when editing any doc file
 
 ## Telegram Channel Posts
 

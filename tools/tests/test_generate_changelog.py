@@ -58,13 +58,13 @@ from tools.scripts.generate_changelog import (
 @pytest.fixture
 def simple_commit_raw():
     """Minimal valid commit: one type, one bullet, no scope."""
-    return "abc1234\nfeat: add login page\n- Created: `auth/login.py` — new login page\n"
+    return "abc1234\nfeat: add login page\n- Created: auth/login.py — new login page\n"
 
 
 @pytest.fixture
 def scoped_commit_raw():
     """Commit with scope in parentheses: feat(auth): ..."""
-    return "abc1234\nfeat(auth): add login\n- Created: `auth/login.py` — new\n"
+    return "abc1234\nfeat(auth): add login\n- Created: auth/login.py — new\n"
 
 
 @pytest.fixture
@@ -78,8 +78,8 @@ def complex_commit_raw():
         "def5678\n"
         "refactor: simplify model loading logic\n"
         "ArchTag:TECHDEBT-PAYMENT\n"
-        "- Updated: `model_loader.py` — reduced cyclomatic complexity from 15 to 8\n"
-        "- Deleted: `legacy_loader.py` — consolidated into main loader\n"
+        "- Updated: model_loader.py — reduced cyclomatic complexity from 15 to 8\n"
+        "- Deleted: legacy_loader.py — consolidated into main loader\n"
         "\n"
         "Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\n"
     )
@@ -110,14 +110,14 @@ def sample_commits():
             type="feat",
             scope=None,
             subject="add login page",
-            bullets=["- Created: `auth/login.py` — new login page"],
+            bullets=["- Created: auth/login.py — new login page"],
         ),
         Commit(
             hash="def5678",
             type="fix",
             scope="auth",
             subject="correct token expiry",
-            bullets=["- Fixed: `auth/token.py` — expiry was off by one"],
+            bullets=["- Fixed: auth/token.py — expiry was off by one"],
         ),
         Commit(
             hash="ghi9012",
@@ -125,8 +125,8 @@ def sample_commits():
             scope=None,
             subject="add dashboard",
             bullets=[
-                "- Created: `dashboard/views.py` — main dashboard view",
-                "- Updated: `urls.py` — added dashboard route",
+                "- Created: dashboard/views.py — main dashboard view",
+                "- Updated: urls.py — added dashboard route",
             ],
         ),
         Commit(
@@ -222,7 +222,7 @@ class TestParseSingleCommit:
             "abc123\n"
             "feat: add feature\n"
             "This is some context about the change.\n"
-            "- Created: `file.py` — new file\n"
+            "- Created: file.py — new file\n"
             "More context here.\n"
         )
         commit = parse_single_commit(raw)
@@ -238,32 +238,16 @@ class TestParseSingleCommit:
         result = parse_single_commit("")
         assert result is None
 
-    @pytest.mark.parametrize(
-        "subject_line,expected_type",
-        [
-            ("feat: something", "feat"),
-            ("fix: something", "fix"),
-            ("docs: something", "docs"),
-            ("ci: something", "ci"),
-            ("chore: something", "chore"),
-            ("refactor: something", "refactor"),
-            ("perf: something", "perf"),
-            ("pr: something", "pr"),
-            ("test: something", "test"),
-        ],
-    )
-    def test_recognizes_all_commit_types(self, subject_line, expected_type):
-        """All types from ADR-26024 must be parseable.
-
-        If a new type is added to ADR-26024, add it here too.
-        """
-        raw = f"hash1\n{subject_line}\n- Updated: `f.py` — thing\n"
+    @pytest.mark.parametrize("commit_type", sorted(TYPE_TO_SECTION))
+    def test_recognizes_all_commit_types(self, commit_type):
+        """All types from pyproject.toml changelog-sections must be parseable."""
+        raw = f"hash1\n{commit_type}: something\n- Updated: f.py — thing\n"
         commit = parse_single_commit(raw)
-        assert commit.type == expected_type
+        assert commit.type == commit_type
 
     def test_preserves_bullet_text_verbatim(self):
         """Bullets are extracted as-is — no trimming, rewriting, or reformatting."""
-        bullet = "- Created: `tools/docs/website/guide.md` — canonical guide (309 lines)"
+        bullet = "- Created: tools/docs/website/guide.md — canonical guide (309 lines)"
         raw = f"abc123\nfeat: add guide\n{bullet}\n"
         commit = parse_single_commit(raw)
         assert commit.bullets[0] == bullet
@@ -273,7 +257,7 @@ class TestParseSingleCommit:
 
         Some commit bodies indent bullets for readability.
         """
-        raw = "abc123\nfeat: add\n  - Created: `f.py` — thing\n"
+        raw = "abc123\nfeat: add\n  - Created: f.py — thing\n"
         commit = parse_single_commit(raw)
         assert len(commit.bullets) == 1
 
@@ -283,7 +267,7 @@ class TestParseSingleCommit:
         Validation is not this function's job (that's validate_commit_msg.py).
         Unknown types may appear in legacy commits or ecosystem extensions.
         """
-        raw = "abc123\nunknown: something\n- Updated: `f.py` — thing\n"
+        raw = "abc123\nunknown: something\n- Updated: f.py — thing\n"
         commit = parse_single_commit(raw)
         assert commit.type == "unknown"
 
@@ -293,7 +277,7 @@ class TestParseSingleCommit:
         The '!' indicates a breaking change (CC spec) but the base type
         is what matters for CHANGELOG section grouping.
         """
-        raw = "abc123\nfeat!: breaking change\n- Updated: `f.py` — thing\n"
+        raw = "abc123\nfeat!: breaking change\n- Updated: f.py — thing\n"
         commit = parse_single_commit(raw)
         assert commit.type == "feat"
 
@@ -398,8 +382,8 @@ class TestFormatChangelog:
         """Body bullets from commits appear verbatim in formatted output."""
         commits = [
             Commit("a", "feat", None, "add feature", [
-                "- Created: `file.py` — new file",
-                "- Updated: `other.py` — modified",
+                "- Created: file.py — new file",
+                "- Updated: other.py — modified",
             ])
         ]
         groups = group_by_type(commits)
@@ -479,9 +463,9 @@ class TestFormatChangelog:
         order is respected.
         """
         commits = [
-            Commit("a", "fix", None, "fix bug", ["- Fixed: `f.py` — bug"]),
-            Commit("b", "feat", None, "add feature", ["- Created: `g.py` — new"]),
-            Commit("c", "docs", None, "update docs", ["- Updated: `d.md` — docs"]),
+            Commit("a", "fix", None, "fix bug", ["- Fixed: f.py — bug"]),
+            Commit("b", "feat", None, "add feature", ["- Created: g.py — new"]),
+            Commit("c", "docs", None, "update docs", ["- Updated: d.md — docs"]),
         ]
         groups = group_by_type(commits)
         output = format_changelog(groups)
@@ -546,9 +530,9 @@ class TestParseCommits:
         """Git output split on END_COMMIT_MARKER → one Commit per chunk."""
         mock_result = MagicMock()
         mock_result.stdout = (
-            "abc123\nfeat: add X\n- Created: `f.py` — new\n\n"
+            "abc123\nfeat: add X\n- Created: f.py — new\n\n"
             "END_COMMIT_MARKER\n"
-            "def456\nfix: fix Y\n- Fixed: `g.py` — bug\n\n"
+            "def456\nfix: fix Y\n- Fixed: g.py — bug\n\n"
             "END_COMMIT_MARKER\n"
         )
         mock_result.returncode = 0
@@ -578,11 +562,9 @@ class TestParseCommits:
 class TestTypeToSection:
     """Contract: all commit types from ADR-26024 have CHANGELOG section mappings."""
 
-    @pytest.mark.parametrize(
-        "commit_type",
-        ["feat", "fix", "docs", "ci", "chore", "refactor", "perf", "pr", "test"],
-    )
+    @pytest.mark.parametrize("commit_type", sorted(TYPE_TO_SECTION))
     def test_all_types_mapped(self, commit_type):
+        """Every type in pyproject.toml changelog-sections has a section mapping."""
         assert commit_type in TYPE_TO_SECTION
 
 

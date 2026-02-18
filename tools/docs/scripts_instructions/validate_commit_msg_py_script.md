@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: "Instruction on validate_commit_msg.py script"
 author: Vadim Rudakov, rudakow.wadim@gmail.com
-date: 2026-02-16
+date: 2026-02-18
 options:
-  version: 1.0.0
+  version: 1.0.1
   birth: 2026-02-16
 ---
 
@@ -39,7 +39,7 @@ This [script](/tools/scripts/validate_commit_msg.py) is a pre-commit hook (`comm
 It enforces three validation layers:
 
 1. **Subject format** — must match `type[(scope)][!]: description` where type is one of the recognized Conventional Commits types.
-2. **Structured body** — must contain at least one changelog bullet (`- Verb: \`target\` — description`).
+2. **Structured body** — must contain at least one changelog bullet (`- Verb: target — description`).
 3. **ArchTag presence** — required for `refactor:`, `perf:`, and breaking change (`!`) commits (Tier 3 justification).
 
 It adheres to the **Smallest Viable Architecture (SVA)** principle.
@@ -85,8 +85,8 @@ The body must contain at least one changelog bullet — a line matching `^\s*- .
 ```
 feat: add login page
 
-- Created: `auth/login.py` — new login page
-- Updated: `auth/urls.py` — added login route
+- Created: auth/login.py — new login page
+- Updated: auth/urls.py — added login route
 ```
 
 Lines that do **NOT** count as bullets:
@@ -105,7 +105,7 @@ For `refactor:` and `perf:` types, and any commit with `!` (breaking change), an
 refactor: simplify model loading
 
 ArchTag:TECHDEBT-PAYMENT
-- Updated: `model_loader.py` — reduced complexity
+- Updated: model_loader.py — reduced complexity
 ```
 
 ArchTag-required types are loaded from `pyproject.toml [tool.commit-convention].archtag-required-types`.
@@ -166,7 +166,7 @@ validate_commit_msg.py MSG_FILE
 uv run tools/scripts/validate_commit_msg.py .git/COMMIT_EDITMSG
 
 # Test with a custom message
-echo -e "feat: add login\n\n- Created: \`login.py\` — new" > /tmp/msg
+echo -e "feat: add login\n\n- Created: login.py — new" > /tmp/msg
 uv run tools/scripts/validate_commit_msg.py /tmp/msg
 ```
 
@@ -278,8 +278,8 @@ testing commit messages validation
 
 **Concrete violations against ADR-26024:**
 
-1. `WIP` is not in valid types (`feat`, `fix`, `docs`, `ci`, `chore`, `refactor`, `perf`, `pr`, `test`)
-2. Body is prose — no structured bullet `- Verb: \`target\` — description`
+1. `WIP` is not in valid types (loaded from `pyproject.toml [tool.commit-convention].valid-types`)
+2. Body is prose — no structured bullet `- Verb: target — description`
 3. 9 files changed, none documented in the body
 
 **Hook output:** Exit 0 (pass). The hook never reached validation — `is_skip_commit("WIP: test")` returned `True` on line 233, causing immediate return.

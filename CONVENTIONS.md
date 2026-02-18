@@ -19,9 +19,10 @@ When editing configuration files
 
 When you generate a commit title and body, follow this convention:
 Commit Conventions architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md:
-- Use conventional commits with prefixes from pyproject.toml [tool.commit-convention] section: 
+- Use conventional commits with prefixes from pyproject.toml [tool.commit-convention] section:
+- `pr:` prefix is for promotional/announcement posts
 - Keep commit subjects concise (50 chars max), focusing on the "what"
-- Commit bodies MUST contain structured bullets: - <Verb>: \<file-path>\ — <what_and_why>
-- <file-path> is relative to repo root, in backticks (e.g., `tools/scripts/check_adr.py`). No abstract targets — every change lives in a file
+- Commit bodies MUST contain structured bullets: - <Verb>: <file-path> — <what and why>
+- <file-path> is relative to repo root (e.g., tools/scripts/check_adr.py). No abstract targets — every change lives in a file
 - One bullet = one line, no line length limit
 - Verbs: Created, Updated, Renamed, Fixed, Moved, Added, Removed, Refactored, Configured

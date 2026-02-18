@@ -116,7 +116,7 @@ def validate_body(body_lines: list[str]) -> list[str]:
     ]
 
     if not bullets:
-        return ["Body must contain at least one changelog bullet (- Verb: `target` — description)"]
+        return ["Body must contain at least one changelog bullet (- Verb: target — description)"]
 
     return []
 
