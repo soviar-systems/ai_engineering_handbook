@@ -1,33 +1,27 @@
-When you implemented a plan in /architect mode and handle it to editor, save this plan to misc/plan/plan_<date_hash>.md. This is needed to save the history of the decisions made between context switch. 
+When you implemented a plan in /architect mode and handle it to editor, save this plan to misc/plan/plan_<date_hash>_<short_description>.md. This is needed to save the history of the decisions made between context switch. 
 
 The repo is configured for working with uv
-    when you run tests or Python scripts, use uv run command,
-    when your need to install a new Python dependency, use uv add command.
+- when you run tests or Python scripts, use uv run command,
+- when you need to install a new Python dependency, use uv add command.
 
 When working with an .md file
-    You are editing a MyST Markdown notebook paired with Jupytext,
-    never convert ```{code-cell} blocks to standard ```bash or ```python,
-    always preserve the exact syntax: ```{code-cell}[optional-kernel],
-    never alter, remove, or reformat MyST directive syntax.
+- You are editing a MyST Markdown notebook paired with Jupytext,
+- never convert ```{code-cell} blocks to standard ```bash or ```python,
+- always preserve the exact syntax: ```{code-cell}[optional-kernel],
+- never alter, remove, or reformat MyST directive syntax.
 
 When coding
-    always prefer Path from pathlib in Python; NEVER use os library,
-    always follow top-down design in coding: main function at the top as the entry point.
+- always prefer Path from pathlib in Python; NEVER use os library,
+- always follow top-down design in coding: main function at the top as the entry point.
 
 When editing configuration files
-    always use placeholders like <IP_ADDRESS> or <DOMAIN> instead of real values.
+- always use placeholders like <IP_ADDRESS> or <DOMAIN> instead of real values.
 
-When you commit changes
-    Prefer atomic commits - each task should have its own commit so if it contains a bug it can be reverted as a whole feature or fix in one git revert command,
-    Always commit telegram posts in the dedicated commit with pr prefix, they must be filtered during the release notes generation.
-    **Follow these guidelines for commit bodies:**
-    - Every commit must contain at least one changelog bullet in the body.
-    - Use the following format for each bullet:
-      ```
-      - Verb: `file-path` — what/why
-      ```
-    - Verb prefixes: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Added`, `Removed`, `Refactored`, `Configured`.
-    - `file-path` should be a path relative to the repo root, wrapped in backticks (e.g., `` `tools/scripts/check_adr.py` ``).
-    - Explain *what* changed in the file and *why* it changed.
-
-Save chat history to the .aider.chat.history/ directory - each new session you start a new history file with the name of form "<date_hash>_<time_hash>.md"
+When you generate a commit title and body, follow this convention:
+Commit Conventions architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md:
+- Use conventional commits with prefixes from pyproject.toml [tool.commit-convention] section: 
+- Keep commit subjects concise (50 chars max), focusing on the "what"
+- Commit bodies MUST contain structured bullets: - <Verb>: \<file-path>\ — <what_and_why>
+- <file-path> is relative to repo root, in backticks (e.g., `tools/scripts/check_adr.py`). No abstract targets — every change lives in a file
+- One bullet = one line, no line length limit
+- Verbs: Created, Updated, Renamed, Fixed, Moved, Added, Removed, Refactored, Configured
