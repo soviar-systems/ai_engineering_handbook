@@ -1,3 +1,4 @@
+https://soviar-systems.github.io/ai_engineering_handbook/manifesto/
 **Документация — это исходный код для ИИ**
 
 Принцип зафиксирован в документации проекта: `architecture/manifesto.md`. Идея озвучивалась не раз, теперь она задокументирована официально.

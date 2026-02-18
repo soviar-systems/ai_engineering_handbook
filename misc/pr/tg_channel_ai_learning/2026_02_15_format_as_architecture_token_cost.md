@@ -1,4 +1,4 @@
-https://soviar-systems.github.io/ai_engineering_handbook/format-as-architecture-signal-noise-in-prompt-delivery/
+https://soviar-systems.github.io/ai_engineering_handbook/format-as-architecture-signal-noise-in-prompt-deli/
 **Формат промпта — это архитектурное решение, а не вопрос вкуса**
 
 💡 **Проблема: формат не нейтрален**
