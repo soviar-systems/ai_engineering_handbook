@@ -67,6 +67,7 @@ def format_string(input_string):
         "<",
         ">",
         "*",
+        "—",
     ]
     replace_pattern = "|".join(map(re.escape, special_symbols_to_replace))
     formatted_string = re.sub(rf"\s*({replace_pattern})\s*", "_", formatted_string)

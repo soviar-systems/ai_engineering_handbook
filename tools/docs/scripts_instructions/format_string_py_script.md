@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: Instruction on format_string.py script
 author: Vadim Rudakov, rudakow.wadim@gmail.com
-date: 2026-02-14
+date: 2026-02-24
 options:
-  version: 0.2.1
+  version: 0.2.2
   birth: 2026-01-07
 ---
 
@@ -38,7 +38,7 @@ format_string.py 'Your Input String'
 
 1. **Convert to Lowercase**: All characters in the input string are converted to lowercase.
 2. **Replace & with and**: The ampersand (`&`) is replaced with the word "and".
-3. **Remove Special Symbols**: Certain special symbols (e.g., "the ", "(", ")", "# ", "#", "`", "~", "$", "%", "@") are removed from the string.
+3. **Remove Special Symbols**: Certain special symbols (e.g., "the ", "(", ")", "# ", "#", "`", "~", "$", "%", "@", "—") are removed from the string.
 4. **Replace Special Symbols with Underscores**: Other special symbols (e.g., ".", ",", ";", ":", "!", "?", "-", "/", "\\", "|", "<", ">", "*") are replaced with underscores (`_`).
 5. **Remove Multiple Underscores**: Any sequence of multiple underscores is reduced to a single underscore.
 6. **Replace Spaces with Underscores**: All spaces in the string are replaced with underscores.
