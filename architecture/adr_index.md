@@ -74,6 +74,9 @@ ADR-26012
 ADR-26024
 : [Structured Commit Bodies for Automated CHANGELOG Generation](/architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md)
 
+ADR-26030
+: [Stateless JIT Context Injection for Agentic Git Workflows](/architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md)
+
 :::
 
 ## Historical Context
