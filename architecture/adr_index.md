@@ -77,6 +77,18 @@ ADR-26024
 ADR-26030
 : [Stateless JIT Context Injection for Agentic Git Workflows](/architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md)
 
+ADR-26031
+: [Prefixed Namespace System for Architectural Records](/architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md)
+
+ADR-26032
+: [Tiered Cognitive Memory: Procedural Skills vs. Declarative RAG](/architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md)
+
+ADR-26033
+: [Virtual Monorepo via Package-Driven Dependency Management](/architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md)
+
+ADR-26034
+: [Agentic OS Paradigm: Skills as Composable Applications](/architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md)
+
 :::
 
 ## Historical Context
