@@ -1,5 +1,18 @@
 ai_engineering_book
 
+1. tools/scripts/check_adr.py - Duplicate resolution error, try to add ## Decision and commit the ADR. Looks like we need just to inform the user, no interaction.
+Apply merge? [Y/n]: Traceback (most recent call last):
+File "/home/commi/Yandex.Disk/it_working/projects/soviar-systems/ai_engineering_book/tools/scripts/check_adr.py", line 1542, in <module>
+sys.exit(main())
+~~~~^^
+File "/home/commi/Yandex.Disk/it_working/projects/soviar-systems/ai_engineering_book/tools/scripts/check_adr.py", line 1416, in main
+if fix_duplicate_sections(adr_files):
+~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+File "/home/commi/Yandex.Disk/it_working/projects/soviar-systems/ai_engineering_book/tools/scripts/check_adr.py", line 529, in fix_duplicate_sections
+response = input("Apply merge? [Y/n]: ").strip().lower()
+~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+EOFError: EOF when reading a line
+
 1. Analyze the Gemini discussion. Make a detailed report on the insights and main viable ideas based on this dialogue and save it to misc/plan/analysis.
 
 Brainstorming. 
