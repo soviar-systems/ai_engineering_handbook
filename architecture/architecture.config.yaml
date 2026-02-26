@@ -1,0 +1,27 @@
+# Architecture Configuration - Shared vocabulary for the Architecture Knowledge Base
+#
+# This is the parent config for all architecture-specific YAML configs.
+# Child configs (adr_config.yaml, evidence.config.yaml) inherit shared fields
+# from here instead of duplicating them.
+#
+# Governed by: ADR-26036 (Config File Location and Naming Conventions)
+# Location convention: lives next to the artifacts it governs (architecture/)
+
+# =============================================================================
+# Valid tags — shared vocabulary for all architectural artifacts
+# =============================================================================
+# Used by: ADRs, analyses, retrospectives
+# Adding a tag here makes it available to all artifact types.
+tags:
+  - architecture
+  - ci
+  - context_management
+  - devops
+  - documentation
+  - git
+  - governance
+  - hardware
+  - model
+  - security
+  - testing
+  - workflow

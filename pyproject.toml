@@ -42,3 +42,12 @@ chore = "Maintenance"
 refactor = "Refactoring"
 perf = "Performance"
 pr = "Public Relations"
+
+# Config pointer registry (ADR-26036) — scripts resolve their config path from here.
+# Consumed by: tools/scripts/check_adr.py (after migration to pointer-based loading)
+[tool.check-adr]
+config = "architecture/adr/adr_config.yaml"
+
+# Consumed by: tools/scripts/check_evidence.py
+[tool.check-evidence]
+config = "architecture/evidence/evidence.config.yaml"

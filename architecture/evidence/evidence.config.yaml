@@ -1,0 +1,154 @@
+# Evidence Configuration - Single Source of Truth for Evidence Artifacts
+# Used by: check_evidence.py
+#
+# Governed by: ADR-26035 (Architecture Knowledge Base Taxonomy)
+#              ADR-26036 (Config File Location and Naming Conventions)
+#
+# Tags are inherited from the parent config (architecture.config.yaml).
+# Common required fields (id, title, date) come from the central frontmatter
+# standard — not specified here.
+
+# =============================================================================
+# Parent config (ADR-26036)
+# =============================================================================
+# Path to parent config relative to repo root. Defines shared architectural
+# vocabulary (tags). check_evidence.py loads this at runtime.
+parent_config: "architecture/architecture.config.yaml"
+
+# =============================================================================
+# Naming conventions
+# =============================================================================
+# Regex patterns for validating filenames (without .md extension)
+# Group 1 = year digits, Group 2 = sequence number
+naming_patterns:
+  analysis: "^A-(\\d{2})(\\d{3})_[a-z][a-z0-9_]*$"
+  retrospective: "^R-(\\d{2})(\\d{3})_[a-z][a-z0-9_]*$"
+  source: "^S-(\\d{2})(\\d{3})_[a-z][a-z0-9_]*$"
+
+# =============================================================================
+# Artifact type definitions
+# =============================================================================
+# Each type specifies:
+#   directory_name    — leaf directory relative to this config's parent (evidence/)
+#   id_prefix         — namespace prefix for IDs
+#   required_fields   — type-specific fields (common fields inherited automatically)
+#   optional_fields   — allowed but not required
+#   statuses          — valid lifecycle states (empty = no lifecycle)
+#   required_sections — mandatory ## headers in document body
+#   optional_sections — additional ## headers that may appear
+#
+# The script computes:
+#   all_required_fields = central_frontmatter_fields + required_fields
+#   all_allowed_sections = required_sections + optional_sections
+
+artifact_types:
+
+  # ---------------------------------------------------------------------------
+  # Analyses — Prospective evidence (trade studies, comparisons, evaluations)
+  # ---------------------------------------------------------------------------
+  analysis:
+    directory_name: "analyses"
+    id_prefix: "A"
+    # Example: A-26001_architecture_knowledge_base_taxonomy.md
+
+    required_fields:
+      - status       # See statuses below
+      - tags         # List validated against parent config tags
+
+    optional_fields:
+      - sources      # List of source IDs that fed into this (e.g., [S-26001])
+      - produces     # List of ADR/artifact IDs this generates (e.g., [ADR-26035])
+
+    statuses:
+      - active       # Current, referenced by active ADRs
+      - absorbed     # Key findings merged into ADRs; analysis is historical record
+      - superseded   # Replaced by a newer analysis
+
+    required_sections:
+      - Problem Statement
+      - References
+
+    optional_sections:
+      - Research Pipeline Model
+      - Approach Evaluation
+      - Taxonomy Design
+      - Rejected Ideas
+      - Key Insights
+      - Portability Design
+
+  # ---------------------------------------------------------------------------
+  # Retrospectives — Post-mortems, failure analyses, incident reports
+  # ---------------------------------------------------------------------------
+  retrospective:
+    directory_name: "retrospective"
+    id_prefix: "R"
+    # Example: R-26001_slm_non_determinism_in_commit_generation.md
+
+    required_fields:
+      - status       # See statuses below
+      - severity     # See severity levels below
+      - tags         # List validated against parent config tags
+
+    optional_fields:
+      - produces     # List of ADR IDs produced from this incident (e.g., [ADR-26003])
+
+    statuses:
+      - active       # Issue ongoing or recently resolved, lessons still being applied
+      - resolved     # Root cause fixed, preventive measures in place
+      - superseded   # Replaced by a newer retrospective
+
+    severity:
+      - low          # Minor inconvenience, no data loss, easy workaround
+      - medium       # Workflow disruption, manual intervention needed
+      - high         # Significant impact on development velocity or quality
+      - critical     # Data loss, security breach, or production outage
+
+    required_sections:
+      - Executive Summary
+      - References
+
+    optional_sections:
+      - Introduction
+      - Technical Diagnosis
+      - Root Cause
+      - Impact Assessment
+      - Corrective Actions
+      - Preventive Measures
+      - Final Mandate
+
+  # ---------------------------------------------------------------------------
+  # Sources — Ephemeral dialogue transcripts, meeting notes, raw inputs
+  # ---------------------------------------------------------------------------
+  source:
+    directory_name: "sources"
+    id_prefix: "S"
+    # Example: S-26001_claude_akb_taxonomy_discussion.md
+
+    required_fields:
+      - model        # AI model name (e.g., "claude-opus-4") or "human" for meetings
+
+    optional_fields:
+      - extracted_into  # Analysis ID (e.g., A-26001), null until extraction
+
+    # Sources have no status — they are either present or deleted (git archaeology)
+    statuses: []
+
+    # Source content is free-form (the transcript itself)
+    required_sections: []
+    optional_sections: []
+
+# =============================================================================
+# Lifecycle rules
+# =============================================================================
+lifecycle:
+  # Sources follow the three-commit workflow (ADR-26035 §5):
+  # 1. Commit source to evidence/sources/
+  # 2. Write analysis referencing source, update source's extracted_into
+  # 3. Delete source file (git preserves it)
+  #
+  # Rule: A source is only deleted AFTER extracted_into points to a committed analysis
+  source_deletion_requires_extraction: true
+
+  # Warn about orphaned sources (present but extracted_into is null)
+  # after this many days
+  orphan_warning_days: 30
