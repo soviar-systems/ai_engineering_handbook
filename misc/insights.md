@@ -138,5 +138,10 @@ For this specific script, I think the existing pattern is sufficient. The test c
 higher-level conventions.
 
 
+top-down structure: config → main → validation → discovery → helpers
 
+★ Insight ─────────────────────────────────────
+The pre-commit config follows a consistent pattern: validation hooks first (grouped together), then ---TESTS of HOOK SCRIPTS---
+section. The CI workflow uses tj-actions/changed-files with files_yaml for selective triggering — logic group for script/test
+changes (runs tests), docs group for content changes (runs the tool).
 
