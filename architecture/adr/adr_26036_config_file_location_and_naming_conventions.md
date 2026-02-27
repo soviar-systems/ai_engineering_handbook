@@ -117,7 +117,7 @@ When to use `pyproject.toml` inline vs. a separate YAML file:
 - {term}`ADR-26029` — pyproject.toml as Tool Configuration Hub
 - {term}`ADR-26035` — Architecture Knowledge Base Taxonomy
 - [YAML FAQ — Recommended filename extension](https://yaml.org/faq.html)
-- [Script instruction docs](/tools/docs/scripts_instructions/README.md)
+- [Script instruction docs](/tools/docs/scripts_instructions/README.ipynb)
 
 ## Participants
 1. Vadim Rudakov

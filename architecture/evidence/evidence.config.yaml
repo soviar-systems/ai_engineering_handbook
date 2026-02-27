@@ -5,8 +5,14 @@
 #              ADR-26036 (Config File Location and Naming Conventions)
 #
 # Tags are inherited from the parent config (architecture.config.yaml).
-# Common required fields (id, title, date) come from the central frontmatter
-# standard — not specified here.
+
+# =============================================================================
+# Common frontmatter fields (all artifact types)
+# =============================================================================
+# Until a repo-wide frontmatter standard exists, these live here as SSoT.
+# When a central standard is formalized, migrate and replace with a pointer.
+common_required_fields: [id, title, date]
+date_format: "^\\d{4}-\\d{2}-\\d{2}$"
 
 # =============================================================================
 # Parent config (ADR-26036)

@@ -61,6 +61,14 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
+      - id: check-evidence
+        name: Validate evidence artifacts
+        entry: uv run --active tools/scripts/check_evidence.py --check-staged
+        language: system
+        pass_filenames: false
+        files: ^architecture/evidence/
+        stages: [pre-commit, manual]
+
       - id: check-adr-index
         name: Check ADR Index
         entry: uv run --active tools/scripts/check_adr.py --fix
@@ -148,6 +156,13 @@ repos:
         language: python
         files: ^(tools/(scripts/generate_changelog\.py|tests/test_generate_changelog\.py)|pyproject\.toml)$
         pass_filenames: false
+
+      - id: test-check-evidence
+        name: Test check_evidence
+        entry: uv run --active pytest tools/tests/test_check_evidence.py
+        language: system
+        pass_filenames: false
+        files: ^(tools/scripts/check_evidence\.py|tools/tests/test_check_evidence\.py|tools/scripts/paths\.py|architecture/evidence/evidence\.config\.yaml)$
 
       - id: test-check-adr-index
         name: Test Check ADR Index script

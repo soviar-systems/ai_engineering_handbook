@@ -63,6 +63,8 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 **Python:**
 - Use `pathlib.Path`, never `os` library
 - Follow top-down design: main function at the top
+- Detect repo root via `git rev-parse --show-toplevel` with `Path(__file__)` fallback, never `Path(".")`
+- Script structure order: data classes → configuration → main → validation → discovery → helpers → `if __name__`
 
 **Content Frontmatter (ADR-26023):**
 - Use MyST-native fields: `title`, `author`, `date`, `options.version`, `options.birth`
@@ -71,7 +73,9 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 
 **Tool Configuration (ADR-26029):**
 - Machine-readable tool config goes in `pyproject.toml [tool.X]` sections, loaded via `tomllib` (stdlib)
+- Config hierarchy: `pyproject.toml [tool.X]` → domain config (e.g., `evidence.config.yaml`) → shared config via `parent_config` pointer
 - Path constants stay in `tools/scripts/paths.py`; ADR validation rules stay in `adr_config.yaml`
+- Track intentional tech debt in `misc/plan/techdebt.md` with date, location, and migration path
 
 **ADRs:**
 - Never manually edit `architecture/adr_index.md` — run `uv run tools/scripts/check_adr.py --fix` to auto-update it
@@ -115,6 +119,9 @@ Package manager: `uv` (never use pip directly)
 - **Use semantic assertions**: `assert len(errors) > 0` or `assert adr_number in {found_numbers}` instead of exact counts when the exact count isn't the contract
 - **Parameterize inputs**: Test varied scenarios (edge cases, empty inputs, multiple items) without duplicating test logic
 - **Parametrize from config, not hardcoded lists**: Import `VALID_TYPES`, `TYPE_TO_SECTION`, etc. from scripts — they load from `pyproject.toml` SSoT
+- **No hardcoded paths in tests**: Resolve config paths via `pyproject.toml` → config → parent_config chain, never hardcode directory structures
+- **Import module once**: Use `import tools.scripts.X as _module` at top of test file; access all functions via `_module.func()` — single point to update on package rename
+- **Config-driven test helpers**: Build valid test data (frontmatter, filenames) dynamically from config structure, not hardcoded field→value mappings
 - **Document the contract**: Each test class should have a docstring explaining what contract it verifies
 
 **Commit Conventions (ADR-26024):**

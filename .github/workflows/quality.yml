@@ -309,6 +309,42 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: uv run pytest tools/tests/test_generate_changelog.py
 
+  evidence-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Get changed files
+        id: changed
+        uses: tj-actions/changed-files@v45
+        with:
+          files_yaml: |
+            logic:
+              - tools/scripts/check_evidence.py
+              - tools/tests/test_check_evidence.py
+              - tools/scripts/paths.py
+              - architecture/evidence/evidence.config.yaml
+            docs:
+              - architecture/evidence/**/*.md
+          safe_output: true
+
+      - name: Run Logic Tests
+        if: steps.changed.outputs.logic_any_changed == 'true'
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: uv run pytest tools/tests/test_check_evidence.py
+
+      - name: Run Evidence Validation
+        if: steps.changed.outputs.docs_any_changed == 'true'
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: uv run tools/scripts/check_evidence.py --verbose
+
   adr-index:
     runs-on: ubuntu-latest
     steps:
