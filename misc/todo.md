@@ -1,30 +1,39 @@
 ai_engineering_book
 
-extract_html
-- all new lines are broken, they must be kept as is or even converted to markdown when possible, see https://github.com/unclecode/crawl4ai
-
 Brainstorming
-Known tech debt must be traced officially to be resolved as soon as possible. How is this done in the mature dev commands? And how can we implement it in our ecosystem? We need an ADR for this. See misc/plan/techdebt.md as the temporary solution.
-
-Brainstorming
-https://gemini.google.com/share/10c1438e1c05
-Extract all the important and valuable insights, ideas, clarifications. This is not only the documentation discussion, this is the new architectural patterns for building ai systems, so we need to finalize results in the analyses dir.
+1. architecture/evidence/sources/ - when removing the sources we lose the number. we need to either change the taxonomy for sources or maintain an index for all the sources we had, so it is a reference. but do we really need such an index?
+2. Should we keep all analysis files without cleaning the dir from time to time or it should be governed the same way the sources governed - removing after we are sure all the valuable information is extracted to ADR?
 
 Brainstorming. 
-1. Read the misc/plan/analysis.
-2. Revise the YAML frontmatter to be the same across all documentation. Now the ADRs have their own template and other docs have a different template. We need to align the frontmatter to the 
+1. Read the architecture/evidence/analyses.
+2. What other ADRs can we extract from this analysis?
+
+Brainstorming. 
+1. Read the architecture/evidence/analyses.
+2. Revise the YAML frontmatter standard to be the same across all documentation (the problem mentioned in misc/plan/techdebt.md). Now the ADRs have their own template and other docs have a different template. We need to align the frontmatter to the 
 - MyST formatting,
-- skills architecture (name, tags, description - essential fields) so the agents while getting the context can walk through these frontmatters instead of reading the entire docs and save tokens
-- internal rules (version, birth and last modified dates).
+- skills architecture (name, tags, description - essential fields) - so the agents while getting the context can walk through these frontmatters instead of reading the entire docs and save tokens; I tend to adopt this approach to all documentation in the repos, so the agents need to read the frontmatters to get understanding whether they need to read the files in full,
+- internal rules (version, birth and last modified dates) are also should be included to the frontmatter standard.
 Revise the existing ADRs to supersede outdated ones with the new standard. Update the existing *active* ADRs to follow the new frontmatter style, start versioning. The docs should be refined in a lazy manner (ADR-26023).
 We need to revise all the existing configs to use the new general frontmatter config instead of hard-coding general required fields.
 
+Brainstorming. 
+1. Read the architecture/evidence/analyses.
+2. We need to get the decision on the problem of the docs taxonomy on the ecosystem level discussed in the analysis. I have no the final opinion yet.
+3. Known tech debt must be traced officially to be resolved as soon as possible. This type of the documentation is to note all the tech debt we cannot resolve at that moment but we should remember and not lose. How is this done in the mature dev commands? And how can we implement it in our ecosystem? We need an ADR for this. See misc/plan/techdebt.md as the temporary solution.
+
+extract_html
+- all new lines are broken, they must be kept as is or even converted to markdown when possible, see https://github.com/unclecode/crawl4ai
+
+
 Brainstorming
-The docs validation scripts are so different but they solve one common goal - they are the docs quality gates. We need to assess all the scripts for solving common tasks and extract such functionality to the dedicated "parent" module and leave only the specific functionality for each doc type. More over, it looks like we need to elaborate the docs taxonomy - we already have the architectural docs, but we also have handbooks, scripts instructions, etc. Can we create some classification and build the validation gates around this docs system? We can consider the docs types as the interface in programming or the file types in UNIX/Linux systems. This interface should provide the uniform design for any new repo in the ecosystem.
-This interface can lead us to the rethinking the repo structure, for example:
-- docs/ - 0_intro, ai_system, architecture, mlops, security
-- tools/
-I do not have an answer, I have questions. We need to research the best real world production level practices, existing standards, and elaborate the concept of the uniform design for the new AI era where the docs is the source code.
+- The docs validation scripts are so different but they solve one common goal - they are the docs quality gates. We need to assess all the scripts for solving common tasks and extract such functionality to the dedicated "parent" module and leave only the specific functionality for each doc type. More over, it looks like we need to elaborate the docs taxonomy - we already have the architectural docs, but we also have handbooks, scripts instructions, etc. Can we create some classification and build the validation gates around this docs system? We can consider the docs types as the interface in programming or the file types in UNIX/Linux systems. This interface should provide the uniform design for any new repo in the ecosystem.
+- The scripts when using git or discovery tools should use one common module for such operations (agentic tools?). For example, check_evidence.py script uses _detect_repo_root(), resolve_config_path(), 
+- This interface can lead us to the rethinking the repo structure, for example:
+    - docs/ - 0_intro, ai_system, architecture, mlops, security
+    - tools/
+
+I do not have answers, I have questions. We need to research the best real world production level practices, existing standards, and elaborate the concept of the uniform design for the new AI era where the docs is the source code.
 
 1. tools/scripts/check_adr.py - Duplicate resolution error, try to add ## Decision and commit the ADR. Looks like we need just to inform the user, no interaction.
 Apply merge? [Y/n]: Traceback (most recent call last):
@@ -82,6 +91,6 @@ repo configuration
 DONE
 
 Brainstorming
-There are three types of analytical data I use or produce when researching/analyzing a new architectural problem: the dialogue scripts with the web chat models (source), the detailed analytical summary, the ADR or an handbook. The ADRs have their own place, but other types of docs don't, I always have to find some random places for them in the repo or even simply remove them. I understand that these files are also very important but I cannot understand where I should store (and should I?) for future revisions. This problem is common not for only this repo but for any repo I conduct because the architectural decisions are the main source of truth for the development. Let's elaborate the system of storing/versioning/removing such files considering the existing conventions fixed in the architecture/docs/.
-The ADRs are all kept in one dir, and only the adr_index.md divides them by sections. I propose to discuss the change of the adr/ structure to active/, proposed/ (i.e. rfc), superseded/, rejected/. The adr_index.md reflects this structure and the ADRs are validated to be in their dirs by the status field. Is it a good architectural decision for the ADRs governance?
+Extract architecture/evidence/sources/2026_02_28_gemini_dialogue_skills_new_architectures.html using tools/scripts/extract_html.py. Read the result carefully and step by step extract all the important and valuable insights, ideas, clarifications. This is not only the documentation discussion, this is the new architectural patterns for building ai systems, so we need to finalize results in the architecture/evidence/analyses dir. 
+https://gemini.google.com/share/10c1438e1c05
 
