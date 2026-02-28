@@ -133,6 +133,7 @@ Package manager: `uv` (never use pip directly)
 - One bullet = one line, no line length limit
 - Verbs: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`
 - CHANGELOG is generated from commit history, not manually curated
+- Commit bullets mentioning changelog exclusion patterns (e.g., `CLAUDE.md`, `misc/`) will be self-filtered — describe intent instead of listing literal pattern values; verify with `uv run tools/scripts/generate_changelog.py --verbose HEAD~1..HEAD 1>/dev/null`
 - Merge policy: Squash-and-Merge (1 PR = 1 Commit on trunk)
 
 **Pre-commit Hooks:**
@@ -143,7 +144,7 @@ Package manager: `uv` (never use pip directly)
 **Script Suite (ADR-26011):**
 - Use architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md convention when developing Python scripts.
 - Pre-commit hook enforces the triad: when modifying a script or its tests, the corresponding doc in `tools/docs/scripts_instructions/` must also be staged
-- Bump `options.version` (patch) and `date` in frontmatter when editing any doc file
+- Bump `options.version` and `date` in frontmatter when editing any doc file — patch for fixes, minor for new features
 
 ## Telegram Channel Posts
 
