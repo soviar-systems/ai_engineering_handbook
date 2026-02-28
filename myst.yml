@@ -8,14 +8,10 @@ project:
   # authors: []
   github: https://github.com/lefthand67/ai_engineering_handbook
   exclude:
-    - "RELEASE_NOTES.md"
     - "CONVENTIONS.md"
     - "CLAUDE.md"
-    - "architecture/adr/0001-template.md"
-    - "misc/in_progress/*"
-    - "misc/in_progress/*"
-    - "misc/plan/*"
-    - "misc/pr/*"
+    - "architecture/adr/adr_template.md"
+    - "misc/*"
     # jupytext pairs md to ipynb
     - "0_intro/**/*.md"
     - "ai_system/**/*.md"

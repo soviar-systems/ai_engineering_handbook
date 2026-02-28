@@ -1,3 +1,53 @@
+release v2.6.0
+* New Features:
+    - Add evidence artifact validation tooling
+        - Created: tools/scripts/check_evidence.py — validates evidence artifacts against evidence.config.yaml schema
+        - Created: tools/tests/test_check_evidence.py — 75 config-driven tests with SSoT chain resolution
+        - Created: tools/docs/scripts_instructions/check_evidence_py_script.md — ADR-26011 script instruction doc
+        - Updated: architecture/evidence/evidence.config.yaml — added common_required_fields and date_format as SSoT
+        - Updated: .pre-commit-config.yaml — added check-evidence and test-check-evidence hooks
+        - Updated: .github/workflows/quality.yml — added evidence-validation job with logic/docs triggers
+        - Fixed: architecture/adr/adr_26036_config_file_location_and_naming_conventions.md — link format (.md → .ipynb)
+    - Architecture — add ADR-26030 for stateless JIT context injection
+        - Created: architecture/adr/adr_26030_stateless_jit_context_injection.md — formalized the stateless observer pattern to eliminate context accumulation and reduce token costs.
+        - Updated: pyproject.toml — added initial placeholders for commit-convention tool configuration to support JIT prompt assembly.
+        - Updated: architecture/adr/adr_index.md — indexed ADR-26030 under Evolutionary Proposals to maintain the documentation registry.
+* Bug Fixes:
+    - Update format_string.py and docs
+        - Updated: tools/scripts/format_string.py — Add — symbol to special symbols to replace
+        - Updated: tools/docs/scripts_instructions/format_string_py_script.ipynb — Add —symbol to list of removed special symbols in documentation
+* Documentation:
+    - Add A-26002 analysis — Agentic OS, Tiered Memory, Package Infrastructure
+        - Created: architecture/evidence/analyses/A-26002_agentic_os_skills_tiered_memory_package_infra.md — comprehensive analysis extracting 11 architectural insights from Gemini dialogue S-26001: Agentic OS paradigm, three-tier cognitive memory, tag-filtered skill discovery, package-driven virtual monorepo, builder/runtime separation, researcher agent alternatives, DSPy evaluation, industry alternatives landscape, and evolution from prompt engineering to software engineering
+    - Add S-26001 Gemini dialogue on skills architecture
+        - Created: architecture/evidence/sources/S-26001_gemini_dialogue_skills_architectures.md — full extracted transcript of Gemini 3.0 Flash consultation covering Agentic OS paradigm, tiered cognitive memory, and package-driven infrastructure
+* Architectural Decisions:
+    - Add Architecture Knowledge Base taxonomy and config conventions
+        - Created: architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md — taxonomy for evidence artifacts (analyses, retrospective, sources)
+        - Created: architecture/adr/adr_26036_config_file_location_and_naming_conventions.md — <domain>.config.yaml naming,
+        - Created: architecture/evidence/analyses/A-26001_architecture_knowledge_base_taxonomy.md — inaugural analysis documenting
+        - Created: architecture/evidence/evidence.config.yaml — evidence artifact validation spec with naming patterns, required
+        - Created: architecture/architecture.config.yaml — shared architectural vocabulary (tags) as parent config
+        - Created: architecture/evidence/sources/README.md — source lifecycle and git archaeology guide
+        - Updated: architecture/adr_index.md — auto-generated entries for ADR-26035 and ADR-26036
+        - Updated: pyproject.toml — added [tool.check-adr] and [tool.check-evidence] config pointer registry
+    - Propose new ADR taxonomy
+        - Added: architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md - propose adding prefixes for ADR in different repos of the ecosystem so their ids do not overlap and confuse the consumer of these ADRs
+    - Add skills architecture ADRs
+        - Added: architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md - skills plus RAG architecture inspired by Claude talk
+        - Added: architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md - how to interconnect projects in the ecosystem without real monorepo
+        - Added: architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md -  the 3 Tier Architecture of LLM, Agent, Skills
+* Maintenance:
+    - Remove backtick requirement and make commit config SSoT
+        - Updated: architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md — removed backtick wrapping from bullet format spec and examples
+        - Updated: tools/docs/git/01_production_git_workflow_standards.md — removed backtick requirement from body convention rules and examples
+        - Updated: tools/docs/scripts_instructions/validate_commit_msg_py_script.md — removed backticks from examples, replaced hardcoded type list with pyproject.toml reference
+        - Updated: tools/docs/scripts_instructions/generate_changelog_py_script.md — removed backticks from CHANGELOG format examples
+        - Updated: pyproject.toml — added adr type, removed test type from commit-convention
+        - Updated: tools/scripts/validate_commit_msg.py — removed backticks from error message
+        - Refactored: tools/tests/test_validate_commit_msg.py — parametrize lists derive from VALID_TYPES/ARCHTAG_REQUIRED_TYPES instead of hardcoded values
+        - Refactored: tools/tests/test_generate_changelog.py — parametrize lists derive from TYPE_TO_SECTION instead of hardcoded values
+
 release 2.5.0
 * New Features:
     - Add MHTML support to extract_html_text.py

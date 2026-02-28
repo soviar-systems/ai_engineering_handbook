@@ -1,5 +1,82 @@
 # Release Notes
 
+## release v2.6.0 "The Cognitive Architecture"
+
+### Summary of Changes
+
+This release shifts focus from infrastructure governance (v2.4.0–v2.5.0) to **architectural vision**: how should an AI-backed ecosystem think, remember, and organize itself? Six new ADRs answer this question by defining a three-tier cognitive model — procedural skills, declarative RAG, and composable agent applications — and by establishing the infrastructure to support it: namespaced decision records, a virtual monorepo, and stateless context injection.
+
+Simultaneously, the release introduces a formal **Architecture Knowledge Base** — a taxonomy and validation toolchain for the architectural artifacts (analyses, sources, retrospectives) that feed the decision-making process. The ecosystem is now introspective: it documents how it documents.
+
+Three strategic themes define v2.6.0:
+
+1. **Skills Architecture** — Three interconnected ADRs ([ADR-26032](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md), [ADR-26033](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md), [ADR-26034](architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md)) define a coherent vision for AI agent operation: tiered cognitive memory separates fast procedural skills from slow declarative retrieval; a virtual monorepo connects ecosystem projects without coupling them; and the Agentic OS paradigm treats skills as composable applications that agents discover and execute at runtime. This is the conceptual leap of the release — from "what tools do we use" to "how should AI agents organize knowledge and capabilities."
+2. **Architecture Knowledge Base** — [ADR-26035](architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md) and [ADR-26036](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) formalize how architectural knowledge itself is classified and stored. A new `check_evidence.py` validator (75 config-driven tests) enforces the taxonomy automatically. Evidence artifacts — analyses, sources, retrospectives — are now first-class citizens with naming conventions, required metadata, and validation gates. The knowledge base that informs architectural decisions is now as governed as the decisions themselves.
+3. **Ecosystem Scaling** — [ADR-26030](architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md) formalizes stateless JIT context injection, eliminating context accumulation across agent sessions and reducing token costs. [ADR-26031](architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md) introduces prefixed namespaces for architectural records, so that ADR identifiers remain unique and unambiguous as the ecosystem grows across multiple repositories. Together, they prepare the infrastructure for a multi-repo ecosystem where each spoke can maintain its own decision history without collision.
+
+### Architecture Decisions
+
+*   **[ADR-26032: Tiered Cognitive Memory](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md), [ADR-26033: Virtual Monorepo](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md), [ADR-26034: Agentic OS Paradigm](architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md) — Skills Architecture**:
+    The most significant conceptual contribution of this release. ADR-26032 separates agent memory into three tiers: procedural skills (fast, always-loaded), declarative RAG (slow, on-demand retrieval), and episodic context (session-specific). ADR-26033 proposes a virtual monorepo where ecosystem packages share conventions without physical coupling — a package-driven dependency model that avoids the complexity of a real monorepo. ADR-26034 crowns the vision: agents operate like an OS, discovering and composing skills at runtime through tag-filtered registries. Together, these three ADRs chart the path from today's tool-specific automation to tomorrow's composable AI workforce.
+
+*   **[ADR-26035: Architecture Knowledge Base Taxonomy](architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md)**:
+    Before this ADR, analyses and source transcripts were unstructured files in ad-hoc locations. ADR-26035 introduces a formal taxonomy: **analyses** (A-prefixed, structured conclusions from sources), **sources** (S-prefixed, raw evidence like dialogue transcripts), and **retrospectives** (R-prefixed, post-hoc evaluations). Each type has naming conventions, required metadata, and a defined lifecycle. This makes the evidence base machine-queryable — an AI agent can now distinguish a raw Gemini transcript from a curated architectural analysis.
+
+*   **[ADR-26036: Config File Location and Naming Conventions](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md)**:
+    As the number of config files grew (adr_config.yaml, evidence.config.yaml, architecture.config.yaml), inconsistent naming and placement created confusion. ADR-26036 standardizes the pattern: `<domain>.config.yaml` files live in their domain directory, with a `parent_config` pointer for shared vocabulary. This is the config counterpart to ADR-26029 (pyproject.toml for tool config) — together they establish a complete configuration hierarchy.
+
+*   **[ADR-26030: Stateless JIT Context Injection](architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md)**:
+    Agent sessions that accumulate context over time become expensive and brittle — stale instructions mix with current state, token budgets grow unboundedly. ADR-26030 formalizes the stateless observer pattern: each agent invocation receives exactly the context it needs, assembled just-in-time from repository state. No session memory, no accumulated drift. This is the architectural foundation for scalable agent workflows.
+
+*   **[ADR-26031: Prefixed Namespace System for Architectural Records](architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md)**:
+    As the ecosystem spawns spoke repositories (vadocs, research monorepo), ADR numbering will collide — ADR-26001 in the hub means something different from ADR-26001 in a spoke. This ADR proposes prefix-based namespacing so that each repository's decisions are globally unique and cross-referenceable.
+
+### Accepted ADRs (Promoted in This Release)
+
+No ADRs were promoted from proposed to accepted in this release. All 7 new ADRs enter as proposed — the ecosystem is in an exploratory phase, accumulating RFCs that will be validated by practice before promotion.
+
+### Open RFCs (Proposed ADRs)
+
+All architectural decisions introduced in this release are in **proposed** status — they are living RFCs, open for analysis and feedback. They become binding standards only after passing the promotion gate (ADR-26025).
+
+| ADR | Title | Theme |
+| :--- | :--- | :--- |
+| [ADR-26030](architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md) | Stateless JIT Context Injection for Agentic Git Workflows | Ecosystem Scaling |
+| [ADR-26031](architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md) | Prefixed Namespace System for Architectural Records | Ecosystem Scaling |
+| [ADR-26032](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md) | Tiered Cognitive Memory: Procedural Skills vs. Declarative RAG | Skills Architecture |
+| [ADR-26033](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md) | Virtual Monorepo via Package-Driven Dependency Management | Skills Architecture |
+| [ADR-26034](architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md) | Agentic OS Paradigm: Skills as Composable Applications | Skills Architecture |
+| [ADR-26035](architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md) | Architecture Knowledge Base Taxonomy | Knowledge Base |
+| [ADR-26036](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) | Config File Location and Naming Conventions | Knowledge Base |
+
+### New Features and Articles Added
+
+*   **Evidence Artifact Validation (`check_evidence.py`)**:
+    A new validation script that enforces the Architecture Knowledge Base taxonomy. It validates evidence artifacts against `evidence.config.yaml` — checking naming patterns, required frontmatter fields, date formats, and artifact type classification. The script follows the established Script Suite convention (ADR-26011): script + 75 config-driven tests + instruction document. Integrated into pre-commit hooks and the CI quality pipeline.
+
+*   **Architecture Knowledge Base Infrastructure**:
+    The `architecture/evidence/` directory gains formal structure: `evidence.config.yaml` defines the validation schema with common required fields and date format as SSoT; `architecture.config.yaml` provides shared architectural vocabulary (tags) as a parent config; `sources/README.md` documents the source lifecycle and git archaeology guide.
+
+*   **A-26002: Agentic OS Analysis**:
+    A comprehensive analysis extracting 11 architectural insights from the Gemini dialogue S-26001 — covering the Agentic OS paradigm, three-tier cognitive memory, tag-filtered skill discovery, package-driven virtual monorepo, builder/runtime separation, and the evolution from prompt engineering to software engineering. This analysis directly informed ADR-26032, ADR-26033, and ADR-26034.
+
+*   **S-26001: Gemini Dialogue on Skills Architecture**:
+    The raw source transcript of a Gemini 3.0 Flash consultation on skills architectures, cognitive memory tiers, and package-driven infrastructure. Preserved as evidence per ADR-26035 taxonomy — the source that seeded the skills architecture vision.
+
+### Updates in Existing Files
+
+*   **Commit Convention Cleanup**: Removed the backtick wrapping requirement from structured commit body bullets across ADR-26024, git workflow docs, validation script docs, and CHANGELOG format docs. The commit convention in `pyproject.toml` is now the single source of truth — added `adr` type, removed `test` type.
+
+*   **format_string.py**: Added dash (`—`) to the list of special symbols replaced during string formatting. Corresponding documentation updated.
+
+*   **Pre-commit & CI**: Added `check-evidence` and `test-check-evidence` hooks to `.pre-commit-config.yaml`; added `evidence-validation` job to `quality.yml` with logic/docs triggers.
+
+### Existing Files Moved or Renamed
+
+| Original | New |
+| :--- | :--- |
+| *(no file moves in this release)* | |
+
 ## release v2.5.0 "The Self-Documenting System"
 
 ### Summary of Changes
