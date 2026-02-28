@@ -42,6 +42,8 @@ from tools.scripts.generate_changelog import (
     GenerateChangelogCLI,
     TYPE_TO_SECTION,
     SECTION_ORDER,
+    EXCLUDE_PATTERNS,
+    _filter_excluded_commits,
 )
 
 
@@ -494,6 +496,17 @@ class TestFormatChangelog:
         capitalized = subject[0].upper() + subject[1:]
         assert capitalized in output
 
+    def test_section_headers_are_bold_markdown(self):
+        """Section headers use markdown bold for visual emphasis.
+
+        Format: `* **Section Name:**` — the bold wraps the section name and colon.
+        """
+        commits = [Commit("a", "feat", None, "add X", ["- bullet"])]
+        groups = group_by_type(commits)
+        output = format_changelog(groups)
+        section_name = TYPE_TO_SECTION["feat"]
+        assert f"**{section_name}:**" in output
+
 
 # ---------------------------------------------------------------------------
 # parse_commits (mocked git)
@@ -602,7 +615,7 @@ class TestGenerateChangelogCLI:
         mock_gen.return_value = ""
         cli = GenerateChangelogCLI()
         cli.run(argv=["v1.0..HEAD", "--version", "2.5.0"])
-        mock_gen.assert_called_once_with("v1.0..HEAD", "2.5.0")
+        mock_gen.assert_called_once_with("v1.0..HEAD", "2.5.0", verbose=False)
 
     @patch("tools.scripts.generate_changelog.generate_changelog")
     def test_prepend_writes_before_existing_content(self, mock_gen, tmp_path):
@@ -615,3 +628,165 @@ class TestGenerateChangelogCLI:
         content = changelog.read_text()
         assert content.startswith("new changelog")
         assert "old content" in content
+
+    @patch("tools.scripts.generate_changelog.generate_changelog")
+    def test_prepend_inserts_blank_line_between_new_and_existing(
+        self, mock_gen, tmp_path
+    ):
+        """Blank line separates new release block from existing content.
+
+        Without this, the last line of the new block and the first line of
+        the old block visually merge into a single paragraph.
+        """
+        mock_gen.return_value = "new release\n"
+        changelog = tmp_path / "CHANGELOG"
+        changelog.write_text("old release\n")
+        cli = GenerateChangelogCLI()
+        cli.run(argv=["v1.0..HEAD", "--prepend", str(changelog)])
+        content = changelog.read_text()
+        assert "new release\n\nold release" in content
+
+    @patch("tools.scripts.generate_changelog.generate_changelog")
+    def test_verbose_flag_forwarded_to_generator(self, mock_gen):
+        """--verbose / -v flag is passed through to generate_changelog()."""
+        mock_gen.return_value = ""
+        cli = GenerateChangelogCLI()
+        cli.run(argv=["v1.0..HEAD", "--verbose"])
+        mock_gen.assert_called_once_with("v1.0..HEAD", None, verbose=True)
+
+
+# ---------------------------------------------------------------------------
+# Exclusion patterns
+#
+# Contract: commits and bullets matching configured patterns are filtered out.
+# Patterns are loaded from pyproject.toml [tool.commit-convention.changelog-exclude-patterns].
+# Matching is case-insensitive substring search.
+#
+# Two levels:
+#   - Commit level: subject matches → entire commit dropped
+#   - Bullet level: bullet matches → only that bullet dropped
+# ---------------------------------------------------------------------------
+
+
+class TestExcludePatterns:
+    """Contract: configured patterns filter housekeeping noise from CHANGELOG.
+
+    All tests derive patterns from EXCLUDE_PATTERNS (loaded from pyproject.toml),
+    not hardcoded strings. This keeps tests resilient to config changes.
+    """
+
+    def test_exclude_patterns_loaded_from_config(self):
+        """EXCLUDE_PATTERNS is populated from pyproject.toml, not empty."""
+        assert isinstance(EXCLUDE_PATTERNS, list)
+        assert len(EXCLUDE_PATTERNS) > 0
+
+    def test_commit_with_excluded_subject_omitted(self):
+        """_filter_excluded_commits drops commits whose subject matches a pattern."""
+        pattern = EXCLUDE_PATTERNS[0]
+        matching = Commit("a", "chore", None, f"update {pattern} config", [])
+        clean = Commit("b", "feat", None, "add feature", [])
+        result = _filter_excluded_commits([matching, clean])
+        assert len(result) == 1
+        assert result[0].hash == "b"
+
+    def test_commit_exclusion_is_case_insensitive(self):
+        """Pattern matching ignores case — 'claude.md' matches 'CLAUDE.MD'."""
+        pattern = EXCLUDE_PATTERNS[0]
+        # Swap case: if pattern is "CLAUDE.md", subject uses "claude.MD"
+        swapped = pattern.swapcase()
+        matching = Commit("a", "chore", None, f"update {swapped}", [])
+        result = _filter_excluded_commits([matching])
+        assert len(result) == 0
+
+    def test_bullet_matching_exclude_pattern_is_removed(self):
+        """Bullets matching a pattern are dropped by parse_single_commit.
+
+        The commit itself is kept — only the offending bullet is removed.
+        """
+        pattern = EXCLUDE_PATTERNS[0]
+        raw = (
+            f"abc123\nfeat: add feature\n"
+            f"- Updated: {pattern} — housekeeping\n"
+            f"- Created: real_file.py — real change\n"
+        )
+        commit = parse_single_commit(raw)
+        assert commit is not None
+        # Only the clean bullet survives
+        assert len(commit.bullets) == 1
+        assert pattern.lower() not in commit.bullets[0].lower()
+
+    def test_bullet_exclusion_is_case_insensitive(self):
+        """Bullet filtering ignores case, same as commit-level filtering."""
+        pattern = EXCLUDE_PATTERNS[0]
+        swapped = pattern.swapcase()
+        raw = (
+            f"abc123\nfeat: add feature\n"
+            f"- Updated: {swapped} — housekeeping\n"
+            f"- Created: real_file.py — real change\n"
+        )
+        commit = parse_single_commit(raw)
+        assert commit is not None
+        assert len(commit.bullets) == 1
+
+    def test_no_exclusion_when_pattern_not_present(self):
+        """Commits and bullets without matching patterns pass through untouched."""
+        clean = Commit("a", "feat", None, "add real feature", ["- Created: f.py — new"])
+        result = _filter_excluded_commits([clean])
+        assert len(result) == 1
+        assert result[0].bullets == ["- Created: f.py — new"]
+
+    @pytest.mark.parametrize("pattern", EXCLUDE_PATTERNS)
+    def test_each_configured_pattern_filters_commits(self, pattern):
+        """Every pattern in EXCLUDE_PATTERNS can filter a matching commit."""
+        matching = Commit("a", "chore", None, f"update {pattern}", [])
+        result = _filter_excluded_commits([matching])
+        assert len(result) == 0, f"Pattern {pattern!r} did not filter commit"
+
+    @pytest.mark.parametrize("pattern", EXCLUDE_PATTERNS)
+    def test_each_configured_pattern_filters_bullets(self, pattern):
+        """Every pattern in EXCLUDE_PATTERNS can filter a matching bullet."""
+        raw = (
+            f"abc123\nfeat: add feature\n"
+            f"- Updated: {pattern} — housekeeping\n"
+            f"- Created: real_file.py — real change\n"
+        )
+        commit = parse_single_commit(raw)
+        assert commit is not None
+        for bullet in commit.bullets:
+            assert pattern.lower() not in bullet.lower(), (
+                f"Pattern {pattern!r} did not filter bullet {bullet!r}"
+            )
+
+    def test_verbose_reports_excluded_commit_to_stderr(self, capsys):
+        """With verbose=True, excluded commits are reported to stderr.
+
+        Tests the contract (something written to stderr), not exact message text.
+        """
+        pattern = EXCLUDE_PATTERNS[0]
+        matching = Commit("a", "chore", None, f"update {pattern} config", [])
+        _filter_excluded_commits([matching], verbose=True)
+        captured = capsys.readouterr()
+        assert len(captured.err) > 0
+
+    def test_verbose_reports_excluded_bullet_to_stderr(self, capsys):
+        """With verbose=True, excluded bullets are reported to stderr.
+
+        Tests the contract (something written to stderr), not exact message text.
+        """
+        pattern = EXCLUDE_PATTERNS[0]
+        raw = (
+            f"abc123\nfeat: add feature\n"
+            f"- Updated: {pattern} — housekeeping\n"
+            f"- Created: real_file.py — real change\n"
+        )
+        parse_single_commit(raw, verbose=True)
+        captured = capsys.readouterr()
+        assert len(captured.err) > 0
+
+    def test_no_stderr_output_when_not_verbose(self, capsys):
+        """Without verbose flag, exclusion filtering is silent."""
+        pattern = EXCLUDE_PATTERNS[0]
+        matching = Commit("a", "chore", None, f"update {pattern} config", [])
+        _filter_excluded_commits([matching], verbose=False)
+        captured = capsys.readouterr()
+        assert captured.err == ""

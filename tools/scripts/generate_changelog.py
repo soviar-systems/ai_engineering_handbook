@@ -59,6 +59,9 @@ TYPE_TO_SECTION: dict[str, str] = dict(_CONFIG["changelog-sections"])
 # Ordered list of type keys — defines section ordering in CHANGELOG output
 SECTION_ORDER: list[str] = list(_CONFIG["changelog-sections"].keys())
 
+# Substring patterns for filtering housekeeping commits and bullets
+EXCLUDE_PATTERNS: list[str] = list(_CONFIG.get("changelog-exclude-patterns", []))
+
 # ---------------------------------------------------------------------------
 # Commit dataclass
 # ---------------------------------------------------------------------------
@@ -116,14 +119,20 @@ def main():
 # ---------------------------------------------------------------------------
 
 
-def generate_changelog(ref_range: str, version: str | None = None) -> str:
+def generate_changelog(
+    ref_range: str,
+    version: str | None = None,
+    *,
+    verbose: bool = False,
+) -> str:
     """Generate formatted CHANGELOG string from git history."""
-    commits = parse_commits(ref_range)
+    commits = parse_commits(ref_range, verbose=verbose)
+    commits = _filter_excluded_commits(commits, verbose=verbose)
     groups = group_by_type(commits)
     return format_changelog(groups, version)
 
 
-def parse_commits(ref_range: str) -> list[Commit]:
+def parse_commits(ref_range: str, *, verbose: bool = False) -> list[Commit]:
     """Extract commits from git log using --first-parent.
 
     --first-parent is critical: it filters out feature branch noise,
@@ -153,14 +162,14 @@ def parse_commits(ref_range: str) -> list[Commit]:
         chunk = chunk.strip()
         if not chunk:
             continue
-        commit = parse_single_commit(chunk)
+        commit = parse_single_commit(chunk, verbose=verbose)
         if commit is not None:
             commits.append(commit)
 
     return commits
 
 
-def parse_single_commit(raw: str) -> Commit | None:
+def parse_single_commit(raw: str, *, verbose: bool = False) -> Commit | None:
     """Parse raw commit text into a Commit dataclass.
 
     Expected format (from git log %H%n%s%n%b):
@@ -196,7 +205,7 @@ def parse_single_commit(raw: str) -> Commit | None:
 
     # Extract bullets from body (lines 2+)
     body_lines = lines[2:]
-    bullets = _extract_bullets(body_lines)
+    bullets = _extract_bullets(body_lines, verbose=verbose)
 
     return Commit(
         hash=commit_hash,
@@ -207,7 +216,7 @@ def parse_single_commit(raw: str) -> Commit | None:
     )
 
 
-def _extract_bullets(body_lines: list[str]) -> list[str]:
+def _extract_bullets(body_lines: list[str], *, verbose: bool = False) -> list[str]:
     """Extract changelog bullets from body, excluding ArchTag and trailers.
 
     Trailers are detected as Key: Value lines that appear after a blank line.
@@ -239,7 +248,34 @@ def _extract_bullets(body_lines: list[str]) -> list[str]:
         if _BULLET_RE.match(line):
             bullets.append(line.strip())
 
-    return bullets
+    filtered = []
+    for b in bullets:
+        if _matches_exclude_pattern(b):
+            if verbose:
+                print(f"  [excluded bullet] {b}", file=sys.stderr)
+        else:
+            filtered.append(b)
+    return filtered
+
+
+def _matches_exclude_pattern(text: str) -> bool:
+    """Return True if text contains any configured exclusion pattern (case-insensitive)."""
+    text_lower = text.lower()
+    return any(p.lower() in text_lower for p in EXCLUDE_PATTERNS)
+
+
+def _filter_excluded_commits(
+    commits: list[Commit], *, verbose: bool = False,
+) -> list[Commit]:
+    """Drop commits whose subject matches an exclusion pattern."""
+    filtered = []
+    for c in commits:
+        if _matches_exclude_pattern(c.subject):
+            if verbose:
+                print(f"[excluded commit] {c.subject}", file=sys.stderr)
+        else:
+            filtered.append(c)
+    return filtered
 
 
 def group_by_type(commits: list[Commit]) -> dict[str, list[Commit]]:
@@ -279,7 +315,7 @@ def format_changelog(
 
     for type_key in ordered_types + extra_types:
         section_name = TYPE_TO_SECTION.get(type_key, type_key.capitalize())
-        lines.append(f"* {section_name}:")
+        lines.append(f"* **{section_name}:**")
 
         for commit in groups[type_key]:
             # Subject line — capitalize first letter
@@ -335,16 +371,22 @@ Examples:
             metavar="FILE",
             help="Prepend output to an existing file instead of printing to stdout",
         )
+        parser.add_argument(
+            "-v", "--verbose",
+            action="store_true",
+            default=False,
+            help="Print excluded commits and bullets to stderr",
+        )
         return parser
 
     def run(self, argv: list[str] | None = None) -> None:
         args = self.parser.parse_args(argv)
-        output = generate_changelog(args.ref_range, args.version)
+        output = generate_changelog(args.ref_range, args.version, verbose=args.verbose)
 
         if args.prepend:
             target = Path(args.prepend)
             existing = target.read_text(encoding="utf-8") if target.exists() else ""
-            target.write_text(output + existing, encoding="utf-8")
+            target.write_text(output + "\n" + existing, encoding="utf-8")
         else:
             print(output, end="")
 

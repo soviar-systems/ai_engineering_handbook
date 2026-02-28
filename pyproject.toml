@@ -30,6 +30,7 @@ formats = "ipynb,md:myst"
 [tool.commit-convention]
 valid-types = ["feat", "fix", "docs", "adr", "ci", "refactor", "perf", "chore", "pr"]
 archtag-required-types = ["refactor", "perf"]
+changelog-exclude-patterns = ["CLAUDE.md", "aider", "misc/", "jupytext sync"]
 
 [tool.commit-convention.changelog-sections]
 # Key order defines CHANGELOG section ordering

@@ -3,7 +3,7 @@ ai_engineering_book
 1. changelog generator:
 - add a new line after the end of prepend
 - add md bold for the level 1 bullets, like **New Features:** so the main sections are visually distinct from other sections
-- the list of exclusion for changelog - strings containing CLAUDE.md, aider, all the misc/ changes, jupytext sync operations
+- the list of exclusion for changelog - strings containing CLAUDE.md, aider, all the misc/ changes, jupytext sync operations. should it be a config for such exclusions or we will use pyproject.yaml?
 
 Brainstorming
 1. git policy
@@ -102,5 +102,16 @@ repo configuration
 
 Add validation of the version and date change in YAML frontmatters using script. 
 
+
+ADR required fields:
+- Status
+- Tags
+- Context
+- Decision
+- Consequences
+- Alternatives
+- References
+- Participants
+Title, date are not needed because they're rendered by MyST. We need to add ADR-YYNNN to the MyST rendered title somehow - the adr number is not shown in the table contents
 
 DONE
