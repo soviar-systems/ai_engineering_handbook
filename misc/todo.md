@@ -1,8 +1,38 @@
 ai_engineering_book
 
+1. changelog generator:
+- add a new line after the end of prepend
+- add md bold for the level 1 bullets, like **New Features:** so the main sections are visually distinct from other sections
+- the list of exclusion for changelog - strings containing CLAUDE.md, aider, all the misc/ changes, jupytext sync operations
+
 Brainstorming
+1. git policy
+- I need the central point to start with understanding how the git policy is governed in the repo. this knowledge is smeared within the repo and when I want to see what types of branches, commit prefixes are allowed, how to work with the commit bodies, etc. I do not understand where to go to make any changes - what configs, scripts, docs I should change. 
+2. I am tending to extract this functionality either to vadocs or to the specialized package for git policy governance. The vadocs looks good because it governs the docs validation and these git scripts also are the validation gates for the docs so I can control the process from within one package. The vados looks not a good choice because git operations, hooks, and CI are specific operations with their own goals and maintaining them in the vadocs package will make mess. The UNIX philosophy is about making one tool for one task, and then you pipe these tools as lego blocks into the new tools.
+The result should be the analysis file.
+
+Brainstorming
+1. We haven't finished the architecture dir restructuring. See ADR-26035 - we only created evidence dir, but we need to align the structure to the Conceptual Taxonomy.
+2. The question 1 leads to the problem of vadocs package as the production level, a given-repo-agnostic tool. The docs validation scripts in tools/scripts are so different but they solve one common goal - they are the docs quality gates. We need to assess all the scripts for solving common tasks and extract such functionality to the dedicated "parent" module and leave only the specific functionality for each doc type. More over, it looks like we need to elaborate the more sophisticated docs taxonomy - we already have the architectural docs, but we also have handbooks, scripts instructions, etc. We need to elaborate some classification and build the validation gates around this docs system. I think, we need to leverage the UNIX design approach where the syscalls are the interfaces, and our docs types can also be interfaces and the given logic is hidden behind them. These interfaces should provide the uniform design for any new repo in the ecosystem. Thus the validation scripts are behind these interfaces and can use any tools (git or bash commands) or shared modules when they govern their doc type. This is much closer to the concept of Docs-as-Code. This interface approach will conduct how the repos structure should look like.
+The interface (docs types classification) will also should define the tags system we can use for our git policy, ADRs, skills to let the agents filter the information in a stable manner complementing the RAG system. This hypothesis needs to be discussed.
+I do not have answers, I have questions. We need to research the best real world production level practices, existing standards, and elaborate the concept of the uniform design for the new AI era where the docs is the source code.
+The result of this session is the analysis file, not the pure plan. 
+
+Brainstorming - clean up ephemeral and working files.
 1. architecture/evidence/sources/ - when removing the sources we lose the number. we need to either change the taxonomy for sources or maintain an index for all the sources we had, so it is a reference. but do we really need such an index?
 2. Should we keep all analysis files without cleaning the dir from time to time or it should be governed the same way the sources governed - removing after we are sure all the valuable information is extracted to ADR?
+3. The implemented plans should be also cleaned up from time to time. 
+So, we need to elaborate some cleaning up policy:
+- the list of ephemeral files that should be removed and stayed only in the git history
+- the period when the cleaning up should happen, for example with the new release.
+This policy should be governed by some script like, when we commit the changelog - the script checks the existence of the ephemeral files, their presence in git history, and then tells the user to remove them. The script is like check_broken_links, but check_ephemeral_files.
+The result of the session is the analysis file.
+
+Shared module approach:
+For example, check_evidence.py script uses _detect_repo_root(), resolve_config_path(), 
+
+Brainstorming
+1. Architectural docs should be validated as having the arch or whatever commit prefix so we can manage them as a special case in changelog and release notes. the ADRs are the strategic backbone, they deserve their own section.
 
 Brainstorming. 
 1. Read the architecture/evidence/analyses.
@@ -24,16 +54,6 @@ Brainstorming.
 
 extract_html
 - all new lines are broken, they must be kept as is or even converted to markdown when possible, see https://github.com/unclecode/crawl4ai
-
-
-Brainstorming
-- The docs validation scripts are so different but they solve one common goal - they are the docs quality gates. We need to assess all the scripts for solving common tasks and extract such functionality to the dedicated "parent" module and leave only the specific functionality for each doc type. More over, it looks like we need to elaborate the docs taxonomy - we already have the architectural docs, but we also have handbooks, scripts instructions, etc. Can we create some classification and build the validation gates around this docs system? We can consider the docs types as the interface in programming or the file types in UNIX/Linux systems. This interface should provide the uniform design for any new repo in the ecosystem.
-- The scripts when using git or discovery tools should use one common module for such operations (agentic tools?). For example, check_evidence.py script uses _detect_repo_root(), resolve_config_path(), 
-- This interface can lead us to the rethinking the repo structure, for example:
-    - docs/ - 0_intro, ai_system, architecture, mlops, security
-    - tools/
-
-I do not have answers, I have questions. We need to research the best real world production level practices, existing standards, and elaborate the concept of the uniform design for the new AI era where the docs is the source code.
 
 1. tools/scripts/check_adr.py - Duplicate resolution error, try to add ## Decision and commit the ADR. Looks like we need just to inform the user, no interaction.
 Apply merge? [Y/n]: Traceback (most recent call last):
@@ -72,11 +92,6 @@ Brainstorming
     - ./mlops
 
 
-changelog generator:
-- add a new line after the end of prepend
-- ADRs should be validated as having the adr commit prefix so we can manage them as a special case in changelog and release notes. the ADRs are the strategic backbone, they deserve their own section.
-- the list of exclusion strings - containing CLAUDE.md, aider, misc/plan, pr/
-
 adr_index:
 - consider divide History section to rejected and superseded
 
@@ -85,12 +100,7 @@ repo configuration
 - git validation package
 - configure repo script - in vadocs?
 
-
+Add validation of the version and date change in YAML frontmatters using script. 
 
 
 DONE
-
-Brainstorming
-Extract architecture/evidence/sources/2026_02_28_gemini_dialogue_skills_new_architectures.html using tools/scripts/extract_html.py. Read the result carefully and step by step extract all the important and valuable insights, ideas, clarifications. This is not only the documentation discussion, this is the new architectural patterns for building ai systems, so we need to finalize results in the architecture/evidence/analyses dir. 
-https://gemini.google.com/share/10c1438e1c05
-
