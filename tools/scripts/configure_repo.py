@@ -17,9 +17,10 @@ This script performs the following setup tasks:
 1. Runs `uv sync` to install dependencies
 2. Runs `uv run pre-commit install` to set up pre-commit hooks
 3. Runs `uv run pre-commit install --hook-type commit-msg` to set up commit-msg hooks
-4. Copies aider config file to repository root
-5. Makes all .sh and .py files executable
-6. Creates symlinks in ~/bin for scripts
+4. Runs `uv run pre-commit install --hook-type post-commit` to set up post-commit hooks
+5. Copies aider config file to repository root
+6. Makes all .sh and .py files executable
+7. Creates symlinks in ~/bin for scripts
 """
 
 import argparse
@@ -43,12 +44,14 @@ class UvSyncRunner:
         self.dry_run = dry_run
 
     def run(self) -> bool:
-        """Run uv sync, pre-commit install, and commit-msg hook install."""
+        """Run uv sync, pre-commit install, commit-msg and post-commit hook installs."""
         if not self.run_uv_sync():
             return False
         if not self.run_precommit_install():
             return False
         if not self.run_precommit_install_commit_msg():
+            return False
+        if not self.run_precommit_install_post_commit():
             return False
         return True
 
@@ -66,6 +69,11 @@ class UvSyncRunner:
         """Run uv run pre-commit install --hook-type commit-msg."""
         cmd = ["uv", "run", "pre-commit", "install", "--hook-type", "commit-msg"]
         return self._execute(cmd, "Installing commit-msg hook")
+
+    def run_precommit_install_post_commit(self) -> bool:
+        """Run uv run pre-commit install --hook-type post-commit."""
+        cmd = ["uv", "run", "pre-commit", "install", "--hook-type", "post-commit"]
+        return self._execute(cmd, "Installing post-commit hook")
 
     def _execute(self, cmd: list[str], description: str) -> bool:
         """Execute a command and return success status."""

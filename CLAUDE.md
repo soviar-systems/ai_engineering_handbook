@@ -139,7 +139,13 @@ Package manager: `uv` (never use pip directly)
 **Pre-commit Hooks:**
 - Extensive validation runs before each commit (see `.pre-commit-config.yaml`)
 - Includes: broken links check, link format check, jupytext sync/verify, API key detection, JSON validation, script tests
+- Post-commit `changelog-preview` hook shows the CHANGELOG entry for the just-created commit
 - All hooks use `uv run` for Python execution
+
+**Safe Git Commands:**
+- Use `git restore <file>` to discard changes, never `git checkout -- <file>` (ambiguous between branch and file operations)
+- Use `git switch <branch>` to change branches, never `git checkout <branch>`
+- Never use `git reset --hard`, `git push --force`, or `git clean -f` without explicit user request
 
 **Script Suite (ADR-26011):**
 - Use architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md convention when developing Python scripts.

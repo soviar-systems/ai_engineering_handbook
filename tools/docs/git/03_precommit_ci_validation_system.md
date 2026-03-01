@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: "Pre-commit Hooks and CI Validation System"
 author: rudakow.wadim@gmail.com
-date: 2026-02-17
+date: 2026-03-01
 options:
-  version: 1.1.0
+  version: 1.2.0
   birth: 2026-01-22
 ---
 
@@ -68,6 +68,7 @@ The table below maps each validation concern to its pre-commit hook and CI job. 
 | API key detection | `check-api-keys` | `api-keys` | Any file or script changes |
 | **Commit & Release** | | | |
 | Commit message | `validate-commit-msg` (commit-msg stage) | `validate-commit-msg` | Script, test, or `pyproject.toml` changes |
+| Changelog preview | `changelog-preview` (post-commit stage) | — | Always (informational) |
 | CHANGELOG generation | — | `generate-changelog` | Script, test, or `pyproject.toml` changes |
 | **Architecture** | | | |
 | Script suite (1:1:1) | `check-script-suite` | `script-suite` | Script, test, or doc changes |
@@ -412,18 +413,7 @@ flowchart TB
 
 ### Installing Pre-commit Hooks
 
-```bash
-# Install pre-commit (if not already installed)
-uv add pre-commit
-
-# Install the pre-commit stage hooks
-uv run pre-commit install
-
-# Install the commit-msg stage hook (for commit message validation)
-uv run pre-commit install --hook-type commit-msg
-```
-
-See [Pre-Commit Hooks and Staging: Instruction for Developers](/tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.ipynb) for details on hook stage installation.
+See [Pre-Commit Hooks and Staging: Instruction for Developers](/tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.ipynb) for installation commands, or run the [repo configuration script](/tools/scripts/configure_repo.py) which handles all hook types automatically.
 
 +++
 

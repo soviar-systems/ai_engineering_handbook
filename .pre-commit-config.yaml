@@ -84,6 +84,14 @@ repos:
         stages: [commit-msg]
         pass_filenames: true
 
+      - id: changelog-preview
+        name: Changelog Preview
+        entry: "bash -c 'uv run --active tools/scripts/generate_changelog.py --verbose HEAD~1..HEAD; echo; echo Tip -- use git commit --amend if the output looks incorrect'"
+        language: system
+        always_run: true
+        stages: [post-commit]
+        verbose: true
+
       # ---TESTS of HOOK SCRIPTS---
       # Trigger this whenever any script or test in the scripts
       # directory changes

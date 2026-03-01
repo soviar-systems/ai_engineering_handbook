@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: "Pre-Commit Hooks and Staging: Instruction for Developers"
 author: rudakow.wadim@gmail.com
-date: 2026-02-17
+date: 2026-03-01
 options:
-  version: 1.1.0
+  version: 1.2.0
   birth: 2026-01-04
 ---
 
@@ -92,17 +92,18 @@ The `.pre-commit-config.yaml` file is already configured in the repo, so the dev
 $ uv add pre-commit
 $ uv run pre-commit install
 $ uv run pre-commit install --hook-type commit-msg
+$ uv run pre-commit install --hook-type post-commit
 ```
 
 ```{code-cell}
-ls ../../../.git/hooks | grep -E '^(pre-commit|commit-msg)$'
+ls ../../../.git/hooks | grep -E '^(pre-commit|commit-msg|post-commit)$'
 ```
 
 :::{warning} **Hook stages require separate installation**
-`pre-commit install` only installs the default `pre-commit` stage hook. Each additional stage (`commit-msg`, `pre-push`, `prepare-commit-msg`, etc.) requires its own `--hook-type` install call. If you add hooks at new stages in `.pre-commit-config.yaml`, the corresponding `--hook-type` install must happen in your setup — otherwise the hooks exist in config but never fire.
+`pre-commit install` only installs the default `pre-commit` stage hook. Each additional stage (`commit-msg`, `post-commit`, `pre-push`, `prepare-commit-msg`, etc.) requires its own `--hook-type` install call. If you add hooks at new stages in `.pre-commit-config.yaml`, the corresponding `--hook-type` install must happen in your setup — otherwise the hooks exist in config but never fire.
 :::
 
-Run the [repo configuration script](/tools/scripts/configure_repo.py), it will automatically handle both hook types.
+Run the [repo configuration script](/tools/scripts/configure_repo.py), it will automatically handle all hook types.
 
 +++
 
@@ -130,9 +131,20 @@ The `validate_commit_msg.py` script runs as a `commit-msg` stage pre-commit hook
 | Body bullets | **Hard fail** | Body must contain at least one line starting with `- ` (a changelog bullet) |
 | ArchTag presence | **Hard fail** | For `refactor:`, `perf:`, or `BREAKING CHANGE` commits, `ArchTag:TAG-NAME` must be present (Tier 3) |
 
-**Merge commits and fixup commits** are automatically skipped.
-
 **With Squash-and-Merge**, intermediate commit messages during development are less critical — the squash commit message (derived from the PR description) is the one that must pass validation. However, the hook runs on all local commits to build good habits and catch formatting issues early.
+
++++
+
+## **5. Changelog Preview (Post-Commit)**
+
++++
+
+After each commit, the `changelog-preview` hook runs `generate_changelog.py --verbose` on the just-created commit. This shows the developer:
+
+- The CHANGELOG entry their commit will produce
+- Any bullets or subjects that will be filtered by exclusion patterns (e.g., `CLAUDE.md`, `misc/`)
+
+This is **informational only** — it never blocks the commit. If the output looks incorrect, use `git commit --amend` to fix the commit message.
 
 :::{seealso}
 > - {term}`ADR-26003`: Adoption of gitlint for Tiered Workflow Enforcement

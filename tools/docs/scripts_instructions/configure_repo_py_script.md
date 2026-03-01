@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: "Instruction on configure_repo.py script"
 author: rudakow.wadim@gmail.com
-date: 2026-02-17
+date: 2026-03-01
 options:
-  version: 0.2.0
+  version: 0.3.0
   birth: 2026-01-27
 ---
 
@@ -58,6 +58,7 @@ The script performs five sequential operations:
 | **UV Sync** | Runs `uv sync` to install/update dependencies from lockfile |
 | **Pre-commit Install** | Runs `uv run pre-commit install` to configure pre-commit hooks |
 | **Commit-msg Hook** | Runs `uv run pre-commit install --hook-type commit-msg` to enable commit message validation |
+| **Post-commit Hook** | Runs `uv run pre-commit install --hook-type post-commit` to enable changelog preview |
 | **Aider Config** | Copies `tools/configs/aider.conf.yml` to `.aider.conf.yml` if target missing |
 | **Script Permissions** | Makes all `.sh` and `.py` files executable recursively |
 | **Symlinks** | Creates symlinks in `~/bin` for all files in `tools/scripts/` |
@@ -83,7 +84,7 @@ The script is organized into specialized classes to maintain clarity:
 
 | Class | Responsibility |
 |-------|----------------|
-| `UvSyncRunner` | Execute `uv sync`, `pre-commit install`, and `commit-msg` hook install |
+| `UvSyncRunner` | Execute `uv sync`, `pre-commit install`, `commit-msg` and `post-commit` hook installs |
 | `AiderConfigCopier` | Copy aider configuration file with existence checks |
 | `ScriptPermissions` | Find and make `.sh`/`.py` files executable |
 | `SymlinkCreator` | Create symlinks in target bin directory |
@@ -166,7 +167,7 @@ env -u VIRTUAL_ENV uv run tools/scripts/configure_repo.py --dry-run
 +++
 
 ```bash
-env -u VIRTUAL_ENV uv run tools/scripts/configure_repo.py --skip-symlinks --skip-uv-sync --verbose
+uv run tools/scripts/configure_repo.py --skip-symlinks --skip-uv-sync --verbose
 ```
 
 +++
@@ -215,5 +216,5 @@ env -u VIRTUAL_ENV uv run pytest tools/tests/test_configure_repo.py -q
 ```
 
 ```{code-cell}
-env -u VIRTUAL_ENV uv run pytest tools/tests/test_configure_repo.py --cov=tools/scripts/configure_repo --cov-report=term-missing -q
+env -u VIRTUAL_ENV uv run pytest tools/tests/test_configure_repo.py --cov=tools.scripts.configure_repo --cov-report=term-missing -q
 ```
