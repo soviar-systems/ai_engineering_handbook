@@ -117,6 +117,7 @@ Package manager: `uv` (never use pip directly)
 - **Avoid asserting on specific wording**: Use `assert exit_code == 1` instead of `assert "specific error text" in output`
 - **Test behavior boundaries**: One broken ref → exit 1, zero broken refs → exit 0. Don't test message content
 - **Use semantic assertions**: `assert len(errors) > 0` or `assert adr_number in {found_numbers}` instead of exact counts when the exact count isn't the contract
+- **Avoid exact call counts in mocks**: Don't use `assert mock.call_count == N` — use `side_effect` lists that implicitly enforce short-circuiting (extra calls raise `StopIteration`)
 - **Parameterize inputs**: Test varied scenarios (edge cases, empty inputs, multiple items) without duplicating test logic
 - **Parametrize from config, not hardcoded lists**: Import `VALID_TYPES`, `TYPE_TO_SECTION`, etc. from scripts — they load from `pyproject.toml` SSoT
 - **No hardcoded paths in tests**: Resolve config paths via `pyproject.toml` → config → parent_config chain, never hardcode directory structures
@@ -141,11 +142,21 @@ Package manager: `uv` (never use pip directly)
 - Includes: broken links check, link format check, jupytext sync/verify, API key detection, JSON validation, script tests
 - Post-commit `changelog-preview` hook shows the CHANGELOG entry for the just-created commit
 - All hooks use `uv run` for Python execution
+- YAML gotcha: `entry` values with `: ` (colon-space) must be double-quoted in `.pre-commit-config.yaml` — YAML interprets unquoted `: ` as a mapping separator
 
 **Safe Git Commands:**
 - Use `git restore <file>` to discard changes, never `git checkout -- <file>` (ambiguous between branch and file operations)
 - Use `git switch <branch>` to change branches, never `git checkout <branch>`
 - Never use `git reset --hard`, `git push --force`, or `git clean -f` without explicit user request
+
+**Design Principles:**
+- Prefer reusing existing tools over writing new code — check if an existing script already does what you need before creating new functions/classes
+- Hook-specific UX (tips, warnings) belongs in the hook entry, not in the reusable script — scripts may be called in contexts where the tip is nonsensical
+- Question the plan: if the implementation seems disproportionate to the goal, step back and look for a simpler approach
+
+**Documentation:**
+- Avoid duplicating information across docs — use cross-references to the authoritative source
+- Doc 02 (`02_pre_commit_hooks_and_staging_instruction_for_devel.md`) is the authoritative source for hook installation instructions
 
 **Script Suite (ADR-26011):**
 - Use architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md convention when developing Python scripts.
