@@ -79,6 +79,7 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 
 **ADRs and Evidence Artifacts:**
 - Writing quality standards, evidence pipeline, status transitions, and operational rules: see [Architecture Decision Workflow](/architecture/architecture_decision_workflow_guide.md)
+- Evidence artifact sections are validated by `check_evidence.py` against `evidence.config.yaml` — analysis artifacts allow: Problem Statement, References, Approach Evaluation, Taxonomy Design, Key Insights, Rejected Ideas, Research Pipeline Model, Portability Design
 - `check_adr.py` operates on all ADRs at once (no file arguments)
 - ADR frontmatter `status` determines index section placement (see `adr_config.yaml`)
 - ADR filenames use truncated slugs — always glob (`architecture/adr/adr_26NNN*.md`) to verify the exact filename before creating links
