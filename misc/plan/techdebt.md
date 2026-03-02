@@ -20,4 +20,12 @@ Traceable record of intentional shortcuts. Each entry has a date, location, and 
 - **Migration path:** Write an ADR formalizing the tech debt tracking convention (format, ownership, review cadence). Optionally add a validation script and pre-commit hook following the ADR-26011 script suite pattern.
 - **Introduced by:** plan_20260227_architecture_knowledge_base_taxonomy_tooling.md (Batch 2)
 
+### TD-003: ADR deprecation workflow not formalized (2026-03-02)
+
+- **Location:** `architecture/adr/adr_config.yaml` (status `deprecated`), `architecture/adr/adr_template.md`, `tools/scripts/check_adr.py`
+- **Context:** The `deprecated` status is defined in `adr_config.yaml` and mapped to the "Historical Context" index section, but unlike `rejected` (which has a conditional `Rejection Rationale` section and template support), deprecation has no template guidance, no conditional section, and no validation rules in `check_adr.py`. No ADRs have used this status yet.
+- **Current state:** Provisional guidance documented in [Architecture Decision Workflow](/architecture/architecture_decision_workflow_guide.md). The guide marks the deprecation section as "not yet formalized."
+- **Migration path:** When the first ADR needs deprecation: (1) add a conditional `Deprecation Rationale` section to `adr_template.md`, (2) add validation rules to `adr_config.yaml` and `check_adr.py`, (3) remove the "not yet formalized" caveat from the guide.
+- **Introduced by:** plan_20260302_adr_writing_guide.md
+
 ## Resolved

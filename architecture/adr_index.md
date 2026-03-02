@@ -51,6 +51,9 @@ ADR-26028
 ADR-26029
 : [pyproject.toml as Tool Configuration Hub](/architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md)
 
+ADR-26037
+: [Smallest Viable Architecture (SVA) Constraint Framework](/architecture/adr/adr_26037_smallest_viable_architecture_constraint_framework.md)
+
 :::
 
 ## Evolutionary Proposals

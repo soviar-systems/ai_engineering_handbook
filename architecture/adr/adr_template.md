@@ -7,6 +7,8 @@ superseded_by: null
 tags: [architecture]  # Valid tags defined in adr_config.yaml
 ---
 
+<!-- Quality guidelines: /architecture/architecture_decision_workflow_guide.md -->
+
 # ADR-{{ id }}: {{ title }}
 
 ## Date

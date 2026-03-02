@@ -25,6 +25,7 @@ BROKEN_LINKS_EXCLUDE_LINK_STRINGS = {
     "path/to/adr_26002_slug.md",
     "./intro/",
     "valid.md",  # Added for test_validate_link_with_exclusions
+    "repo-root-relative/path",  # Example in architecture_decision_workflow_guide.md
 }
 
 BROKEN_LINKS_EXCLUDE_FILES = [".aider.chat.history.md"]

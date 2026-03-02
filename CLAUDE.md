@@ -77,10 +77,12 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Path constants stay in `tools/scripts/paths.py`; ADR validation rules stay in `adr_config.yaml`
 - Track intentional tech debt in `misc/plan/techdebt.md` with date, location, and migration path
 
-**ADRs:**
-- Never manually edit `architecture/adr_index.md` — run `uv run tools/scripts/check_adr.py --fix` to auto-update it
+**ADRs and Evidence Artifacts:**
+- Writing quality standards, evidence pipeline, status transitions, and operational rules: see [Architecture Decision Workflow](/architecture/architecture_decision_workflow_guide.md)
 - `check_adr.py` operates on all ADRs at once (no file arguments)
 - ADR frontmatter `status` determines index section placement (see `adr_config.yaml`)
+- ADR filenames use truncated slugs — always glob (`architecture/adr/adr_26NNN*.md`) to verify the exact filename before creating links
+- Internal file references must use markdown links `[Title](/repo-root-relative/path)` — backtick paths bypass `check_broken_links.py` validation
 
 **Configuration:**
 - Use placeholders like `[IP_ADDRESS]` or `[DOMAIN]` instead of real values
