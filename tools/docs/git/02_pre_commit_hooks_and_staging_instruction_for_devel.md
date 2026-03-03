@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: "Pre-Commit Hooks and Staging: Instruction for Developers"
 author: rudakow.wadim@gmail.com
-date: 2026-03-01
+date: 2026-03-03
 options:
-  version: 1.2.0
+  version: 1.3.0
   birth: 2026-01-04
 ---
 
@@ -118,6 +118,10 @@ $ uv run pre-commit [<hook_id>] [--all-files]
 +++
 
 ## **4. Commit Message Validation**
+
++++
+
+Commit message validation runs at the **`commit-msg`** stage — not `pre-commit` (which fires before the message is written) and not `post-commit` (which cannot abort the commit). The `commit-msg` hook receives the draft message and can reject it with a non-zero exit code, aborting the commit before it enters history. This makes it the only stage where message structure can be enforced as a blocking gate. See [A-26004: Hook Stage Assignment Rationale](/architecture/evidence/analyses/A-26004_hook_stage_assignment_rationale.md) for the full stage analysis.
 
 +++
 

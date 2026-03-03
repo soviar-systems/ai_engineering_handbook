@@ -78,12 +78,14 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Track intentional tech debt in `misc/plan/techdebt.md` with date, location, and migration path
 
 **ADRs and Evidence Artifacts:**
+- To validate artifacts, run the script (e.g., `check_evidence.py`). Only run the script's test suite (`pytest test_check_evidence.py`) when the script itself was modified
 - Writing quality standards, evidence pipeline, status transitions, and operational rules: see [Architecture Decision Workflow](/architecture/architecture_decision_workflow_guide.md)
 - Evidence artifact sections are validated by `check_evidence.py` against `evidence.config.yaml` — analysis artifacts allow: Problem Statement, References, Approach Evaluation, Taxonomy Design, Key Insights, Rejected Ideas, Research Pipeline Model, Portability Design
 - `check_adr.py` operates on all ADRs at once (no file arguments)
 - ADR frontmatter `status` determines index section placement (see `adr_config.yaml`)
 - ADR filenames use truncated slugs — always glob (`architecture/adr/adr_26NNN*.md`) to verify the exact filename before creating links
 - Internal file references must use markdown links `[Title](/repo-root-relative/path)` — backtick paths bypass `check_broken_links.py` validation
+- When linking to a Jupytext-paired file, always use the `.ipynb` extension — `check-link-format` hook rejects `.md` links when a paired `.ipynb` exists
 
 **Configuration:**
 - Use placeholders like `[IP_ADDRESS]` or `[DOMAIN]` instead of real values
@@ -149,6 +151,8 @@ Package manager: `uv` (never use pip directly)
 
 **Safe Git Commands:**
 - Use `git restore <file>` to discard changes, never `git checkout -- <file>` (ambiguous between branch and file operations)
+- Use `git restore --staged <file>` to unstage files, never `git reset HEAD <file>`
+- Use `rm` (not `git rm`) for untracked files — `git rm` fails on files not in the index
 - Use `git switch <branch>` to change branches, never `git checkout <branch>`
 - Never use `git reset --hard`, `git push --force`, or `git clean -f` without explicit user request
 
