@@ -1,7 +1,7 @@
 ---
 id: A-26005
 title: "Documentation Type Interfaces and Unified Validation Architecture"
-date: 2026-03-06
+date: 2026-03-07
 status: active
 tags: [documentation, architecture, governance]
 sources: [S-26004, S-26005]
@@ -650,8 +650,8 @@ A unified tag vocabulary means the tag `model` used in an ADR, a commit, a skill
 - [Manifesto: Documentation as Source Code](/architecture/manifesto.md)
 - [Technical Debt Register](/misc/plan/techdebt.md) — TD-001 (common_required_fields)
 - [SemVer: Artifact Versioning Policy](/tools/docs/git/semver_artifact_versioning_policy_avp.ipynb) — version field standard
-- [S-26004: Gemini — Semantic Alignment Assessment](/architecture/evidence/sources/S-26004_gemini_semantic_alignment_assessment.md) — WRC analysis, contract-first development
-- [S-26005: Qwen — Agentic OS Architecture Diagram](/architecture/evidence/sources/S-26005_qwen_agentic_os_architecture_diagram.md) — UNIX ↔ Agentic OS mapping
+- `S-26004: Gemini — Semantic Alignment Assessment` — WRC analysis, contract-first development
+- `S-26005: Qwen — Agentic OS Architecture Diagram` — UNIX ↔ Agentic OS mapping
 
 ### External Standards
 - **DITA** (OASIS) — Document type specialization and schema validation

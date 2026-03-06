@@ -126,7 +126,7 @@ Sources are ephemeral by design — committed for traceability, deleted after ex
 
 **Rule:** A source file is only deleted AFTER its `extracted_into` field points to a committed analysis.
 
-**Git archaeology** commands for recovering deleted sources are documented in [evidence/sources/README.md](/architecture/evidence/sources/README.md).
+**Git archaeology** commands for recovering deleted sources are documented in [evidence/sources/README](/architecture/evidence/sources/README.ipynb).
 
 ### 6. Validation
 
@@ -173,7 +173,7 @@ The conceptual taxonomy (Decisions / Evidence / Governance) is universal. The ph
 - [A-26001: Architecture Knowledge Base Taxonomy](/architecture/evidence/analyses/A-26001_architecture_knowledge_base_taxonomy.md) — analysis that produced this ADR
 - [evidence.config.yaml](/architecture/evidence/evidence.config.yaml) — evidence artifact specification
 - [architecture.config.yaml](/architecture/architecture.config.yaml) — shared architectural vocabulary
-- [evidence/sources/README.md](/architecture/evidence/sources/README.md) — source lifecycle and git archaeology
+- [evidence/sources/README](/architecture/evidence/sources/README.ipynb) — source lifecycle and git archaeology
 - {term}`ADR-26016` — Metadata-Driven Architectural Records Lifecycle
 - {term}`ADR-26017` — ADR Format Validation Workflow
 - {term}`ADR-26036` — Config File Location and Naming Conventions

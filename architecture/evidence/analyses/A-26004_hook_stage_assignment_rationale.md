@@ -1,7 +1,7 @@
 ---
 id: A-26004
 title: "Hook Stage Assignment Rationale"
-date: 2026-03-03
+date: 2026-03-07
 status: active
 tags: [git, governance]
 sources: [S-26003]
@@ -59,6 +59,6 @@ The current architecture correctly follows this principle:
 
 ## References
 
-- [S-26003: Gemini 3 Flash — Post-Commit Hook Stage Advice](/architecture/evidence/sources/S-26003_gemini_post_commit_hook_stage_advice.md) — source dialogue on hook stage risks
+- `S-26003: Gemini 3 Flash — Post-Commit Hook Stage Advice` — source dialogue on hook stage risks
 - [Pre-Commit Hooks and Staging: Instruction for Developers](/tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.ipynb) — authoritative hook documentation
 - [ADR-26024: Structured Commit Bodies for Automated CHANGELOG Generation](/architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md) — commit convention that `validate-commit-msg` enforces

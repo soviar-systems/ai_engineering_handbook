@@ -1,7 +1,7 @@
 ---
 id: A-26002
 title: "Agentic OS, Tiered Cognitive Memory, and Package-Driven Infrastructure"
-date: 2026-02-28
+date: 2026-03-07
 status: active
 tags: [architecture, context_management, devops]
 sources: [S-26001]
@@ -362,7 +362,7 @@ This is a governance proposal that needs its own ADR before adoption. It potenti
 
 ## References
 
-- [S-26001: Gemini — Skills Architecture, Tiered Memory, and Package-Driven Infrastructure](/architecture/evidence/sources/S-26001_gemini_dialogue_skills_architectures.md)
+- `S-26001: Gemini — Skills Architecture, Tiered Memory, and Package-Driven Infrastructure`
 - [Claude Skills Inventor Transcript — Barry Zhang & Mahesh Murag (YouTube)](https://www.youtube.com/watch?v=CEvIs9y1uog)
 - {term}`ADR-26013`: Just-in-Time Prompt Transformation
 - {term}`ADR-26016`: Metadata-Driven Architectural Records Lifecycle

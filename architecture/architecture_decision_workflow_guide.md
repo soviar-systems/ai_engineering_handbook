@@ -4,9 +4,9 @@
 
 title: "Architecture Decision Workflow"
 author: rudakow.wadim@gmail.com
-date: 2026-03-02
+date: 2026-03-07
 options:
-  version: 1.0.0
+  version: 1.0.1
   birth: 2026-03-02
 
 ---
@@ -119,7 +119,7 @@ Skip evidence when the decision is straightforward with clear alternatives and n
 All evidence artifacts live in `architecture/evidence/` and are governed by [evidence.config.yaml](/architecture/evidence/evidence.config.yaml). See {term}`ADR-26035` for the full specification.
 
 **Sources (S-YYNNN)** — Ephemeral transcripts and raw inputs.
-Sources follow a three-commit lifecycle: capture → extract → delete. The source file is removed after its value is extracted into an analysis; git history preserves the original. See [Sources README](/architecture/evidence/sources/README.md) for the full workflow.
+Sources follow a three-commit lifecycle: capture → extract → delete. The source file is removed after its value is extracted into an analysis; git history preserves the original. See [Sources README](/architecture/evidence/sources/README.ipynb) for the full workflow.
 
 **Analyses (A-YYNNN)** — Extracted findings, trade studies, and comparisons.
 Analyses are the durable evidence artifacts. Required sections include Problem Statement and References. Link to the producing ADR via the `produces:` frontmatter field.
