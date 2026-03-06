@@ -1,22 +1,33 @@
 ai_engineering_book
 
-1. changelog generator:
-- add a new line after the end of prepend
-- add md bold for the level 1 bullets, like **New Features:** so the main sections are visually distinct from other sections
-- the list of exclusion for changelog - strings containing CLAUDE.md, aider, all the misc/ changes, jupytext sync operations. should it be a config for such exclusions or we will use pyproject.yaml?
+adr_index:
+- consider divide History section to rejected and supersded
+- also consider restructuring of the dir to
+    - active
+    - rfc
+    - rejected
+    - superseded
+    for easier navigation
+    
+
+generate_changelog.py
+[excluded bullet] - Updated: misc/insights.md - added new insights from the dialogues.
+[excluded bullet] - Updated: misc/todo.md - updated the file.
+Unreleased
+* **Maintenance:**
+- Update todo and insight files
+If all the lines of the commit body are excluded, the commit itself should be excluded also.
+
+
+Brainstorming
+TDD analysis https://t.me/turboproject/3505
 
 Brainstorming
 1. git policy
 - I need the central point to start with understanding how the git policy is governed in the repo. this knowledge is smeared within the repo and when I want to see what types of branches, commit prefixes are allowed, how to work with the commit bodies, etc. I do not understand where to go to make any changes - what configs, scripts, docs I should change. 
+- Git Policy is a mess file and it does not correspond to the ADR. adr_26003_adoption_of_gitlint_for_tiered_workflow.md, for example. No clear picture of the Git policy itself and of its implementation. Looks like it is time to extract the git operations to the delivery mechanism, i.e. the standalone package that can be installed as a regular dep.
 2. I am tending to extract this functionality either to vadocs or to the specialized package for git policy governance. The vadocs looks good because it governs the docs validation and these git scripts also are the validation gates for the docs so I can control the process from within one package. The vados looks not a good choice because git operations, hooks, and CI are specific operations with their own goals and maintaining them in the vadocs package will make mess. The UNIX philosophy is about making one tool for one task, and then you pipe these tools as lego blocks into the new tools.
 The result should be the analysis file.
-
-Brainstorming
-1. We haven't finished the architecture dir restructuring. See ADR-26035 - we only created evidence dir, but we need to align the structure to the Conceptual Taxonomy.
-2. The question 1 leads to the problem of vadocs package as the production level, a given-repo-agnostic tool. The docs validation scripts in tools/scripts are so different but they solve one common goal - they are the docs quality gates. We need to assess all the scripts for solving common tasks and extract such functionality to the dedicated "parent" module and leave only the specific functionality for each doc type. More over, it looks like we need to elaborate the more sophisticated docs taxonomy - we already have the architectural docs, but we also have handbooks, scripts instructions, etc. We need to elaborate some classification and build the validation gates around this docs system. I think, we need to leverage the UNIX design approach where the syscalls are the interfaces, and our docs types can also be interfaces and the given logic is hidden behind them. These interfaces should provide the uniform design for any new repo in the ecosystem. Thus the validation scripts are behind these interfaces and can use any tools (git or bash commands) or shared modules when they govern their doc type. This is much closer to the concept of Docs-as-Code. This interface approach will conduct how the repos structure should look like.
-The interface (docs types classification) will also should define the tags system we can use for our git policy, ADRs, skills to let the agents filter the information in a stable manner complementing the RAG system. This hypothesis needs to be discussed.
-I do not have answers, I have questions. We need to research the best real world production level practices, existing standards, and elaborate the concept of the uniform design for the new AI era where the docs is the source code.
-The result of this session is the analysis file, not the pure plan. 
 
 Brainstorming - clean up ephemeral and working files.
 1. architecture/evidence/sources/ - when removing the sources we lose the number. we need to either change the taxonomy for sources or maintain an index for all the sources we had, so it is a reference. but do we really need such an index?
@@ -114,4 +125,25 @@ ADR required fields:
 - Participants
 Title, date are not needed because they're rendered by MyST. We need to add ADR-YYNNN to the MyST rendered title somehow - the adr number is not shown in the table contents
 
+ADR index
+1. It should be divided into 4 sections:
+- active
+- RFC 
+- superseded
+- rejected
+2. Each ADR should contain title and description so the very index is a reference to the ADRs.
+
 DONE
+
+Brainstorming
+Read architecture/evidence/sources/gemini-3-flash-agentic-os-design-review.md and save it as source file. We need to revise the analysis architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md with the new ideas on filesystem maintainance: hierarchical structure of the Agentic OS filesystem and relational theory approach of the normalized and effectively maintained filesystem.
+
+Brainstorming
+1. We haven't finished the architecture dir restructuring. See ADR-26035 - we only created evidence dir, but we need to align the structure to the Conceptual Taxonomy.
+2. The question 1 leads to the problem of ../vadocs package as the production level, a given-repo-agnostic tool. The docs validation scripts in tools/scripts are so different but they solve one common goal - they are the docs quality gates. We need to assess all the scripts for solving common tasks and extract such functionality to the dedicated "parent" module and leave only the specific functionality for each doc type. More over, it looks like we need to elaborate the more sophisticated docs taxonomy - we already have the architectural docs, but we also have handbooks, scripts instructions, etc. We need to elaborate some classification and build the validation gates around this docs system. I think, we need to leverage the UNIX design approach where the syscalls are the interfaces, and our docs types can also be interfaces and the given logic is hidden behind them. These interfaces should provide the uniform design for any new repo in the ecosystem. Thus the validation scripts are behind these interfaces and can use any tools (git or bash commands) or shared modules when they govern their doc type. This is much closer to the concept of Docs-as-Code. This interface approach will conduct how the repos structure should look like.
+The interface (docs types classification) will also should define the tags system we can use for our git policy, ADRs, skills to let the agents filter the information in a stable manner complementing the RAG system. This hypothesis needs to be discussed.
+I do not have answers, I have questions. We need to research the best real world production level practices, existing standards, and elaborate the concept of the uniform design for the new AI era where the docs is the source code.
+The result of this session is the analysis file, not the pure plan. 
+
+Brainstorming
+Do we have an ADR for Smallest Viable Architecture (SVA)? If no, we must create it.

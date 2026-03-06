@@ -81,9 +81,7 @@ The question is: do you want to tackle this now as part of v0.41.0, or ship v0.4
 big change) and convert format in v0.42.0?
 
 ★ Insight ─────────────────────────────────────
-This is a case where format is architecture. The same content in JSON vs Markdown changes how an LLM processes it — not just
-aesthetically, but behaviorally. JSON triggers "parse this data" mode; Markdown triggers "follow these instructions" mode. For a
-file whose purpose is to instruct, the format should match the intent.
+This is a case where format is architecture. The same content in JSON vs Markdown changes how an LLM processes it — not just aesthetically, but behaviorally. JSON triggers "parse this data" mode; Markdown triggers "follow these instructions" mode. For a file whose purpose is to instruct, the format should match the intent.
 
 
 
@@ -100,17 +98,12 @@ On RAG vs Plain Files
 
 For this specific research task, plain files in context are significantly better. Here's why:
 
-1. Post-mortems are narrative chains — they cross-reference each other ("validates Principle 3 from v0.30 postmortem"). RAG would
-fragment these chains into disconnected chunks, losing the validated knowledge thread.
-2. The docs are small enough (~20 pages total) — they fit comfortably in context. RAG adds latency and retrieval noise for no
-benefit.
-3. Cross-document reasoning is critical — I need to map Gemini's self-diagnosis against Qwen's behavior against ADR principles
-simultaneously. RAG retrieves per-query, not per-reasoning-chain.
-4. RAG would miss "negative evidence" — knowing that a post-mortem does NOT mention a problem is informative. RAG can't surface
-absence.
+1. Post-mortems are narrative chains — they cross-reference each other ("validates Principle 3 from v0.30 postmortem"). RAG would fragment these chains into disconnected chunks, losing the validated knowledge thread.
+2. The docs are small enough (~20 pages total) — they fit comfortably in context. RAG adds latency and retrieval noise for no benefit.
+3. Cross-document reasoning is critical — I need to map Gemini's self-diagnosis against Qwen's behavior against ADR principles simultaneously. RAG retrieves per-query, not per-reasoning-chain.
+4. RAG would miss "negative evidence" — knowing that a post-mortem does NOT mention a problem is informative. RAG can't surface absence.
 
-When RAG would help: if you had 50+ ADRs, 20+ post-mortems, and 100+ test results. At that scale, retrieval beats full context.
-Your current scale is ideal for direct context.
+When RAG would help: if you had 50+ ADRs, 20+ post-mortems, and 100+ test results. At that scale, retrieval beats full context. Your current scale is ideal for direct context.
 
 
 
@@ -145,3 +138,11 @@ The pre-commit config follows a consistent pattern: validation hooks first (grou
 section. The CI workflow uses tj-actions/changed-files with files_yaml for selective triggering — logic group for script/test
 changes (runs tests), docs group for content changes (runs the tool).
 
+★ Insight ─────────────────────────────────────
+The pivot from extending validate_commit_msg.py (4 functions, 1 dataclass, 13 tests) to a single post-commit hook entry demonstrates SVA in practice — the generate_changelog.py --verbose already had all the logic. The original plan would have duplicated filtering logic across two scripts, creating a maintenance burden and violating the DRY principle. The amend tip lives in the hook entry (where it's contextually appropriate) rather than in the script (where it would be nonsensical for historical ranges like v1.0..v2.0).
+
+
+★ Insight ─────────────────────────────────────
+- The evidence pipeline follows a three-commit lifecycle: capture → extract → delete. However, since we already know the analysis target (A-26004), we can set extracted_into: A-26004 immediately rather than using null — this is valid when source and analysis are created in the same session.
+- Validation-as-confirmation: Not every evidence analysis produces a new ADR. When the analysis confirms existing architecture is sound, produces: [] is the correct signal — the value is in the documented rationale, not in a new decision.
+- Stage semantics matter: The key architectural insight is that post-commit is fundamentally non-blocking. Using it for validation creates an unfixable gap — the bad commit already exists. The current repo correctly reserves post-commit for informational-only output (changelog preview).
