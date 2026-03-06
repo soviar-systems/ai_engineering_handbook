@@ -1,14 +1,14 @@
 ---
 id: A-26005
-title: "Documentation Type Interfaces and Unified Validation Architecture"
+title: "Agentic OS Filesystem Architecture: Document Types, VFS, and Virtual Relational Layer"
 date: 2026-03-07
 status: active
 tags: [documentation, architecture, governance]
-sources: [S-26004, S-26005]
+sources: [S-26004, S-26005, S-26006]
 produces: []
 ---
 
-# A-26005: Documentation Type Interfaces and Unified Validation Architecture
+# A-26005: Agentic OS Filesystem Architecture: Document Types, VFS, and Virtual Relational Layer
 
 ## Problem Statement
 
@@ -18,7 +18,13 @@ ADR-26035 established the Evidence taxonomy (Decisions / Evidence / Governance) 
 
 The Agentic OS model (A-26002, S-26005) positions documentation as the file system of an AI-native operating system. In UNIX, every file has a type and metadata (the inode). In this system, every document should have a type and metadata (YAML frontmatter). The gap: UNIX has a VFS layer that provides a uniform interface across all file types. This repo has no equivalent — each validation script implements its own type-specific logic with no shared abstraction.
 
-This analysis applies the UNIX design system as a blueprint to design a Document Type Interface architecture for the Agentic OS.
+Beyond the typing gap, there is a **relational integrity gap**. Documents reference each other — analyses cite sources (`sources: [S-26004]`), ADRs produce artifacts (`produces: [ADR-26035]`). These are foreign key relationships, but no validation enforces them. A source ID can be typo'd, a referenced ADR can be deleted, and no CI gate catches it. The knowledge base has referential links but no referential integrity.
+
+There is also an **integration gap**. The Agentic OS model (A-26002) describes three layers — Control Plane (governance), Kernel (cognitive processing), Execution (sandboxed skills) — but the filesystem architecture that ties them together is not formalized. The document type system sits at the intersection of all three layers: governance defines types, the kernel queries types for routing, and execution produces new typed documents. Without a unified filesystem design, these layers cannot interoperate reliably.
+
+This analysis applies two theoretical foundations — **UNIX system design** and **Codd's relational theory** — as blueprints to design the Agentic OS filesystem architecture, with Document Type Interfaces as the VFS layer and a Virtual Relational Layer (VRL) providing referential integrity over Git/YAML.
+
+**Interim artifact caveat.** This analysis is itself an interim artifact. The Agentic OS methodology is under active revision — ADRs, the evidence pipeline, and the document type taxonomy are all subject to redesign as the OS architecture crystallizes. The structures described here should be understood as the current best model, not a final specification. The focus is on **interfaces** (stable contracts) rather than **implementations** (which will evolve).
 
 ## Key Insights
 
@@ -123,6 +129,99 @@ Six shared patterns are duplicated across 2+ scripts:
 | CLI / Error Reporting (argparse + exit codes) | All 10 scripts | ~30 LOC × 10 |
 
 Per SVA (ADR-26037): extraction is justified only when duplication causes maintenance pain or behavioral inconsistency. The first three patterns (frontmatter, sections, file discovery) are the strongest candidates — they implement the same logic with the same bugs and the same edge cases.
+
+### Virtual Relational Layer — Codd's Theory Applied to Git/YAML
+
+Traditional filesystems are hierarchical and opaque — they organize by location, not by relationship. Codd's relational model (1970) solved this exact problem for data: **Data Independence** — the logical structure of data is independent of its physical storage. The same principle applies to the Agentic OS filesystem.
+
+S-26006 proposes a **Virtual Relational Layer (VRL)** — treating the Git repository as a relational system without introducing an actual database (which would violate SVA C4: Orchestration Bloat):
+
+| Relational Concept | VRL Implementation | Example |
+|---|---|---|
+| **Tuple (row)** | YAML frontmatter (1NF — each field is atomic) | `id: A-26005`, `title: "..."`, `date: 2026-03-07` |
+| **Primary Key** | `id` field (globally unique, namespace-prefixed) | `A-26005`, `S-26006`, `ADR-26035` |
+| **Foreign Key** | `sources`, `produces`, `extracted_into` fields | `sources: [S-26004, S-26005]` |
+| **Schema** | `evidence.config.yaml`, `adr_config.yaml` | Required fields, controlled vocabularies |
+| **Shared Attribute Table** | `architecture.config.yaml` (parent config) | Tag vocabulary, shared metadata |
+| **Transaction** | Git commit (atomic, all-or-nothing) | Single commit changes source + analysis |
+| **Transaction Log** | Git history (append-only, durable) | `git log --all --full-history` |
+| **Constraint Check** | Validation scripts in CI/CD | `check_evidence.py` validates FK existence |
+| **Materialized View** | Build-time `catalog.json` (future) | Pre-computed index for agent queries |
+
+**Git provides ACID properties:**
+- **Atomicity** — a commit either succeeds entirely or fails entirely
+- **Consistency** — pre-commit hooks enforce schema constraints before writes
+- **Isolation** — branches provide working isolation (worktrees for parallel agents)
+- **Durability** — committed history is permanent; even deleted sources are recoverable via `git log --all --full-history`
+
+**Referential integrity** is the critical gap. Currently, an analysis can declare `sources: [S-99999]` and no validation catches the invalid FK. The VRL design requires a referential integrity gate: CI/CD validates that every value in `sources: []`, `produces: []`, and `extracted_into` exists as a valid primary key in the ecosystem. This is the `check_evidence.py` equivalent of a database FK constraint.
+
+**Normalization principles apply — but only to metadata.** Shared attribute tables (tag vocabularies, controlled status values) already live in config files rather than being duplicated in every document. This is 2NF normalization. The document body (Markdown text) remains denormalized — it is the "unstructured payload" that the relational layer does not govern. Over-normalizing the body would create artificial JOIN dependencies that hurt readability without improving integrity.
+
+**The JOIN problem.** Filesystems do not natively support JOINs. If an agent needs to answer "What ADRs resulted from research source S-26004?", it must scan the metadata of all ADR files looking for `sources` containing `S-26004`. For small repos this is acceptable. At scale, the solution is a **materialized view** — a `catalog.json` generated at build time that pre-computes the relational graph, enabling O(1) lookups by the agent. This is analogous to database indexing.
+
+```mermaid
+graph LR
+    subgraph Git_Layer ["Git (Transaction Log)"]
+        Commit[Atomic Commit = Transaction]
+        History[Git History = Durability]
+    end
+
+    subgraph VRL ["Virtual Relational Layer"]
+        FM["YAML Frontmatter = Tuple (1NF)"]
+        PK["id: A-26005 = Primary Key"]
+        FK["sources: S-26004 = Foreign Key"]
+        Config["config.yaml = Shared Attribute Table"]
+    end
+
+    subgraph Validation ["Validation = DBMS"]
+        IntCheck["check_evidence.py = FK Constraint"]
+        LinkCheck["check_broken_links.py = Referential Integrity"]
+        Catalog["catalog.json = Materialized View"]
+    end
+
+    Git_Layer --> VRL
+    VRL --> Validation
+
+    style Git_Layer fill:#e8eaf6,stroke:#283593
+    style VRL fill:#fff8e1,stroke:#f57f17
+    style Validation fill:#e8f5e9,stroke:#2e7d32
+```
+
+S-26006 rates the VRL methodology at WRC 0.925 (Production-Ready): E=0.95 (Codd's relational algebra is the most validated data theory in existence), A=0.85 (used in data catalogs and semantic web standards), P=0.95 (native to Git/YAML stack, zero runtime overhead).
+
+### Contract-Based Documentation — Docs as ISA
+
+S-26006 introduces a conceptual reframing that extends the AI-First Methodology principle: documentation is not just "content consumed by agents" — it is the **Instruction Set Architecture (ISA)** for the LLM processor.
+
+In traditional computing:
+- The **ISA** (x86, ARM) defines the contract between software and hardware — what instructions the processor can execute
+- **Header files** (.h) define the interface between caller and callee — what functions exist and their signatures
+- The **ABI** defines calling conventions — how data is passed between components
+
+In the Agentic OS:
+- **Doc-Type Interfaces** are the ISA — they define what "instructions" (document types) the system recognizes
+- **YAML frontmatter** is the header file — it declares the document's interface (type, capabilities, dependencies)
+- **Validation schemas** are the ABI — they enforce the contract between producers and consumers of documents
+
+This three-level layering has a precise precedent in HPC engineering. The [GEMM handbook](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb) documents the BLAS Interface / API / ABI hierarchy:
+
+| Layer | BLAS (HPC) | Agentic OS (Documentation) |
+|---|---|---|
+| **Interface** (semantic contract) | BLAS specification: "`SGEMM` must perform {math}`C = \alpha AB + \beta C`" | Doc-Type Interface: "an ADR must have status, sections, lifecycle" |
+| **API** (source-level binding) | CBLAS header: `void cblas_sgemm(...)` | YAML config: `adr_config.yaml` (field names, controlled vocabularies) |
+| **ABI** (runtime binding) | Compiled `.so` with calling conventions | Validation script: `check_adr.py` (the executable validator) |
+
+The BLAS standard originated c. 1972 and still governs HPC 50+ years later — implementations changed (Fortran → C → CUDA → ROCm), hardware changed (mainframes → GPUs → TPUs), but the **interface survived**. The GEMM handbook documents a cautionary counterexample: Soviet engineers built math code specific to the BESM-6 machine without standard interfaces, making migration to new hardware an arduous multi-year process.
+
+The lesson for the Agentic OS: **the interface is the asset, not the implementation.** Document Type Interfaces (`adr_config.yaml`, `evidence.config.yaml`) should be designed to outlive any specific validation tool (vadocs), agent (Claude, Gemini), or infrastructure (Git, GitHub Actions). Implementations will be replaced; interfaces persist.
+
+This creates a **Self-Documenting Runtime** where:
+- The **Documentation** is the **Control Plane** — it defines what the system is, what it decided, and what it can do
+- The **Agent/Sandbox** is the **Data Plane** — it executes tasks governed by the documentation contracts
+- The **Validation Engine** (vadocs) is the **Linker** — it ensures interface compliance before "execution" (deployment)
+
+The practical implication: when a new agent (Claude, Gemini, a local SLM) connects to this system, it reads the Doc-Type Interfaces to understand what the system offers — the same way a compiler reads header files to understand what functions are available. The agent doesn't need system-specific training; it needs to read the ISA.
 
 ## Taxonomy Design
 
@@ -368,6 +467,138 @@ The natural extraction boundary aligns with the UNIX syscall/VFS split:
 
 Each validation script is a "user space application" that calls syscalls. The Document Type Registry is the VFS that maps types to schemas. vadocs provides both layers — the kernel.
 
+### The Integrated Triple-Layer Architecture
+
+S-26006 synthesizes the UNIX design and relational theory into a unified Agentic OS architecture with three layers. This is the "full stack" that the document type system operates within:
+
+```mermaid
+graph TD
+    subgraph Control_Plane ["CONTROL PLANE (Relational Governance)"]
+        direction TB
+        Catalog[Knowledge Catalog: Git/YAML] --> Integrity[Referential Integrity Gates]
+        Integrity --> Schema[Doc-Type Interface Schemas]
+        Schema --> VFS[VFS Middleware: vadocs]
+    end
+
+    subgraph Kernel_Layer ["KERNEL LAYER (Cognitive OS)"]
+        direction TB
+        Planner[Planner: Context Manager]
+        Router[Router: Syscall Dispatcher]
+        MemP[Memory Pager: Tiered Search]
+    end
+
+    subgraph Execution_Layer ["EXECUTION LAYER (UNIX User Space)"]
+        direction TB
+        SKL[Skill Packages: uv/Python]
+        Sandbox[Sandbox: Container Isolation]
+    end
+
+    VFS ==>|Provides Metadata| Kernel_Layer
+    Kernel_Layer ==>|Dispatches Process| Execution_Layer
+    Execution_Layer ==>|Writes Evidence| Catalog
+
+    style Control_Plane fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style Kernel_Layer fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Execution_Layer fill:#fff3e0,stroke:#e65100,stroke-width:2px
+```
+
+| Layer | Function | UNIX Analogy | Relational Analogy | This Repo |
+|---|---|---|---|---|
+| **Control Plane** | Defines legal state space | `/etc/` + VFS | Schema + constraints | `*_config.yaml` + vadocs |
+| **Kernel Layer** | Manages cognitive resources | Scheduler + VM | Query optimizer | Agent framework (planner, router) |
+| **Execution Layer** | Runs isolated tasks | User space processes | Stored procedures | Skills in sandboxed `uv` environments |
+
+The layers form a **closed loop**: the Execution Layer produces evidence (new documents), which the Control Plane validates and catalogs, which the Kernel Layer queries for the next task. This is the "Self-Documenting Runtime" — execution produces documentation, documentation governs execution.
+
+The knowledge flow follows a relational pipeline where each artifact type feeds the next:
+
+```mermaid
+erDiagram
+    SOURCE ||--o{ ANALYSIS : "feeds"
+    ANALYSIS ||--o{ ADR : "justifies"
+    ADR ||--o{ SKILL : "governs"
+    SKILL ||--o{ EVIDENCE : "produces"
+    EVIDENCE ||--o{ ANALYSIS : "updates"
+```
+
+This cycle mirrors the BLAS ecosystem: benchmarks (evidence) inform standards (ADRs), standards govern implementations (skills), implementations produce performance data (evidence), which feeds the next benchmark cycle.
+
+The **Boot & Execution Cycle** describes how the three layers interact at runtime:
+
+```mermaid
+sequenceDiagram
+    participant Agent as Agentic Kernel
+    participant VRL as Virtual Relational Layer
+    participant VFS as VFS / vadocs
+    participant Sandbox as Skill Sandbox
+    participant Git as Git (Transaction Log)
+
+    Note over Agent,Git: BOOT PHASE
+    Agent->>VRL: Query: resolve task requirements
+    VRL->>VRL: JOIN metadata across frontmatter tuples
+    VRL-->>Agent: Return matched doc IDs + metadata
+
+    Note over Agent,Git: LINKING PHASE
+    Agent->>VFS: Load Doc-Type Interface for matched docs
+    VFS->>VFS: Validate schema compliance
+    VFS-->>Agent: Return validated document models
+
+    Note over Agent,Git: EXECUTION PHASE
+    Agent->>Sandbox: Fork process with skill logic
+    Sandbox->>Sandbox: Execute in isolated uv environment
+    Sandbox-->>Agent: Return structured result
+
+    Note over Agent,Git: PERSISTENCE PHASE (ACID WRITE)
+    Agent->>Git: Commit new evidence tuple
+    Git->>VRL: Update relational catalog
+    Git-->>Agent: Transaction committed
+```
+
+1. **Boot Phase (VRL Join)**: The kernel queries the Virtual Relational Layer — performs metadata JOINs across frontmatter tuples to find relevant documents for the current task. This is the `stat()` equivalent: read metadata without reading bodies.
+
+2. **Linking Phase (VFS Load)**: The VFS middleware loads Doc-Type Interfaces for matched documents, validates schema compliance, and returns typed document models. This is the "compile-time check" — ensuring the agent has well-formed inputs before execution.
+
+3. **Execution Phase (UNIX Sandbox)**: The kernel forks a process — spins up an isolated `uv` environment where the skill executes its logic. The sandbox prevents side effects from violating the documentation contract.
+
+4. **Persistence Phase (ACID Write)**: The output is wrapped in a new evidence tuple (a document with proper frontmatter) and committed to Git. The commit is atomic — either the entire change succeeds or nothing changes. Git history provides durability.
+
+The Tiered Cognitive Memory model maps onto this architecture, showing where different information types live and how they are accessed:
+
+```mermaid
+graph TB
+    subgraph T1 [Tier 1: Procedural - Skills]
+        direction TB
+        S_Doc[INTERFACE.md]
+        S_Code[__main__.py / uv package]
+        S_Doc --- S_Code
+    end
+
+    subgraph T2 [Tier 2: Episodic - Context]
+        direction TB
+        State[student_state.json]
+        Session[session_history.md]
+    end
+
+    subgraph T3 [Tier 3: Declarative - RAG]
+        direction TB
+        Handbook[Handbooks / ADRs]
+        Sources[Research Sources]
+    end
+
+    OS((Agentic OS Kernel))
+
+    T1 ==>|Registration| OS
+    T2 ==>|JIT Injection| OS
+    T3 ==>|Tag/Vector Retrieval| OS
+
+    style OS fill:#d1c4e9,stroke:#311b92,stroke-width:3px
+    style T1 fill:#fff3e0,stroke:#e65100
+    style T2 fill:#e8f5e9,stroke:#1b5e20
+    style T3 fill:#f3e5f5,stroke:#4a148c
+```
+
+The document type system is the **VFS middleware within the Control Plane** — one component of the full architecture, not the whole thing. It provides the typed, validated interface through which the Kernel Layer accesses the Knowledge Catalog. Without it, the kernel must parse untyped Markdown — the equivalent of an OS reading raw disk blocks without a filesystem.
+
 ### The Document Type Taxonomy
 
 Combining industry research with the repo's 13 discovered types, plus the UNIX filesystem hierarchy as the structural blueprint:
@@ -609,6 +840,28 @@ The source identifies three key UNIX kernel concepts that map to context window 
 
 This analysis extends S-26005's mapping by adding the **file type** and **VFS** rows — the document type system is the filesystem layer that was implicit but not articulated in the original Agentic OS model.
 
+### S-26006 Assessment — Virtual Relational Layer and Integrated Architecture
+
+The Gemini source (S-26006) extends S-26005's UNIX ↔ Agentic OS mapping with Codd's relational theory, producing two key contributions:
+
+**Contribution 1: The Virtual Relational Layer (VRL).** S-26006 resolves the "filesystem is hierarchical and messy" problem without introducing an actual database — which would violate SVA C4 (Orchestration Bloat). Instead, Git serves as the transaction log, YAML frontmatter serves as tuples, and validation scripts serve as the DBMS constraint checker. This is the relational model applied to docs-as-code: all the integrity benefits of a database, none of the runtime infrastructure.
+
+**Contribution 2: The Integrated Triple-Layer Architecture.** S-26005 provided the UNIX ↔ Agentic OS component mapping, but not the full system design. S-26006 introduces Control Plane / Kernel / Execution as the three layers, with the closed-loop cycle (execution produces evidence, evidence feeds governance, governance constrains execution). This provides the integration model that was missing.
+
+**The over-engineering question.** S-26006 explicitly addresses whether this design is over-engineered. The defense: for a static human-read knowledge base, relational rigor would be over-engineering. For an Agentic OS where AI agents must reliably navigate, filter, and produce documents without human supervision, referential integrity is not a luxury — it is "mechanical necessity." The SVA test: if the friction of maintaining structured metadata is outweighed by the reliability gain in agent-driven workflows, the complexity is justified.
+
+**Limitations.** S-26006's WRC scores (0.925 for VRL, 0.895 for integrated architecture) are model-generated assessments, not independently validated benchmarks. They should be treated as directional indicators of feasibility, not as production measurements.
+
+### Interim Architecture Caveat
+
+The structures described throughout this analysis — ADRs, evidence pipeline, 13 document types, vadocs, the VFS layer — are all **interim implementations**. The Agentic OS methodology is under active revision. The document type taxonomy, the evidence lifecycle, and even the ADR framework itself may be redesigned as the OS architecture crystallizes.
+
+This is not a weakness — it is an expected property of a system in the "kernel development" phase. UNIX itself went through multiple filesystem designs (S5FS → FFS → ext2 → ext4) before settling on mature abstractions. The Agentic OS is at the S5FS stage: the concepts are sound, but the specific implementations will evolve.
+
+The practical implication: **invest in interfaces, not implementations.** The Document Type Interface Contract (the YAML schema definitions) should be designed to survive implementation changes. A future validation engine might replace vadocs entirely — but if the interface contract is stable, the migration is painless. This mirrors the BLAS lesson from the [GEMM handbook](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb): the BLAS specification survived 50+ years of implementation changes because the interface was the asset, not the code behind it.
+
+The Agentic OS concept may eventually subsume or replace the ADR framework. If the Control Plane formalization proves more powerful than the current ADR lifecycle, ADRs might become one document type among many in a unified governance system rather than the privileged decision-making artifact. This analysis should be read as the "current best model" — a working hypothesis, not a final specification.
+
 ## Portability Design
 
 ### Hub-Spoke Ecosystem
@@ -631,6 +884,41 @@ This maps to DITA's specialization model:
 
 The `docs.config.yaml` at repo root is the "DITA map" — it declares which types exist in this repo and where their configs live. vadocs provides the base types; repos specialize them.
 
+The Virtual Relational Layer must also be portable: referential integrity validation (FK checks on `sources`, `produces`, `extracted_into`) needs to work across spoke repos that reference hub artifacts. A spoke repo's analysis might cite `sources: [S-26004]` from the hub — the FK checker must be able to resolve cross-repo primary keys.
+
+The solution draws from **PostgreSQL's namespace (schema) system**. In Postgres, the same table name can exist in multiple schemas — `sales.orders` and `inventory.orders` are distinct tables with independent data but potentially shared structure. The fully qualified name `schema.table.column` resolves all ambiguity.
+
+The analogy extends further: in PostgreSQL, a **cluster** is a set of independent databases managed by one server instance — each database has its own schemas and tables but shares the same `postmaster`, authentication, and wire protocol. The ecosystem is exactly a cluster: independent repos (databases) sharing the same validation engine (vadocs) and doc-type interfaces (the wire protocol). Each repo is autonomous — it has its own Git history, its own CI/CD, its own `catalog.json` — but it conforms to the shared interface contract, enabling cross-repo queries.
+
+Within each repo (database), document types serve as schemas:
+
+| PostgreSQL Concept | Agentic OS Equivalent | Example |
+|---|---|---|
+| **Cluster** | Ecosystem (all repos under one org) | `soviar-systems` — shared vadocs engine, shared interfaces |
+| **Database** | Repository (independent Git history, CI/CD) | `ai_engineering_handbook`, `vadocs`, `mentor_generator` |
+| **Schema** | Document type namespace | `evidence`, `architecture`, `learning` |
+| **Table** | Document type | `adr`, `analysis`, `source`, `skill` |
+| **Row** | Individual document | `A-26005`, `ADR-26035` |
+| **Fully qualified name** | `repo.type.id` | `ai_engineering_handbook.analysis.A-26005` |
+| **`search_path`** | Repo resolution order | Local repo first, then hub, then ecosystem |
+| **`pg_catalog`** | Shared doc-type interface definitions | `vadocs` package — the shared "system catalog" |
+
+Within a single repo, short IDs (`A-26005`) are unambiguous — like Postgres using the `search_path` to resolve unqualified table names within the current schema. Cross-repo references use the fully qualified form:
+
+```yaml
+# In vadocs repo — referencing a hub artifact
+sources: [ai_engineering_handbook.source.S-26004]
+
+# In the same repo — short form (schema = current repo)
+sources: [S-26004]
+```
+
+**Relationship to ADR-26031 (proposed).** ADR-26031 proposes renaming artifact IDs with repo prefixes (`HUB-26001` instead of `ADR-26001`) to avoid ID collisions across repos. This is a **primary key format change** — it solves collision avoidance but is a different problem from cross-repo FK resolution. ADR-26031 itself acknowledges an open question in its Consequences: *"Index Fragmentation — Spoke ADRs depend on the hub's ADRs. How to interconnect them?"* The Postgres namespace approach answers this question: namespaced references (`ai_engineering_handbook.adr.26035`) provide the interconnection mechanism that ADR-26031 is missing. The two concepts are complementary — ADR-26031 changes the PK format within a repo, while the namespace system provides cross-repo FK resolution. A final decision on ADR-26031 should incorporate the namespace design to solve both problems coherently.
+
+Each repo's `catalog.json` (materialized view) is a schema-local index; the federated catalog resolves cross-schema references by checking repos in `search_path` order: local → hub → ecosystem.
+
+This mapping is particularly powerful because PostgreSQL clusters support cross-database queries via `dblink` and **Foreign Data Wrappers (FDW)** — mechanisms that let one database transparently query tables in another database without copying data. In the Agentic OS, the equivalent is a spoke repo querying hub artifacts via the federated catalog: the spoke's validation script resolves `ai_engineering_handbook.adr.26035` by consulting the hub's `catalog.json` through a FDW-like mechanism, without duplicating the hub's data locally.
+
 ### Cross-Repo Tag Unification
 
 The tag vocabulary serves multiple consumers:
@@ -650,8 +938,10 @@ A unified tag vocabulary means the tag `model` used in an ADR, a commit, a skill
 - [Manifesto: Documentation as Source Code](/architecture/manifesto.md)
 - [Technical Debt Register](/misc/plan/techdebt.md) — TD-001 (common_required_fields)
 - [SemVer: Artifact Versioning Policy](/tools/docs/git/semver_artifact_versioning_policy_avp.ipynb) — version field standard
+- [GEMM: The Engineering Standard](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb) — BLAS Interface/API/ABI hierarchy, "the interface is the asset" principle
 - `S-26004: Gemini — Semantic Alignment Assessment` — WRC analysis, contract-first development
 - `S-26005: Qwen — Agentic OS Architecture Diagram` — UNIX ↔ Agentic OS mapping
+- `S-26006: Gemini — Agentic OS Design Review and Virtual Relational Layer` — VRL, integrated triple-layer architecture, Postgres namespace model
 
 ### External Standards
 - **DITA** (OASIS) — Document type specialization and schema validation
@@ -663,6 +953,8 @@ A unified tag vocabulary means the tag `model` used in an ADR, a commit, a skill
 - **GitLab CTRT** — Production docs-as-code type system
 - Maurice J. Bach, *The Design of the UNIX Operating System* (1986) — Process model, system calls, file system design
 - Kaiwan N. Billimoria, *Linux Kernel Programming* (2021) — Memory management, kernel modules, namespaces
+- E.F. Codd, *A Relational Model of Data for Large Shared Data Banks* (1970) — Foundational paper for the Virtual Relational Layer concept
+- Richard P. Gabriel, *Worse is Better* (1991) — Referenced in the over-engineering defense (SVA alignment)
 
 ### External Tools
 - **Astro Content Collections** — Zod-validated typed content
