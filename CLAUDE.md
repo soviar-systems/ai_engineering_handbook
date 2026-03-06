@@ -86,6 +86,9 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - ADR filenames use truncated slugs — always glob (`architecture/adr/adr_26NNN*.md`) to verify the exact filename before creating links
 - Internal file references must use markdown links `[Title](/repo-root-relative/path)` — backtick paths bypass `check_broken_links.py` validation
 - When linking to a Jupytext-paired file, always use the `.ipynb` extension — `check-link-format` hook rejects `.md` links when a paired `.ipynb` exists
+- Before committing, run `uv run tools/scripts/check_broken_links.py` and `uv run tools/scripts/check_link_format.py` to find stale links — fix them proactively instead of waiting for hook failures
+- After deleting source files (three-commit workflow step 3), convert markdown links to deleted sources into backtick references (`S-YYNNN: Title`) in analysis files
+- ADR frontmatter `date` is the birth date (no `options.birth` field yet) — do not update it on minor edits. Analysis `date` can be updated freely
 
 **Configuration:**
 - Use placeholders like `[IP_ADDRESS]` or `[DOMAIN]` instead of real values
