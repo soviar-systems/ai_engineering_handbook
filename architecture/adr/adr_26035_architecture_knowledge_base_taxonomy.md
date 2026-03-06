@@ -2,7 +2,7 @@
 id: 26035
 title: "Architecture Knowledge Base Taxonomy"
 date: 2026-02-26
-status: proposed
+status: accepted
 superseded_by: null
 tags: [governance, documentation, architecture]
 ---
@@ -13,7 +13,7 @@ tags: [governance, documentation, architecture]
 2026-02-26
 
 ## Status
-proposed
+accepted
 
 ## Context
 

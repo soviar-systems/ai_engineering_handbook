@@ -3,7 +3,7 @@ id: S-26001
 title: "Gemini — Skills Architecture, Tiered Memory, and Package-Driven Infrastructure"
 date: 2026-02-28
 model: gemini-3.0-flash
-extracted_into: null
+extracted_into: A-26002
 ---
 
 # S-26001: Gemini — Skills Architecture, Tiered Memory, and Package-Driven Infrastructure

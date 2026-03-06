@@ -51,6 +51,9 @@ ADR-26028
 ADR-26029
 : [pyproject.toml as Tool Configuration Hub](/architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md)
 
+ADR-26035
+: [Architecture Knowledge Base Taxonomy](/architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md)
+
 ADR-26037
 : [Smallest Viable Architecture (SVA) Constraint Framework](/architecture/adr/adr_26037_smallest_viable_architecture_constraint_framework.md)
 
@@ -91,9 +94,6 @@ ADR-26033
 
 ADR-26034
 : [Agentic OS Paradigm: Skills as Composable Applications](/architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md)
-
-ADR-26035
-: [Architecture Knowledge Base Taxonomy](/architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md)
 
 ADR-26036
 : [Config File Location and Naming Conventions](/architecture/adr/adr_26036_config_file_location_and_naming_conventions.md)
