@@ -98,6 +98,9 @@ ADR-26034
 ADR-26036
 : [Config File Location and Naming Conventions](/architecture/adr/adr_26036_config_file_location_and_naming_conventions.md)
 
+ADR-26038
+: [Context Engineering as Core Design Principle](/architecture/adr/adr_26038_context_engineering_as_core_design_principle.md)
+
 :::
 
 ## Historical Context

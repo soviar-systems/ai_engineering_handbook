@@ -146,3 +146,37 @@ The pivot from extending validate_commit_msg.py (4 functions, 1 dataclass, 13 te
 - The evidence pipeline follows a three-commit lifecycle: capture → extract → delete. However, since we already know the analysis target (A-26004), we can set extracted_into: A-26004 immediately rather than using null — this is valid when source and analysis are created in the same session.
 - Validation-as-confirmation: Not every evidence analysis produces a new ADR. When the analysis confirms existing architecture is sound, produces: [] is the correct signal — the value is in the documented rationale, not in a new decision.
 - Stage semantics matter: The key architectural insight is that post-commit is fundamentally non-blocking. Using it for validation creates an unfixable gap — the bad commit already exists. The current repo correctly reserves post-commit for informational-only output (changelog preview).
+
+★ Insight ─────────────────────────────────────
+pgvector aligns well with the compass analysis findings:
+- "80% of work is data engineering, governance, and workflow integration" — having one Postgres instance instead of Postgres +
+separate vector DB halves the infrastructure surface
+- The Postgres namespace model from A-26005 becomes literal, not metaphorical — you're already thinking in Postgres terms for
+cross-repo doc governance, now the vector store lives in the same conceptual space
+- Hybrid search (semantic + keyword) is what production memory systems use (Zep, Mastra) — pgvector + tsvector gives you both in
+one engine without adding dependencies
+─────────────────────────────────────────────────
+
+
+
+this is why I developed the concept of the Agentic OS. I planned to build the general purpose agent and
+run it with the different skills for each task: the skills for interviewing, the skills for research, the skill for mentor
+system prompt generation, and the very mentor skill (generated dynamically for each new course). So, the RAG is the common
+source. More over, one of the research skill task's is to create a reference list and the user or other agents/skills add them
+to the RAG.
+
+● Now it clicks — the mentor_generator is not a standalone app, it's the first application running on your Agentic OS. The skills are
+the composable units, the RAG is shared infrastructure, and the agent is the kernel that dispatches skills.
+
+★ Insight ─────────────────────────────────────
+This reframes the entire roadmap. The compass analysis warned against building a grand OS top-down, but it also said the winner
+will "emerge from a working runtime that accretes capabilities because developers keep needing one more thing." The
+mentor_generator IS that working runtime. You're not building an OS then looking for applications — you're building an application
+that naturally needs OS primitives:
+- Skills = the interview, research, generation, and mentor skills
+- Shared memory = pgvector RAG (the /usr/share/ of the OS)
+- Process state = course_history, session_history (the /proc/ from A-26005)
+- Governance = vadocs validates the skill configs, templates, ADRs
+
+This is exactly the LINPACK → BLAS path. Build the working app, extract the OS primitives as they prove necessary.
+─────────────────────────────────────────────────

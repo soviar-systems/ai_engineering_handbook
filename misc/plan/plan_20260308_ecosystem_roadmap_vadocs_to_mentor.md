@@ -1,0 +1,212 @@
+---
+title: "Ecosystem Roadmap: From vadocs Governance to Production Mentor Agent"
+date: 2026-03-08
+---
+
+# Ecosystem Roadmap: vadocs to Production Mentor Agent
+
+## Goal
+
+A general-purpose local agent that runs skills for different tasks. The first complete application: a personalized AI learning mentor with RAG-backed knowledge, web research, and session continuity. Deployable from repo with `podman play kube` + API key.
+
+## Dependency Chain
+
+```
+vadocs + vadocs-git (ecosystem governance)
+  | validates docs in
+ai_engineering_book (hub — ADRs, evidence, standards)
+  | defines standards consumed by
+mentor_generator (first OS application)
+  | runs on
+agent runtime (skill dispatcher + shared RAG)
+  | uses
+pgvector in Postgres (shared semantic memory, Podman pod via Kube YAML)
+```
+
+## Phase 1: Foundation (Governance Automation)
+
+Order: Decide (ADRs) -> Implement (scripts in hub) -> Extract (ecosystem packages)
+
+### 1.0 Compass Source Artifact
+
+Formalize the compass analysis as S-26007 in architecture/evidence/sources/.
+
+### 1.05 Revise ADRs 26031-26034
+
+| ADR | Action | Reason |
+|---|---|---|
+| 26031 (namespaces) | Revise or supersede | A-26005's Postgres namespace model is more powerful than flat PREFIX-YYNNN |
+| 26032 (tiered memory) | Revise and accept | Compass validates three-tier model; needs concrete tech choices (pgvector, litellm.token_counter) |
+| 26033 (virtual monorepo) | Finish and accept | uv workspace approach is sound; consequences section missing |
+| 26034 (skills as apps) | Revise and accept | Needs compass refinements: SKILL.md convergence, single-agent emphasis, MCP integration |
+
+### 1.1 Strategic ADRs
+
+In dependency order:
+
+1. ADR-26038: Context Engineering as Core Principle
+   - Single-agent + skill dispatch
+   - Context management is the product, not orchestration
+   - Grounded in S-26007 (compass analysis)
+
+2. ADR-26039: pgvector + Podman Kube YAML as Ecosystem Standard
+   - One Postgres for structured + vector data
+   - Podman pods via Kube YAML manifests (no Docker, no Compose)
+   - Shared across all ecosystem projects
+
+3. ADR-26040: Common Frontmatter Standard
+   - 7-8 universal fields from A-26005 (title, description, type, date, birth, version, tags, token_size)
+   - description field required for agent progressive disclosure
+   - token_size auto-maintained by pre-commit hook
+   - Resolves TD-001
+
+4. ADR-26041: Ecosystem Package Boundary
+   - vadocs = doc content validation (frontmatter, sections, cross-refs, type registry)
+   - vadocs-git = git policy governance (commit messages, branch naming, changelog)
+   - vadocs init for repo scaffolding
+   - Org-agnostic, configurable prefixes (no hardcoded values)
+
+5. ADR-26042: Skills as Progressive Disclosure Units
+   - Revise ADR-26034 with compass findings on SKILL.md convergence
+   - MCP integration for tool connectivity
+   - Single-agent emphasis
+
+6. ADR-26043: Ephemeral File Lifecycle
+   - Cleanup policy for sources, implemented plans, insights
+   - check_ephemeral_files.py script
+   - Maps to A-26005 RUNTIME doc types (/proc/, /var/spool/)
+
+7. ADR-26044: Tech Debt Governance
+   - Formalize tracking format, ownership, review cadence
+   - Resolves TD-002
+
+### 1.2 Implement Validation Scripts in Hub
+
+Based on the ADRs:
+- Common frontmatter validation (ADR-26040) in hub scripts
+- Evidence type validators for new types from A-26005 taxonomy
+- Git policy validators (commit msg, branch naming) — separate from doc validators
+- Fix check_adr.py interactive input bug
+- Fix generate_changelog.py excluded commits bug
+
+### 1.3 Extract vadocs v0.2.0
+
+Extract shared primitives from hub tools/scripts/ into vadocs:
+
+Syscalls (kernel):
+- parse_frontmatter(), extract_sections(), find_files()
+- load_config(), ValidationError, report_errors()
+- Common patterns across check_adr.py, check_evidence.py, check_broken_links.py
+
+VFS (registry):
+- DocumentTypeRegistry, common frontmatter schema, type resolution
+- Based on ADR-26040
+
+Validators (user space):
+- ADR validator, Evidence validator, generic Frontmatter validator
+- Existing vadocs v0.1.0 + check_evidence.py logic
+
+Hub scripts become thin wrappers calling vadocs.
+
+### 1.4 Extract vadocs-git v0.1.0
+
+- validate_commit_msg.py -> vadocs-git
+- generate_changelog.py -> vadocs-git
+- check_script_suite.py -> vadocs-git
+- Pre-commit hooks orchestrate both vadocs and vadocs-git
+
+### 1.5 Install in Ecosystem
+
+- mentor_generator installs vadocs + vadocs-git
+- All three repos get pre-commit hooks using ecosystem packages
+
+## Phase 2: Runtime (Agent + Infrastructure)
+
+### 2.0 Research: Frontier CLI Agents
+
+Analyze internals of aider, gemini-cli, qwen-code, claude-code:
+- Architecture patterns
+- Context management strategies
+- Tool integration approaches
+- What to leverage (like litellm from aider)
+
+### 2.1 ADR: Skill Dispatcher Architecture
+
+In mentor_generator, informed by 2.0 research:
+- Skill registration and dispatch
+- Shared context management (the "kernel")
+- Tool integration via litellm tool_call / MCP
+
+### 2.2 ADR: Context Window Management
+
+Three scenarios the mentor must handle:
+- (a) Context almost full -> summarize and continue (page fault -> swap)
+- (b) User explicitly stops -> graceful save (SIGTERM)
+- (c) Session goals complete -> fill session log template (exit(0))
+Token counting via litellm.token_counter() per provider.
+
+### 2.3 pgvector + Podman Pod
+
+- Kube YAML manifest for Postgres + pgvector
+- podman play kube for local deployment
+- Schema for structured data + vector embeddings
+
+### 2.4 RAG Indexer + Hybrid Retriever
+
+- CLI command to index books/articles (PDF, EPUB, markdown)
+- Hybrid search: pgvector similarity + tsvector keyword
+- Exposed as a tool to the agent
+- Embedding model configurable (local sentence-transformers or API)
+
+### 2.5 Tool Integration
+
+- litellm tool_call for LLM-native tool use
+- MCP where appropriate for external services
+- Web search tool
+
+## Phase 3: Application (The Mentor)
+
+### 3.1 Refactor Pipeline into Skills
+
+Current mentor_generator pipeline becomes skills:
+- collector.py -> Interview skill (questions as data, logic generic)
+- creative_engine.py -> Generation skill (template + context -> filled output)
+- validator.py + template_engine.py stay as pipeline infrastructure
+
+### 3.2 Research Skill
+
+- Web search + source analysis
+- Reference list creation (10-15 foundational sources)
+- Index sources to RAG (pgvector)
+- Output: JSON with strict structure per template
+
+### 3.3 Mentor Skill
+
+- Dynamic config loaded as system prompt
+- RAG-backed knowledge retrieval during learning sessions
+- Course_history managed automatically (episodic memory)
+- Context window management (three scenarios from 2.2)
+
+### 3.4 End-to-End Flow
+
+```
+uv run python -m agent.main /start
+  -> Interview skill (collect answers)
+  -> Research skill (web search, build references, index to RAG)
+  -> Generate skill (create mentor config)
+  -> "Your mentor is ready. Start learning? [Y/n]"
+  -> Mentor skill loads (dynamic config as system prompt)
+  -> Learning session begins (RAG-backed, course_history managed)
+```
+
+## Key Technical Decisions
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Container runtime | Podman with Kube YAML manifests | Native tooling, rootless, no daemon |
+| LLM connectivity | litellm | Any provider, single API (leveraged from aider) |
+| Vector store | pgvector in Postgres | Ecosystem standard, one DB for structured + vector |
+| Token counting | litellm.token_counter() | Provider-aware, already a dependency |
+| Doc governance | vadocs + vadocs-git | UNIX philosophy, separate concerns, ecosystem plugins |
+| Agent architecture | Single agent + skill dispatch | Compass evidence: single > multi-agent |
+| Context strategy | Proactive management, three exit scenarios | OS process model (page fault, SIGTERM, exit(0)) |
