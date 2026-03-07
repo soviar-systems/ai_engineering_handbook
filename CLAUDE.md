@@ -89,9 +89,21 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Before committing, run `uv run tools/scripts/check_broken_links.py` and `uv run tools/scripts/check_link_format.py` to find stale links — fix them proactively instead of waiting for hook failures
 - After deleting source files (three-commit workflow step 3), convert markdown links to deleted sources into backtick references (`S-YYNNN: Title`) in analysis files
 - ADR frontmatter `date` is the birth date (no `options.birth` field yet) — do not update it on minor edits. Analysis `date` can be updated freely
+- Never link from persistent artifacts (ADRs, analyses) to ephemeral files (`misc/plan/`, `misc/todo.md`) — use backtick references instead
+- Never reference "planned ADR-NNNNN" in documents — either link to an existing ADR or reference the problem/tracking location (e.g., `techdebt.md`)
+- ADR Decision sections: concise statements with references. Evidence details and measurements belong in Consequences
+- When ADRs reference external projects (e.g., `mentor_generator`, `vadocs`), provide inline context — ADRs are long-living documents read without prior session knowledge
+- Evidence source files: `S-YYNNN_<slug>.md` naming with frontmatter fields `id`, `title`, `date`, `model`, `extracted_into` (see `evidence.config.yaml`)
 
 **Configuration:**
 - Use placeholders like `[IP_ADDRESS]` or `[DOMAIN]` instead of real values
+
+**Containerization:**
+- Use Podman, never Docker — Podman is the production tool in this ecosystem
+- Use Kube YAML manifests runnable via `systemctl --user`, never Docker Compose or Podman Compose — ADR pending
+
+**Ephemeral Files:**
+- `misc/todo.md` is plain text (no markdown formatting) — treat as an ephemeral scratch notebook
 
 ## CI/CD Pipeline
 
