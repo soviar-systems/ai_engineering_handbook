@@ -61,39 +61,39 @@ In dependency order:
    - Shared across all ecosystem projects
    - Also created S-26011 (pgvector viability + logic locality) and A-26007 extracting insights
 
-3. ADR-260XX: ← NEXT Podman Kube YAML as Deployment Standard
-   - Podman pods via Kube YAML manifests (no Docker, no Compose)
-   - Applies to all containerized services (Postgres, future services)
-   - Referenced as "ADR pending" in CLAUDE.md
+3. ADR-26040: Podman Kube YAML as Deployment Standard ✅
+   - Kube YAML manifests as single deployment artifact
+   - `podman-kube@.service` systemd template for lifecycle management
+   - Rootless by default, orchestrator-independent (ADR-26009)
 
-4. ADR-260XX: Server-Side vs Client-Side Context Management
+4. ADR-260XX: ← NEXT Server-Side vs Client-Side Context Management
    - Research: can Postgres server-side functions (stored procedures, triggers) reduce client-side latency for context operations?
    - Impacts mentor_generator agent design (the first ecosystem agent)
    - Trade-offs: self-contained DB logic vs Python flexibility
 
-5. ADR-26040: Common Frontmatter Standard
+5. ADR-26041: Common Frontmatter Standard
    - 7-8 universal fields from A-26005 (title, description, type, date, birth, version, tags, token_size)
    - description field required for agent progressive disclosure
    - token_size auto-maintained by pre-commit hook
    - Resolves TD-001
 
-6. ADR-26041: Ecosystem Package Boundary
+6. ADR-26042: Ecosystem Package Boundary
    - vadocs = doc content validation (frontmatter, sections, cross-refs, type registry)
    - vadocs-git = git policy governance (commit messages, branch naming, changelog)
    - vadocs init for repo scaffolding
    - Org-agnostic, configurable prefixes (no hardcoded values)
 
-7. ADR-26042: Skills as Progressive Disclosure Units
+7. ADR-26043: Skills as Progressive Disclosure Units
    - Revise ADR-26034 with compass findings on SKILL.md convergence
    - MCP integration for tool connectivity
    - Single-agent emphasis
 
-8. ADR-26043: Ephemeral File Lifecycle
+8. ADR-26044: Ephemeral File Lifecycle
    - Cleanup policy for sources, implemented plans, insights
    - check_ephemeral_files.py script
    - Maps to A-26005 RUNTIME doc types (/proc/, /var/spool/)
 
-9. ADR-26044: Tech Debt Governance
+9. ADR-26045: Tech Debt Governance
    - Formalize tracking format, ownership, review cadence
    - Resolves TD-002
 

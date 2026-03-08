@@ -98,6 +98,9 @@ ADR-26038
 ADR-26039
 : [pgvector as Ecosystem Database Standard](/architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md)
 
+ADR-26040
+: [Podman Kube YAML as Deployment Standard](/architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md)
+
 :::
 
 ## Historical Context

@@ -55,6 +55,7 @@ The repository is organized around a six-layer AI system architecture:
 When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_<descriptive_slug>.md, ONLY then start implementation. After the plan is fully implemented, move it to misc/plan/implemented/. This is needed to save the history of the decisions made between context switches.
 
 **MyST Notebooks:**
+- `myst.yml` abbreviations must be in alphabetical order
 - Never convert `{code-cell}` blocks to standard markdown code blocks
 - Always preserve MyST directive syntax exactly
 - Notebooks (.ipynb) and markdown (.md) files are paired via Jupytext - editing one requires syncing
@@ -80,27 +81,31 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 **ADRs and Evidence Artifacts:**
 - To validate artifacts, run the script (e.g., `check_evidence.py`). Only run the script's test suite (`pytest test_check_evidence.py`) when the script itself was modified
 - Writing quality standards, evidence pipeline, status transitions, and operational rules: see [Architecture Decision Workflow](/architecture/architecture_decision_workflow_guide.md)
-- Evidence artifact sections are validated by `check_evidence.py` against `evidence.config.yaml` — analysis artifacts allow: Problem Statement, References, Approach Evaluation, Taxonomy Design, Key Insights, Rejected Ideas, Research Pipeline Model, Portability Design
+- Evidence artifact sections are validated by `check_evidence.py` against `evidence.config.yaml`
 - `check_adr.py` operates on all ADRs at once (no file arguments)
 - ADR frontmatter `status` determines index section placement (see `adr_config.yaml`)
 - ADR filenames use truncated slugs — always glob (`architecture/adr/adr_26NNN*.md`) to verify the exact filename before creating links
 - Internal file references must use markdown links `[Title](/repo-root-relative/path)` — backtick paths bypass `check_broken_links.py` validation
 - When linking to a Jupytext-paired file, always use the `.ipynb` extension — `check-link-format` hook rejects `.md` links when a paired `.ipynb` exists
 - Before committing, run `uv run tools/scripts/check_broken_links.py` and `uv run tools/scripts/check_link_format.py` to find stale links — fix them proactively instead of waiting for hook failures
-- After deleting source files (three-commit workflow step 3), convert markdown links to deleted sources into backtick references (`S-YYNNN: Title`) in analysis files
 - ADR frontmatter `date` is the birth date (no `options.birth` field yet) — do not update it on minor edits. Analysis `date` can be updated freely
-- Never link from persistent artifacts (ADRs, analyses) to ephemeral files (`misc/plan/`, `misc/todo.md`) — use backtick references instead
+- Never link from persistent artifacts (ADRs, analyses) to ephemeral files (`misc/plan/`, `misc/todo.md`, `evidence/sources/`) — use backtick references instead
 - Never reference "planned ADR-NNNNN" in documents — either link to an existing ADR or reference the problem/tracking location (e.g., `techdebt.md`)
 - ADR Decision sections: concise statements with references. Evidence details and measurements belong in Consequences
 - When ADRs reference external projects (e.g., `mentor_generator`, `vadocs`), provide inline context — ADRs are long-living documents read without prior session knowledge
 - Evidence source files: `S-YYNNN_<slug>.md` naming with frontmatter fields `id`, `title`, `date`, `model`, `extracted_into` (see `evidence.config.yaml`)
+- When given a raw LLM dialogue file, save it as a proper source artifact (`S-YYNNN`) with frontmatter, then create an analysis (`A-YYNNN`) extracting actionable insights
+- One ADR = one decision. If two concerns have independent justifications and alternatives, split them
+- ADR examples should be generic (e.g., `project_alpha`), not tied to specific ecosystem projects — ADRs outlive current project details
+- Do not import external evaluation frameworks (e.g., WRC scores) into ADRs — reference conclusions, not foreign metrics
+- Do not include unverified benchmark numbers — either cite the source or remove
 
 **Configuration:**
 - Use placeholders like `[IP_ADDRESS]` or `[DOMAIN]` instead of real values
 
 **Containerization:**
 - Use Podman, never Docker — Podman is the production tool in this ecosystem
-- Use Kube YAML manifests runnable via `systemctl --user`, never Docker Compose or Podman Compose — ADR pending
+- Use Kube YAML manifests runnable via `systemctl --user`, never Docker Compose or Podman Compose (ADR-26040)
 
 **Ephemeral Files:**
 - `misc/todo.md` is plain text (no markdown formatting) — treat as an ephemeral scratch notebook
