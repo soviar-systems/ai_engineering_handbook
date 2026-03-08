@@ -34,8 +34,10 @@ project:
     FPGA: Field-Programmable Gate Arrays
     GEMM: GEneral Matrix-Matrix multiplication
     GEMV: General Matrix-Vector multiply, a special case of GEMM
+    HA: High Availability
     HDL: Hardware Description Languages
     HLS: High-Level Synthesis
+    HNSW: Hierarchical Navigable Small World
     HPC: High-Performance Computing
     JSON: JavaScript Object Notation
     KV: Key-Value Cache

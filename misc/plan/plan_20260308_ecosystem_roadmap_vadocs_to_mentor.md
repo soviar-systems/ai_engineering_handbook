@@ -27,58 +27,73 @@ pgvector in Postgres (shared semantic memory, Podman pod via Kube YAML)
 
 Order: Decide (ADRs) -> Implement (scripts in hub) -> Extract (ecosystem packages)
 
-### 1.0 Compass Source Artifact
+### 1.0 Compass Source Artifact ✅
 
-Formalize the compass analysis as S-26007 in architecture/evidence/sources/.
+Formalized as S-26007 in architecture/evidence/sources/.
+Also created S-26008 (LangChain vs production agents), S-26009 (pgvector RAG), S-26010 (stateless JIT), and analysis A-26006 extracting insights from all three.
 
-### 1.05 Review ADRs 26031-26034
+### 1.05 Review ADRs 26031-26034 ✅
 
 Proposed ADRs from the initial Agentic OS brainstorm. Valid concepts absorbed into ADR-26038 and subsequent ADRs.
 
-| ADR | Action | Reason |
+| ADR | Action | Status |
 |---|---|---|
-| 26031 (namespaces) | Reject | Problem is real but proposed solution (string prefixes) is weaker than A-26005 Postgres namespace model |
-| 26032 (tiered memory) | Keep proposed | Procedural vs declarative split is orthogonal to ADR-26038's three-tier memory; needs completion |
-| 26033 (virtual monorepo) | Keep proposed | Valid independent problem (ecosystem repo interaction via uv workspaces); needs completion |
-| 26034 (skills as apps) | Reject | Grand "Agentic OS" framing replaced by context engineering (ADR-26038); skills concept survives in ADR-26038 and planned ADR-26042 |
+| 26031 (namespaces) | Rejected | Problem real but string prefixes weaker than A-26005 Postgres namespace model |
+| 26032 (tiered memory) | Kept proposed | Procedural vs declarative split orthogonal to ADR-26038; needs completion |
+| 26033 (virtual monorepo) | Kept proposed | Valid independent problem (ecosystem repo interaction); needs completion |
+| 26034 (skills as apps) | Rejected | Grand OS framing replaced by context engineering (ADR-26038); valid concepts acknowledged |
+
+Also defined status transition rules in adr_config.yaml (proposed can only go to accepted/rejected, never superseded). Guide updated to reference config as SSoT. Script enforcement pending (see 1.2).
 
 ### 1.1 Strategic ADRs
 
 In dependency order:
 
-1. ADR-26038: Context Engineering as Core Principle
+1. ADR-26038: Context Engineering as Core Principle ✅
    - Single-agent + skill dispatch
    - Context management is the product, not orchestration
    - Grounded in S-26007 (compass analysis)
 
-2. ADR-26039: pgvector + Podman Kube YAML as Ecosystem Standard
+2. ADR-26039: pgvector as Ecosystem Database Standard ✅
    - One Postgres for structured + vector data
-   - Podman pods via Kube YAML manifests (no Docker, no Compose)
+   - Schema-per-project isolation
+   - Deployment-agnostic (container or local package)
    - Shared across all ecosystem projects
+   - Also created S-26011 (pgvector viability + logic locality) and A-26007 extracting insights
 
-3. ADR-26040: Common Frontmatter Standard
+3. ADR-260XX: ← NEXT Podman Kube YAML as Deployment Standard
+   - Podman pods via Kube YAML manifests (no Docker, no Compose)
+   - Applies to all containerized services (Postgres, future services)
+   - Referenced as "ADR pending" in CLAUDE.md
+
+4. ADR-260XX: Server-Side vs Client-Side Context Management
+   - Research: can Postgres server-side functions (stored procedures, triggers) reduce client-side latency for context operations?
+   - Impacts mentor_generator agent design (the first ecosystem agent)
+   - Trade-offs: self-contained DB logic vs Python flexibility
+
+5. ADR-26040: Common Frontmatter Standard
    - 7-8 universal fields from A-26005 (title, description, type, date, birth, version, tags, token_size)
    - description field required for agent progressive disclosure
    - token_size auto-maintained by pre-commit hook
    - Resolves TD-001
 
-4. ADR-26041: Ecosystem Package Boundary
+6. ADR-26041: Ecosystem Package Boundary
    - vadocs = doc content validation (frontmatter, sections, cross-refs, type registry)
    - vadocs-git = git policy governance (commit messages, branch naming, changelog)
    - vadocs init for repo scaffolding
    - Org-agnostic, configurable prefixes (no hardcoded values)
 
-5. ADR-26042: Skills as Progressive Disclosure Units
+7. ADR-26042: Skills as Progressive Disclosure Units
    - Revise ADR-26034 with compass findings on SKILL.md convergence
    - MCP integration for tool connectivity
    - Single-agent emphasis
 
-6. ADR-26043: Ephemeral File Lifecycle
+8. ADR-26043: Ephemeral File Lifecycle
    - Cleanup policy for sources, implemented plans, insights
    - check_ephemeral_files.py script
    - Maps to A-26005 RUNTIME doc types (/proc/, /var/spool/)
 
-7. ADR-26044: Tech Debt Governance
+9. ADR-26044: Tech Debt Governance
    - Formalize tracking format, ownership, review cadence
    - Resolves TD-002
 

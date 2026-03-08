@@ -95,6 +95,9 @@ ADR-26036
 ADR-26038
 : [Context Engineering as Core Design Principle](/architecture/adr/adr_26038_context_engineering_as_core_design_principle.md)
 
+ADR-26039
+: [pgvector as Ecosystem Database Standard](/architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md)
+
 :::
 
 ## Historical Context
