@@ -2,7 +2,7 @@
 id: 26034
 title: "Agentic OS Paradigm: Skills as Composable Applications"
 date: 2026-02-25
-status: proposed
+status: rejected
 superseded_by: null
 tags: [architecture, context_management]
 ---
@@ -13,7 +13,20 @@ tags: [architecture, context_management]
 2026-02-25
 
 ## Status
-proposed
+rejected
+
+## Rejection Rationale
+
+The "Agentic OS" framing — treating the agent as a full operating system with processors, OS layers, and applications — led to top-down architectural design (VFS, VRL, Document Type Registry) that was growing in complexity without a working runtime to validate it. A comprehensive landscape analysis ([S-26007](/architecture/evidence/sources/S-26007_compass_realistic_state_of_agentic_ai_2026.md)) revealed that production agent success correlates with context engineering simplicity, not architectural sophistication.
+
+{term}`ADR-26038` replaces the grand OS framing with **context engineering as the core design principle**: single-agent with skill dispatch, three-tier memory, and context budget as a first-class constraint. The valid concepts from this ADR survive:
+
+- **Skills as composable units** — formalized in {term}`ADR-26038` as progressive disclosure units with SKILL.md format, to be detailed in a future ADR-26042
+- **Three-tier architecture (LLM / Agent / Skills)** — reframed as three-tier memory (working / episodic / semantic) in {term}`ADR-26038`
+- **Procedural vs declarative knowledge split** — preserved in {term}`ADR-26032` as an orthogonal concern
+- **SKILL.md + tools/ + tests/ folder structure** — validated by cross-vendor convergence (Anthropic, OpenAI) documented in S-26007
+
+The OS metaphor remains useful for communication but is no longer the architectural driver.
 
 ## Context
 In the search for a viable, composable, and production-level architecture for a spoke repo "Mentor Generator," we must recognize that the paradigm has shifted from **monolithic prompting** to a **layered ["Agentic OS"](https://www.youtube.com/watch?v=CEvIs9y1uog) strategy**.

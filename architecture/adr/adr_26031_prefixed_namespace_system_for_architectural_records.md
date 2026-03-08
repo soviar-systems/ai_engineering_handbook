@@ -2,7 +2,7 @@
 id: 26031
 title: "Prefixed Namespace System for Architectural Records"
 date: 2026-02-25
-status: proposed
+status: rejected
 superseded_by: null
 tags: [governance, documentation, workflow]
 ---
@@ -13,7 +13,13 @@ tags: [governance, documentation, workflow]
 2026-02-25
 
 ## Status
-proposed
+rejected
+
+## Rejection Rationale
+
+The namespace collision problem is real — when agents consume documentation from multiple ecosystem repos, duplicate IDs (e.g., `ADR-26001` exists in both the hub and mentor_generator) create confusion without full paths. However, the proposed solution — flat string prefixes like `HUB-`, `MNT-` — is a weak approach that doesn't solve the deeper problem of cross-repo discoverability and index fragmentation (acknowledged in the proposal's own unresolved negative consequence).
+
+[A-26005](/architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md) documents a Postgres-like namespace model (schema-per-repo with cross-schema queries) that provides a structurally superior alternative: logical isolation with the ability to query across repos when needed. That approach should be formalized as a dedicated ADR.
 
 ## Context
 As the ecosystem expands into a hub-and-spoke model {term}`ADR-26020`, maintaining a single global incrementing ID for ADRs (e.g., `ADR-26001`) has become impossible. Multiple repositories are generating overlapping IDs, leading to "documentation debt" where it is unclear which decision governs which repository.

@@ -31,14 +31,16 @@ Order: Decide (ADRs) -> Implement (scripts in hub) -> Extract (ecosystem package
 
 Formalize the compass analysis as S-26007 in architecture/evidence/sources/.
 
-### 1.05 Revise ADRs 26031-26034
+### 1.05 Review ADRs 26031-26034
+
+Proposed ADRs from the initial Agentic OS brainstorm. Valid concepts absorbed into ADR-26038 and subsequent ADRs.
 
 | ADR | Action | Reason |
 |---|---|---|
-| 26031 (namespaces) | Revise or supersede | A-26005's Postgres namespace model is more powerful than flat PREFIX-YYNNN |
-| 26032 (tiered memory) | Revise and accept | Compass validates three-tier model; needs concrete tech choices (pgvector, litellm.token_counter) |
-| 26033 (virtual monorepo) | Finish and accept | uv workspace approach is sound; consequences section missing |
-| 26034 (skills as apps) | Revise and accept | Needs compass refinements: SKILL.md convergence, single-agent emphasis, MCP integration |
+| 26031 (namespaces) | Reject | Problem is real but proposed solution (string prefixes) is weaker than A-26005 Postgres namespace model |
+| 26032 (tiered memory) | Keep proposed | Procedural vs declarative split is orthogonal to ADR-26038's three-tier memory; needs completion |
+| 26033 (virtual monorepo) | Keep proposed | Valid independent problem (ecosystem repo interaction via uv workspaces); needs completion |
+| 26034 (skills as apps) | Reject | Grand "Agentic OS" framing replaced by context engineering (ADR-26038); skills concept survives in ADR-26038 and planned ADR-26042 |
 
 ### 1.1 Strategic ADRs
 
@@ -88,6 +90,7 @@ Based on the ADRs:
 - Git policy validators (commit msg, branch naming) — separate from doc validators
 - Fix check_adr.py interactive input bug
 - Fix generate_changelog.py excluded commits bug
+- check_adr.py: enforce status transitions per adr_config.yaml status_transitions (proposed -> accepted/rejected only, no supersession of proposals)
 
 ### 1.3 Extract vadocs v0.2.0
 
