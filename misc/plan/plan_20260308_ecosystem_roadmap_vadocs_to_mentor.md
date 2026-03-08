@@ -66,34 +66,34 @@ In dependency order:
    - `podman-kube@.service` systemd template for lifecycle management
    - Rootless by default, orchestrator-independent (ADR-26009)
 
-4. ADR-260XX: ← NEXT Server-Side vs Client-Side Context Management
-   - Research: can Postgres server-side functions (stored procedures, triggers) reduce client-side latency for context operations?
-   - Impacts mentor_generator agent design (the first ecosystem agent)
-   - Trade-offs: self-contained DB logic vs Python flexibility
+4. ADR-26041: Client-Side Logic with Server-Side Retrieval ✅
+   - Logic-in-View pattern: Python owns orchestration, SQL functions own retrieval
+   - LLM inference dominates latency — server-side logic advantage is negligible
+   - Grounded in A-26007 (logic locality analysis) and existing postgres_connector module
 
-5. ADR-26041: Common Frontmatter Standard
+5. ADR-26042: ← NEXT Common Frontmatter Standard
    - 7-8 universal fields from A-26005 (title, description, type, date, birth, version, tags, token_size)
    - description field required for agent progressive disclosure
    - token_size auto-maintained by pre-commit hook
    - Resolves TD-001
 
-6. ADR-26042: Ecosystem Package Boundary
+6. ADR-26043: Ecosystem Package Boundary
    - vadocs = doc content validation (frontmatter, sections, cross-refs, type registry)
    - vadocs-git = git policy governance (commit messages, branch naming, changelog)
    - vadocs init for repo scaffolding
    - Org-agnostic, configurable prefixes (no hardcoded values)
 
-7. ADR-26043: Skills as Progressive Disclosure Units
+7. ADR-26044: Skills as Progressive Disclosure Units
    - Revise ADR-26034 with compass findings on SKILL.md convergence
    - MCP integration for tool connectivity
    - Single-agent emphasis
 
-8. ADR-26044: Ephemeral File Lifecycle
+8. ADR-26045: Ephemeral File Lifecycle
    - Cleanup policy for sources, implemented plans, insights
    - check_ephemeral_files.py script
    - Maps to A-26005 RUNTIME doc types (/proc/, /var/spool/)
 
-9. ADR-26045: Tech Debt Governance
+9. ADR-26046: Tech Debt Governance
    - Formalize tracking format, ownership, review cadence
    - Resolves TD-002
 

@@ -101,6 +101,9 @@ ADR-26039
 ADR-26040
 : [Podman Kube YAML as Deployment Standard](/architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md)
 
+ADR-26041
+: [Client-Side Logic with Server-Side Retrieval](/architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md)
+
 :::
 
 ## Historical Context
