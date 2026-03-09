@@ -72,10 +72,13 @@ In dependency order:
    - Grounded in A-26007 (logic locality analysis) and existing postgres_connector module
 
 5. ADR-26042: ← NEXT Common Frontmatter Standard
-   - 7-8 universal fields from A-26005 (title, description, type, date, birth, version, tags, token_size)
-   - description field required for agent progressive disclosure
-   - token_size auto-maintained by pre-commit hook
-   - Resolves TD-001
+   - Composable block schema: identity (title, type), discovery (description, tags, token_size), lifecycle (date, birth, version)
+   - Types compose blocks additively (DITA specialization principle) — no exclusions
+   - 11 types registered: 10 content + 1 service. Sources skip lifecycle (ephemeral), service skips discovery+lifecycle
+   - Auto-maintenance: date, birth, token_size by pre-commit hooks. version auto-validated
+   - Jupytext two-block parsing: dual-block parser required for tutorial files
+   - Grounded in A-26008 (taxonomy audit and composable block design) and A-26005 (VFS/inode model)
+   - Resolves TD-001, supersedes ADR-26023 field placement
 
 6. ADR-26043: Ecosystem Package Boundary
    - vadocs = doc content validation (frontmatter, sections, cross-refs, type registry)
