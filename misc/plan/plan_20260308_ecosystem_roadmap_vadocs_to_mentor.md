@@ -29,7 +29,7 @@ Order: Decide (ADRs) -> Implement (scripts in hub) -> Extract (ecosystem package
 
 ### 1.0 Compass Source Artifact ✅
 
-Formalized as S-26007 in architecture/evidence/sources/.
+Formalized as A-26009 in architecture/evidence/analyses/ (promoted from S-26007).
 Also created S-26008 (LangChain vs production agents), S-26009 (pgvector RAG), S-26010 (stateless JIT), and analysis A-26006 extracting insights from all three.
 
 ### 1.05 Review ADRs 26031-26034 ✅
@@ -52,7 +52,7 @@ In dependency order:
 1. ADR-26038: Context Engineering as Core Principle ✅
    - Single-agent + skill dispatch
    - Context management is the product, not orchestration
-   - Grounded in S-26007 (compass analysis)
+   - Grounded in A-26009 (compass analysis)
 
 2. ADR-26039: pgvector as Ecosystem Database Standard ✅
    - One Postgres for structured + vector data

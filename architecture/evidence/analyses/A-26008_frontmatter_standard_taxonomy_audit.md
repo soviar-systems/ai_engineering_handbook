@@ -4,7 +4,7 @@ title: "Common Frontmatter Standard: Taxonomy Audit and Composable Block Design"
 date: 2026-03-09
 status: active
 tags: [documentation, governance, architecture]
-sources: [S-26007]
+sources: [A-26009]
 produces: []
 ---
 
@@ -237,7 +237,7 @@ This follows the specialization principle from OASIS DITA (Darwin Information Ty
 | `tags` | Domain classification — semantic namespace | Human (validated against vocabulary) |
 | `token_size` | Context budget cost — `i_size` | **Auto** (pre-commit hook) |
 
-This mirrors the SKILL.md progressive disclosure pattern documented in S-26007: metadata (~100 tokens) lets the agent decide whether to load the full content (~5K tokens).
+This mirrors the SKILL.md progressive disclosure pattern documented in [A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md): metadata (~100 tokens) lets the agent decide whether to load the full content (~5K tokens).
 
 **`lifecycle` block** — "How current is it?" (production traceability):
 
@@ -322,7 +322,7 @@ Key properties:
 - [ADR-26023: MyST-Aligned Frontmatter Standard](/architecture/adr/adr_26023_myst_aligned_frontmatter_standard.md) — Current frontmatter standard (to be superseded by ADR-26042)
 - [ADR-26035: Architecture Knowledge Base Taxonomy](/architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md) — Evidence pipeline and three-commit workflow
 - [ADR-26039: pgvector as Ecosystem Database Standard](/architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md) — Schema-per-project isolation mirrors type-per-directory model
-- `S-26007: Compass — The Realistic State of Agentic AI 2026` — SKILL.md progressive disclosure pattern, agent context management evidence
+- [A-26009: Compass — The Realistic State of Agentic AI 2026](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) (Claude Opus 4.6 research) — SKILL.md progressive disclosure pattern, agent context management evidence
 - `evidence.config.yaml` — Current evidence artifact schemas (TD-001 location)
 - `adr_config.yaml` — Current ADR schema
 - `misc/plan/techdebt.md` — TD-001 (common_required_fields)

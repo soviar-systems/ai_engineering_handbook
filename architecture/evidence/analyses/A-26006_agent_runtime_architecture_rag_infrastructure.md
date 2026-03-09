@@ -52,7 +52,7 @@ S-26008 recommends the combination of litellm (model abstraction) + MCP (tool st
 
 This means the mentor_generator's tools (RAG retriever, web search, file I/O) should be wrapped as MCP servers. The master loop calls litellm with tools registered from MCP config. This achieves the separation of concerns: the loop is generic, the skills are pluggable.
 
-**Counterpoint**: S-26007 (Compass) warns that MCP has real security vulnerabilities (CVE-2025-6514, 36% skill flaw rate). For local-first deployment this is less critical (no remote servers), but the permission model should still be considered.
+**Counterpoint**: [A-26009 (Compass)](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) warns that MCP has real security vulnerabilities (CVE-2025-6514, 36% skill flaw rate). For local-first deployment this is less critical (no remote servers), but the permission model should still be considered.
 
 ### 3. pgvector Architecture — Schema-Per-Repo Design
 
@@ -127,7 +127,7 @@ S-26008 provides a clear rejection rationale for LangChain that strengthens the 
 
 - Big companies (Anthropic, OpenAI) do not use high-level LangChain for flagship products
 - The "Black Box" problem: framework internals strip context or format prompts in non-transparent ways
-- 45% of LangChain users never deployed to production (corroborated by S-26007 Adaline analysis)
+- 45% of LangChain users never deployed to production (corroborated by [A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) Adaline analysis)
 - litellm replaces LangChain's model abstraction without the orchestration overhead
 - LangGraph (low-level sibling) is production-viable but adds complexity the ecosystem doesn't need
 
@@ -147,7 +147,7 @@ The validated stack: **litellm (models) + FastMCP (tools) + custom master loop (
 
 ### Open Questions
 
-1. **MCP security for local deployment**: S-26007 documents serious MCP vulnerabilities. For local-first Podman deployment, the attack surface is smaller, but we should still design a permission model for tool access. Defer to Phase 2 implementation.
+1. **MCP security for local deployment**: [A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) documents serious MCP vulnerabilities. For local-first Podman deployment, the attack surface is smaller, but we should still design a permission model for tool access. Defer to Phase 2 implementation.
 
 2. **Embedding model choice**: `nomic-embed-text` is recommended for local Ollama setups. For API-based embedding (when using capable cloud LLMs), litellm can abstract the provider. The choice should be configurable per deployment — local users get nomic, API users get model-native embeddings.
 

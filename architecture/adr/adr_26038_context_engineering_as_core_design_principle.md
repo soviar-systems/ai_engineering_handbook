@@ -20,9 +20,9 @@ proposed
 
 ## Context
 
-The Agentic OS concept ({term}`ADR-26034`, [A-26002: Agentic OS, Tiered Cognitive Memory, and Package-Driven Infrastructure](/architecture/evidence/analyses/A-26002_agentic_os_skills_tiered_memory_package_infra.md)) positions documentation as a filesystem and skills as composable applications. However, a comprehensive landscape analysis ([S-26007: Compass — The Realistic State of Agentic AI Architectures in Early 2026](/architecture/evidence/sources/S-26007_compass_realistic_state_of_agentic_ai_2026.md), Claude Opus 4.6 research work) reveals a consistent pattern across production deployments: **context engineering, not architectural sophistication, determines agent success**.
+The Agentic OS concept ({term}`ADR-26034`, [A-26002: Agentic OS, Tiered Cognitive Memory, and Package-Driven Infrastructure](/architecture/evidence/analyses/A-26002_agentic_os_skills_tiered_memory_package_infra.md)) positions documentation as a filesystem and skills as composable applications. However, a comprehensive landscape analysis ([A-26009: Compass — The Realistic State of Agentic AI Architectures in Early 2026](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md)) reveals a consistent pattern across production deployments: **context engineering, not architectural sophistication, determines agent success**.
 
-Key evidence from S-26007:
+Key evidence from [A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md):
 
 1. **Vercel's text-to-SQL agent**: Stripping from 15+ tools to 2 improved success rate from 80% to 100%, reduced tokens by 40%. Their conclusion: "We were doing the model's thinking for it."
 
@@ -58,7 +58,7 @@ This is a context engineering problem, not an orchestration problem.
 
 We adopt **context engineering as the core design principle** for the Agentic OS ecosystem. This means:
 
-1. **Single-agent architecture with skill dispatch.** The agent is one process that loads skills on demand (progressive disclosure). Skills are injected instructions, not separate agents. This follows the SKILL.md pattern validated by Anthropic and OpenAI cross-vendor convergence (S-26007).
+1. **Single-agent architecture with skill dispatch.** The agent is one process that loads skills on demand (progressive disclosure). Skills are injected instructions, not separate agents. This follows the SKILL.md pattern validated by Anthropic and OpenAI cross-vendor convergence ([A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md)).
 
 2. **Three-tier memory as the primary abstraction.**
    - **Working memory**: Current context window, managed by token-aware budget tracking (litellm.token_counter per provider)
@@ -78,9 +78,9 @@ We adopt **context engineering as the core design principle** for the Agentic OS
 
 ### Positive
 
-- Prevents the "Agentic OS as grand architecture" trap identified in S-26007 — the system grows from a working runtime, not top-down design
+- Prevents the "Agentic OS as grand architecture" trap identified in [A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) — the system grows from a working runtime, not top-down design
 - Aligns with every production success story in the compass analysis (Claude Code, Cursor, Vercel, Devin)
-- Token budget awareness prevents the cost explosion documented in S-26007 (agentic apps re-send context 10-50x per session)
+- Token budget awareness prevents the cost explosion documented in [A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) (agentic apps re-send context 10-50x per session)
 - Skills as injected instructions (not sub-agents) eliminate the context isolation problem that kills multi-agent systems
 - Three-tier memory maps directly to Mentor Generator's existing architecture (context window / course_history / books in RAG)
 - Format-aware context delivery maximizes instructional signal per attention-weighted token. [Format as Architecture](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) demonstrates up to 21% token cost difference between formats on identical content (2,306 vs 2,798 tokens), and Mentor Generator post-mortems (v0.40.0 → v0.41.0) confirmed that switching from JSON to YAML improved compiler fidelity from catastrophic drift to ~95% adherence on the same model (Qwen3-Max)
@@ -97,11 +97,11 @@ We adopt **context engineering as the core design principle** for the Agentic OS
 
 - **Framework-heavy approach (LangGraph state machines).** Model the agent as a graph with typed state passing and checkpointing. **Rejection Reason:** 45% of LangChain users never deployed to production, 23% who deployed eventually removed it (Adaline analysis). Adds abstraction layers that obscure prompts and responses (Anthropic's "Building Effective Agents" warning).
 
-- **Architecture-first OS design.** Build the full VFS, VRL, Document Type Registry, then write applications on top. **Rejection Reason:** S-26007 concludes the winner will "emerge from a working runtime that accretes capabilities because developers keep needing one more thing." The [GEMM Engineering Standard](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb) documents how the BLAS interface survived 50+ years of implementation changes — not because it was designed top-down, but because it was extracted from working LINPACK code (a production linear algebra library written at Argonne National Laboratory in the 1970s). The interface became the standard precisely because it codified patterns that were already proven in practice. The same principle applies here: extract the OS primitives from the working Mentor Generator runtime, don't design them in isolation.
+- **Architecture-first OS design.** Build the full VFS, VRL, Document Type Registry, then write applications on top. **Rejection Reason:** [A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) concludes the winner will "emerge from a working runtime that accretes capabilities because developers keep needing one more thing." The [GEMM Engineering Standard](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb) documents how the BLAS interface survived 50+ years of implementation changes — not because it was designed top-down, but because it was extracted from working LINPACK code (a production linear algebra library written at Argonne National Laboratory in the 1970s). The interface became the standard precisely because it codified patterns that were already proven in practice. The same principle applies here: extract the OS primitives from the working Mentor Generator runtime, don't design them in isolation.
 
 ## References
 
-- [S-26007: Compass — The Realistic State of Agentic AI Architectures in Early 2026](/architecture/evidence/sources/S-26007_compass_realistic_state_of_agentic_ai_2026.md) — primary evidence base (Claude Opus 4.6 research)
+- [A-26009: Compass — The Realistic State of Agentic AI Architectures in Early 2026](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) — primary evidence base
 - [A-26005: Agentic OS Filesystem Architecture](/architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md) — VFS boundary and document type system (used as compass for extraction, not as implementation target)
 - [A-26002: Agentic OS, Tiered Cognitive Memory, and Package-Driven Infrastructure](/architecture/evidence/analyses/A-26002_agentic_os_skills_tiered_memory_package_infra.md) — tiered memory model, Mentor Generator catalyst
 - [Format as Architecture: Signal-to-Noise in Prompt Delivery](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) — token-level analysis of format impact on LLM behavior, Mentor Generator post-mortem evidence
