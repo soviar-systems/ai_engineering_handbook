@@ -71,14 +71,13 @@ In dependency order:
    - LLM inference dominates latency — server-side logic advantage is negligible
    - Grounded in A-26007 (logic locality analysis) and existing postgres_connector module
 
-5. ADR-26042: ← NEXT Common Frontmatter Standard
-   - Composable block schema: identity (title, type), discovery (description, tags, token_size), lifecycle (date, birth, version)
-   - Types compose blocks additively (DITA specialization principle) — no exclusions
-   - 11 types registered: 10 content + 1 service. Sources skip lifecycle (ephemeral), service skips discovery+lifecycle
-   - Auto-maintenance: date, birth, token_size by pre-commit hooks. version auto-validated
-   - Jupytext two-block parsing: dual-block parser required for tutorial files
-   - Grounded in A-26008 (taxonomy audit and composable block design) and A-26005 (VFS/inode model)
-   - Resolves TD-001, supersedes ADR-26023 field placement
+5. ADR-26042: Common Frontmatter Standard ✅
+   - Composable block schema: identity (title, type, author), discovery (description, tags, token_size), lifecycle (date, birth, version)
+   - MyST-native fields top-level, ecosystem fields under options.*
+   - Types compose blocks additively (DITA specialization) — 10 types: 9 content + 1 service (manifesto absorbed into policy)
+   - Hub-and-spoke config: frontmatter.config.yaml (hub) + domain configs (spokes) with strict additive inheritance
+   - Will supersede ADR-26023 upon acceptance
+   - Grounded in A-26008 (taxonomy audit and composable block design)
 
 6. ADR-26043: Ecosystem Package Boundary
    - vadocs = doc content validation (frontmatter, sections, cross-refs, type registry)
@@ -100,15 +99,34 @@ In dependency order:
    - Formalize tracking format, ownership, review cadence
    - Resolves TD-002
 
+### 1.15 ADR-26042 Migration
+
+Two-phase automated migration implementing ADR-26042:
+
+**Phase A — ADR semantic fix (one-shot script):**
+- For each of 41 ADRs: copy current `date` to `options.birth`, set `date` to git last-modified date
+- Add `options.type: adr`, `options.token_size` (computed from content)
+- Set `description` to `TODO` placeholder for human review
+- Priority: `date` semantics are wrong until this runs
+
+**Phase B — All other governed files (auto-fix script):**
+- Analogous to `check_adr.py --fix` maintaining `adr_index.md`
+- Scan governed directories, detect missing fields per `frontmatter.config.yaml` type registry
+- Auto-add: `options.type` (inferred from directory), `options.token_size` (computed), `options.birth` (git log), `date` (git log)
+- Human fields (`description`, `tags`): set `TODO` placeholders
+- Rename `adr_config.yaml` → `adr.config.yaml` (dot-separated naming consistency)
+- Create `frontmatter.config.yaml` hub config referenced from `pyproject.toml [tool.frontmatter]`
+- Migrate `common_required_fields` from `evidence.config.yaml` to hub (resolves TD-001)
+
 ### 1.2 Implement Validation Scripts in Hub
 
 Based on the ADRs:
-- Common frontmatter validation (ADR-26040) in hub scripts
+- Common frontmatter validation (ADR-26042) in hub scripts
 - Evidence type validators for new types from A-26005 taxonomy
 - Git policy validators (commit msg, branch naming) — separate from doc validators
 - Fix check_adr.py interactive input bug
 - Fix generate_changelog.py excluded commits bug
-- check_adr.py: enforce status transitions per adr_config.yaml status_transitions (proposed -> accepted/rejected only, no supersession of proposals)
+- check_adr.py: enforce status transitions per adr.config.yaml status_transitions (proposed -> accepted/rejected only, no supersession of proposals)
 
 ### 1.3 Extract vadocs v0.2.0
 

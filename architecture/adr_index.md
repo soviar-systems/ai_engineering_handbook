@@ -104,6 +104,9 @@ ADR-26040
 ADR-26041
 : [Client-Side Logic with Server-Side Retrieval](/architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md)
 
+ADR-26042
+: [Common Frontmatter Standard](/architecture/adr/adr_26042_common_frontmatter_standard.md)
+
 :::
 
 ## Historical Context

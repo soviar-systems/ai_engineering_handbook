@@ -4,14 +4,6 @@ Traceable record of intentional shortcuts. Each entry has a date, location, and 
 
 ## Open
 
-### TD-001: common_required_fields in evidence.config.yaml (2026-02-27)
-
-- **Location:** `architecture/evidence/evidence.config.yaml` → `common_required_fields`, `date_format`
-- **Context:** All evidence artifact types share common frontmatter fields (`id`, `title`, `date`) and a date format. These belong in a repo-wide central frontmatter standard that doesn't exist yet.
-- **Current state:** Defined directly in `evidence.config.yaml` so that `check_evidence.py` and its tests have a single SSoT instead of hardcoded values.
-- **Migration path:** When a central frontmatter standard config is created, remove these keys from `evidence.config.yaml` and replace with a pointer (like `parent_config` does for tags).
-- **Introduced by:** plan_20260227_architecture_knowledge_base_taxonomy_tooling.md (Batch 2)
-
 ### TD-002: Technical Debt Register has no formal governance (2026-02-27)
 
 - **Location:** `misc/plan/techdebt.md` (this file)
@@ -29,3 +21,7 @@ Traceable record of intentional shortcuts. Each entry has a date, location, and 
 - **Introduced by:** plan_20260302_adr_writing_guide.md
 
 ## Resolved
+
+### TD-001: common_required_fields in evidence.config.yaml (2026-02-27)
+- Resolved by ADR-26042 (Common Frontmatter Standard) — hub-and-spoke config replaces fragmented common_required_fields
+- Resolved: 2026-03-11
