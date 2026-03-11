@@ -111,6 +111,21 @@ sections:
     - superseded
     - deprecated
 
+# Valid status transitions (SSoT for check_adr.py validation)
+# Format: from_status: [list of valid target statuses]
+# Rule: only accepted ADRs can be superseded or deprecated.
+# Proposed ADRs that don't survive review are rejected.
+status_transitions:
+  proposed:
+    - accepted
+    - rejected
+  accepted:
+    - superseded
+    - deprecated
+  rejected: []
+  superseded: []
+  deprecated: []
+
 # Default status for ADRs without explicit status
 default_status: proposed
 

@@ -85,13 +85,15 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - `check_adr.py` operates on all ADRs at once (no file arguments)
 - ADR frontmatter `status` determines index section placement (see `adr_config.yaml`)
 - ADR filenames use truncated slugs — always glob (`architecture/adr/adr_26NNN*.md`) to verify the exact filename before creating links
-- Internal file references must use markdown links `[Title](/repo-root-relative/path)` — backtick paths bypass `check_broken_links.py` validation
+- Internal file references must use markdown links `[Title](/repo-root-relative/path)` — backtick paths bypass `check_broken_links.py` validation. Example paths in docs must use patterns from `BROKEN_LINKS_EXCLUDE_LINK_STRINGS` in `tools/scripts/paths.py` to avoid false positives
+- Persistent artifacts (ADRs, analyses, retrospectives) must always be referenced via markdown links `[A-26009](/repo-root-relative/path)`, never plain backtick IDs — md links are navigable by both agents and humans
+- Backtick references are only for ephemeral files (sources in `evidence/sources/`, files in `misc/`)
 - When linking to a Jupytext-paired file, always use the `.ipynb` extension — `check-link-format` hook rejects `.md` links when a paired `.ipynb` exists
 - Before committing, run `uv run tools/scripts/check_broken_links.py` and `uv run tools/scripts/check_link_format.py` to find stale links — fix them proactively instead of waiting for hook failures
 - ADR frontmatter `date` is the birth date (no `options.birth` field yet) — do not update it on minor edits. Analysis `date` can be updated freely
 - Never link from persistent artifacts (ADRs, analyses) to ephemeral files (`misc/plan/`, `misc/todo.md`, `evidence/sources/`) — use backtick references instead
 - Never reference "planned ADR-NNNNN" in documents — either link to an existing ADR or reference the problem/tracking location (e.g., `techdebt.md`)
-- ADR Decision sections: concise statements with references. Evidence details and measurements belong in Consequences
+- **ADR Decision sections must be concise statements, NOT implementation details.** No bash commands, no code blocks showing how to run things, no specific tool invocations. Evidence details and measurements belong in Consequences. Risk mitigations should not name specific implementations (e.g., "Traefik handles routing") — use generic descriptions
 - When ADRs reference external projects (e.g., `mentor_generator`, `vadocs`), provide inline context — ADRs are long-living documents read without prior session knowledge
 - Evidence source files: `S-YYNNN_<slug>.md` naming with frontmatter fields `id`, `title`, `date`, `model`, `extracted_into` (see `evidence.config.yaml`)
 - When given a raw LLM dialogue file, save it as a proper source artifact (`S-YYNNN`) with frontmatter, then create an analysis (`A-YYNNN`) extracting actionable insights
@@ -168,6 +170,9 @@ Package manager: `uv` (never use pip directly)
 - Post-commit `changelog-preview` hook shows the CHANGELOG entry for the just-created commit
 - All hooks use `uv run` for Python execution
 - YAML gotcha: `entry` values with `: ` (colon-space) must be double-quoted in `.pre-commit-config.yaml` — YAML interprets unquoted `: ` as a mapping separator
+
+**Safe Editing:**
+- When doing bulk `replace_all` on artifact IDs (e.g., `S-26007` → `A-26009`), review each match for semantic correctness — some occurrences may be examples or format illustrations where the original prefix is intentional
 
 **Safe Git Commands:**
 - Use `git restore <file>` to discard changes, never `git checkout -- <file>` (ambiguous between branch and file operations)

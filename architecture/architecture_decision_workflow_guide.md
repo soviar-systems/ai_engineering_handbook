@@ -91,6 +91,12 @@ Deprecate an ADR when the decision is **no longer relevant** — the problem it 
 1. Set `status: deprecated` in frontmatter
 2. Add a brief explanation in the Status section: why the decision is no longer applicable
 
+### Valid Status Transitions
+
+Not all transitions are valid. The starting status constrains which terminal statuses are reachable. The valid transitions are defined in [adr_config.yaml](/architecture/adr/adr_config.yaml) `status_transitions` (SSoT) and enforced by [check_adr.py](/tools/scripts/check_adr.py).
+
+**Key rule:** Only `accepted` ADRs can be superseded or deprecated. Proposed ADRs that don't survive review are rejected — even if valid concepts within them are absorbed into other ADRs.
+
 ### Choosing the Right Terminal Status
 
 | Situation | Status | Superseding ADR? |
