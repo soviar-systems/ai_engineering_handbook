@@ -79,11 +79,11 @@ In dependency order:
    - Will supersede ADR-26023 upon acceptance
    - Grounded in A-26008 (taxonomy audit and composable block design)
 
-6. ADR-26043: Ecosystem Package Boundary
-   - vadocs = doc content validation (frontmatter, sections, cross-refs, type registry)
-   - vadocs-git = git policy governance (commit messages, branch naming, changelog)
-   - vadocs init for repo scaffolding
-   - Org-agnostic, configurable prefixes (no hardcoded values)
+6. ADR-26043: Ecosystem Package Boundary ✅
+   - vadocs as installable package organized by concern: core/, docs/, git/, init/, cli.py
+   - All governance scripts inside vadocs (15 scripts), only prepare_prompt.py stays outside
+   - CLI mirrors concern structure: `vadocs docs check-broken-links`, `vadocs git generate-changelog`
+   - Hub-and-spoke config from ADR-26042, org-agnostic design (no hardcoded values)
 
 7. ADR-26044: Skills as Progressive Disclosure Units
    - Revise ADR-26034 with compass findings on SKILL.md convergence
