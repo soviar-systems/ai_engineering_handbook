@@ -1,5 +1,93 @@
 # Release Notes
 
+## release v2.7.0 "The Context Engineering Pivot"
+
+### Summary of Changes
+
+v2.6.0 explored an ambitious vision — agents as operating systems that discover and compose skills at runtime. That research produced valuable insights (4 analyses, 11 source artifacts, 7 ADRs), but the key finding was simpler than the vision: **what matters is not how many agents you have, but what each agent sees.** v2.7.0 distills this into a strategic pivot — context engineering replaces the Agentic OS paradigm as the ecosystem's core design principle.
+
+Simultaneously, this release lays the **infrastructure blueprint** for what comes next. Seven new ADRs define the technical stack needed to deploy a working AI application: one database (pgvector), one container runtime (Podman), one metadata schema (composable frontmatter), one governance package (vadocs). The goal: `podman play kube` + API key = running mentor agent.
+
+This is also the ecosystem's **first consolidation release**: 4 ADRs promoted to accepted standards, 3 rejected with their insights absorbed. After two releases of pure exploration, the ecosystem is now making commitments.
+
+Three strategic themes define v2.7.0:
+
+1. **Context Engineering Pivot** — v2.6.0's Agentic OS exploration (ADR-26032, ADR-26033, ADR-26034) asked how agents should organize knowledge. The [Compass analysis](architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) — a comprehensive review of the state of agentic AI in early 2026 — showed that multi-agent swarms (systems where independent agents negotiate with each other) suffer from context isolation: each agent makes decisions without the other's knowledge. [ADR-26038](architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) adopts a simpler model: one agent loads skills as injected instructions on demand, and the primary engineering challenge is managing the context window — what the agent sees, not how many agents there are. The boundary between skill injection and subagent delegation (as used by production tools like Claude Code) remains an open research question that will be analyzed in future releases.
+
+2. **Ecosystem Infrastructure Blueprint** — Seven proposed ADRs define the technical stack: [ADR-26039](architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md) (pgvector — one Postgres for structured data and vector embeddings), [ADR-26040](architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md) (Podman Kube YAML — one manifest from dev to prod), [ADR-26041](architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md) (Python owns logic, SQL owns retrieval), [ADR-26042](architecture/adr/adr_26042_common_frontmatter_standard.md) (composable frontmatter with 10 document types), [ADR-26043](architecture/adr/adr_26043_ecosystem_package_boundary.md) (vadocs as an installable governance package). Together they answer a practical question: what does the ecosystem need to deploy its first application?
+
+3. **Evidence-Driven Architecture** — The release demonstrates the Architecture Knowledge Base (ADR-26035) as a proven workflow: 4 new analyses ([A-26006](architecture/evidence/analyses/A-26006_agent_runtime_architecture_rag_infrastructure.md) through [A-26009](architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md)) grounded 5 ADRs in empirical evidence. Source artifacts were created, their insights extracted into analyses, and the sources deleted — the three-commit lifecycle model works. The SVA constraint framework (ADR-26037) was formalized from an informal guideline into six canonical constraints.
+
+### Architecture Decisions
+
+*   **[ADR-26038: Context Engineering as Core Design Principle](architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) — The Pivot**:
+    The most significant decision of the release. Instead of building an "Agentic OS" with tiered memory, tag-filtered registries, and runtime skill discovery, the ecosystem adopts a simpler model: one agent, skills loaded as injected instructions on demand (progressive disclosure), and context window budget as the first-class constraint. The Compass analysis (A-26009) shows that multi-agent swarms — systems where independent agents negotiate with each other — suffer from context isolation between agents. The ecosystem avoids this by keeping everything in one conversation: skills inject instructions into the agent's context rather than spawning separate agents. However, production tools like Claude Code use subagent patterns (forked child processes with their own LLM calls) that don't fit neatly into either category. The boundary between skill injection and subagent delegation is an open research question scheduled for future analysis.
+
+*   **[ADR-26039: pgvector as Ecosystem Database Standard](architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md), [ADR-26041: Client-Side Logic with Server-Side Retrieval](architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md) — Data Infrastructure**:
+    One Postgres instance serves the entire ecosystem — structured data and vector embeddings in the same database, isolated by schema-per-project. ADR-26041 complements this with the Logic-in-View pattern: Python owns orchestration logic, SQL functions own retrieval. Since LLM inference dominates latency (seconds), the millisecond advantage of server-side logic is irrelevant.
+
+*   **[ADR-26040: Podman Kube YAML as Deployment Standard](architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md) — Deployment**:
+    Kube YAML manifests are the single deployment artifact. `podman-kube@.service` systemd template manages lifecycle. Rootless by default, no Docker daemon, no Compose — the same manifest runs locally and in production.
+
+*   **[ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md), [ADR-26043: Ecosystem Package Boundary](architecture/adr/adr_26043_ecosystem_package_boundary.md) — Governance Infrastructure**:
+    ADR-26042 defines a composable frontmatter schema with three blocks (identity, discovery, lifecycle) and 10 document types. Hub-and-spoke configuration ensures consistency across repositories. ADR-26043 draws the boundary for vadocs: 15 governance scripts organized by concern (core, docs, git, init), with a CLI that mirrors the structure. Together, they prepare the ecosystem for multi-repository governance.
+
+*   **ADR Rejections — [ADR-26031](architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md), [ADR-26034](architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md), [ADR-26003](architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md)**:
+    ADR-26031 (prefixed namespaces) rejected — string prefix approach is weaker than the Postgres namespace model from A-26005. ADR-26034 (Agentic OS paradigm) rejected — the grand OS framing is replaced by context engineering; valid concepts (skills, procedural/declarative split) are absorbed into ADR-26038. ADR-26003 (gitlint) rejected — commit validation is solved by custom `validate_commit_msg.py` (ADR-26024); branch naming will be addressed in a future vadocs-git plugin.
+
+### Accepted ADRs (Promoted in This Release)
+
+Four ADRs promoted from proposed to accepted, marking the transition from exploration to commitment:
+
+| ADR | Title | Rationale |
+| :--- | :--- | :--- |
+| [ADR-26011](architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md) | Mandatory Script Suite Workflow | Triad (script + tests + docs) enforced via pre-commit hooks |
+| [ADR-26024](architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md) | Structured Commit Bodies for Automated CHANGELOG | validate_commit_msg.py + generate_changelog.py operational |
+| [ADR-26038](architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) | Context Engineering as Core Design Principle | Core principle driving ADR rejections and ecosystem direction |
+| [ADR-26040](architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md) | Podman Kube YAML as Deployment Standard | Production templates exist, CLAUDE.md mandates Podman |
+
+### Open RFCs (Proposed ADRs)
+
+All infrastructure ADRs introduced in this release are in **proposed** status — they define the target architecture but await implementation validation before promotion.
+
+| ADR | Title | Theme |
+| :--- | :--- | :--- |
+| [ADR-26039](architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md) | pgvector as Ecosystem Database Standard | Data Infrastructure |
+| [ADR-26041](architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md) | Client-Side Logic with Server-Side Retrieval | Data Infrastructure |
+| [ADR-26042](architecture/adr/adr_26042_common_frontmatter_standard.md) | Common Frontmatter Standard | Governance |
+| [ADR-26043](architecture/adr/adr_26043_ecosystem_package_boundary.md) | Ecosystem Package Boundary | Governance |
+| [ADR-26032](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md) | Tiered Cognitive Memory | Skills Architecture |
+| [ADR-26033](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md) | Virtual Monorepo | Skills Architecture |
+
+### New Features and Articles Added
+
+*   **Evidence Pipeline Maturation**:
+    Four new analyses (A-26006 through A-26009) demonstrate the Architecture Knowledge Base as a working system: raw dialogues formalized as sources, insights extracted into analyses, analyses grounding ADRs. The Compass analysis (A-26009) — a comprehensive assessment of the realistic state of agentic AI in 2026 — directly drove the rejection of the Agentic OS paradigm and the adoption of context engineering. Evidence source artifacts (S-26006 through S-26011) were created, extracted, and deleted per the three-commit workflow, proving the lifecycle model.
+
+*   **SVA Constraint Framework (ADR-26037)**:
+    The Smallest Viable Architecture principle, previously an informal guideline, is now formalized as six canonical constraints (C1–C6) derived from first principles (UNIX, YAGNI, Twelve-Factor, SRE, GitOps, ISO 29148). Consultant prompts updated to reference the canonical framework.
+
+*   **Post-Commit Changelog Preview**:
+    A new post-commit hook runs `generate_changelog.py` on the just-created commit, showing the CHANGELOG entry immediately after commit. This provides instant feedback on how structured body bullets will appear in the release — catching formatting issues before they accumulate.
+
+### Updates in Existing Files
+
+*   **format_string.py (v0.3.0)**: Gained argparse CLI (replacing sys.argv), optional truncation (`--trunc`, `--trunc-len`), en-dash support, and file extension stripping (.pdf, .epub, .tar.gz, etc.). Full triad update: 42 tests with contract-based docstrings, instruction doc with grouped examples.
+
+*   **generate_changelog.py (v1.2.0)**: Fixed orphan commit bug — commits with all bullets excluded by patterns now drop entirely from output instead of rendering as subject-only stubs. Gained exclusion patterns from `pyproject.toml`, bold markdown section headers, `--verbose` flag for debugging, and blank-line separator in `--prepend` mode. 78 tests total.
+
+*   **Architecture Decision Workflow Guide**: Gained Valid Status Transitions section referencing `adr_config.yaml` as SSoT, with transition rules (proposed → accepted/rejected only, terminal states locked).
+
+*   **AI Systems Consultant Prompt (Hybrid)**: Refined specialization, updated tooling lists, replaced ad-hoc SVA constraints with canonical C1–C6 from ADR-26037.
+
+### Existing Files Moved or Renamed
+
+| Original | New |
+| :--- | :--- |
+| `architecture/evidence/sources/S-26007_compass*.md` | Promoted to `architecture/evidence/analyses/A-26009_compass*.md` |
+| `architecture/evidence/sources/S-26001` through `S-26005` | Deleted (extracted into analyses) |
+| `architecture/evidence/sources/S-26006` through `S-26011` | Deleted (extracted into ADRs and analyses) |
+
 ## release v2.6.0 "The Cognitive Architecture"
 
 ### Summary of Changes

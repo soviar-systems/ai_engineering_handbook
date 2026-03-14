@@ -1,9 +1,9 @@
 ---
 title: "AI Engineering Handbook"
 author: rudakow.wadim@gmail.com
-date: 2026-02-28
+date: 2026-03-14
 options:
-  version: 2.6.0
+  version: 2.7.0
   birth: 2025-10-19
 ---
 
@@ -19,6 +19,12 @@ Content is **generated through a hybrid LLM methodology**, **cross-validated by 
 
 ## What's new?
 
+v2.7.0 — "The Context Engineering Pivot"
+* **From Agentic OS to Context Engineering**: v2.6.0 explored an ambitious vision — agents as operating systems. That research produced valuable insights, but the key finding was simpler: what matters is not how many agents you have, but what each agent sees. [ADR-26038](architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) adopts context engineering as the core principle — one agent, skills loaded on demand, context window as the primary constraint. The multi-agent vs single-agent boundary will be analyzed more thoroughly in future releases.
+* **Infrastructure Blueprint**: 7 new ADRs define the technical stack for the ecosystem's next phase — database, deployment, data access, metadata format, and governance packaging. The goal: everything needed to deploy a working application from a single `podman play kube` command plus an API key.
+* **First Consolidation**: 4 ADRs promoted to accepted standards, 3 rejected with their insights absorbed. The ecosystem moves from pure exploration to selective commitment.
+* **Toolchain**: Changelog generator bug fixed, format_string script modernized, post-commit changelog preview hook added. Evidence pipeline proven with 4 analyses grounding 5 architectural decisions.
+
 v2.6.0 — "The Cognitive Architecture"
 * **Skills Architecture**: Three ADRs (26032–26034) define how AI agents should organize knowledge and capabilities — tiered cognitive memory, virtual monorepo for package-driven ecosystems, and the Agentic OS paradigm where skills are composable applications discovered at runtime.
 * **Architecture Knowledge Base**: ADR-26035/26036 formalize a taxonomy for evidence artifacts (analyses, sources, retrospectives) with `check_evidence.py` enforcing it automatically (75 tests). The ecosystem now documents how it documents.
@@ -30,12 +36,6 @@ v2.5.0 — "The Self-Documenting System"
 * **Tool-Agnostic Architecture**: ADR-26004..26008 (tool-specific) superseded by ADR-26027/26028 (cognitive roles); `aidx` rewritten as the generic Multi-Phase AI Pipeline.
 * **Promotion Gate**: ADR-26025 formalizes RFC→ADR workflow; `check_adr.py` enforces promotion criteria. 6 ADRs promoted to accepted.
 * **Ecosystem Cleanup**: Research extracted to dedicated monorepo (ADR-26026); `pyproject.toml` formalized as tool config SSoT (ADR-26029).
-
-v2.4.0 — "The Governed Architecture"
-* **ADR Governance**: All 24 ADRs now carry machine-readable YAML frontmatter (status, date, tags), making the decision history searchable by AI agents and filterable in RAG pipelines. 7 new ADRs (26016–26022) formalize decisions from metadata-driven lifecycle to GitHub Pages hosting.
-* **Content Lifecycle**: Superseded articles are now deleted rather than left to mislead RAG retrieval (ADR-26021). `llm_usage_patterns` retired; `choosing_model_size` rewritten as a VRAM budgeting guide.
-* **Hub-Spoke Ecosystem**: This repo is now the standards hub; extracted packages like [vadocs](https://github.com/lefthand67/vadocs) are independent spokes with their own implementation decisions (ADR-26020).
-* **Validation Toolchain**: `check_adr.py` replaces `check_adr_index.py` — config-driven validation of frontmatter, sections, term references, and index partitioning (110 tests, 98% coverage).
 
 
 ## Live Documentation Site

@@ -1,3 +1,147 @@
+release 2.7.0
+* **New Features:**
+    - Add optional truncation, en-dash support, and extension stripping to format_string
+        - Updated: tools/scripts/format_string.py — replace sys.argv with argparse (--trunc, --trunc-len flags), add en-dash to symbol list, strip known file extensions (.pdf, .epub, .tar.gz, etc.) before formatting, make truncation opt-in
+        - Updated: tools/tests/test_format_string.py — contract-based test docstrings, parametrize punctuation tests, add extension stripping and truncation opt-in tests (42 tests)
+        - Updated: tools/docs/scripts_instructions/format_string_py_script.md — add Options table, document extension stripping step, group examples by use case, bump version to 0.3.0
+    - Formalize SVA constraint framework as ADR-26037
+        - Created: architecture/adr/adr_26037_smallest_viable_architecture_constraint_framework.md — canonical C1-C6 constraints derived from first principles (UNIX, YAGNI, Twelve-Factor, SRE, GitOps, ISO 29148)
+        - Created: architecture/evidence/analyses/A-26003_sva_constraint_framework_design.md — design analysis with migration mapping and case study validation
+        - Updated: ai_system/3_prompts/consultants/local_ai_systems_consultant.json — replaced ad-hoc C1-C4 with canonical C1-C6 (v0.14.0)
+        - Updated: ai_system/3_prompts/consultants/devops_consultant.json — replaced ad-hoc C1-C4 with canonical C1-C6 (v0.3.0)
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — replaced ad-hoc C1-C5 with canonical C1-C6 (v0.2.0)
+    - Add post-commit changelog preview hook
+        - Updated: .pre-commit-config.yaml — added changelog-preview post-commit hook that runs generate_changelog.py --verbose on the just-created commit with amend tip
+        - Updated: tools/scripts/configure_repo.py — added run_precommit_install_post_commit() method and wired into UvSyncRunner.run()
+        - Updated: tools/tests/test_configure_repo.py — added tests for post-commit install, removed brittle call_count assertions in favor of side_effect short-circuit verification
+        - Updated: tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.md — added post-commit install command, new Section 5 for changelog preview, bumped to v1.2.0
+        - Updated: tools/docs/git/03_precommit_ci_validation_system.md — added changelog-preview to validation matrix, replaced duplicate install block with cross-reference to doc 02, bumped to v1.2.0
+        - Updated: tools/docs/scripts_instructions/configure_repo_py_script.md — added post-commit hook to operations table and class description, bumped to v0.3.0
+    - Update AI systems consultant prompt for hybrid approach
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Modified consultant ID, version, and birth date to reflect the hybrid specialization.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Broadened consultant specialization to include cloud models.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Refined consultant description and role.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Adjusted personality guidelines for clarity and conciseness.
+        - Removed: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Removed audience specification.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Updated languages and tooling lists.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Clarified production readiness criteria.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Modified no-hallucination guidance.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Updated WRC penalty definitions.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Adjusted methodology discovery process.
+        - Removed: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Removed internal note.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Clarified P-Score audit summary.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Added default language to language setting.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Adjusted task description for methodology comparison.
+    - Add exclusion patterns, bold headers, and verbose flag to changelog generator
+        - Updated: pyproject.toml — added changelog-exclude-patterns config key for filtering housekeeping commits
+        - Updated: tools/scripts/generate_changelog.py — added EXCLUDE_PATTERNS constant, _matches_exclude_pattern() and _filter_excluded_commits() helpers for case-insensitive substring filtering at both commit and bullet levels
+        - Updated: tools/scripts/generate_changelog.py — added --verbose/-v flag threaded through parse chain to print excluded items to stderr, so users can debug why commits/bullets are missing
+        - Updated: tools/scripts/generate_changelog.py — changed section headers from plain text to markdown bold (**Section Name:**) for visual emphasis
+        - Updated: tools/scripts/generate_changelog.py — added blank line separator between new and existing content in --prepend mode to prevent visual merging
+        - Updated: tools/tests/test_generate_changelog.py — added 20 new tests (76 total): TestExcludePatterns class with config-driven parametrized coverage, bold header test, blank line prepend test, verbose stderr tests
+        - Updated: tools/docs/scripts_instructions/generate_changelog_py_script.md — bumped to v1.1.0, documented exclusion patterns with self-referencing trap warning and post-commit recheck command, verbose flag, bold headers, updated function listing and test count
+* **Bug Fixes:**
+    - Drop commits with no surviving bullets from changelog output
+        - Fixed: tools/scripts/generate_changelog.py — added _filter_empty_bullet_commits to drop commits with all bullets excluded, verbose mode reports dropped commits, empty sections also skipped in format_changelog
+        - Updated: tools/tests/test_generate_changelog.py — added test_commit_dropped_when_all_bullets_excluded and test_verbose_reports_commit_dropped_for_empty_bullets, updated legacy commit test to match new contract (78 tests)
+        - Updated: tools/docs/scripts_instructions/generate_changelog_py_script.md — documented bulletless commit exclusion, updated exclusion pattern hierarchy, bump version to 1.2.0
+* **Documentation:**
+    - Fact-check A-26009 and align ADR-26038 with verified evidence
+        - Updated: architecture/evidence/analyses/A-26009 — added 28 MyST footnotes with permanent URLs for all verifiable claims, replaced unverifiable Galileo AI quote with arXiv:2601.04748 evidence, added subagent vs swarm distinction with Gartner data, added Context Rot study reference in Synthesis for model capability caveat, softened unverifiable "70% rebuild" and Forrester claims, fixed Simon Willison attribution to actual May 2025 blog post
+        - Updated: architecture/adr/adr_26038 — replaced Galileo AI quote (item 4) with arXiv:2601.04748 single-agent-with-skills study, added fork-and-join subagent pattern as approved scaling strategy in risk mitigation, replaced ephemeral techdebt.md reference with ADR-26042 term ref, removed ephemeral roadmap link from References
+    - Add ADR-26043 Ecosystem Package Boundary
+        - Created: architecture/adr/adr_26043_ecosystem_package_boundary.md — defines vadocs as installable package organized by concern (core, docs, git, init)
+    - Add status transition rules and strengthen ADR conventions
+        - Updated: architecture/adr/adr_config.yaml — added status_transitions SSoT (proposed→accepted/rejected, accepted→superseded/deprecated, terminal states locked)
+        - Updated: architecture/architecture_decision_workflow_guide.md — added Valid Status Transitions section referencing adr_config.yaml as SSoT
+    - Add ADR-26042 Common Frontmatter Standard
+        - Created: architecture/adr/adr_26042_common_frontmatter_standard.md — composable block schema (identity/discovery/lifecycle), 10 types (9 content + 1 service), hub-and-spoke config, strict additive inheritance, date semantic unification
+    - Promote S-26007 compass source to A-26009 analysis
+        - Created: architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md — promoted from ephemeral source to persistent analysis with proper frontmatter (id, status, tags, produces)
+        - Deleted: architecture/evidence/sources/S-26007_compass_realistic_state_of_agentic_ai_2026.md — content preserved in A-26009
+        - Updated: architecture/evidence/analyses/A-26006_agent_runtime_architecture_rag_infrastructure.md — S-26007 refs → A-26009 md links
+        - Updated: architecture/evidence/analyses/A-26008_frontmatter_standard_taxonomy_audit.md — S-26007 refs → A-26009 md links, fixed S-26007 example in ID format line
+        - Updated: architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md — S-26007 refs → A-26009 md links
+        - Updated: architecture/adr/adr_26038_context_engineering_as_core_design_principle.md — S-26007 refs → A-26009 md links (7 occurrences)
+    - Add A-26008 frontmatter taxonomy audit and composable block design
+        - Created: architecture/evidence/analyses/A-26008_frontmatter_standard_taxonomy_audit.md — taxonomy audit comparing A-26005 proposal against repo reality, defines composable block schema (identity/discovery/lifecycle), 11-type registry, service type, Jupytext two-block parsing problem, date semantic shift analysis
+    - Add ADR-26041 Client-Side Logic with Server-Side Retrieval
+        - Created: architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md — Logic-in-View pattern: Python owns orchestration, SQL functions own retrieval
+        - Updated: architecture/adr_index.md — added ADR-26041 to Evolutionary Proposals
+    - Add ADR-26040 Podman Kube YAML as deployment standard
+        - Created: architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md — standardize Kube YAML + podman-kube@.service + named volumes
+        - Updated: architecture/adr_index.md — auto-updated by check-adr-index hook
+    - Add ADR-26039 pgvector as ecosystem database standard
+        - Created: architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md — schema-per-project isolation, hybrid search, deployment-agnostic
+        - Created: architecture/evidence/sources/S-26011_gemini_pgvector_viability_and_logic_locality.md — Gemini peer review of pgvector decision and client vs server logic locality
+        - Created: architecture/evidence/analyses/A-26007_pgvector_viability_and_logic_locality.md — extracted referential drift analysis, Logic-in-View pattern, VACUUM trap, security constraints
+        - Updated: myst.yml — added HA and HNSW abbreviations
+    - Extract agent runtime and RAG infrastructure evidence
+        - Created: architecture/evidence/sources/S-26008_gemini_langchain_agents_tools_memory.md — Gemini dialogue on LangChain vs production agent architecture (master loop, litellm, MCP)
+        - Created: architecture/evidence/sources/S-26009_gemini_local_git_repo_rag_pgvector.md — Gemini dialogue on pgvector RAG setup (schema-per-repo, halfvec, scalability)
+        - Created: architecture/evidence/sources/S-26010_gemini_stateless_jit_agentic_git_workflow.md — renamed and formalized from agentic_git_commits source
+        - Created: architecture/evidence/analyses/A-26006_agent_runtime_architecture_rag_infrastructure.md — extracts actionable insights from S-26008/S-26009/S-26010 for Phase 2 runtime decisions
+    - Rethink Agentic OS approach
+        - Created: architecture/evidence/sources/S-26007_compass_realistic_state_of_agentic_ai_2026.md — formalized compass research (Claude Opus 4.6) on the realistic state of agentic AI architectures in early 2026 as evidence source
+        - Created: architecture/adr/adr_26038_context_engineering_as_core_design_principle.md — context engineering as core design principle, single-agent with skill dispatch, three-tier memory, context budget as first-class constraint
+        - Updated: architecture/adr_index.md — added ADR-26038 to index (auto-fix)
+    - Add S-26006 source, revise A-26005 with VRL and integrated architecture
+        - Created: architecture/evidence/sources/S-26006_gemini_agentic_os_design_review.md — Gemini 3.0 Flash dialogue on Agentic OS design review, Virtual Relational Layer, and Postgres namespace model
+        - Updated: architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md — retitled to "Agentic OS Filesystem Architecture: Document Types, VFS, and Virtual Relational Layer"
+        - Added: Key Insights subsection on Virtual Relational Layer (Codd's theory applied to Git/YAML, ACID via Git, FK validation, normalization, JOIN problem)
+        - Added: Key Insights subsection on Contract-Based Documentation (docs as ISA, BLAS Interface/API/ABI parallel from GEMM handbook)
+        - Added: Taxonomy Design subsection on Integrated Triple-Layer Architecture (Control Plane / Kernel / Execution with 4 mermaid diagrams)
+        - Added: Approach Evaluation subsections on S-26006 assessment and Interim Architecture Caveat
+        - Added: Portability Design Postgres namespace model (cluster/database/schema/table mapping, FDW for cross-repo queries, relationship to ADR-26031)
+        - Updated: Problem Statement with relational integrity gap, integration gap, and interim artifact caveat
+        - Updated: References with S-26006, GEMM handbook, Codd (1970), Gabriel (1991)
+    - Update evidence sources README, fix stale links
+        - Updated: architecture/evidence/sources/README.md — Added YAML frontmatter, clarified three-commit workflow, added combining commits note, included git archaeology commands.
+        - Added: architecture/evidence/sources/README.ipynb — Added .ipynb pair with real Bash command outputs.
+        - Updated: architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md — Converted deleted source links (S-26004, S-26005) to backtick references.
+        - Updated: architecture/evidence/analyses/A-26002_agentic_os_skills_tiered_memory_package_infra.md — Converted deleted source link (S-26001) to backtick reference.
+        - Updated: architecture/evidence/analyses/A-26004_hook_stage_assignment_rationale.md — Converted deleted source link (S-26003) to backtick reference.
+        - Updated: architecture/architecture_decision_workflow_guide.md — Changed README.md link to README.ipynb, bumped version to 1.0.1.
+        - Updated: architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md — Changed README.md links to README.ipynb.
+    - Delete extracted evidence sources (three-commit workflow, step 3)
+        - Deleted: architecture/evidence/sources/S-26001_gemini_dialogue_skills_architectures.md — extracted_into: A-26002
+        - Deleted: architecture/evidence/sources/S-26002_gemini_changelog_alternatives_analysis.md — extracted_into: ADR-26024
+        - Deleted: architecture/evidence/sources/S-26003_gemini_post_commit_hook_stage_advice.md — extracted_into: A-26004
+        - Deleted: architecture/evidence/sources/S-26004_gemini_semantic_alignment_assessment.md — extracted_into: A-26005
+        - Deleted: architecture/evidence/sources/S-26005_qwen_agentic_os_architecture_diagram.md — extracted_into: A-26005
+    - Add Document Type Interfaces analysis and formalize evidence sources
+        - Created: architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md — comprehensive design analysis elaborating the Agentic OS document type system using UNIX as blueprint (inode metadata model, VFS/Document Type Registry, AI-first methodology, RUNTIME category for agent process state)
+        - Created: architecture/evidence/sources/S-26004_gemini_semantic_alignment_assessment.md — formalized orphaned source with S-YYNNN naming and frontmatter (WRC analysis, contract-first development, semantic linter design)
+        - Created: architecture/evidence/sources/S-26005_qwen_agentic_os_architecture_diagram.md — formalized orphaned source with S-YYNNN naming and frontmatter (UNIX ↔ Agentic OS mapping, Bach/Billimoria kernel concepts)
+        - Updated: architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md — promoted status from proposed to accepted (taxonomy proven with 5 analyses, 5 sources, working validation script)
+        - Updated: architecture/evidence/sources/S-26001_gemini_dialogue_skills_architectures.md — set extracted_into from null to A-26002
+    - Add hook stage assignment evidence artifacts
+        - Created: architecture/evidence/sources/S-26003_gemini_post_commit_hook_stage_advice.md — Gemini 3 Flash dialogue on post-commit vs commit-msg stage risks
+        - Created: architecture/evidence/analyses/A-26004_hook_stage_assignment_rationale.md — analysis confirming current hook stage assignments are sound
+        - Updated: tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.md — added stage rationale paragraph to Section 4, bumped to v1.3.0
+        - Deleted: architecture/evidence/sources/gemini-3-flash-post-commit-hook.md — content moved to S-26003
+    - Add Architecture Decision Workflow guide
+        - Created: architecture/architecture_decision_workflow_guide.md — merged guide covering ADR lifecycle, evidence pipeline, writing quality standards, status transitions (rejection/supersession/deprecation), anti-patterns checklist, and governing ADRs
+        - Deleted: architecture/what_is_an_adr.md — content absorbed into the merged guide
+        - Updated: architecture/adr/adr_template.md — added HTML comment pointing to the guide
+        - Updated: architecture/adr_index.md — added ADR-26037 to index
+        - Updated: tools/scripts/paths.py — added example link string to broken links exclusion list
+    - Formalize Gemini changelog alternatives transcript as S-26002
+        - Renamed: architecture/evidence/analyses/gemini_20260209_changelog_alternatives_analysis.md → architecture/evidence/sources/S-26002_gemini_changelog_alternatives_analysis.md — raw dialogue transcript belongs in sources/, not analyses/
+        - Updated: architecture/evidence/sources/S-26002_gemini_changelog_alternatives_analysis.md — added YAML frontmatter (id, title, date, model, extracted_into: ADR-26024) per sources/README.md schema
+* **Architectural Decisions:**
+    - Accept 4 ADRs, reject ADR-26003 for release alignment
+        - Updated: architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md — status proposed → accepted (script suite triad enforced via pre-commit)
+        - Updated: architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md — status proposed → accepted (validate_commit_msg.py + generate_changelog.py active)
+        - Updated: architecture/adr/adr_26038_context_engineering_as_core_design_principle.md — status proposed → accepted (core principle driving ecosystem direction)
+        - Updated: architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md — status proposed → rejected (custom validate_commit_msg.py replaced gitlint; branch naming deferred to future ADR)
+        - Fixed: architecture/adr/adr_26043_ecosystem_package_boundary.md — removed invalid tag 'tooling'
+        - Updated: architecture/adr_index.md — regenerated by check_adr.py --fix
+    - Reject ADR-26031 and ADR-26034
+        - Updated: architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md — rejected: string prefix approach weaker than A-26005 Postgres namespace model; problem is real but solution is wrong
+        - Updated: architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md — rejected: grand OS framing replaced by context engineering (ADR-26038); valid concepts (skills, procedural/declarative split) acknowledged and tracked
+        - Updated: architecture/adr_index.md — auto-updated by check_adr.py (26031, 26034 moved to Historical Context)
+
 release v2.6.0
 * New Features:
     - Add evidence artifact validation tooling

@@ -187,9 +187,25 @@ Analyze internals of aider, gemini-cli, qwen-code, claude-code:
 - Tool integration approaches
 - What to leverage (like litellm from aider)
 
+### 2.05 Research: Skills vs Subagents — Architectural Boundary
+
+**Problem**: ADR-26038 defines skills as "injected instructions, not sub-agents." But production tools (Claude Code, aider) use subagent patterns — child processes with their own LLM calls forked from the parent agent. This creates an unresolved tension:
+
+- **Injected instructions** (ADR-26038 position): skill loads into the main conversation as context, one LLM loop, no context isolation. Progressive disclosure controls token budget
+- **Forked subagents** (Claude Code pattern): parent spawns a child process with a subset of context, child returns a result, parent integrates. Multiple LLM loops, but orchestrated by a single parent — NOT a multi-agent swarm
+- **Multi-agent swarms** (AutoGen, CrewAI): independent agents negotiating with each other, context isolation between them, 25% correctness floor (UC Berkeley MAST)
+
+**Key questions**:
+- Is the Claude Code subagent pattern a controlled fork-and-join within single-agent architecture, or a multi-agent system?
+- When should a skill be injected instructions vs a forked subagent? What's the decision boundary?
+- Agent swarms are gaining popularity (2026 hype cycle) — is there a real use case beyond the hype, or does the evidence consistently show single-agent superiority?
+- How does this interact with MCP tool servers — is an MCP server a subagent, a tool, or something else?
+
+**Output**: Analysis (A-YYNNN) grounding the distinction, potentially a new ADR clarifying the skill/subagent boundary for the ecosystem
+
 ### 2.1 ADR: Skill Dispatcher Architecture
 
-In mentor_generator, informed by 2.0 research:
+In mentor_generator, informed by 2.0 and 2.05 research:
 - Skill registration and dispatch
 - Shared context management (the "kernel")
 - Tool integration via litellm tool_call / MCP
