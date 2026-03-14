@@ -30,7 +30,7 @@ Key evidence from [A-26009](/architecture/evidence/analyses/A-26009_compass_real
 
 3. **Cognition (Devin, $73M ARR)**: Published "Don't Build Multi-Agents" — multi-agent systems are inherently fragile due to context isolation between sub-agents.
 
-4. **Galileo AI estimate**: "In 80% of cases, a well-crafted single agent with thoughtful context management outperforms a multi-agent system."
+4. **Single-agent with skills study** ([arXiv:2601.04748](https://arxiv.org/abs/2601.04748), January 2026): Single agents with skill libraries "substantially reduce token usage and latency while maintaining competitive accuracy" compared to multi-agent approaches.
 
 5. **Claude Code ($1B run-rate)**: Fundamentally a single-agent tool-use loop — LLM + tools in a loop, not elaborate orchestration.
 
@@ -87,9 +87,9 @@ We adopt **context engineering as the core design principle** for the Agentic OS
 
 ### Negative / Risks
 
-- Single-agent architecture may hit scaling limits for truly independent parallel tasks. **Mitigation:** The constraint says "start single-agent" — it does not prohibit adding concurrency when proven necessary, but the burden of proof is on the proposer
+- Single-agent architecture may hit scaling limits for truly independent parallel tasks. **Mitigation:** The constraint says "start single-agent" — it does not prohibit adding concurrency when proven necessary, but the proposer must demonstrate the need. The approved scaling pattern is **fork-and-join subagents** (parent delegates subtasks to child processes while retaining full context), as distinct from multi-agent swarms where independent agents negotiate with each other
 - Token counting accuracy varies across providers (not all expose exact counts). **Mitigation:** litellm.token_counter provides best-effort estimates; design for approximate budgets with safety margins
-- Progressive disclosure requires good metadata (descriptions, tags, token_size) on all documents and skills. **Mitigation:** A common frontmatter standard (currently tracked as TD-001 in [Technical Debt Register](/misc/plan/techdebt.md)) will establish these fields; vadocs validates compliance
+- Progressive disclosure requires good metadata (descriptions, tags, token_size) on all documents and skills. **Mitigation:** A common frontmatter standard ({term}`ADR-26042`) will establish these fields; vadocs validates compliance
 
 ## Alternatives
 
@@ -108,7 +108,6 @@ We adopt **context engineering as the core design principle** for the Agentic OS
 - [GEMM: The Engineering Standard](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb) — BLAS Interface/API/ABI hierarchy, "the interface is the asset" principle, LINPACK extraction precedent
 - {term}`ADR-26034` — Agentic OS Paradigm: Skills as Composable Applications (refined by this ADR: single-agent emphasis)
 - {term}`ADR-26037` — Smallest Viable Architecture Constraint Framework (operationalized by this ADR for the agent runtime)
-- [Ecosystem Roadmap](/misc/plan/plan_20260308_ecosystem_roadmap_vadocs_to_mentor.md) — implementation plan
 
 ## Participants
 
