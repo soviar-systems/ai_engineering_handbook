@@ -2,7 +2,7 @@
 id: 26040
 title: "Podman Kube YAML as Deployment Standard"
 date: 2026-03-09
-status: proposed
+status: accepted
 superseded_by: null
 tags: [architecture, devops]
 ---
@@ -16,7 +16,7 @@ tags: [architecture, devops]
 
 ## Status
 
-proposed
+Accepted
 
 ## Context
 

@@ -2,7 +2,7 @@
 id: ADR-26024
 title: "Structured Commit Bodies for Automated CHANGELOG Generation"
 date: 2026-02-18
-status: proposed
+status: accepted
 superseded_by: null
 tags: [workflow, ci, documentation, git]
 ---
@@ -19,7 +19,7 @@ Structured Commit Bodies for Automated CHANGELOG Generation
 
 ## Status
 
-proposed
+Accepted
 
 ## Context
 

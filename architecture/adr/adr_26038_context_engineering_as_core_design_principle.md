@@ -2,7 +2,7 @@
 id: 26038
 title: "Context Engineering as Core Design Principle"
 date: 2026-03-08
-status: proposed
+status: accepted
 superseded_by: null
 tags: [architecture, context_management, governance]
 ---
@@ -16,7 +16,7 @@ tags: [architecture, context_management, governance]
 
 ## Status
 
-proposed
+Accepted
 
 ## Context
 

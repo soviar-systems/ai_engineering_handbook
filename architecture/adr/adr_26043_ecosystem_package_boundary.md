@@ -5,7 +5,7 @@ author: Vadim Rudakov, rudakow.wadim@gmail.com
 date: 2026-03-14
 status: proposed
 superseded_by: null
-tags: [governance, tooling, architecture]
+tags: [governance, architecture]
 ---
 
 <!-- Quality guidelines: /architecture/architecture_decision_workflow_guide.md -->

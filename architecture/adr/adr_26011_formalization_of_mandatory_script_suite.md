@@ -2,7 +2,7 @@
 id: 26011
 title: Formalization of the Mandatory Script Suite Workflow
 date: 2026-01-31
-status: proposed
+status: accepted
 tags: [architecture]
 superseded_by: null
 ---
@@ -15,7 +15,7 @@ Mandating a synchronized 1:1:1 ratio for Scripts, Tests, and Documentation.
 
 ## Status
 
-Proposed
+Accepted
 
 ## Date
 

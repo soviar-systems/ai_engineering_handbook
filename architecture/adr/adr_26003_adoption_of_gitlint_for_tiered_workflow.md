@@ -2,7 +2,7 @@
 id: 26003
 title: Adoption of `gitlint` for Tiered Workflow Enforcement
 date: 2026-01-24
-status: proposed
+status: rejected
 tags: [architecture, git]
 superseded_by: null
 ---
@@ -15,7 +15,9 @@ Standardizing Git Commit Validation using `gitlint` to Enforce Three-Tier Archit
 
 ## Status
 
-Proposed
+Rejected
+
+Commit message validation is handled by a custom Python script `validate_commit_msg.py` (see [ADR-26024](/architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md)). Branch naming validation (Tier 1) will be addressed in a future Git Three-Tier ADR as a `vadocs-git` plugin.
 
 ## Date
 

@@ -9,6 +9,9 @@ ADR-26001
 ADR-26002
 : [Adoption of the Pre-commit Framework](/architecture/adr/adr_26002_adoption_of_pre_commit_framework.md)
 
+ADR-26011
+: [Formalization of the Mandatory Script Suite Workflow](/architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md)
+
 ADR-26013
 : [Just-in-Time Prompt Transformation](/architecture/adr/adr_26013_just_in_time_prompt_transformation.md)
 
@@ -36,6 +39,9 @@ ADR-26022
 ADR-26023
 : [MyST-Aligned Frontmatter Standard](/architecture/adr/adr_26023_myst_aligned_frontmatter_standard.md)
 
+ADR-26024
+: [Structured Commit Bodies for Automated CHANGELOG Generation](/architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md)
+
 ADR-26025
 : [RFC→ADR Workflow Formalization](/architecture/adr/adr_26025_rfc_adr_workflow_formalization.md)
 
@@ -57,28 +63,25 @@ ADR-26035
 ADR-26037
 : [Smallest Viable Architecture (SVA) Constraint Framework](/architecture/adr/adr_26037_smallest_viable_architecture_constraint_framework.md)
 
+ADR-26038
+: [Context Engineering as Core Design Principle](/architecture/adr/adr_26038_context_engineering_as_core_design_principle.md)
+
+ADR-26040
+: [Podman Kube YAML as Deployment Standard](/architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md)
+
 :::
 
 ## Evolutionary Proposals
 
 :::{glossary}
-ADR-26003
-: [Adoption of `gitlint` for Tiered Workflow Enforcement](/architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md)
-
 ADR-26009
 : [Adoption of Ansible for Idempotent Configuration Management](/architecture/adr/adr_26009_adoption_of_ansible_for_idempotent_confi.md)
 
 ADR-26010
 : [Adoption of Molecule for Automated Ansible Role Validation](/architecture/adr/adr_26010_adoption_of_molecule_for_automated_ansib.md)
 
-ADR-26011
-: [Formalization of the Mandatory Script Suite Workflow](/architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md)
-
 ADR-26012
 : [Extraction of Documentation Validation Engine](/architecture/adr/adr_26012_extraction_of_docs_validation_engine.md)
-
-ADR-26024
-: [Structured Commit Bodies for Automated CHANGELOG Generation](/architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md)
 
 ADR-26030
 : [Stateless JIT Context Injection for Agentic Git Workflows](/architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md)
@@ -92,14 +95,8 @@ ADR-26033
 ADR-26036
 : [Config File Location and Naming Conventions](/architecture/adr/adr_26036_config_file_location_and_naming_conventions.md)
 
-ADR-26038
-: [Context Engineering as Core Design Principle](/architecture/adr/adr_26038_context_engineering_as_core_design_principle.md)
-
 ADR-26039
 : [pgvector as Ecosystem Database Standard](/architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md)
-
-ADR-26040
-: [Podman Kube YAML as Deployment Standard](/architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md)
 
 ADR-26041
 : [Client-Side Logic with Server-Side Retrieval](/architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md)
@@ -107,11 +104,17 @@ ADR-26041
 ADR-26042
 : [Common Frontmatter Standard](/architecture/adr/adr_26042_common_frontmatter_standard.md)
 
+ADR-26043
+: [Ecosystem Package Boundary](/architecture/adr/adr_26043_ecosystem_package_boundary.md)
+
 :::
 
 ## Historical Context
 
 :::{glossary}
+ADR-26003
+: [Adoption of `gitlint` for Tiered Workflow Enforcement](/architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md)
+
 ADR-26004
 : [Implementation of Agentic RAG for Autonomous Research](/architecture/adr/adr_26004_implementation_of_agentic_rag_for_autonom.md)
 
