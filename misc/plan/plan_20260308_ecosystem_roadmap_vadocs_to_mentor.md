@@ -99,6 +99,24 @@ In dependency order:
    - Formalize tracking format, ownership, review cadence
    - Resolves TD-002
 
+10. ADR-26047: Git Three-Tier Validation Mechanics
+    - Document adopted three-tier git validation (branch naming, commit format, ArchTag)
+    - Branch naming (Tier 1) is the unimplemented gap
+    - Target: vadocs-git plugin
+
+11. ADR-26048: AI-Native Development Methodology — Code as Primary Documentation
+    - Core thesis: in AI-native ecosystems, code structure IS the documentation layer — agents read code faster than prose
+    - **Contract-in-code**: class docstrings capture guarantees and boundaries, not implementation steps. Method names are self-documenting. Pipeline-aware docs rot on refactor
+    - **Test diagnostics for agents**: parametrize multi-case tests (pytest shows which input failed) instead of custom assertion messages. Assertion messages are documentation-in-implementation anti-pattern — they couple to intent the test name should convey
+    - **Diagnostics hierarchy**: test name → pytest introspection → contract docstring. Custom messages only where failure mode is genuinely ambiguous
+    - **Broader scope**: this shapes the entire ecosystem development workflow — how we write tests, document functions, structure modules so that agents can navigate and modify code with minimal context injection
+    - Research questions: Do agents benefit from structured error codes in test output? Should test suites export machine-readable contract schemas? How does this interact with ADR-26042 (frontmatter as machine-readable metadata)?
+    - Key insight: this is TDD optimized for agent consumers, not just TDD for humans. Three emerging principles:
+      1. Names over messages — test method names are the primary diagnostic channel
+      2. Parametrize over multiply-assert — pytest infrastructure provides the diagnostics, not hand-written strings
+      3. Contracts over pipelines — docstrings describe what survives refactoring, not what breaks on refactoring
+    - Connects to ADR-26038 (context engineering): if code structure is the documentation, context window budget is spent on code, not on redundant prose that paraphrases the code
+
 ### 1.15 ADR-26042 Migration
 
 Two-phase automated migration implementing ADR-26042:

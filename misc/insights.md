@@ -180,3 +180,19 @@ that naturally needs OS primitives:
 
 This is exactly the LINPACK → BLAS path. Build the working app, extract the OS primitives as they prove necessary.
 ─────────────────────────────────────────────────
+
+
+★ Insight ─────────────────────────────────────
+The status transition model has an implicit constraint: superseded requires accepted as a prior state (a principle must have been adopted before it can be obsoleted by a better one). proposed ADRs that don't survive review are simply rejected. This is analogous to how an RFC that never becomes a standard is "not adopted" — it can't be "superseded" because it was never the standard.
+
+
+**The Key Distinction: Syntax vs. Semantics**
+
+```
+SYNTAX (kernel's job):     "Read 100 bytes starting at offset 500"
+                           → Uniform for all programs, all files
+
+SEMANTICS (your job):      "Those 100 bytes represent 25 integers"
+                           → Defined by your program's logic
+```
+That separation of transport (kernel) vs. meaning (user space) is the genius of UNIX’s byte-stream model.

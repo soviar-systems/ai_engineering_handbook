@@ -1,5 +1,14 @@
 ai_engineering_book
 
+ADR:
+- should we use only one tag so we can change the adr_index to be sectioned, not the huge list of titles?
+
+adr_index
+- can we move the check to git add stage, not post-commit?
+
+ADR
+- The Security Implications section must be added as a required field for proposed and accepted ADRs.
+
 ADR index
 - divide History section into rejected and superseded
 - restructure the dir to active/rfc/rejected/superseded for easier navigation
