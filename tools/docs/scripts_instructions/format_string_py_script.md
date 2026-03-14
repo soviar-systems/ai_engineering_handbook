@@ -14,57 +14,91 @@ kernelspec:
 ---
 title: Instruction on format_string.py script
 author: Vadim Rudakov, rudakow.wadim@gmail.com
-date: 2026-02-24
+date: 2026-03-14
 options:
-  version: 0.2.2
+  version: 0.3.0
   birth: 2026-01-07
 ---
 
 +++
 
-# Instruction on format_string.py script
-
-+++
-
-This script formats a given input string by applying several transformations to make it URL-safe and filesystem-friendly. The transformations include converting to lowercase, replacing specific special characters, removing unwanted words, and truncating the string if necessary.
+This script formats a given input string by applying several transformations to make it URL-safe and filesystem-friendly. The transformations include converting to lowercase, replacing specific special characters, removing unwanted words, and optionally truncating the string.
 
 ## Synopsis
 
 ```bash
 format_string.py 'Your Input String'
+format_string.py --trunc 'Your Input String'
+format_string.py --trunc --trunc-len 30 'Your Input String'
 ```
+
+## Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--trunc` | Enable truncation | Off |
+| `--trunc-len N` | Maximum length when truncation is enabled | 50 |
 
 ## Transformation Logic
 
-1. **Convert to Lowercase**: All characters in the input string are converted to lowercase.
-2. **Replace & with and**: The ampersand (`&`) is replaced with the word "and".
-3. **Remove Special Symbols**: Certain special symbols (e.g., "the ", "(", ")", "# ", "#", "`", "~", "$", "%", "@", "—") are removed from the string.
-4. **Replace Special Symbols with Underscores**: Other special symbols (e.g., ".", ",", ";", ":", "!", "?", "-", "/", "\\", "|", "<", ">", "*") are replaced with underscores (`_`).
-5. **Remove Multiple Underscores**: Any sequence of multiple underscores is reduced to a single underscore.
-6. **Replace Spaces with Underscores**: All spaces in the string are replaced with underscores.
-7. **Truncate Long Strings**: If the resulting string exceeds 50 characters, it is truncated to 50 characters.
-8. **Remove Trailing Underscore**: If the final character of the string is an underscore, it is removed.
+1. **Strip File Extensions**: Known file extensions (`.pdf`, `.epub`, `.html`, `.txt`, `.md`, `.ipynb`, `.doc`, `.json`, `.yaml`, `.png`, `.jpg`, `.mp4`, archives like `.tar.gz`, `.zip`, etc.) are removed. Compound extensions (`.tar.gz`, `.tar.bz2`) are stripped as a unit.
+2. **Convert to Lowercase**: All characters in the input string are converted to lowercase.
+3. **Replace & with and**: The ampersand (`&`) is replaced with the word "and".
+4. **Remove Special Symbols**: Certain special symbols (e.g., "the ", "(", ")", "# ", "#", "`", "~", "$", "%", "@") are removed from the string.
+5. **Replace Special Symbols with Underscores**: Other special symbols (e.g., ".", ",", ";", ":", "!", "?", "-", "–", "—", "/", "\\", "|", "<", ">", "*") are replaced with underscores (`_`).
+6. **Remove Multiple Underscores**: Any sequence of multiple underscores is reduced to a single underscore.
+7. **Replace Spaces with Underscores**: All spaces in the string are replaced with underscores.
+8. **Truncate Long Strings** (optional): When `--trunc` is passed, strings exceeding `--trunc-len` (default 50) are truncated. Truncation is off by default.
+9. **Remove Trailing Underscore**: If the final character of the string is an underscore, it is removed.
 
 ## Examples
 
+### Basic usage — article and book titles
+
 ```{code-cell}
-format_string.py 'Agents4Science Conference Paper Digest: How Agents Are "Doing" Science Right Now'
+cd ../../../
+ls
 ```
 
 ```{code-cell}
-format_string.py '# Post-Mortem: Architectural Flaws in the `nbdiff`-Centric Jupyter Version Control Handbook'
+env -u VIRTUAL_ENV uv run tools/scripts/format_string.py 'From Concepts to Code: Introduction to Data Science (2024)'
 ```
 
 ```{code-cell}
-format_string.py 'Feedforward Neural Networks in Depth, Part 3 Cost Functions | I, Deep Learning.pdf'
+env -u VIRTUAL_ENV uv run tools/scripts/format_string.py 'Quiz - Special Applications: Face Recognition & Neural Style Transfer'
+```
+
+### Stripping file extensions
+
+```{code-cell}
+env -u VIRTUAL_ENV uv run tools/scripts/format_string.py 'Feedforward Neural Networks in Depth, Part 3 Cost Functions | I, Deep Learning.pdf'
 ```
 
 ```{code-cell}
-format_string.py 'From Concepts to Code: Introduction to Data Science (2024)'
+env -u VIRTUAL_ENV uv run tools/scripts/format_string.py 'research_paper_draft.epub'
+```
+
+### Handling markdown and code formatting
+
+```{code-cell}
+env -u VIRTUAL_ENV uv run tools/scripts/format_string.py '# Post-Mortem: Architectural Flaws in the `nbdiff`-Centric Jupyter Version Control Handbook'
+```
+
+### Long titles with special characters
+
+```{code-cell}
+env -u VIRTUAL_ENV uv run tools/scripts/format_string.py 'Agents4Science Conference Paper Digest: How Agents Are "Doing" Science Right Now'
+```
+
+### Truncation
+
+```{code-cell}
+# 50 symbols is the default
+env -u VIRTUAL_ENV uv run tools/scripts/format_string.py --trunc 'Agents4Science Conference Paper Digest: How Agents Are "Doing" Science Right Now'
 ```
 
 ```{code-cell}
-format_string.py 'Quiz - Special Applications: Face Recognition & Neural Style Transfer'
+env -u VIRTUAL_ENV uv run tools/scripts/format_string.py --trunc --trunc-len 30 'From Concepts to Code: Introduction to Data Science (2024)'
 ```
 
 ## Test Suite
@@ -73,14 +107,23 @@ The [test suite](/tools/tests/test_format_string.py) covers all transformation r
 
 | Test Area | Coverage |
 |-----------|----------|
+| Extension stripping | `.pdf`, `.epub`, `.tar.gz`, compound extensions |
 | Case conversion | Lowercase transformation |
-| Symbol replacement | &, punctuation, slashes, etc. |
+| Symbol replacement | `&`, punctuation, dashes (–, —), slashes, etc. |
 | Symbol removal | Parentheses, quotes, special chars |
 | Underscore handling | Collapsing, stripping |
-| Truncation | 50 character limit |
+| Truncation | Optional, configurable length |
 
 Run tests with:
 
 ```bash
 uv run pytest tools/tests/test_format_string.py -v
+```
+
+```{code-cell}
+env -u VIRTUAL_ENV uv run pytest tools/tests/test_format_string.py -q
+```
+
+```{code-cell}
+env -u VIRTUAL_ENV uv run pytest tools/tests/test_format_string.py --cov=tools.scripts.format_string --cov-report=term-missing -q
 ```
