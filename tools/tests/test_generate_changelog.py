@@ -44,6 +44,7 @@ from tools.scripts.generate_changelog import (
     SECTION_ORDER,
     EXCLUDE_PATTERNS,
     _filter_excluded_commits,
+    _filter_empty_bullet_commits,
 )
 
 
@@ -104,7 +105,7 @@ def sample_commits():
     Used for grouping and formatting tests. Includes:
     - Two feat commits (tests grouping of same type)
     - One fix commit with scope (tests scope handling)
-    - One docs commit with no bullets (tests legacy/bodyless handling)
+    - One docs commit with a bullet
     """
     return [
         Commit(
@@ -136,7 +137,7 @@ def sample_commits():
             type="docs",
             scope=None,
             subject="update README",
-            bullets=[],
+            bullets=["- Updated: README.md — refreshed project description"],
         ),
     ]
 
@@ -426,31 +427,14 @@ class TestFormatChangelog:
         bullet_indent = len(bullet_line) - len(bullet_line.lstrip())
         assert bullet_indent > topic_indent
 
-    def test_legacy_commit_produces_no_sub_items(self):
-        """Commits without body bullets appear with subject only.
-
-        Legacy commits (pre-convention) should degrade gracefully —
-        they get a topic line but no bullet sub-items beneath it.
-        """
+    def test_bulletless_commit_is_excluded(self):
+        """Commits with no bullets (legacy or all-excluded) do not appear in output."""
         commits = [Commit("a", "docs", None, "update README", [])]
         groups = group_by_type(commits)
         output = format_changelog(groups)
-        # Subject appears
-        assert "update readme" in output.lower()
-        lines = output.split("\n")
-        # Find the topic line and verify nothing is more deeply indented after it
-        topic_idx = next(
-            i for i, l in enumerate(lines) if "update readme" in l.lower()
-        )
-        topic_indent = len(lines[topic_idx]) - len(lines[topic_idx].lstrip())
-        # No subsequent non-empty lines should be more deeply indented
-        for line in lines[topic_idx + 1 :]:
-            if line.strip():
-                line_indent = len(line) - len(line.lstrip())
-                assert line_indent <= topic_indent, (
-                    f"Unexpected sub-item after bodyless commit: {line!r}"
-                )
-                break  # Only check the next non-empty line
+        assert "update readme" not in output.lower()
+        # Section header should also be absent
+        assert "Documentation" not in output
 
     def test_empty_groups_returns_string(self):
         """Empty input → valid string (not crash). May be empty or header-only."""
@@ -699,10 +683,7 @@ class TestExcludePatterns:
         assert len(result) == 0
 
     def test_bullet_matching_exclude_pattern_is_removed(self):
-        """Bullets matching a pattern are dropped by parse_single_commit.
-
-        The commit itself is kept — only the offending bullet is removed.
-        """
+        """Bullets matching a pattern are dropped; commit kept if other bullets remain."""
         pattern = EXCLUDE_PATTERNS[0]
         raw = (
             f"abc123\nfeat: add feature\n"
@@ -711,9 +692,26 @@ class TestExcludePatterns:
         )
         commit = parse_single_commit(raw)
         assert commit is not None
-        # Only the clean bullet survives
         assert len(commit.bullets) == 1
         assert pattern.lower() not in commit.bullets[0].lower()
+
+    def test_commit_dropped_when_all_bullets_excluded(self):
+        """Contract: if every bullet in a commit matches exclusion patterns,
+        the entire commit is excluded — not rendered as a subject-only orphan."""
+        pattern = EXCLUDE_PATTERNS[0]
+        raw = (
+            f"abc123\ndocs: Update something\n"
+            f"- Updated: {pattern} — first change\n"
+            f"- Created: {pattern} — second change\n"
+        )
+        commit = parse_single_commit(raw)
+        assert commit is not None
+        # All bullets were excluded during parsing
+        assert len(commit.bullets) == 0
+        # Commit with no bullets should not appear in formatted output
+        groups = group_by_type([commit])
+        output = format_changelog(groups)
+        assert commit.subject not in output
 
     def test_bullet_exclusion_is_case_insensitive(self):
         """Bullet filtering ignores case, same as commit-level filtering."""
@@ -790,3 +788,19 @@ class TestExcludePatterns:
         _filter_excluded_commits([matching], verbose=False)
         captured = capsys.readouterr()
         assert captured.err == ""
+
+    def test_verbose_reports_commit_dropped_for_empty_bullets(self, capsys):
+        """Contract: verbose mode reports when a commit is dropped because
+        all its bullets were excluded."""
+        pattern = EXCLUDE_PATTERNS[0]
+        raw = (
+            f"abc123\ndocs: Update something\n"
+            f"- Updated: {pattern} — only change\n"
+        )
+        commit = parse_single_commit(raw, verbose=True)
+        assert commit is not None
+        assert len(commit.bullets) == 0
+        # The generate_changelog pipeline should report the drop
+        commits = _filter_empty_bullet_commits([commit], verbose=True)
+        captured = capsys.readouterr()
+        assert len(captured.err) > 0

@@ -128,6 +128,7 @@ def generate_changelog(
     """Generate formatted CHANGELOG string from git history."""
     commits = parse_commits(ref_range, verbose=verbose)
     commits = _filter_excluded_commits(commits, verbose=verbose)
+    commits = _filter_empty_bullet_commits(commits, verbose=verbose)
     groups = group_by_type(commits)
     return format_changelog(groups, version)
 
@@ -278,6 +279,20 @@ def _filter_excluded_commits(
     return filtered
 
 
+def _filter_empty_bullet_commits(
+    commits: list[Commit], *, verbose: bool = False,
+) -> list[Commit]:
+    """Drop commits with no surviving bullets (all excluded or legacy bodyless)."""
+    filtered = []
+    for c in commits:
+        if not c.bullets:
+            if verbose:
+                print(f"[dropped — no bullets] {c.subject}", file=sys.stderr)
+        else:
+            filtered.append(c)
+    return filtered
+
+
 def group_by_type(commits: list[Commit]) -> dict[str, list[Commit]]:
     """Group commits by their type key, preserving insertion order."""
     groups: dict[str, list[Commit]] = {}
@@ -314,10 +329,15 @@ def format_changelog(
     extra_types = [t for t in groups if t not in SECTION_ORDER]
 
     for type_key in ordered_types + extra_types:
+        # Collect commits with surviving bullets
+        visible_commits = [c for c in groups[type_key] if c.bullets]
+        if not visible_commits:
+            continue
+
         section_name = TYPE_TO_SECTION.get(type_key, type_key.capitalize())
         lines.append(f"* **{section_name}:**")
 
-        for commit in groups[type_key]:
+        for commit in visible_commits:
             # Subject line — capitalize first letter
             capitalized_subject = commit.subject[0].upper() + commit.subject[1:]
             lines.append(f"    - {capitalized_subject}")

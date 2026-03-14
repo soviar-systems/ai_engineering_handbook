@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: "Instruction on generate_changelog.py script"
 author: Vadim Rudakov, rudakow.wadim@gmail.com
-date: 2026-02-28
+date: 2026-03-14
 options:
-  version: 1.1.0
+  version: 1.2.0
   birth: 2026-02-16
 ---
 
@@ -99,9 +99,9 @@ Each commit is parsed from `git log --format=%H%n%s%n%b%nEND_COMMIT_MARKER`:
 
 +++
 
-### Legacy Commit Handling
+### Commits Without Bullets Are Excluded
 
-Commits predating the structured body convention (no bullets) are included with their subject line only — no sub-items. This ensures graceful degradation when scanning history that spans the convention adoption date.
+Commits with no surviving bullets — whether legacy (pre-convention) or fully filtered by exclusion patterns — are dropped entirely from the output. This prevents subject-only orphan entries that add noise without detail.
 
 +++
 
@@ -115,8 +115,9 @@ Sections appear in the order defined by `pyproject.toml [tool.commit-convention.
 
 Commits and bullets matching patterns from `pyproject.toml [tool.commit-convention.changelog-exclude-patterns]` are filtered from output. Matching is case-insensitive substring search.
 
-* **Commit level**: subject matches pattern → entire commit dropped
-* **Bullet level**: bullet matches pattern → only that bullet dropped
+* **Bullet level**: bullet matches pattern → that bullet is dropped
+* **Commit level**: if all bullets are excluded, the entire commit is dropped (no subject-only orphans)
+* **Subject level**: subject matches pattern → entire commit dropped
 
 Use `--verbose` / `-v` to print excluded items to stderr for debugging.
 
@@ -213,7 +214,7 @@ env -u VIRTUAL_ENV uv run tools/scripts/generate_changelog.py HEAD~10..HEAD~7 | 
 +++
 
 ```bash
-uv run tools/scripts/generate_changelog.py v2.4.0..HEAD --version 2.6.0 --prepend CHANGELOG
+uv run tools/scripts/generate_changelog.py v2.5.0..HEAD --version 2.6.0 --prepend CHANGELOG
 ```
 
 +++
@@ -240,11 +241,11 @@ head "${stderr_log}"
 
 +++
 
-The script is accompanied by a test suite (`test_generate_changelog.py`) with 76 tests covering:
+The script is accompanied by a test suite (`test_generate_changelog.py`) with 78 tests covering:
 
 * **Commit parsing**: Hash, type, scope, subject, bullet extraction, trailer/ArchTag exclusion
 * **Grouping**: Type-based grouping, order preservation, empty input
-* **Formatting**: Version header, section headers (bold markdown), indentation hierarchy, capitalization, section ordering, legacy commits
+* **Formatting**: Version header, section headers (bold markdown), indentation hierarchy, capitalization, section ordering, bulletless commit exclusion
 * **Git integration**: `--first-parent` flag, multi-commit parsing, empty ranges (mocked subprocess)
 * **CLI integration**: Required arguments, stdout output, `--version` flag, `--prepend` file writing (with blank line separator), `--verbose` flag
 * **Exclusion patterns**: Config loading, commit-level filtering, bullet-level filtering, case-insensitivity, verbose stderr output, parametrized coverage of all configured patterns
