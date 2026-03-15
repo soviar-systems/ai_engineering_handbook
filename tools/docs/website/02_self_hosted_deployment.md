@@ -6,17 +6,20 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.19.0
 kernelspec:
-  name: python3
   display_name: Python 3 (ipykernel)
   language: python
+  name: python3
 ---
 
 ---
 title: "Self-Hosted Website Deployment (Podman / Nginx / Traefik)"
 author: Vadim Rudakov, rudakow.wadim@gmail.com
-date: 2026-02-09
+description: "Step-by-step guide for deploying a MyST website on private infrastructure using Podman, Nginx, Traefik, and GitHub Actions CI/CD. Covers multi-website configuration with per-site Nginx server blocks behind a shared Traefik reverse proxy."
+date: 2026-03-16
+tags: [website, deployment, nginx, traefik, podman, github_actions]
 options:
-  version: 1.0.0
+  type: guide
+  version: 1.1.0
   birth: 2025-12-17
 ---
 
@@ -420,6 +423,7 @@ http:
 
 +++
 
+(troubleshooting-checklist)=
 ### Troubleshooting Checklist
 
 +++
@@ -428,6 +432,20 @@ http:
 * **Permission Denied:** Check that the GitHub SSH user has write access to the target folder on the server.
 * **No Site Config:** Ensure `myst.yml` is present in the root of your GitHub repository.
 * **Traefik Issues:** Check the Traefik dashboard to ensure the service is "Healthy" and the URL matches the host's listener.
+* **Links redirect to `http://host:<port>/` instead of `https://host/`:** This is caused by Nginx's default `absolute_redirect on` behaviour. When a visitor navigates to a URL without a trailing slash (e.g. `/general-overview-of-system`), Nginx issues a `301` redirect to the same path with a trailing slash. By default it constructs an **absolute** `Location` header using the `Host` header from the incoming request and its own internal listen port — producing `http://workbooks.example.com:81/general-overview-of-system/` instead of the correct `https://workbooks.example.com/general-overview-of-system/`.
+
+  This only manifests on non-default ports (e.g. `81`). Port `80` hides the bug because browsers silently drop the default HTTP port from URLs.
+
+  **Fix:** add `absolute_redirect off;` to the affected `server` block. This makes Nginx emit a relative `Location: /path/` header so the browser resolves the redirect against its current scheme and host (`https://workbooks.example.com`), ignoring the internal port entirely. See the corrected config in {ref}`nginx-conf-multi-site`.
+
+  ```yaml
+  server {
+      listen 81;
+      server_name localhost;
+      absolute_redirect off;  # prevent redirects leaking internal port/scheme
+      ...
+  }
+  ```
 
 +++
 
@@ -483,6 +501,7 @@ $ tree --dirsfirst -L 2 ~/website/
 
 +++
 
+(nginx-conf-multi-site)=
 ### B.1 nginx.conf
 
 +++
@@ -499,7 +518,7 @@ server {
     listen 80;
     server_name localhost;
 
-    root /usr/share/nginx/site_a; 
+    root /usr/share/nginx/site_a;
     index index.html;
 
     location / {
@@ -518,6 +537,11 @@ server {
 server {
     listen 81;
     server_name localhost;
+    # Nginx's default absolute_redirect on would produce redirects like
+    # http://host:81/path/ — leaking the internal port through Traefik.
+    # Setting this to off makes Nginx emit relative Location headers so
+    # the browser stays on the correct https:// scheme and public domain.
+    absolute_redirect off;
 
     root /usr/share/nginx/site_b;
     index index.html;
@@ -536,6 +560,10 @@ server {
 ```
 
 Note that the `root` paths must be different so they don't serve the same files.
+
+:::{warning}
+Any `server` block listening on a **non-default port** (anything other than `80`) must include `absolute_redirect off;`. Without it, Nginx's trailing-slash redirects will expose the internal port to the browser, breaking HTTPS navigation through Traefik. See {ref}`troubleshooting-checklist` for a full explanation.
+:::
 :::
 
 +++
