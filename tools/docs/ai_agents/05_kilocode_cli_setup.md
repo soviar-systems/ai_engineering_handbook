@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.19.0
+    jupytext_version: 1.19.1
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
@@ -18,18 +18,36 @@ kernelspec:
 ---
 title: "Kilo Code CLI: Installation and Setup"
 author: Vadim Rudakov, rudakow.wadim@gmail.com
-description: "Step-by-step setup guide for Kilo Code CLI (Roo Code/Cline fork, 500+ models): npm install, Ollama local models, DashScope/Qwen cloud, and multi-provider BYOK setup."
+description: "Step-by-step setup guide for Kilo Code CLI (Kilo platform gateway, 500+ cloud models): npm install, authentication, free-tier models, and MCP server setup."
 tags: [cli_agents, tooling, installation]
 date: 2026-03-15
 options:
   type: guide
   birth: 2026-03-15
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 +++
 
-Kilo Code is an open-source AI coding agent for the terminal (and VS Code). It is a fork of Roo Code / Cline, supports 500+ models, and works with both cloud APIs and local models via Ollama — a strong alternative to aider when you want an interactive TUI agent.
+Kilo Code CLI is a terminal-based AI coding agent from [kilo.ai](https://kilo.ai). It connects to the **Kilo platform gateway**, which proxies 500+ cloud models (including free-tier ones). It supports interactive TUI sessions, one-off task runs, and MCP server integration.
+
+:::{warning}
+**This tool contradicts the hybrid LLM+SLM philosophy of this book.**
+
+This book is built around the principle that local SLMs are first-class citizens: model selection is driven by capability (reasoning-class vs. agentic-class), not by vendor availability. Kilo Code CLI inverts this — it routes all traffic through the Kilo platform gateway (`api.kilo.ai`), requires account registration even for "free" models, and has no support for local Ollama models or direct API keys. Every inference call passes through a proprietary intermediary you do not control.
+
+For terminal-based agentic coding aligned with this book's philosophy, use [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (cloud, direct API) or [aider](https://aider.chat) with `--model ollama/...` (local SLMs, no gateway).
+
+This guide is kept as a reference and cautionary example.
+:::
+
++++
+
+:::{important}
+**Kilo Code CLI ≠ Kilo Code VS Code Extension.**
+
+The CLI (`@kilocode/cli` npm package) routes all model traffic through the Kilo platform gateway. It does **not** support local Ollama models or direct BYOK API keys to third-party providers (Anthropic, Google, DashScope, etc.). The VS Code extension (a Roo Code/Cline fork) supports those features — the CLI does not.
+:::
 
 +++
 
@@ -95,7 +113,26 @@ kilo --version
 
 +++
 
-## **2. Launch Kilo Code**
+## **2. Authenticate with Kilo Platform**
+
++++
+
+Kilo CLI requires a Kilo account to use any model — including free-tier ones. Log in via browser OAuth:
+
+```bash
+kilo auth login
+```
+
+This opens a browser-based OAuth flow. Credentials are stored in `~/.local/share/kilo/auth.json`.
+
+```bash
+kilo auth list    # show stored credentials
+kilo auth logout  # log out
+```
+
++++
+
+## **3. Launch Kilo Code**
 
 +++
 
@@ -130,246 +167,54 @@ kilo run "add input validation to the signup form"
 
 | Flag | Description |
 | :--- | :--- |
-| `-m provider/model` | Set the model (e.g. `-m ollama/qwen2.5-coder:14b`) |
+| `-m kilo/<model>` | Set the model (must be a valid Kilo model ID) |
 | `-c` | Continue the last session |
 | `-s <session-id>` | Resume a specific session |
 | `--prompt "<text>"` | Pass an initial prompt non-interactively |
 
 +++
 
-## **3. Authenticate with Kilo Platform**
+## **4. Available Models**
 
 +++
 
-Kilo offers its own hosted models, including free-tier ones, at [kilo.ai](https://kilo.ai). To use them, log in:
+Kilo routes traffic through its gateway, which aggregates models from OpenRouter, Anthropic, Google, and others. Some models are free, others require Kilo credits.
+
+List all available models:
 
 ```bash
-kilo auth login
+kilo models            # list all model IDs
+kilo models --verbose  # include cost and context window metadata
 ```
 
-This opens a browser-based OAuth flow. Credentials are stored in `~/.local/share/kilo/auth.json`.
+### Free-tier models (as of March 2026)
+
++++
+
+| Model ID | Notes |
+| :--- | :--- |
+| `kilo/kilo-auto/free` | Auto-selected free model |
+| `kilo/openrouter/free` | OpenRouter free tier proxy |
+| `kilo/arcee-ai/trinity-large-preview:free` | 400B MoE, 128k context, good for agentic tasks |
+| `kilo/minimax/minimax-m2.5:free` | Balanced capability |
+| `kilo/x-ai/grok-code-fast-1:optimized:free` | Fast, code-focused |
+| `kilo/stepfun/step-3.5-flash:free` | Lightweight, fast |
+
+Launch with a specific model:
 
 ```bash
-kilo auth list    # show stored credentials
-kilo auth logout  # log out
-```
-
-List available Kilo-hosted models (including free ones):
-
-```bash
-kilo models
+kilo -m kilo/arcee-ai/trinity-large-preview:free
 ```
 
 +++
 
 :::{note}
-**No account needed** to use your own API keys or a local Ollama instance — skip this section entirely if you prefer BYOK or local models.
+Free-tier model availability can change. Run `kilo models` to see the current list — model IDs ending in `:free` have zero cost.
 :::
 
 +++
 
-## **4. Connect to Local Ollama + Qwen**
-
-+++
-
-Kilo Code supports Ollama as a local model provider. This lets you run Qwen (or any other model) entirely on your own hardware with no API costs and full data privacy.
-
-+++
-
-### Pull the model and start Ollama
-
-+++
-
-```bash
-ollama pull qwen2.5-coder:14b    # recommended for agentic tasks
-ollama pull qwen2.5-coder:3b     # lighter, fast edits
-ollama serve                     # starts server at http://localhost:11434
-```
-
-+++
-
-### Launch Kilo with a local model
-
-+++
-
-```bash
-kilo -m ollama/qwen2.5-coder:14b
-```
-
-Or for a one-off run:
-
-```bash
-kilo run -m ollama/qwen2.5-coder:14b "refactor the auth module to use JWT"
-```
-
-+++
-
-:::{tip}
-**Recommended models by task:**
-
-| Model | Use case |
-| :--- | :--- |
-| `qwen2.5-coder:14b` | Multi-file edits, complex instructions |
-| `qwen2.5-coder:3b` | Fast single-file edits, low VRAM |
-| `qwen3-coder:30b` | Best quality (requires 24GB+ VRAM) |
-:::
-
-+++
-
-:::{note}
-**Context window:** Ollama's default `num_ctx` can be too small for agentic tasks. Set it to at least 32k in your `Modelfile` or via `OLLAMA_NUM_CTX=32768` environment variable before starting `ollama serve`.
-:::
-
-+++
-
-## **5. Connect to Qwen Cloud (DashScope API)**
-
-+++
-
-To use Qwen's cloud models (larger, more capable than local ones) you authenticate via the **DashScope API key**.
-
-+++
-
-:::{important}
-**Qwen OAuth (regular account login) is not supported in Kilo Code.**
-
-[Qwen Code](https://github.com/QwenLM/qwen-code) has a special `/auth → Qwen OAuth` flow that lets you log in with a regular [qwen.ai](https://qwen.ai) account and get **1,000 free requests/day** without any API key. This feature is built into Qwen Code only — it does not exist in Kilo Code.
-
-If you want that free tier with zero setup, use Qwen Code instead. In Kilo Code, Qwen cloud access requires a DashScope API key.
-:::
-
-+++
-
-### Get a DashScope API key
-
-+++
-
-1. Sign up or log in at [Alibaba Cloud Model Studio](https://bailian.console.aliyun.com/)
-2. Go to **API Keys** and create a new key
-3. For international users (outside China): use [international.aliyuncs.com](https://bailian.console.aliyun.com/?tab=api#/api-key)
-
-+++
-
-### Set the key as an environment variable
-
-+++
-
-```bash
-export DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxxxxxx
-# add to ~/.bashrc to make it permanent
-```
-
-+++
-
-### Launch Kilo with Qwen Cloud via OpenAI-compatible endpoint
-
-+++
-
-Kilo Code supports any OpenAI-compatible provider. Use the `-m` flag with the `openai-compatible` provider and set the base URL:
-
-```bash
-OPENAI_API_KEY=$DASHSCOPE_API_KEY \
-OPENAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1 \
-kilo -m openai-compatible/qwen-plus
-```
-
-Available Qwen cloud model IDs:
-
-| Model | Notes |
-| :--- | :--- |
-| `qwen-turbo` | Fast, cheap, good for simple tasks |
-| `qwen-plus` | Balanced capability and cost |
-| `qwen-max` | Best quality, highest cost |
-| `qwen2.5-coder-32b-instruct` | Best for code tasks |
-
-+++
-
-:::{seealso}
-- [DashScope OpenAI-compatible API docs](https://www.alibabacloud.com/help/en/model-studio/compatibility-of-openai-with-dashscope)
-- [Qwen model list](https://www.alibabacloud.com/help/en/model-studio/getting-started/models)
-:::
-
-+++
-
-## **6. Connect to Cloud Providers (Gemini, Claude, OpenRouter, Groq)**
-
-+++
-
-Kilo Code supports all major cloud providers via **BYOK (Bring Your Own Key)**. You can register your key through the Kilo platform web UI, or pass it directly via environment variables for a provider-agnostic approach.
-
-+++
-
-### Get API keys
-
-+++
-
-| Provider | Where to get the key | Free tier |
-| :--- | :--- | :--- |
-| **Gemini** | [Google AI Studio](https://aistudio.google.com/api-keys) | Yes, 20 RPD on flash models |
-| **Claude (Anthropic)** | [Anthropic Console](https://console.anthropic.com/settings/keys) | No (pay-as-you-go) |
-| **OpenRouter** | [OpenRouter Settings](https://openrouter.ai/settings/keys) | Yes, 50 free req/day |
-| **Groq** | [Groq Console](https://console.groq.com/keys) | Yes |
-
-+++
-
-### Register your key via Kilo web UI (recommended)
-
-+++
-
-After logging in with `kilo auth login`:
-
-1. Go to [kilo.ai/dashboard](https://kilo.ai/dashboard)
-2. Navigate to **Account → Bring Your Own Key (BYOK)**
-3. Click **Add Your First Key**, select the provider, and paste your API key
-
-From this point your key is used automatically when you select a model from that provider in Kilo.
-
-+++
-
-### Or pass the key via environment variable
-
-+++
-
-For a simpler, login-free workflow — set the standard environment variable and launch:
-
-```bash
-# Gemini
-export GEMINI_API_KEY=AIzaSy...
-kilo -m gemini/gemini-2.5-flash
-
-# Claude
-export ANTHROPIC_API_KEY=sk-ant-...
-kilo -m anthropic/claude-sonnet-4-5
-
-# OpenRouter
-export OPENROUTER_API_KEY=sk-or-...
-kilo -m openrouter/qwen/qwen3-coder:free
-
-# Groq
-export GROQ_API_KEY=gsk_...
-kilo -m groq/llama-3.3-70b-versatile
-```
-
-+++
-
-:::{tip}
-Add your keys to `~/.bashrc` to avoid re-exporting them each session:
-```bash
-export GEMINI_API_KEY=AIzaSy...
-export ANTHROPIC_API_KEY=sk-ant-...
-```
-:::
-
-+++
-
-:::{seealso}
-- [Kilo Code AI Providers docs](https://kilo.ai/docs/ai-providers)
-- [Kilo BYOK docs](https://kilo.ai/docs/getting-started/byok)
-:::
-
-+++
-
-## **7. Useful Commands Reference**
+## **5. Useful Commands Reference**
 
 +++
 
@@ -377,6 +222,7 @@ export ANTHROPIC_API_KEY=sk-ant-...
 kilo                        # launch interactive TUI
 kilo run "<task>"           # run a one-off task
 kilo models                 # list all available models
+kilo models --verbose       # list with cost and context metadata
 kilo session list           # list past sessions
 kilo export <session-id>    # export session as JSON
 kilo auth login             # log in to Kilo platform
@@ -386,6 +232,36 @@ kilo mcp                    # manage MCP (Model Context Protocol) servers
 kilo upgrade                # upgrade to the latest version
 kilo stats                  # show token usage and cost statistics
 kilo uninstall              # uninstall kilo and remove config files
+```
+
++++
+
+## **6. Uninstall**
+
++++
+
+Kilo's built-in uninstall command removes the binary, config, and local data:
+
+```bash
+kilo uninstall
+```
+
+Then remove the npm package:
+
+```bash
+npm uninstall -g @kilocode/cli --prefix ~/.local
+```
+
+Remove leftover data directories:
+
+```bash
+rm -rf ~/.local/share/kilo
+```
+
+Verify nothing remains:
+
+```bash
+which kilo    # should return nothing
 ```
 
 +++
