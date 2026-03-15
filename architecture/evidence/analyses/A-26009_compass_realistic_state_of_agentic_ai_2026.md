@@ -1,24 +1,40 @@
 ---
 id: A-26009
 title: "Compass — The Realistic State of Agentic AI Architectures in Early 2026"
-date: 2026-03-08
-status: active
+author: Vadim Rudakov, rudakow.wadim@gmail.com
+description: "Evidence verdict on production viability of agentic architectures in early 2026: context engineering — not orchestration sophistication — is the real bottleneck; the pivot that killed the Agentic OS design."
 tags: [architecture, context_management, governance, security]
+date: 2026-03-16
+status: active
 sources: []
 produces: [ADR-26038, ADR-26034]
+options:
+  type: analysis
+  birth: 2026-03-08
+  version: 1.0.1
 ---
 
 # A-26009: Compass — The Realistic State of Agentic AI Architectures in Early 2026
 
++++
+
 ## Problem Statement
+
++++
 
 The agentic AI ecosystem has reached a paradox: the tooling has never been richer, but production success remains rare and concentrated in the simplest architectures. Only about 5% of enterprises surveyed have AI agents live in production[^cleanlab], and stack churn is extreme — respondents describe rebuilding their agent stack on timescales of months. The frameworks that work — Claude Code, Cursor, simple tool-use loops — share a common trait: they resist the elaborate multi-agent orchestration that most "Agentic OS" designs aspire to. Anyone designing an OS-like layer for agents must contend with overwhelming evidence that **context engineering, not architectural sophistication, is the actual bottleneck** in production agent systems.
 
 This analysis covers eight dimensions of the landscape to ground a peer review of an Agentic OS design concept, drawing on surveys, postmortems, benchmarks, and production case studies from 2024–2026.
 
++++
+
 ## Key Insights
 
++++
+
 ### The demo-to-production gap is severe and well-documented
+
++++
 
 The LangChain State of AI Agents Report[^langchain-state] (late 2025, n=1,340) found that 57% of respondents have agents in production, but **quality is the #1 barrier** — 32% cite accuracy, relevance, and consistency as top blockers. The Cleanlab/MIT survey[^cleanlab] paints a starker picture: only 95 out of 1,837 respondents (roughly 5%) had agents actually live. Stack churn is extreme. One respondent described "moving from LangChain to Azure in two months, only to consider moving back again."
 
@@ -26,9 +42,11 @@ The documented production pain points cluster into four categories. **Prompt dri
 
 These aren't growing pains. Informatica[^informatica] reports that over 80% of AI projects still fail, twice the rate of traditional technology programs, and 91% of AI models experience quality degradation over time. Forrester's 2026 predictions[^forrester] reinforce this concern: enterprises will defer 25% of planned AI spend to 2027, and only 15% of AI decision-makers reported an EBITDA lift — fewer than one-third can tie AI value to P&L changes. Agent failures do not follow the patterns of traditional software bugs; they emerge from ambiguity, miscoordination, and unpredictable system dynamics.
 
----
++++
 
 ### Nine frameworks, three real architectural patterns
+
++++
 
 The framework landscape has consolidated around three architectural patterns despite surface-level diversity. **Graph-based state machines** (LangGraph, ~25K GitHub stars, 38M monthly PyPI downloads) model agents as nodes with typed state passing and automatic checkpointing. **Role-based multi-agent systems** (CrewAI, ~45K stars, 450M monthly workflows) organize agents into crews with delegation and hierarchical processes. **Minimalist tool-loop architectures** (OpenAI Agents SDK, ~16K stars) use just four primitives: agents, handoffs, guardrails, and sessions. Then there are the **protocol/ecosystem approaches** — Anthropic's MCP + Skills + Claude Agent SDK — which avoid prescribing orchestration patterns entirely.
 
@@ -38,9 +56,11 @@ The standout newcomer is **Mastra**[^mastra] (~22K stars, 300K+ weekly npm downl
 
 **Google ADK** provides a modular, multi-language approach (Python, TypeScript, Go, Java) with three agent types — LLM, Workflow, and Custom — but remains tightly coupled to the Gemini/Vertex AI ecosystem. **DSPy** (~23K stars) remains the most intellectually distinctive framework, treating prompts as a compilation target rather than an authoring surface, but its production footprint is thin. The industry-wide pattern is clear: **frameworks that impose the least architectural opinion and maximize context control tend to survive production contact.**
 
----
++++
 
 ### The "agent OS" metaphor has been explored, but no one has built Unix
+
++++
 
 The OS-for-agents metaphor has been proposed repeatedly, but **no project has combined all OS primitives into a coherent, widely-adopted system**. The landscape fragments into three camps.
 
@@ -52,9 +72,11 @@ Enterprise players have adopted the branding without the architecture. PwC launc
 
 Two distinct meanings of "Agent OS" have emerged and any design must choose between them: (a) the LLM itself as kernel, with agents as applications running on it (AIOS, Karpathy), or (b) an infrastructure layer that manages agents as processes, analogous to how Linux manages programs (AControlLayer, HFS Research). These are complementary but architecturally different.
 
----
++++
 
 ### MCP is real infrastructure, but security remains the open wound
+
++++
 
 The Model Context Protocol[^mcp] has achieved something genuinely rare in AI: **cross-vendor adoption at scale**. Launched by Anthropic in November 2024, MCP now has **97 million monthly SDK downloads**, over 10,000 published servers, and first-class client support in Claude, ChatGPT, Cursor, Gemini, Microsoft Copilot, VS Code, and JetBrains IDEs. In December 2025, Anthropic donated MCP to the Agentic AI Foundation (AAIF) under the Linux Foundation[^agents-md], with platinum members including AWS, Google, Microsoft, OpenAI, Bloomberg, and Cloudflare. Jensen Huang called MCP's impact on the landscape "revolutionary."
 
@@ -64,9 +86,11 @@ Production deployments are real. Block (Square/Cash App) is an AAIF co-founder w
 
 The critical weakness is security. **CVE-2025-6514**[^cve-6514] in the mcp-remote package compromised 437,000+ developer environments. **CVE-2025-49596**[^cve-49596] in Anthropic's own MCP Inspector enabled browser-based remote code execution. Tool descriptions go directly to the AI model, creating prompt injection surfaces. Token storage across MCP servers means one breach grants access to everything. The Snyk ToxicSkills study[^snyk] found that **36% of community-published skills have security flaws** (n=3,984 skills scanned). For any Agentic OS design, the lesson is stark: MCP is the right connectivity standard, but wrapping it in a serious permission and sandboxing model is non-negotiable.
 
----
++++
 
 ### Skills packaging is converging faster than expected
+
++++
 
 The most surprising finding in this research is genuine cross-vendor convergence on agent capability packaging. Anthropic's **SKILL.md format** — YAML frontmatter plus Markdown instructions in a directory with optional scripts and references — was released as an open standard in December 2025, and **OpenAI adopted the same format** for Codex CLI and ChatGPT. This is the closest the industry has come to a portable, reusable skill format.
 
@@ -76,9 +100,11 @@ In parallel, **AGENTS.md**[^agents-md] has achieved remarkable adoption: 60,000+
 
 Skill marketplaces are nascent but real. **SkillsMP** hosts 31,000+ agent skills. Oracle, ServiceNow, and Salesforce have launched enterprise agent marketplaces. Integration platforms like **Composio** (250-850+ pre-built tool integrations, SOC 2 compliant) and **Nango** (600+ APIs, open-source) solve the auth and connectivity pain that plagues custom integrations. The "agent app store" concept is materializing, though quality control and security remain unsolved.
 
----
++++
 
 ### Memory architectures are production-ready but context window size is a red herring
+
++++
 
 The industry has converged on a **three-tier memory model**: working memory (current context window), episodic memory (session/interaction history), and semantic memory (long-term knowledge). Multiple production systems implement this with real benchmarks.
 
@@ -88,9 +114,11 @@ The critical insight for any OS design: **larger context windows do not reduce t
 
 Letta's approach[^letta] — letting agents manage their own context via tool calls (memory_replace, memory_insert, archival_memory_search) — is the most architecturally interesting for an OS design. Their February 2026 Context Repositories feature adds git-backed memory with version tracking, enabling concurrent subagents to manage divergence through standard git operations. LangGraph's checkpointer pattern (PostgresSaver, Redis for sub-1ms latency) is the most battle-tested for thread-level persistence. The known failure modes to design around: context poisoning from outdated memories, memory sprawl without garbage collection, summarization drift from repeated compression, and retrieval failures at scale requiring hybrid semantic + keyword + graph approaches.
 
----
++++
 
 ### The evidence overwhelmingly favors simplicity over elaborate architectures
+
++++
 
 This is the finding most relevant to peer-reviewing an Agentic OS concept. The evidence from 2024-2026 consistently shows that **simpler architectures outperform complex ones in production**.
 
@@ -106,9 +134,11 @@ Simon Willison's[^willison] working definition captures the pattern that actuall
 
 For an Agentic OS designer, this creates a tension: you need enough architecture to manage context, permissions, and persistence, but **every additional abstraction layer is a liability** until proven otherwise. Harrison Chase[^chase] (LangChain) articulates the hard-won lesson at ODSC AI West 2025: "Put all complexity in the prompt. Don't add pre-processing steps or wrapper logic."
 
----
++++
 
 ### Documentation is becoming load-bearing infrastructure for agents
+
++++
 
 The final piece of the landscape addresses how agents discover and consume knowledge. Three standards are emerging at different layers. **llms.txt** (proposed by Jeremy Howard, September 2024) places LLM-friendly Markdown at `/llms.txt` on websites. Adoption is growing fast — from 15 sites in the Majestic Million in February 2025 to 105 by May, with ~784+ listed in community directories — but remains negligible in the broader web. No major LLM provider has confirmed consuming llms.txt files. Mintlify auto-generates it for 5,000+ companies, making it de facto documentation infrastructure for the dev tools ecosystem.
 
@@ -116,7 +146,11 @@ The final piece of the landscape addresses how agents discover and consume knowl
 
 The most rigorous treatment of documentation-as-infrastructure is the **"Codified Context" paper**[^codified] (arXiv:2602.20478, February 2026). A single developer built a 108,000-line C# distributed system in ~70 days using AI agents, with a three-tier context architecture: hot memory (always-loaded project constitution), 19 specialized domain-expert agents with embedded knowledge, and cold memory (34 on-demand specification documents served via MCP). The total context infrastructure was ~26,000 lines — an order of magnitude beyond typical manifest files. The key finding: **"Single-file manifests (.cursorrules, CLAUDE.md, AGENTS.md) do not scale beyond modest codebases."** A 1,000-line prototype fits in one prompt; a 100,000-line system requires structured, tiered, relational documentation. Nobody has yet built a production-grade relational/typed documentation system for agent navigation, but the Codified Context paper demonstrates the need exists and the pattern works.
 
++++
+
 ### Synthesis
+
++++
 
 Five hard truths define the realistic picture for any Agentic OS concept in early 2026.
 
@@ -130,15 +164,26 @@ Five hard truths define the realistic picture for any Agentic OS concept in earl
 
 **The Unix analogy is apt but incomplete.** As Marc Bara[^bara] observed, "Unix did not create any of its individual concepts. It combined them into a coherent system with a small set of composable primitives." The agent ecosystem has the individual concepts — virtual memory (Letta[^letta]), scheduling (AIOS[^aios]), tool connectivity (MCP[^mcp]), capability packaging (Skills), process isolation (Claude Cowork's containers). What's missing is the coherent combination. But the evidence also warns that the winner is likely to "emerge from a working runtime that accretes capabilities because developers keep needing one more thing" — not from a grand architectural vision designed top-down.
 
++++
+
 ## References
 
++++
+
 ### Internal
+
++++
+
 - [ADR-26038: Context Engineering as Core Design Principle](/architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) — produced from this analysis
 - [ADR-26034: Agentic OS Paradigm — Skills as Composable Applications](/architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md) — produced from this analysis (rejected)
 - [A-26005: Document Type Interfaces and Unified Validation](/architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md) — OS metaphor and VFS model
 - [A-26006: Agent Runtime Architecture and RAG Infrastructure](/architecture/evidence/analyses/A-26006_agent_runtime_architecture_rag_infrastructure.md) — complements this analysis with implementation patterns
 
++++
+
 ### External
+
++++
 
 [^cleanlab]: [Cleanlab/MIT Enterprise AI Agent Survey](https://cleanlab.ai/ai-agents-in-production-2025/) (2025, n=1,837)
 [^langchain-state]: [LangChain State of AI Agents Report](https://www.langchain.com/state-of-agent-engineering) (late 2025, n=1,340)
