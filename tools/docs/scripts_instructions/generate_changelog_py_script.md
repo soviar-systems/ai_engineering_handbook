@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.19.0
+    jupytext_version: 1.19.1
 kernelspec:
   name: bash
   display_name: Bash
@@ -131,6 +131,15 @@ uv run tools/scripts/generate_changelog.py --verbose HEAD~1..HEAD 1>/dev/null
 ```
 
 Empty stderr means all bullets survived. Any output shows what was excluded.
+:::
+
+:::{tip} Align the commit subject with changelog-visible bullets
+When bullets are excluded, the commit subject becomes the changelog section header for
+only the surviving bullets. If the subject was written to summarise all the work —
+including excluded items such as plan files or housekeeping — the changelog entry will be
+misleading: the header will promise more than the bullets deliver. Write the commit
+subject to match the changelog-visible bullets only; describe excluded work in the body
+where it belongs for git history but not for the changelog.
 :::
 
 +++

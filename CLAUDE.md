@@ -162,6 +162,7 @@ Package manager: `uv` (never use pip directly)
 - Verbs: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`
 - CHANGELOG is generated from commit history, not manually curated
 - Commit bullets mentioning changelog exclusion patterns (e.g., `CLAUDE.md`, `misc/`) will be self-filtered — describe intent instead of listing literal pattern values; verify with `uv run tools/scripts/generate_changelog.py --verbose HEAD~1..HEAD 1>/dev/null`
+- When some bullets are excluded, the commit subject becomes the changelog section header for only the surviving bullets. Write the subject to match changelog-visible bullets only — a subject summarising excluded work produces a misleading changelog entry where the header promises more than the bullets deliver
 - Merge policy: Squash-and-Merge (1 PR = 1 Commit on trunk)
 
 **Pre-commit Hooks:**
