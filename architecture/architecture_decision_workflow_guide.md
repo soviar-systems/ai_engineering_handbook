@@ -174,7 +174,8 @@ Expand every abbreviation on first use. Do not use terminology that is not defin
 1. **Use affirmative, active language.** "Adopt X," "Require Z," "Standardize on Y" — not "X should be considered" or "It was decided that..."
 2. **Make it falsifiable.** A future reader should be able to determine whether the decision was followed or violated
 3. **Keep implementation details out.** Migration mappings, file-by-file change lists, and step-by-step procedures belong in evidence artifacts (A-YYNNN), not in the ADR body. The ADR states *what* and *why*; evidence records *how*
-4. **Never invent identifiers.** Every constraint ID, principle number, or framework label referenced in the decision must be defined in an authoritative source. Invented identifiers create false traceability (see {term}`ADR-26026`)
+4. **Decide at the capability level, not the tool level.** State the requirement; the chosen tool is the current implementation of that requirement — a detail inside the Decision body, not the decision itself. A reader three years from now must be able to judge whether the principle still holds even if the tool changed. If the tool name is the first word of your Decision section, the abstraction is likely too low.
+5. **Never invent identifiers.** Every constraint ID, principle number, or framework label referenced in the decision must be defined in an authoritative source. Invented identifiers create false traceability (see {term}`ADR-26026`)
 
 ### Consequences
 

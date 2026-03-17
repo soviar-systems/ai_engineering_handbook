@@ -117,6 +117,101 @@ In dependency order:
       3. Contracts over pipelines — docstrings describe what survives refactoring, not what breaks on refactoring
     - Connects to ADR-26038 (context engineering): if code structure is the documentation, context window budget is spent on code, not on redundant prose that paraphrases the code
 
+### 1.12 DB Layer and Ecosystem Context ADRs
+
+These ADRs formalise conventions that exist informally today. They were identified during
+the un_votes/postgres_connector migration into soviar-systems (session 2026-03-18;
+integration plan in `misc/plan/` or `misc/plan/implemented/` — plans are ephemeral).
+ADR writing is deferred here to avoid number conflicts with 26044–26048 above.
+
+**Prerequisites:** ADR-26039 (pgvector, schema-per-project) ✅
+
+**Already completed (session 2026-03-18):**
+- S-26012 created: adr_001 content preserved as evidence source. Title rule applied:
+  no document-type keywords (ADR, RFC) in S-YYNNN titles — risk of confusing future
+  tooling and search. Good: "Database Ecosystem Design Principles". Bad: "ADR-001: ...".
+- `architecture_decision_workflow_guide.md` updated: Rule 4 added under Decision guidance —
+  "Decide at capability level, not tool level. The tool is the current implementation of
+  the requirement; it belongs in the Decision body, not as the decision itself."
+- CLAUDE.md files for un_votes, postgres_connector, and root soviar-systems refactored
+  ahead of ADR-26049 (principle is clear enough to act; see integration plan for content).
+- `soviar-systems/adr_001_database_ecosystem_design_principles.md` deleted (preserved as S-26012).
+
+**Cross-cutting rule established in session 2026-03-18:**
+S-YYNNN sources MUST be cited by ID in prose only ("...captured in source S-26012"),
+never as markdown links. After the three-commit deletion, the link would fail
+`check_broken_links.py`.
+
+In dependency order:
+
+12. ADR-26049: Ecosystem Context Distribution
+    - **Core decision:** two-tier CLAUDE.md architecture.
+    - Tier 1 — Project CLAUDE.md (self-sufficient): must work when cloned standalone with
+      no `soviar-systems/` parent. Mandatory sections:
+      - `## Governing Ecosystem Rules` (immediately after `## Project Overview`): inline
+        rule summaries, never links. Categories: commit format (ADR-26024), package manager
+        (uv only), containers (ADR-26040), safe git commands, plan management, contract
+        docstrings, TDD + non-brittle tests, SVA check (ADR-26037). DB projects additionally
+        include: psycopg/postgres_connector mandate, schema namespacing, logging, secrets.
+      - `## Ecosystem ADR Index`: stable hub URL (GitHub Pages via ADR-26022) for deep
+        architectural lookup only.
+    - Tier 2 — Root `soviar-systems/CLAUDE.md` (local convenience only): universal rules
+      that appear in every project file anyway. Header:
+      `<!-- Local convenience layer — NOT authoritative per ADR-26049. Each repo's CLAUDE.md is the canonical source. -->`
+    - Propagation: when a hub ADR is accepted and changes an agent-operational rule, the
+      ADR author updates all affected project CLAUDE.md files in the same PR. Structured
+      commit body (ADR-26024) lists every CLAUDE.md touched — this is the audit trail.
+    - References: ADR-26020, ADR-26033, ADR-26038, ADR-26037, ADR-26043, ADR-26024, ADR-26040.
+
+13. ADR-26050: Safe Database Communication from Python
+    - **Framing (critical):** the decision is the PRINCIPLE — safe parameterised query
+      construction — not the specific driver. psycopg 3 + postgres_connector are the
+      current implementation of that principle. A reader 3 years from now should be able
+      to judge whether the principle still holds even if the tools changed.
+    - Current driver: psycopg 3; shared access layer: `postgres_connector` (PyPI dep).
+    - Why combined in one ADR: postgres_connector is the mechanism that enforces the
+      driver's safety discipline uniformly across projects. The driver rule is meaningless
+      without the shared library; the shared library is meaningless without knowing which
+      driver discipline it enforces. They can still be independently superseded.
+    - **asyncpg:** satisfies the same safety principle (parameterised by design, not
+      bolt-on). Currently constrained by lack of sync API for sync pipeline workloads.
+      NOT rejected — requires A-260NN trade study comparing asyncpg vs psycopg 3 across
+      actual workload mix. This is the promotion gate for proposed → accepted.
+    - **Mandatory alternatives section:** asyncpg (open, needs trade study), direct psycopg
+      without shared library (rejected: inconsistent discipline), Django ORM (rejected:
+      SVA disproportionality), ODBC (rejected: PostgreSQL-only ecosystem).
+    - Supersedes: source S-26012.
+
+14. ADR-26051: PostgreSQL Schema Namespacing
+    - Each project stores data in its own PostgreSQL schema (not `public`).
+    - Schema name via `DB_SCHEMA` env var in `info.py`; project-specific default.
+    - All SQL uses two-part `sql.Identifier(schema, table)` — never bare identifiers.
+    - `ensure_schema()` creates schema before any table DDL.
+    - Complements ADR-26039 (schema-per-project already established for pgvector context).
+
+15. ADR-26052: Python Logging Standard
+    - `logging.getLogger(__name__)` in all modules; `print()` prohibited in production code.
+    - Scope: ALL ecosystem Python projects, not DB-only.
+    - Log level conventions: DEBUG (per-row/trace), INFO (milestones), WARNING (recoverable
+      unexpected state), ERROR (failures requiring attention).
+
+16. ADR-26053: Secrets Management Standard
+    - Production secrets MUST be managed via a dedicated secrets management tool.
+    - Current tool: Ansible Vault (docs at `misc/in_progress/security/password_management/`).
+    - `pexpect` is a symptom of missing secrets management — prohibition follows from this ADR.
+    - No credentials in committed env files; CLI tools receive secrets via env vars injected
+      by the secrets manager at runtime.
+    - **Promotion gate:** `misc/in_progress/security/password_management/` docs must be
+      finalised and promoted to governed content before this ADR can be accepted.
+
+**postgres_connector current state (relevant for ADR authoring):**
+- No `CLAUDE.md` — created in session 2026-03-18 per ADR-26049 principle.
+- No `architecture/` directory — create `architecture/adr/` when writing spoke ADRs.
+- Spoke ADR for schema definition format (`_is_constraint()`, tuple format,
+  `create_attributes_dict()`) goes in `postgres_connector/architecture/adr/`. Number
+  within the package's own namespace (e.g. `adr_001_schema_definition_format.md`).
+- Source S-26012 contains the full original content for reference during ADR authoring.
+
 ### 1.15 ADR-26042 Migration
 
 Two-phase automated migration implementing ADR-26042:
