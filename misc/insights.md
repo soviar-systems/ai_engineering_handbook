@@ -1,3 +1,12 @@
+The contract docstring pattern is not test-specific — it's the answer to "what does a future agent need to read first to work safely in this file?" Every production module benefits from the same structure:
+
+- What this file does (scope, responsibility)
+- Public interface (what callers may use)
+- What does NOT belong here (boundaries — prevents scope creep)
+- Key design decisions (the "why", so agents don't undo intentional choices)
+- Dependencies (what it relies on)
+
+
 ★ Insight ─────────────────────────────────────
 Structured commit bodies as a knowledge graph: The - Verb: target — why/impact format from ADR-26025 turns each commit into a queryable knowledge record. Future agents can grep commits for "Restored:" to find reverted decisions, "Replaced:" for architectural migrations, or "Removed:" for DRY cleanups. This is significantly more useful than prose commit messages for both humans doing retrospectives and AI agents doing codebase archaeology.
 
@@ -161,18 +170,13 @@ one engine without adding dependencies
 
 this is why I developed the concept of the Agentic OS. I planned to build the general purpose agent and
 run it with the different skills for each task: the skills for interviewing, the skills for research, the skill for mentor
-system prompt generation, and the very mentor skill (generated dynamically for each new course). So, the RAG is the common
-source. More over, one of the research skill task's is to create a reference list and the user or other agents/skills add them
+system prompt generation, and the very mentor skill (generated dynamically for each new course). So, the RAG is the common source. More over, one of the research skill task's is to create a reference list and the user or other agents/skills add them
 to the RAG.
 
-● Now it clicks — the mentor_generator is not a standalone app, it's the first application running on your Agentic OS. The skills are
-the composable units, the RAG is shared infrastructure, and the agent is the kernel that dispatches skills.
+● Now it clicks — the mentor_generator is not a standalone app, it's the first application running on your Agentic OS. The skills are the composable units, the RAG is shared infrastructure, and the agent is the kernel that dispatches skills.
 
 ★ Insight ─────────────────────────────────────
-This reframes the entire roadmap. The compass analysis warned against building a grand OS top-down, but it also said the winner
-will "emerge from a working runtime that accretes capabilities because developers keep needing one more thing." The
-mentor_generator IS that working runtime. You're not building an OS then looking for applications — you're building an application
-that naturally needs OS primitives:
+This reframes the entire roadmap. The compass analysis warned against building a grand OS top-down, but it also said the winner will "emerge from a working runtime that accretes capabilities because developers keep needing one more thing." The mentor_generator IS that working runtime. You're not building an OS then looking for applications — you're building an application that naturally needs OS primitives:
 - Skills = the interview, research, generation, and mentor skills
 - Shared memory = pgvector RAG (the /usr/share/ of the OS)
 - Process state = course_history, session_history (the /proc/ from A-26005)

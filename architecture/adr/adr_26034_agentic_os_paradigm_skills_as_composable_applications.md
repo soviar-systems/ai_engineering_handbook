@@ -21,7 +21,7 @@ The "Agentic OS" framing — treating the agent as a full operating system with 
 
 {term}`ADR-26038` replaces the grand OS framing with **context engineering as the core design principle**: single-agent with skill dispatch, three-tier memory, and context budget as a first-class constraint. The valid concepts from this ADR survive:
 
-- **Skills as composable units** — formalized in {term}`ADR-26038` as progressive disclosure units with SKILL.md format, to be detailed in a future ADR-26042
+- **Skills as composable units** — formalized in {term}`ADR-26038` as progressive disclosure units with SKILL.md format, fully specified in [ADR-26044](/architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md)
 - **Three-tier architecture (LLM / Agent / Skills)** — reframed as three-tier memory (working / episodic / semantic) in {term}`ADR-26038`
 - **Procedural vs declarative knowledge split** — preserved in {term}`ADR-26032` as an orthogonal concern
 - **SKILL.md + tools/ + tests/ folder structure** — validated by cross-vendor convergence (Anthropic, OpenAI) documented in [A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md)

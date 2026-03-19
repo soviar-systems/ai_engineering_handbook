@@ -58,17 +58,17 @@ This is a context engineering problem, not an orchestration problem.
 
 We adopt **context engineering as the core design principle** for the Agentic OS ecosystem. This means:
 
-1. **Single-agent architecture with skill dispatch.** The agent is one process that loads skills on demand (progressive disclosure). Skills are injected instructions, not separate agents. This follows the SKILL.md pattern validated by Anthropic and OpenAI cross-vendor convergence ([A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md)).
+1. **Single-agent architecture with skill dispatch.** The agent is one process that loads skills on demand (progressive disclosure). Skills are injected instructions, not separate agents. The SKILL.md format, structure, and selection mechanism are specified in [ADR-26044](/architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md), grounded in cross-vendor convergence documented in [A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md).
 
 2. **Three-tier memory as the primary abstraction.**
-   - **Working memory**: Current context window, managed by token-aware budget tracking (litellm.token_counter per provider)
-   - **Episodic memory**: Session history (course_history), persisted to disk, paged in on demand
-   - **Semantic memory**: Long-term knowledge in a vector store (books, articles, research), retrieved via hybrid search (vector + keyword)
+   - **Working memory**: Current context window, managed by token-aware budget tracking
+   - **Episodic memory**: Session history, persisted to disk, paged in on demand
+   - **Semantic memory**: Long-term knowledge in a vector store, retrieved via semantic search
 
 3. **Context budget as a first-class constraint.** Every document, skill, and tool output has a token cost. The signal-to-noise ratio of prompt delivery format is itself an architectural decision — see [Format as Architecture: Signal-to-Noise in Prompt Delivery](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) for the detailed analysis and empirical measurements. The agent tracks cumulative context usage and acts proactively:
    - (a) Context almost full: summarize and continue (page fault → swap)
    - (b) User stops: graceful save of session state (SIGTERM → checkpoint)
-   - (c) Goals complete: fill session log template (exit(0) → write result)
+   - (c) Goals complete: persist outcomes and exit cleanly (exit(0) → write result)
 
 4. **Architectural additions require context engineering justification.** Any new layer, abstraction, or component must demonstrate that it improves the agent's ability to manage, retrieve, or budget context. If a feature does not make context management better, it is rejected as over-engineering. This operationalizes {term}`ADR-26037` (Smallest Viable Architecture) for the agent runtime.
 
@@ -82,13 +82,13 @@ We adopt **context engineering as the core design principle** for the Agentic OS
 - Aligns with every production success story in the compass analysis (Claude Code, Cursor, Vercel, Devin)
 - Token budget awareness prevents the cost explosion documented in [A-26009](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) (agentic apps re-send context 10-50x per session)
 - Skills as injected instructions (not sub-agents) eliminate the context isolation problem that kills multi-agent systems
-- Three-tier memory maps directly to Mentor Generator's existing architecture (context window / course_history / books in RAG)
+- Three-tier memory maps directly to Mentor Generator's existing architecture (context window / session history / knowledge base)
 - Format-aware context delivery maximizes instructional signal per attention-weighted token. [Format as Architecture](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) demonstrates up to 21% token cost difference between formats on identical content (2,306 vs 2,798 tokens), and Mentor Generator post-mortems (v0.40.0 → v0.41.0) confirmed that switching from JSON to YAML improved compiler fidelity from catastrophic drift to ~95% adherence on the same model (Qwen3-Max)
 
 ### Negative / Risks
 
 - Single-agent architecture may hit scaling limits for truly independent parallel tasks. **Mitigation:** The constraint says "start single-agent" — it does not prohibit adding concurrency when proven necessary, but the proposer must demonstrate the need. The approved scaling pattern is **fork-and-join subagents** (parent delegates subtasks to child processes while retaining full context), as distinct from multi-agent swarms where independent agents negotiate with each other
-- Token counting accuracy varies across providers (not all expose exact counts). **Mitigation:** litellm.token_counter provides best-effort estimates; design for approximate budgets with safety margins
+- Token counting accuracy varies across providers (not all expose exact counts). **Mitigation:** design for approximate budgets with safety margins; the token counting library provides best-effort estimates
 - Progressive disclosure requires good metadata (descriptions, tags, token_size) on all documents and skills. **Mitigation:** A common frontmatter standard ({term}`ADR-26042`) will establish these fields; vadocs validates compliance
 
 ## Alternatives
@@ -106,8 +106,9 @@ We adopt **context engineering as the core design principle** for the Agentic OS
 - [A-26002: Agentic OS, Tiered Cognitive Memory, and Package-Driven Infrastructure](/architecture/evidence/analyses/A-26002_agentic_os_skills_tiered_memory_package_infra.md) — tiered memory model, Mentor Generator catalyst
 - [Format as Architecture: Signal-to-Noise in Prompt Delivery](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) — token-level analysis of format impact on LLM behavior, Mentor Generator post-mortem evidence
 - [GEMM: The Engineering Standard](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb) — BLAS Interface/API/ABI hierarchy, "the interface is the asset" principle, LINPACK extraction precedent
-- {term}`ADR-26034` — Agentic OS Paradigm: Skills as Composable Applications (refined by this ADR: single-agent emphasis)
-- {term}`ADR-26037` — Smallest Viable Architecture Constraint Framework (operationalized by this ADR for the agent runtime)
+- [ADR-26044: Skills as Progressive Disclosure Units](/architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md) — formal specification of the skill unit and selection mechanism established in Decision point 1
+- [ADR-26034: Agentic OS Paradigm — Skills as Composable Applications](/architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md) — rejected predecessor; single-agent emphasis carried forward here
+- [ADR-26037: Smallest Viable Architecture Constraint Framework](/architecture/adr/adr_26037_smallest_viable_architecture_constraint_framework.md) — operationalized by this ADR for the agent runtime
 
 ## Participants
 

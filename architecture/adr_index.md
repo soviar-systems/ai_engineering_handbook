@@ -107,6 +107,9 @@ ADR-26042
 ADR-26043
 : [Ecosystem Package Boundary](/architecture/adr/adr_26043_ecosystem_package_boundary.md)
 
+ADR-26044
+: [Skills as Progressive Disclosure Units](/architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md)
+
 :::
 
 ## Historical Context

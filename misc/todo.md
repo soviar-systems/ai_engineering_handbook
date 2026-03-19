@@ -1,37 +1,33 @@
 ai_engineering_book
 
+entire ecosystem description
+- should be in hub, this is the entry point. brainstorm is needed
+
+projects agents.md
+- how to maintain the core architectural and validation decisions in such files? they should be independent (the user can isntall only one repo from the ecosystem), at the same time these files rely on the hub's decisions. vadocs look like a good choice for a distribution tools of these updates. The cenral agents.md file can be symlinked from other repos?
+
+code design
+- docstring contracts - see insights.md
+
+TDD analysis
+- https://t.me/turboproject/3505
+- important question touching the code development workflow in the ecosystem
+
 ADR:
 - should we use only one tag so we can change the adr_index to be sectioned, not the huge list of titles?
+ - adr_index
+    - can we move the check to git add stage, not post-commit?
+    - divide History section into rejected and superseded
 
-adr_index
-- can we move the check to git add stage, not post-commit?
-
-ADR
 - The Security Implications section must be added as a required field for proposed and accepted ADRs.
-
-ADR index
-- divide History section into rejected and superseded
-- restructure the dir to active/rfc/rejected/superseded for easier navigation
-- each ADR in the index should contain title and description so the index is a reference (progressive disclosure for agents)
-
-generate_changelog.py
-- if all lines of a commit body are excluded, the commit itself should also be excluded
 
 Architectural docs in changelog
 - ADRs deserve their own section in changelog and release notes
 - architectural docs should have arch: commit prefix for special treatment (vadocs-git scope)
 
-check_adr.py
-- input("Apply merge? [Y/n]") crashes with EOFError in non-interactive contexts (pre-commit hooks)
-- fix: inform the user without requiring interaction, or detect non-interactive mode
-
 extract_html.py
 - all new lines are broken, they must be kept as is or converted to markdown when possible
 - see https://github.com/unclecode/crawl4ai
-
-TDD analysis
-- https://t.me/turboproject/3505
-- important question touching the code development workflow in the ecosystem
 
 Development environment configuration
 - when vadocs is installed, the developer's machine must be configured for the tools vadocs uses
