@@ -135,7 +135,7 @@ Retrospectives document what went wrong and why. Include a severity level (`low`
 
 ## Writing the ADR — Core Discipline
 
-Three rules apply to every section of an ADR:
+Four rules apply to every section of an ADR:
 
 ### Rule 1: Decisions, Not Descriptions
 
@@ -160,6 +160,14 @@ Expand every abbreviation on first use. Do not use terminology that is not defin
 | "YAGNI (You Ain't Gonna Need It) prohibits speculative features" | "This violates YAGNI" (without prior expansion) |
 | "Migration requires updating all three configuration files" | "This can be completed within one sprint" (undefined duration) |
 | "SVA (Smallest Viable Architecture) constrains scope" | "The SVA principle applies here" (undefined term) |
+
+### Rule 4: Separate Concerns Between ADRs
+
+Separation of concerns in ADRs mirrors separation of concerns in code. When two aspects of a decision have independent justifications and change at different rates, split them into separate ADRs and use cross-references. An ADR that embeds another ADR's concern becomes brittle — every change to the embedded concern forces an edit to the host ADR.
+
+**Example:** {term}`ADR-26036` decides *where* configs live and *how they're named* (structure), while {term}`ADR-26054` decides *what format* they use (serialization). By using `<ext>` placeholders and delegating format to {term}`ADR-26054`, the structure ADR survives format changes without edits — the same principle as depending on an interface rather than an implementation.
+
+**Test:** If changing one aspect of your decision (e.g., the file format) would require editing prose in another section (e.g., naming conventions), those aspects belong in separate ADRs.
 
 ## Section-by-Section Guidance
 
@@ -210,7 +218,7 @@ Expand every abbreviation on first use. Do not use terminology that is not defin
 
 ## Anti-Patterns Checklist
 
-Review every ADR against these ten anti-patterns before promotion:
+Review every ADR against these eleven anti-patterns before promotion:
 
 1. **Undefined domain vocabulary** — Terms used without definition in this repository or a referenced standard
 2. **Unexpanded abbreviations** — Abbreviations used without expansion on first occurrence
@@ -222,6 +230,7 @@ Review every ADR against these ten anti-patterns before promotion:
 8. **Tool-as-architecture** — Elevating a tool choice to an architectural decision when the real decision is the capability or pattern
 9. **Future promises as mitigations** — "We will address this later" without a concrete trigger, owner, or timeline
 10. **Dismissive alternatives** — Alternatives rejected without trade-off analysis or evidence
+11. **Embedded sibling concerns** — An ADR that hardcodes details owned by another ADR (e.g., file extensions, format specifics) instead of cross-referencing. Changes to the sibling ADR force edits here — a coupling smell
 
 ## Validation
 
