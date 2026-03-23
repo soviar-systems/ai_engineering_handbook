@@ -4,7 +4,7 @@ title: "Agentic OS Paradigm: Skills as Composable Applications"
 date: 2026-02-25
 status: rejected
 superseded_by: null
-tags: [architecture, context_management]
+tags: [context_management]
 ---
 
 # ADR-26034: Agentic OS Paradigm: Skills as Composable Applications

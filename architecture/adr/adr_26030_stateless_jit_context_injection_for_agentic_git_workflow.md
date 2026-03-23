@@ -4,7 +4,7 @@ title: "Stateless JIT Context Injection for Agentic Git Workflows"
 date: 2026-02-24
 status: proposed
 superseded_by: null
-tags: [architecture, workflow, context_management, git]
+tags: [context_management, git, workflow]
 ---
 
 # ADR-26030: Stateless JIT Context Injection for Agentic Git Workflows

@@ -3,7 +3,7 @@ id: 26012
 title: Extraction of Documentation Validation Engine
 date: 2026-01-31
 status: proposed
-tags: [architecture]
+tags: [governance]
 superseded_by: null
 ---
 

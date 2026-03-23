@@ -3,7 +3,7 @@ id: 26011
 title: Formalization of the Mandatory Script Suite Workflow
 date: 2026-01-31
 status: accepted
-tags: [architecture]
+tags: [governance]
 superseded_by: null
 ---
 

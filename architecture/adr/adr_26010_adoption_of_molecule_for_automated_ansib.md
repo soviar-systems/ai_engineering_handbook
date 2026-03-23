@@ -3,7 +3,7 @@ id: 26010
 title: Adoption of Molecule for Automated Ansible Role Validation
 date: 2026-01-24
 status: proposed
-tags: [architecture]
+tags: [testing]
 superseded_by: null
 ---
 

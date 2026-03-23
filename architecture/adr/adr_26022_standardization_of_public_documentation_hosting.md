@@ -4,7 +4,7 @@ title: "Standardization of Public Documentation Hosting on GitHub Pages"
 date: 2026-02-06
 status: accepted
 superseded_by: null
-tags: [architecture, documentation, devops] 
+tags: [devops, documentation] 
 ---
 
 # ADR-26022: Standardization of Public Documentation Hosting on GitHub Pages

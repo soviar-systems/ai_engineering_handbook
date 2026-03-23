@@ -3,7 +3,7 @@ id: 26007
 title: "Formalization of Phase 0: Intent Synthesis (Requirements Engineering)"
 date: 2026-01-24
 status: superseded
-tags: [architecture, model, workflow]
+tags: [workflow, model]
 superseded_by: ADR-26028
 ---
 

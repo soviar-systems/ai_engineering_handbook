@@ -3,7 +3,7 @@ id: 26008
 title: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
 date: 2026-01-24
 status: superseded
-tags: [architecture, model, workflow]
+tags: [model]
 superseded_by: ADR-26027
 ---
 

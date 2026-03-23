@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: Instruction on check_adr.py script
 author: Vadim Rudakov, rudakow.wadim@gmail.com
-date: 2026-02-08
+date: 2026-03-23
 options:
-  version: 0.6.1
+  version: 0.7.0
   birth: 2026-01-30
 ---
 
@@ -190,12 +190,9 @@ When run with `--fix`, the script:
 1. **Fixes invalid statuses**: Prompts to correct typos (e.g., "prposed" → "proposed")
 2. **Fixes title mismatches**: Prompts to update frontmatter title to match header
 3. **Fixes duplicate sections**: Prompts to merge duplicate `##` headers (keeps first, concatenates bodies)
-4. **Regenerates partitioned index**: Groups ADRs by status into sections:
-   - *Active Architecture*: accepted ADRs
-   - *Evolutionary Proposals*: proposed ADRs
-   - *Historical Context*: rejected, superseded, deprecated ADRs
+4. **Regenerates two-level index**: Groups ADRs by status (## sections), then by primary tag (### sub-sections) when `primary_tag_sectioning` is enabled in config. Status sections: *Active Architecture*, *Evolutionary Proposals*, *Rejected*, *Superseded*, *Deprecated*. The first tag in `tags:` determines the sub-section. Descriptions from frontmatter appear below the title link when present
 5. **Annotates superseded entries**: Adds " — superseded by {term}`ADR-XXXXX`" to index entries for ADRs with `superseded_by` set in frontmatter
-6. **Sorts entries** by ADR number within each section
+6. **Sorts entries** by ADR number within each tag sub-section
 7. **Removes orphan entries** pointing to non-existent files
 8. **Runs promotion gate validation**: Same checks as `--verbose` mode (accepted ADRs must have ≥2 alternatives and non-empty Participants)
 9. **Reports all changes** made
@@ -377,6 +374,7 @@ The [test suite](/tools/tests/test_check_adr.py) provides 150+ tests with 96% co
 | `TestSectionWhitelist` | Unexpected sections flagged via `allowed_sections` whitelist |
 | `TestConditionalSections` | Status-dependent section enforcement (e.g., Rejection Rationale) |
 | `TestCodeFencedSectionsIgnored` | `##` headers inside fenced code blocks are not treated as sections |
+| `TestTwoLevelIndex` | Two-level index: status × primary tag sub-sections, descriptions, ordering |
 
 Run tests with:
 

@@ -4,7 +4,7 @@ title: "Podman Kube YAML as Deployment Standard"
 date: 2026-03-09
 status: accepted
 superseded_by: null
-tags: [architecture, devops]
+tags: [devops]
 ---
 
 <!-- Quality guidelines: /architecture/architecture_decision_workflow_guide.md -->

@@ -4,7 +4,7 @@ title: "Client-Side Logic with Server-Side Retrieval"
 date: 2026-03-09
 status: proposed
 superseded_by: null
-tags: [architecture, context_management]
+tags: [architecture]
 ---
 
 <!-- Quality guidelines: /architecture/architecture_decision_workflow_guide.md -->

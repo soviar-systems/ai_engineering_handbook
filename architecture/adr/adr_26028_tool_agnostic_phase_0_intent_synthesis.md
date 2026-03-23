@@ -3,7 +3,7 @@ id: 26028
 title: "Tool-Agnostic Phase 0: Intent Synthesis"
 date: 2026-02-15
 status: accepted
-tags: [architecture, model, workflow]
+tags: [workflow, model]
 superseded_by: null
 ---
 

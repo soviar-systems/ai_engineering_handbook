@@ -92,6 +92,8 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Evidence artifact sections are validated by `check_evidence.py` against `.vadocs/types/evidence.conf.json`
 - `check_adr.py` operates on all ADRs at once (no file arguments)
 - ADR frontmatter `status` determines index section placement (see `.vadocs/types/adr.conf.json`)
+- ADR index uses two-level sectioning: `## status` → `### primary_tag`. The first tag in `tags:` is the primary tag and determines the sub-section. Choose the most specific domain tag first (e.g., `[devops]` not `[architecture, devops]`). Keep `architecture` as primary only for genuinely structural ADRs
+- ADR `description` field (one-line elevator pitch) appears in the index under the title link when present
 - ADR filenames use truncated slugs — always glob (`architecture/adr/adr_26NNN*.md`) to verify the exact filename before creating links
 - Internal file references must use markdown links `[Title](/repo-root-relative/path)` — backtick paths bypass `check_broken_links.py` validation. Example paths in docs must use patterns from `BROKEN_LINKS_EXCLUDE_LINK_STRINGS` in `tools/scripts/paths.py` to avoid false positives
 - Persistent artifacts (ADRs, analyses, retrospectives) must always be referenced via markdown links `[A-26009](/repo-root-relative/path)`, never plain backtick IDs — md links are navigable by both agents and humans

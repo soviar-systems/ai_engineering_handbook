@@ -2,9 +2,10 @@
 id: YY001
 title: "Short Description"  # Always quote titles (may contain colons)
 date: YYYY-MM-DD
-status: proposed  # Valid values defined in adr_config.yaml
+status: proposed  # Valid values defined in adr.conf.json
 superseded_by: null
-tags: [architecture]  # Valid tags defined in adr_config.yaml
+tags: [primary_domain]  # First tag = primary (determines index sub-section). Valid tags in conf.json
+description: ""  # One-line elevator pitch — shown in adr_index.md
 ---
 
 <!-- Quality guidelines: /architecture/architecture_decision_workflow_guide.md -->

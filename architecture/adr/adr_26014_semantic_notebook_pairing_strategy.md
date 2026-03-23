@@ -3,7 +3,7 @@ id: 26014
 title: Semantic Notebook Pairing Strategy
 date: 2026-01-31
 status: accepted
-tags: [architecture]
+tags: [documentation]
 superseded_by: null
 ---
 

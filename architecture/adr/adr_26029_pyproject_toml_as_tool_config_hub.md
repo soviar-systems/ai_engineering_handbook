@@ -3,7 +3,7 @@ id: 26029
 title: "pyproject.toml as Tool Configuration Hub"
 date: 2026-02-16
 status: accepted
-tags: [architecture, workflow]
+tags: [governance, workflow]
 superseded_by: null
 ---
 

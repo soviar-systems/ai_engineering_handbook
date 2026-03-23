@@ -34,8 +34,12 @@
   "sections": {
     "Active Architecture": ["accepted"],
     "Evolutionary Proposals": ["proposed"],
-    "Historical Context": ["rejected", "superseded", "deprecated"]
+    "Rejected": ["rejected"],
+    "Superseded": ["superseded"],
+    "Deprecated": ["deprecated"]
   },
+
+  "primary_tag_sectioning": true,
 
   "status_transitions": {
     "proposed": ["accepted", "rejected"],

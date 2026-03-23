@@ -3,7 +3,7 @@ id: 26009
 title: Adoption of Ansible for Idempotent Configuration Management
 date: 2026-01-24
 status: proposed
-tags: [architecture]
+tags: [devops]
 superseded_by: null
 ---
 

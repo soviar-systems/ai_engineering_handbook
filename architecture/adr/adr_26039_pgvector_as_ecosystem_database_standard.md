@@ -4,7 +4,7 @@ title: "pgvector as Ecosystem Database Standard"
 date: 2026-03-08
 status: proposed
 superseded_by: null
-tags: [architecture, context_management, devops]
+tags: [context_management, devops]
 ---
 
 <!-- Quality guidelines: /architecture/architecture_decision_workflow_guide.md -->

@@ -162,6 +162,7 @@ VALID_TAGS: set[str] = _load_parent_tags(_config)
 REQUIRED_SECTIONS: list[str] = _config.get("required_sections", [])
 ALLOWED_SECTIONS: set[str] = set(_config.get("allowed_sections", []))
 CONDITIONAL_SECTIONS: dict[str, list[str]] = _config.get("conditional_sections", {})
+PRIMARY_TAG_SECTIONING: bool = _config.get("primary_tag_sectioning", False)
 # date_format from parent config (hub), with spoke fallback
 _parent_rel = _config.get("parent_config", "")
 _parent_path = Path(_parent_rel)
@@ -779,7 +780,9 @@ def parse_index() -> list[IndexEntry]:
     # Find all section headers and their positions
     section_positions = []
     for match in SECTION_HEADER_PATTERN.finditer(content):
-        section_positions.append((match.start(), match.group(1)))
+        # Strip bold markers so "**Active Architecture**" matches config's "Active Architecture"
+        name = match.group(1).strip("*")
+        section_positions.append((match.start(), name))
 
     # Find all glossary blocks
     for glossary_match in GLOSSARY_BLOCK_PATTERN.finditer(content):
@@ -879,8 +882,10 @@ def validate_sync(
                 )
 
     # Check for ordering (within each section for partitioned index)
-    if index_entries:
-        # Group by section for ordering check
+    # When PRIMARY_TAG_SECTIONING is enabled, ordering within tag sub-sections
+    # is guaranteed by fix_index() — skip the cross-section ordering check
+    # since entries are grouped by tag (alphabetical) first, then by number.
+    if index_entries and not PRIMARY_TAG_SECTIONING:
         sections_seen = []
         current_section = None
         current_numbers = []
@@ -1207,10 +1212,61 @@ def fix_title_mismatch(adr_file: AdrFile) -> bool:
     return True
 
 
+def _get_primary_tag(adr: AdrFile) -> str:
+    """Extract primary tag (first tag) from ADR frontmatter.
+
+    Args:
+        adr: ADR file with frontmatter.
+
+    Returns:
+        First tag string, or "untagged" if no tags found.
+    """
+    if adr.frontmatter:
+        tags = adr.frontmatter.get("tags", [])
+        if isinstance(tags, list) and tags:
+            return tags[0]
+        if isinstance(tags, str) and tags:
+            return tags
+    return "untagged"
+
+
+def _format_entry(adr: AdrFile) -> list[str]:
+    """Format a single ADR entry for the index glossary block.
+
+    Args:
+        adr: ADR file to format.
+
+    Returns:
+        List of lines for this entry.
+    """
+    title = adr.title
+    link = f"/architecture/adr/{adr.path.name}"
+
+    # Build annotation for superseded ADRs
+    annotation = ""
+    if adr.frontmatter and adr.frontmatter.get("superseded_by"):
+        successor = adr.frontmatter["superseded_by"]
+        annotation = f" — superseded by {{term}}`{successor}`"
+
+    entry_lines = [f"ADR-{adr.number}\n"]
+    entry_lines.append(f": [{title}]({link}){annotation}\n")
+
+    # Add description as a new paragraph within the definition
+    if adr.frontmatter:
+        description = adr.frontmatter.get("description")
+        if description:
+            entry_lines.append("\n")
+            entry_lines.append(f"  {description}\n")
+
+    entry_lines.append("\n")
+    return entry_lines
+
+
 def fix_index() -> list[str]:
     """Fix the index file by regenerating it from ADR files.
 
-    Generates a partitioned index grouped by status.
+    Generates a partitioned index grouped by status. When primary_tag_sectioning
+    is enabled, adds a second level of grouping by the first tag in each ADR.
 
     Returns:
         List of changes made.
@@ -1241,28 +1297,37 @@ def fix_index() -> list[str]:
         if not section_adrs:
             continue  # Skip empty sections
 
-        lines.append(f"\n## {section_name}\n")
-        lines.append("\n:::{glossary}\n")
+        lines.append(f"\n## **{section_name}**\n")
 
-        for adr in sorted(section_adrs, key=lambda x: x.number):
-            title = adr.title
-            link = f"/architecture/adr/{adr.path.name}"
+        if PRIMARY_TAG_SECTIONING:
+            # Two-level: group by primary tag within each status section
+            tag_groups: dict[str, list[AdrFile]] = {}
+            for adr in section_adrs:
+                tag = _get_primary_tag(adr)
+                tag_groups.setdefault(tag, []).append(adr)
 
-            # Build annotation for superseded ADRs
-            annotation = ""
-            if adr.frontmatter and adr.frontmatter.get("superseded_by"):
-                successor = adr.frontmatter["superseded_by"]
-                annotation = f" — superseded by {{term}}`{successor}`"
+            for tag in sorted(tag_groups):
+                lines.append(f"\n### {tag}\n")
+                lines.append("\n:::{glossary}\n")
 
-            lines.append(f"ADR-{adr.number}\n")
-            lines.append(f": [{title}]({link}){annotation}\n")
-            lines.append("\n")
+                for adr in sorted(tag_groups[tag], key=lambda x: x.number):
+                    lines.extend(_format_entry(adr))
 
-            # Track changes
-            if adr.number not in existing_titles:
-                changes.append(f"Added ADR {adr.number}: {title}")
+                    if adr.number not in existing_titles:
+                        changes.append(f"Added ADR {adr.number}: {adr.title}")
 
-        lines.append(":::\n")
+                lines.append(":::\n")
+        else:
+            # One-level: flat glossary per status section
+            lines.append("\n:::{glossary}\n")
+
+            for adr in sorted(section_adrs, key=lambda x: x.number):
+                lines.extend(_format_entry(adr))
+
+                if adr.number not in existing_titles:
+                    changes.append(f"Added ADR {adr.number}: {adr.title}")
+
+            lines.append(":::\n")
 
     # Check for removed entries
     current_numbers = {f.number for f in adr_files}

@@ -3,7 +3,7 @@ id: 26006
 title: Requirement for Agentic-Class Models for the Architect Phase
 date: 2026-01-24
 status: superseded
-tags: [architecture, model, workflow]
+tags: [model, workflow]
 superseded_by: ADR-26027
 ---
 

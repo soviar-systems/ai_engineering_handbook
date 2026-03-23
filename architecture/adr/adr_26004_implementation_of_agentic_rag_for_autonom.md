@@ -3,7 +3,7 @@ id: 26004
 title: Implementation of Agentic RAG for Autonomous Research
 date: 2026-02-01
 status: rejected
-tags: [architecture, workflow, context_management]
+tags: [context_management, workflow]
 superseded_by: null
 ---
 

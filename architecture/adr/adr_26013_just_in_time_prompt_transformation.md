@@ -3,7 +3,7 @@ id: 26013
 title: Just-in-Time Prompt Transformation
 date: 2026-01-31
 status: accepted
-tags: [architecture]
+tags: [workflow]
 superseded_by: null
 ---
 

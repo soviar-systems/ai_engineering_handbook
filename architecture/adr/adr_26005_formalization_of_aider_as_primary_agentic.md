@@ -3,7 +3,7 @@ id: 26005
 title: Formalization of Aider as the Primary Agentic Orchestrator
 date: 2026-01-24
 status: rejected
-tags: [architecture, workflow]
+tags: [workflow]
 superseded_by: null
 ---
 

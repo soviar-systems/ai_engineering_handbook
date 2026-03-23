@@ -4,7 +4,7 @@ title: "Tiered Cognitive Memory: Procedural Skills vs. Declarative RAG"
 date: 2026-02-25
 status: proposed
 superseded_by: null
-tags: [architecture, context_management]
+tags: [context_management]
 ---
 
 # ADR-26032: Tiered Cognitive Memory: Procedural Skills vs. Declarative RAG

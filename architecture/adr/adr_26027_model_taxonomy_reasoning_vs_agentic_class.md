@@ -3,7 +3,7 @@ id: 26027
 title: "Model Taxonomy: Reasoning-Class vs Agentic-Class Selection Heuristic"
 date: 2026-02-15
 status: accepted
-tags: [architecture, model, workflow]
+tags: [model, workflow]
 superseded_by: null
 ---
 

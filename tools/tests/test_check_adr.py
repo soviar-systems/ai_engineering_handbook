@@ -68,6 +68,7 @@ def create_adr_file_with_frontmatter(
     status: str = "proposed",
     tags: list[str] | None = None,
     frontmatter_title: str | None = None,
+    description: str | None = None,
 ) -> Path:
     """Create an ADR file with YAML frontmatter (new format).
 
@@ -79,6 +80,7 @@ def create_adr_file_with_frontmatter(
         status: ADR status (proposed, accepted, rejected, superseded, deprecated)
         tags: Optional list of tags
         frontmatter_title: Optional title in frontmatter (defaults to title param)
+        description: Optional description for the ADR
 
     Returns:
         Path to created file
@@ -95,6 +97,8 @@ def create_adr_file_with_frontmatter(
     ]
     if tags:
         frontmatter_lines.append(f"tags: [{', '.join(tags)}]")
+    if description:
+        frontmatter_lines.append(f'description: "{description}"')
     frontmatter_lines.append("---")
 
     content = "\n".join(frontmatter_lines) + f"\n\n# ADR-{number}: {title}\n\n## Context\n\nSome context.\n"
@@ -341,6 +345,7 @@ def adr_env(tmp_path, monkeypatch):
     monkeypatch.setattr(module, "REQUIRED_SECTIONS", config.get("required_sections", []))
     monkeypatch.setattr(module, "ALLOWED_SECTIONS", set(config.get("allowed_sections", [])))
     monkeypatch.setattr(module, "CONDITIONAL_SECTIONS", config.get("conditional_sections", {}))
+    monkeypatch.setattr(module, "PRIMARY_TAG_SECTIONING", config.get("primary_tag_sectioning", False))
     # date_format from hub
     _hub = json.loads(hub_config_path.read_text(encoding="utf-8"))
     monkeypatch.setattr(module, "DATE_FORMAT_PATTERN", _hub.get("date_format", r"^\d{4}-\d{2}-\d{2}$"))
@@ -636,9 +641,17 @@ class TestValidateSync:
         link_errors = [e for e in errors if e.number == 26002 and e.error_type == "wrong_link"]
         assert len(link_errors) == 1
 
-    def test_detects_out_of_order_entries(self, synced_env):
-        """Entries not in numerical order should be detected."""
+    def test_detects_out_of_order_entries(self, synced_env, monkeypatch):
+        """Entries not in numerical order should be detected (flat mode only).
+
+        With primary_tag_sectioning, ordering is by tag then number,
+        so cross-section ordering validation is skipped.
+        """
+        import tools.scripts.check_adr as module
         from tools.scripts.check_adr import get_adr_files, parse_index, validate_sync
+
+        # Disable two-level sectioning for this test
+        monkeypatch.setattr(module, "PRIMARY_TAG_SECTIONING", False)
 
         # Create index with wrong order
         create_index(
@@ -3835,3 +3848,213 @@ Some references.
         errors = validate_sections(adr)
         unexpected_errors = [e for e in errors if e.error_type == "unexpected_section"]
         assert len(unexpected_errors) == 0
+
+
+# ======================
+# Two-Level Index (Status × Primary Tag)
+# ======================
+
+
+class TestTwoLevelIndex:
+    """Tests for two-level index generation: status section → primary tag sub-section.
+
+    Contract: when primary_tag_sectioning is enabled in config, fix_index()
+    generates ### tag headers within each ## status section, each containing
+    its own glossary block. ADRs are grouped by their first tag.
+    """
+
+    def test_groups_by_primary_tag_within_status(self, adr_env):
+        """ADRs with different primary tags should appear in separate sub-sections."""
+        from tools.scripts.check_adr import fix_index
+
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26001, "Git Hook Scripts", "git_hooks",
+            status="accepted", tags=["git"],
+        )
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26002, "Podman Deployment", "podman",
+            status="accepted", tags=["devops"],
+        )
+
+        fix_index()
+
+        content = adr_env.index_path.read_text(encoding="utf-8")
+        # Both tag sub-sections should exist under Active Architecture
+        assert "### devops" in content
+        assert "### git" in content
+
+    def test_tag_subsections_sorted_alphabetically(self, adr_env):
+        """Tag sub-sections within a status section should be alphabetical."""
+        from tools.scripts.check_adr import fix_index
+
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26001, "Workflow ADR", "workflow",
+            status="accepted", tags=["workflow"],
+        )
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26002, "Architecture ADR", "arch",
+            status="accepted", tags=["architecture"],
+        )
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26003, "Git ADR", "git_adr",
+            status="accepted", tags=["git"],
+        )
+
+        fix_index()
+
+        content = adr_env.index_path.read_text(encoding="utf-8")
+        pos_arch = content.index("### architecture")
+        pos_git = content.index("### git")
+        pos_workflow = content.index("### workflow")
+        assert pos_arch < pos_git < pos_workflow
+
+    def test_each_tag_subsection_has_own_glossary(self, adr_env):
+        """Each tag sub-section must have its own glossary block."""
+        from tools.scripts.check_adr import fix_index
+
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26001, "Git ADR", "git_adr",
+            status="accepted", tags=["git"],
+        )
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26002, "Devops ADR", "devops_adr",
+            status="accepted", tags=["devops"],
+        )
+
+        fix_index()
+
+        content = adr_env.index_path.read_text(encoding="utf-8")
+        # Should have at least 2 glossary blocks (one per tag sub-section)
+        glossary_count = content.count(":::{glossary}")
+        assert glossary_count >= 2
+
+    def test_empty_tag_subsections_omitted(self, adr_env):
+        """Tag sub-sections with no ADRs should not appear."""
+        from tools.scripts.check_adr import fix_index
+
+        # Only git ADRs, no devops
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26001, "Git ADR", "git_adr",
+            status="accepted", tags=["git"],
+        )
+
+        fix_index()
+
+        content = adr_env.index_path.read_text(encoding="utf-8")
+        assert "### devops" not in content
+        assert "### git" in content
+
+    def test_empty_status_sections_omitted(self, adr_env):
+        """Status sections with no ADRs should not appear."""
+        from tools.scripts.check_adr import fix_index
+
+        # Only accepted ADRs, no proposed/rejected
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26001, "Accepted ADR", "accepted",
+            status="accepted", tags=["git"],
+        )
+
+        fix_index()
+
+        content = adr_env.index_path.read_text(encoding="utf-8")
+        assert "Active Architecture" in content
+        assert "Evolutionary Proposals" not in content
+        assert "Rejected" not in content
+
+    def test_numerical_order_within_tag_subsection(self, adr_env):
+        """ADRs within a tag sub-section should be in numerical order."""
+        from tools.scripts.check_adr import fix_index, parse_index
+
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26003, "Third Git", "third_git",
+            status="accepted", tags=["git"],
+        )
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26001, "First Git", "first_git",
+            status="accepted", tags=["git"],
+        )
+
+        fix_index()
+
+        entries = parse_index()
+        numbers = [e.number for e in entries]
+        assert numbers == [26001, 26003]
+
+    def test_description_included_when_present(self, adr_env):
+        """ADRs with description in frontmatter should show it in index."""
+        from tools.scripts.check_adr import fix_index
+
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26001, "Context Engineering", "ctx_eng",
+            status="accepted", tags=["context_management"],
+            description="Single-agent over multi-agent; context quality is key.",
+        )
+
+        fix_index()
+
+        content = adr_env.index_path.read_text(encoding="utf-8")
+        assert "Single-agent over multi-agent" in content
+
+    def test_description_omitted_when_absent(self, adr_env):
+        """ADRs without description should render title-only entries."""
+        from tools.scripts.check_adr import fix_index
+
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26001, "No Description ADR", "no_desc",
+            status="accepted", tags=["git"],
+        )
+
+        fix_index()
+
+        content = adr_env.index_path.read_text(encoding="utf-8")
+        assert "No Description ADR" in content
+        # The entry should just be the title link, no extra description line
+        lines = content.split("\n")
+        title_line_idx = next(i for i, l in enumerate(lines) if "No Description ADR" in l)
+        # Next non-empty line should NOT be an indented description
+        next_content = ""
+        for l in lines[title_line_idx + 1:]:
+            if l.strip():
+                next_content = l
+                break
+        assert not next_content.startswith("  ")
+
+    def test_parse_index_reads_two_level_structure(self, adr_env):
+        """parse_index() should correctly read entries from two-level index."""
+        from tools.scripts.check_adr import fix_index, parse_index
+
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26001, "Git ADR", "git_adr",
+            status="accepted", tags=["git"],
+        )
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26002, "Proposed ADR", "proposed_adr",
+            status="proposed", tags=["governance"],
+        )
+
+        fix_index()
+
+        entries = parse_index()
+        assert len(entries) == 2
+        numbers = {e.number for e in entries}
+        assert numbers == {26001, 26002}
+
+    def test_superseded_annotation_preserved(self, adr_env):
+        """Superseded ADRs should still show their successor annotation."""
+        from tools.scripts.check_adr import fix_index
+
+        create_adr_file_full(
+            adr_env.adr_dir, 26001, "Old ADR", "old_adr",
+            status="superseded", tags=["model"],
+            superseded_by="ADR-26002",
+        )
+        create_adr_file_with_frontmatter(
+            adr_env.adr_dir, 26002, "New ADR", "new_adr",
+            status="accepted", tags=["model"],
+        )
+
+        fix_index()
+
+        content = adr_env.index_path.read_text(encoding="utf-8")
+        assert "superseded by" in content
+        assert "ADR-26002" in content

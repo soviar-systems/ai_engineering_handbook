@@ -4,7 +4,7 @@ title: "Dedicated Research Monorepo for Volatile Experimental Projects"
 date: 2026-02-15
 status: accepted
 superseded_by: null
-tags: [architecture, governance, workflow]
+tags: [governance, workflow]
 ---
 
 # ADR-26026: Dedicated Research Monorepo for Volatile Experimental Projects

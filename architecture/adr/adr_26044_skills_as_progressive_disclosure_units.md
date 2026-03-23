@@ -5,7 +5,7 @@ author: Vadim Rudakov, rudakow.wadim@gmail.com
 date: 2026-03-18
 status: proposed
 superseded_by: null
-tags: [architecture, context_management]
+tags: [context_management]
 ---
 
 <!-- Quality guidelines: /architecture/architecture_decision_workflow_guide.md -->

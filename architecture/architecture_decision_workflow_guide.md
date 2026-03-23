@@ -34,7 +34,7 @@ All ADRs live in `architecture/adr/` as a flat directory — files are never mov
 To create a new ADR:
 
 1. Copy the [ADR template](/architecture/adr/adr_template.md)
-2. Follow the structure, required fields, valid statuses, and tags defined in `adr.conf.json` — this file is the Single Source of Truth for all ADR validation rules
+2. Follow the structure, required fields, valid statuses, and tags defined in `adr.conf.json` — this file is the Single Source of Truth for all ADR validation rules. **Tagging convention:** the first tag is the *primary tag* and determines which sub-section the ADR appears under in the index. Choose the most specific domain tag first (e.g., `[devops, architecture]` not `[architecture, devops]`). Valid tags are defined in `conf.json`
 3. [check_adr.py](/tools/scripts/check_adr.py) validates ADRs against the config and auto-updates the [ADR index](/architecture/adr_index.md) — never edit the index manually. Run: `uv run tools/scripts/check_adr.py --fix` (see [script docs](/tools/docs/scripts_instructions/check_adr_py_script.ipynb))
 4. Follow the [quality guidelines](#writing-the-adr--core-discipline) and review the [anti-patterns checklist](#anti-patterns-checklist) before requesting promotion
 
