@@ -40,7 +40,7 @@ Each aspect of the Documentation-as-Code paradigm is governed by a concrete ADR:
 | **Structure = architecture** | Repository layout is deliberate design, not accumulation; restructuring = refactoring | ADR-26020, ADR-26026 |
 | **ADRs = development backbone** | Every major decision is an ADR; proposed ADRs serve as living RFCs | ADR-26025 |
 | **CI/CD = deployment** | Sync-guard validates documentation integrity before deployment | ADR-26015 |
-| **Hub = authoritative specs** | Hub holds conventions and specifications; spokes hold implementation | ADR-26020 |
+| **Hub = authoritative specs** | Hub holds conventions and specifications; spokes hold implementation. The hub is the "POSIX standard" — it defines what conforming implementations must do. Implementations (vadocs, mentor_generator) are replaceable; standards outlive them. **The replacement test:** if the implementing tool were replaced, would this decision still apply? Yes → hub. No → implementation repo | ADR-26020 |
 
 ## The Structural Analogy
 

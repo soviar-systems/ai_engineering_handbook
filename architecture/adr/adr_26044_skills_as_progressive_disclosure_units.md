@@ -22,7 +22,7 @@ proposed
 
 ## Context
 
-[ADR-26038](/architecture/adr/adr_26038_context_engineering_as_core_design_principle.md)
+{term}`ADR-26038`
 established context engineering as the core design principle and stated, in one sentence, that
 "skills are injected instructions, not separate agents" following the SKILL.md pattern validated
 by cross-vendor convergence. That sentence is a principle, not a specification. The ecosystem
@@ -32,7 +32,7 @@ needs a formal definition of the skill unit to:
    would invent its own format, fragmenting the ecosystem.
 2. **Budget context accurately** — progressive disclosure requires frontmatter fields
    (`token_size`, `tags`, `description`) that drive selection. These fields need a schema.
-3. **Define the skill/subagent boundary** — [ADR-26038](/architecture/adr/adr_26038_context_engineering_as_core_design_principle.md)
+3. **Define the skill/subagent boundary** — {term}`ADR-26038`
    permits fork-and-join subagents but distinguishes them from skills. The boundary is not yet
    operationally defined.
 4. **Clarify MCP's role** — the emerging standards stack places MCP as the runtime tool
@@ -72,9 +72,9 @@ makes the skill library scale beyond a handful of capabilities.
 
 ### Relationship to ADR-26034
 
-[ADR-26034](/architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md)
+{term}`ADR-26034`
 (rejected) proposed the Agentic OS paradigm and introduced the SKILL.md + tools/ + tests/
-folder structure. The OS framing was rejected; the folder structure was retained in ADR-26038 as
+folder structure. The OS framing was rejected; the folder structure was retained in {term}`ADR-26038` as
 a "validated pattern." ADR-26044 formalizes exactly what was retained: the skill unit structure,
 selection mechanism, and boundaries.
 
@@ -131,7 +131,7 @@ A skill executes within the main agent's context window and LLM loop. It is not:
 - A separate LLM call
 - A message-passing endpoint
 
-This is the boundary established by [ADR-26038](/architecture/adr/adr_26038_context_engineering_as_core_design_principle.md):
+This is the boundary established by {term}`ADR-26038`:
 skills are injected, subagents are forked. The decision rule is:
 
 - **Inject a skill** when the task requires a capability the agent does not have loaded —
@@ -197,7 +197,7 @@ are still subject to the standard test suite (`tests/` fixtures must pass).
   insufficient budget for conversation history and retrieved context in a 32K window.
 
 - **Skills as separate LLM calls (per-skill subagents)**: Each skill gets its own context
-  window, eliminating interference. **Rejected:** [ADR-26038](/architecture/adr/adr_26038_context_engineering_as_core_design_principle.md)
+  window, eliminating interference. **Rejected:** {term}`ADR-26038`
   establishes that context isolation between agents causes incompatible decisions. Forked
   subagents are permitted for independent parallel tasks, not as a default execution model
   for every skill.
@@ -214,12 +214,12 @@ are still subject to the standard test suite (`tests/` fixtures must pass).
 
 ## References
 
-- [ADR-26038: Context Engineering as Core Design Principle](/architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) — establishes "skills as injected instructions, not subagents"; this ADR formalizes that principle
-- [ADR-26034: Agentic OS Paradigm — Skills as Composable Applications](/architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md) — rejected predecessor; SKILL.md + tools/ + tests/ folder structure retained from here
+- {term}`ADR-26038` — establishes "skills as injected instructions, not subagents"; this ADR formalizes that principle
+- {term}`ADR-26034` — rejected predecessor; SKILL.md + tools/ + tests/ folder structure retained from here
 - [A-26009: Compass — The Realistic State of Agentic AI 2026](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) — cross-vendor convergence evidence, progressive disclosure finding, Snyk security data
-- [ADR-26042: Common Frontmatter Standard](/architecture/adr/adr_26042_common_frontmatter_standard.md) — skill frontmatter extends the common schema; `type: skill` resolves from the type registry
-- [ADR-26037: Smallest Viable Architecture Constraint Framework](/architecture/adr/adr_26037_smallest_viable_architecture_constraint_framework.md) — inject/fork decision rule operationalizes SVA for skills
-- [ADR-26032: Tiered Cognitive Memory — Procedural Skills vs. Declarative RAG](/architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md) — skills are the procedural tier; this ADR does not change that boundary
+- {term}`ADR-26042` — skill frontmatter extends the common schema; `type: skill` resolves from the type registry
+- {term}`ADR-26037` — inject/fork decision rule operationalizes SVA for skills
+- {term}`ADR-26032` — skills are the procedural tier; this ADR does not change that boundary
 
 ## Participants
 

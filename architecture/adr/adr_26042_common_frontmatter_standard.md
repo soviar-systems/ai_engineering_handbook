@@ -104,13 +104,13 @@ The `id` field is not universal. Only types that cross-reference each other via 
 
 Validation scripts must support Jupytext dual-block files, parsing the content frontmatter block (Block 2, after the H1 title) rather than the Jupytext config block (Block 1).
 
-### 6. Hub-and-Spoke Configuration
+### 6. Centralized Configuration
 
-The block definitions, type registry, and shared tag vocabulary are codified in `frontmatter.config.yaml`, referenced from `pyproject.toml [tool.frontmatter]`. This is the hub — the SSoT for what fields every type must have. It replaces `architecture.config.yaml` as the shared vocabulary source. Domain configs are the spokes (note: `adr_config.yaml` is renamed to `adr.config.yaml` for dot-separated naming consistency with `evidence.config.yaml`). They retain domain-specific operational rules and declare `parent_config: frontmatter.config.yaml` to inherit the shared schema.
+The block definitions, type registry, and shared tag vocabulary are codified in the project's centralized governance config directory ({term}`ADR-26036`). The shared config (`conf.yaml`) is the SSoT for what fields every type must have. Doc type configs (`<doc_type>.conf.yaml`) retain domain-specific operational rules and inherit common vocabulary via `parent_config`. See [A-26010](/architecture/evidence/analyses/A-26010_config_file_distribution_patterns.md) for the evidence base behind the scope-isolated directory pattern.
 
 > **Important: Strict Additive Inheritance**
 >
-> Spoke configs follow the same additive-only principle as block composition:
+> Between ecosystem projects, the hub project's config provides defaults. Spoke projects' configs extend them:
 >
 > 1. **Hub fields are immutable** — spokes cannot remove, rename, or change semantics of hub-defined fields.
 > 2. **Spokes add** — type-specific fields extend the hub schema.
@@ -150,10 +150,11 @@ Automated, in two phases: (A) ADRs first — one-shot script to fix the `date` �
 - [A-26008: Taxonomy Audit and Composable Block Design](/architecture/evidence/analyses/A-26008_frontmatter_standard_taxonomy_audit.md) — Design specification for this ADR
 - [A-26005: Agentic OS Filesystem Architecture](/architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md) — Taxonomy design, VFS/inode model, DITA specialization analysis
 - [A-26009: Compass — The Realistic State of Agentic AI 2026](/architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) — SKILL.md progressive disclosure pattern
-- [ADR-26023: MyST-Aligned Frontmatter Standard](/architecture/adr/adr_26023_myst_aligned_frontmatter_standard.md) — Superseded by this ADR
-- [ADR-26035: Architecture Knowledge Base Taxonomy](/architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md) — Evidence pipeline and three-commit workflow
-- `evidence.config.yaml` — Current evidence schemas
-- `adr_config.yaml` — Current ADR schema
+- {term}`ADR-26023` — Superseded by this ADR
+- {term}`ADR-26035` — Evidence pipeline and three-commit workflow
+- {term}`ADR-26036` — Config file location and naming conventions; rationale for section 6 config design
+- `evidence.config.yaml` — Current evidence schemas (migrates into centralized config per {term}`ADR-26036`)
+- `adr_config.yaml` — Current ADR schema (migrates into centralized config per {term}`ADR-26036`)
 
 ## Participants
 
