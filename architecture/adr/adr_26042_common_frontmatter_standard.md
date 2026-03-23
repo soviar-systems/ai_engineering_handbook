@@ -48,7 +48,7 @@ We adopt a composable block frontmatter schema as the universal standard for all
 |---|---|---|---|
 | `title` | Document identity | Human | Yes |
 | `type` | Self-describing file type | Human (set once) | No (`options.type`) |
-| `author` | Responsible party (owner, not necessarily the writer — documents may be AI-generated under human control) | Human | Yes |
+| `authors` | Responsible party (owner, not necessarily the writer — documents may be AI-generated under human control) | Human | Yes |
 
 **Discovery block** — enables agent progressive disclosure:
 
@@ -66,10 +66,7 @@ We adopt a composable block frontmatter schema as the universal standard for all
 | `birth` | Creation date | Auto (pre-commit hook on new file) | No (`options.birth`) |
 | `version` | SemVer traceability | Human bump, auto-validated — if `date` changed, `version` must change | No (`options.version`) |
 
-Fields are split into two categories based on MyST rendering support:
-
-- **MyST-native fields** (`title`, `author`, `date`, `description`, `tags`) are top-level YAML keys rendered by the MyST static site.
-- **Ecosystem fields** (`type`, `birth`, `version`, `token_size`) go under `options.*` — invisible to MyST but accessible to validation scripts and RAG pipelines.
+Fields marked "MyST-native" in the tables above are top-level YAML keys rendered by the MyST site. All other fields go under `options.*` — invisible to MyST but accessible to validation scripts and RAG pipelines. The authoritative list of which fields are MyST-native is the block tables, not this prose.
 
 This preserves {term}`ADR-26023`'s principle of leveraging MyST frontmatter natively while extending it with ecosystem-specific metadata.
 
