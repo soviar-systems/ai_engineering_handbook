@@ -67,15 +67,20 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Detect repo root via `git rev-parse --show-toplevel` with `Path(__file__)` fallback, never `Path(".")`
 - Script structure order: data classes → configuration → main → validation → discovery → helpers → `if __name__`
 
-**Content Frontmatter (ADR-26023):**
-- Use MyST-native fields: `title`, `author`, `date`, `options.version`, `options.birth`
+**Content Frontmatter (ADR-26042, supersedes ADR-26023):**
+- Composable blocks: identity (`title`, `type`, `authors`), discovery (`description`, `tags`, `token_size`), lifecycle (`date`, `birth`, `version`)
+- MyST-native fields (top-level): `title`, `authors`, `date`, `description`, `tags` — verified against https://mystmd.org/guide/frontmatter
+- All other fields under `options.*` (ecosystem fields invisible to MyST)
+- Schema SSoT: `.vadocs/conf.yaml` (field registry, blocks, type registry, tags with descriptions)
 - Author email: `rudakow.wadim@gmail.com` (not `lefthand67@gmail.com`)
 - Docs already in production use version `1.0.0`+, not `0.x`
 
-**Tool Configuration (ADR-26029):**
+**Tool Configuration (ADR-26029, ADR-26036):**
 - Machine-readable tool config goes in `pyproject.toml [tool.X]` sections, loaded via `tomllib` (stdlib)
-- Config hierarchy: `pyproject.toml [tool.X]` → domain config (e.g., `evidence.config.yaml`) → shared config via `parent_config` pointer
-- Path constants stay in `tools/scripts/paths.py`; ADR validation rules stay in `adr_config.yaml`
+- Governance configs live in `.vadocs/` directory at project root (ADR-26036, scope-isolated pattern)
+- Config hierarchy: `.vadocs/conf.yaml` (shared vocabulary) → `.vadocs/<doc_type>.conf.yaml` (scoped rules) via `parent_config` pointer
+- Path constants stay in `tools/scripts/paths.py`
+- Config naming: `<doc_type>.conf.yaml` (e.g., `adr.conf.yaml`, `evidence.conf.yaml`)
 - Track intentional tech debt in `misc/plan/techdebt.md` with date, location, and migration path
 
 **ADRs and Evidence Artifacts:**
@@ -90,7 +95,7 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Backtick references are only for ephemeral files (sources in `evidence/sources/`, files in `misc/`)
 - When linking to a Jupytext-paired file, always use the `.ipynb` extension — `check-link-format` hook rejects `.md` links when a paired `.ipynb` exists
 - Before committing, run `uv run tools/scripts/check_broken_links.py` and `uv run tools/scripts/check_link_format.py` to find stale links — fix them proactively instead of waiting for hook failures
-- ADR frontmatter `date` is the birth date (no `options.birth` field yet) — do not update it on minor edits. Analysis `date` can be updated freely
+- ADR frontmatter `date` is currently the birth date (ADR-26042 will unify `date` = last meaningful update, `options.birth` = creation date — migration pending)
 - Never link from persistent artifacts (ADRs, analyses) to ephemeral files (`misc/plan/`, `misc/todo.md`, `evidence/sources/`) — use backtick references instead
 - Never reference "planned ADR-NNNNN" in documents — either link to an existing ADR or reference the problem/tracking location (e.g., `techdebt.md`)
 - **ADR Decision sections must be concise statements, NOT implementation details.** No bash commands, no code blocks showing how to run things, no specific tool invocations. Evidence details and measurements belong in Consequences. Risk mitigations should not name specific implementations (e.g., "Traefik handles routing") — use generic descriptions
