@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.19.0
+    jupytext_version: 1.19.1
 kernelspec:
   name: bash
   display_name: Bash
@@ -26,13 +26,13 @@ options:
 
 +++
 
-This [script](/tools/scripts/check_evidence.py) validates evidence artifacts (analyses, retrospectives, sources) in `architecture/evidence/` against the schema defined in [`evidence.config.yaml`](/architecture/evidence/evidence.config.yaml).
+This [script](/tools/scripts/check_evidence.py) validates evidence artifacts (analyses, retrospectives, sources) in `architecture/evidence/` against the schema defined in `.vadocs/types/evidence.conf.json`.
 
 It ensures:
 - **Required Frontmatter**: Common fields (`id`, `title`, `date`) and type-specific fields are present
 - **Valid Statuses**: Status values match allowed values per artifact type
 - **Valid Severity**: Severity levels match allowed values (retrospectives)
-- **Valid Tags**: Tags are from the shared vocabulary in [`architecture.config.yaml`](/architecture/architecture.config.yaml) (resolved via `parent_config` pointer)
+- **Valid Tags**: Tags are from the shared vocabulary in `.vadocs/conf.json` (resolved via `parent_config` pointer)
 - **Naming Convention**: Filenames match regex patterns from config (e.g., `A-26001_slug`, `R-26001_slug`, `S-26001_slug`)
 - **Date Format**: Date field matches YYYY-MM-DD (ISO 8601)
 - **Required Sections**: Document contains required `##` headers per type
@@ -40,7 +40,7 @@ It ensures:
 - **Code Fence Awareness**: `##` headers inside fenced code blocks are ignored during section extraction
 - **Orphaned Source Detection**: Sources with null `extracted_into` older than configurable threshold produce warnings
 
-All validation rules are defined in [`evidence.config.yaml`](/architecture/evidence/evidence.config.yaml) (Single Source of Truth), with shared tags inherited from the parent config.
+All validation rules are defined in `.vadocs/types/evidence.conf.json` (Single Source of Truth), with shared tags inherited from the hub config `.vadocs/conf.json`.
 
 Governed by: [ADR-26035](/architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md) (Architecture Knowledge Base Taxonomy), [ADR-26036](/architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) (Config File Location and Naming Conventions).
 

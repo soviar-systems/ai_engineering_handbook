@@ -77,7 +77,7 @@ Each artifact type gets an independent ID namespace with a year prefix:
 
 ### 4. Frontmatter Schemas
 
-All schemas are defined in [evidence.config.yaml](/architecture/evidence/evidence.config.yaml) (the single source of truth). Tags are inherited from the parent [architecture.config.yaml](/architecture/architecture.config.yaml) — no duplication. The ADR establishes the principle; the config file is the living specification that can evolve without amending this ADR.
+All schemas are defined in the evidence validation config in `.vadocs/` (the single source of truth, see {term}`ADR-26036`). Tags are inherited from the shared governance config — no duplication. The ADR establishes the principle; the config is the living specification that can evolve without amending this ADR.
 
 **Analysis** (`evidence/analyses/A-YYNNN_slug.md`):
 ```yaml
@@ -130,7 +130,7 @@ Sources are ephemeral by design — committed for traceability, deleted after ex
 
 ### 6. Validation
 
-[check_evidence.py](/tools/scripts/check_evidence.py) validates evidence artifacts against [evidence.config.yaml](/architecture/evidence/evidence.config.yaml), following the same pattern as [check_adr.py](/tools/scripts/check_adr.py) validates ADRs against [adr_config.yaml](/architecture/adr/adr_config.yaml) ({term}`ADR-26017`).
+[check_evidence.py](/tools/scripts/check_evidence.py) validates evidence artifacts against the `.vadocs/` evidence config, following the same pattern as [check_adr.py](/tools/scripts/check_adr.py) validates ADRs ({term}`ADR-26017`).
 
 Validation covers:
 - Frontmatter schema compliance per artifact type
@@ -141,7 +141,7 @@ Validation covers:
 
 This taxonomy is designed to be adoptable by any repository:
 
-1. Copy [evidence.config.yaml](/architecture/evidence/evidence.config.yaml) and [check_evidence.py](/tools/scripts/check_evidence.py) — adapt tags and sections to your domain
+1. Copy the `.vadocs/` evidence config and [check_evidence.py](/tools/scripts/check_evidence.py) — adapt tags and sections to your domain
 2. Create the `evidence/` directory structure
 3. (Optional) Add pre-commit hook and CI job
 
@@ -171,8 +171,8 @@ The conceptual taxonomy (Decisions / Evidence / Governance) is universal. The ph
 ## References
 - [ISO/IEC/IEEE 42010:2022 — Architecture description](https://www.iso.org/standard/74393.html)
 - [A-26001: Architecture Knowledge Base Taxonomy](/architecture/evidence/analyses/A-26001_architecture_knowledge_base_taxonomy.md) — analysis that produced this ADR
-- [evidence.config.yaml](/architecture/evidence/evidence.config.yaml) — evidence artifact specification
-- [architecture.config.yaml](/architecture/architecture.config.yaml) — shared architectural vocabulary
+- {term}`ADR-26036` — Config file location and naming conventions (`.vadocs/` directory)
+- {term}`ADR-26042` — Common frontmatter standard (shared governance vocabulary)
 - [evidence/sources/README](/architecture/evidence/sources/README.ipynb) — source lifecycle and git archaeology
 - {term}`ADR-26016` — Metadata-Driven Architectural Records Lifecycle
 - {term}`ADR-26017` — ADR Format Validation Workflow

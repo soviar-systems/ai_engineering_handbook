@@ -20,6 +20,23 @@ Traceable record of intentional shortcuts. Each entry has a date, location, and 
 - **Migration path:** When the first ADR needs deprecation: (1) add a conditional `Deprecation Rationale` section to `adr_template.md`, (2) add validation rules to `adr_config.yaml` and `check_adr.py`, (3) remove the "not yet formalized" caveat from the guide.
 - **Introduced by:** plan_20260302_adr_writing_guide.md
 
+### TD-004: Script suite triad doc requirement is redundant (2026-03-23)
+
+- **Location:** ADR-26011, `tools/scripts/check_script_suite.py`, `tools/docs/scripts_instructions/`
+- **Context:** ADR-26011 mandates script + test + doc triad. With contract docstrings now required in every module (CLAUDE.md convention) and tests documenting contracts by example, the per-script instruction docs duplicate what's already in the code. Docs fall out of sync on every config change (e.g., YAML→JSON migration required bulk doc updates). When vadocs is extracted as a package, API docs auto-generate from docstrings — per-script docs won't survive.
+- **Current state:** Triad enforced by `check_script_suite.py` pre-commit hook. 15+ doc files in `tools/docs/scripts_instructions/`, each Jupytext-paired (.md + .ipynb).
+- **Analysis:** [A-26014](/architecture/evidence/analyses/A-26014_script_suite_doc_redundancy.md)
+- **Migration path:** (1) Supersede ADR-26011 with new ADR relaxing triad to script + test (doc optional), (2) update `check_script_suite.py` to drop doc requirement, (3) let existing docs age out, (4) new modules only need docstrings. Plan as dedicated task after step 7 completion.
+- **Introduced by:** step 7 config migration session (2026-03-23)
+
+### TD-005: check_frontmatter.py needed for hub-level validation (2026-03-23)
+
+- **Location:** `.vadocs/conf.json` (field_registry, blocks), `check_adr.py`, `check_evidence.py`
+- **Context:** Hub config defines block composition (identity, discovery, lifecycle), authors format, type registry, but no script validates these. Domain scripts only check spoke-level required_fields. Block enforcement, authors format validation, and type field checking are missing.
+- **Current state:** Frontmatter validation is split across domain scripts, each implementing its own subset. Standardized frontmatter (ADR-26042) enables a single shared validator.
+- **Migration path:** (1) Create `check_frontmatter.py` validating hub blocks + spoke rules for all .md files, (2) refactor domain scripts to delegate frontmatter checks, (3) add pre-commit hook. Plan exists conceptually — needs formal plan file.
+- **Introduced by:** step 7 config migration session (2026-03-23)
+
 ## Resolved
 
 ### TD-001: common_required_fields in evidence.config.yaml (2026-02-27)

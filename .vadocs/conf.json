@@ -1,0 +1,217 @@
+{
+  "$schema": "./conf.schema.json",
+  "$comment": [
+    "Shared Governance Config — Single Source of Truth.",
+    "Cross-cutting definitions used by all validation scripts:",
+    "field registry, block composition, type registry, tag vocabulary, date format.",
+    "",
+    "Doc type configs in types/ (adr.conf.json, evidence.conf.json) inherit from",
+    "this file via parent_config pointer and add domain-specific operational rules.",
+    "",
+    "Directory layout:",
+    "  .vadocs/",
+    "    conf.json              <- this file (hub)",
+    "    conf.schema.json       <- JSON Schema for this file",
+    "    types/                 <- doc-type spoke configs",
+    "      adr.conf.json",
+    "      evidence.conf.json",
+    "    validation/            <- operational rules (excludes, patterns)",
+    "",
+    "Governed by: ADR-26036 (Config File Location and Naming Conventions)",
+    "             ADR-26042 (Common Frontmatter Standard)",
+    "             ADR-26054 (JSON as Governance Config Format)"
+  ],
+
+  "field_registry": {
+    "title": {
+      "description": "Document identity",
+      "maintenance": "human",
+      "myst_native": true
+    },
+    "type": {
+      "description": "Self-describing file type (set once)",
+      "maintenance": "human",
+      "myst_native": false
+    },
+    "authors": {
+      "description": "Responsible party (owner, not necessarily the writer). List of {name, email} objects per MyST spec. Ecosystem minimum: name + email for every author.",
+      "maintenance": "human",
+      "myst_native": true
+    },
+    "description": {
+      "description": "Brief elevator pitch for progressive disclosure",
+      "maintenance": "human",
+      "myst_native": true
+    },
+    "tags": {
+      "description": "Domain classification (validated against vocabulary)",
+      "maintenance": "human",
+      "myst_native": true
+    },
+    "token_size": {
+      "description": "Context budget cost in tokens",
+      "maintenance": "auto",
+      "myst_native": false
+    },
+    "date": {
+      "description": "Last meaningful update",
+      "maintenance": "auto",
+      "myst_native": true
+    },
+    "birth": {
+      "description": "Creation date (set once on new file)",
+      "maintenance": "auto",
+      "myst_native": false
+    },
+    "version": {
+      "description": "SemVer traceability — if date changed, version must change",
+      "maintenance": "human+auto",
+      "myst_native": false
+    },
+    "id": {
+      "description": "Cross-reference identifier (numeric for ADRs, prefixed for evidence)",
+      "maintenance": "human",
+      "myst_native": false
+    },
+    "status": {
+      "description": "Lifecycle state (valid values defined per doc type config)",
+      "maintenance": "human",
+      "myst_native": false
+    },
+    "superseded_by": {
+      "description": "ADR ID that replaces this one",
+      "maintenance": "human",
+      "myst_native": false
+    },
+    "severity": {
+      "description": "Incident severity level",
+      "maintenance": "human",
+      "myst_native": false
+    },
+    "sources": {
+      "description": "List of source IDs that fed into this artifact",
+      "maintenance": "human",
+      "myst_native": false
+    },
+    "produces": {
+      "description": "List of ADR/artifact IDs this generates",
+      "maintenance": "human",
+      "myst_native": false
+    },
+    "model": {
+      "description": "AI model name or 'human' for meetings",
+      "maintenance": "human",
+      "myst_native": false
+    },
+    "extracted_into": {
+      "description": "Analysis ID after source extraction (null until extraction)",
+      "maintenance": "human",
+      "myst_native": false
+    },
+    "role": {
+      "description": "Service file role (generated/template/navigation)",
+      "maintenance": "human",
+      "myst_native": false
+    }
+  },
+
+  "blocks": {
+    "identity": ["title", "type", "authors"],
+    "discovery": ["description", "tags", "token_size"],
+    "lifecycle": ["date", "birth", "version"]
+  },
+
+  "types": {
+    "adr": {
+      "blocks": ["identity", "discovery", "lifecycle"],
+      "required": ["id", "status"],
+      "optional": ["superseded_by"]
+    },
+    "analysis": {
+      "blocks": ["identity", "discovery", "lifecycle"],
+      "required": ["id", "status"],
+      "optional": ["sources", "produces"]
+    },
+    "retrospective": {
+      "blocks": ["identity", "discovery", "lifecycle"],
+      "required": ["id", "status", "severity"],
+      "optional": ["produces"]
+    },
+    "source": {
+      "blocks": ["identity", "discovery"],
+      "required": ["id", "model"],
+      "optional": ["extracted_into"]
+    },
+    "tutorial": {
+      "blocks": ["identity", "discovery", "lifecycle"],
+      "required": [],
+      "optional": []
+    },
+    "guide": {
+      "blocks": ["identity", "discovery", "lifecycle"],
+      "required": [],
+      "optional": []
+    },
+    "script_instruction": {
+      "blocks": ["identity", "discovery", "lifecycle"],
+      "required": [],
+      "optional": []
+    },
+    "package_spec": {
+      "blocks": ["identity", "discovery", "lifecycle"],
+      "required": [],
+      "optional": []
+    },
+    "policy": {
+      "blocks": ["identity", "discovery", "lifecycle"],
+      "required": [],
+      "optional": []
+    },
+    "service": {
+      "blocks": ["identity"],
+      "required": [],
+      "optional": ["role", "version"]
+    }
+  },
+
+  "tags": {
+    "architecture": {
+      "description": "Technical design decisions — system structure, component boundaries, patterns"
+    },
+    "ci": {
+      "description": "Continuous integration — pipelines, hooks, automated checks, build steps"
+    },
+    "context_management": {
+      "description": "AI context engineering — token budgets, progressive disclosure, memory, RAG"
+    },
+    "devops": {
+      "description": "Infrastructure and deployment — containers, databases, hosting, environments"
+    },
+    "documentation": {
+      "description": "Documentation standards — frontmatter, formatting, lifecycle, publishing"
+    },
+    "git": {
+      "description": "Git workflow — branching, commits, hooks, repository conventions"
+    },
+    "governance": {
+      "description": "Process and rules — ADR workflow, validation policies, naming conventions"
+    },
+    "hardware": {
+      "description": "Physical compute — GPU/CPU selection, VRAM/RAM constraints, device specs"
+    },
+    "model": {
+      "description": "AI models — selection criteria, taxonomy, capabilities, benchmarks"
+    },
+    "security": {
+      "description": "Security policies — API key management, access control, vulnerability scanning"
+    },
+    "testing": {
+      "description": "Test strategy — TDD, test quality standards, coverage, test infrastructure"
+    },
+    "workflow": {
+      "description": "Development workflow — task orchestration, agent collaboration, release process"
+    }
+  },
+
+  "date_format": "^\\d{4}-\\d{2}-\\d{2}$"
+}

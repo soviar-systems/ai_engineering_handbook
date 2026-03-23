@@ -1,0 +1,69 @@
+{
+  "$comment": "ADR Configuration — operational rules for Architecture Decision Records. Tags and date_format inherited from parent config.",
+  "parent_config": ".vadocs/conf.json",
+
+  "term_reference": {
+    "separator": "-",
+    "valid_pattern": "\\{term\\}`ADR-(\\d+)`",
+    "broken_pattern": "\\{term\\}`ADR (\\d+)`"
+  },
+
+  "required_fields": ["id", "title", "date", "status", "tags"],
+
+  "required_sections": [
+    "Date", "Status", "Context", "Decision",
+    "Consequences", "Alternatives", "References", "Participants"
+  ],
+
+  "allowed_sections": [
+    "Title", "Date", "Status", "Rejection Rationale",
+    "Context", "Decision", "Consequences", "Alternatives",
+    "References", "Participants"
+  ],
+
+  "conditional_sections": {
+    "rejected": ["Rejection Rationale"]
+  },
+
+  "recommended_subsections": {
+    "Consequences": ["Positive", "Negative / Risks"]
+  },
+
+  "statuses": ["proposed", "accepted", "rejected", "superseded", "deprecated"],
+
+  "sections": {
+    "Active Architecture": ["accepted"],
+    "Evolutionary Proposals": ["proposed"],
+    "Historical Context": ["rejected", "superseded", "deprecated"]
+  },
+
+  "status_transitions": {
+    "proposed": ["accepted", "rejected"],
+    "accepted": ["superseded", "deprecated"],
+    "rejected": [],
+    "superseded": [],
+    "deprecated": []
+  },
+
+  "default_status": "proposed",
+
+  "status_corrections": {
+    "proposed": [
+      "prposed", "propposed", "proposd", "porposed",
+      "draft", "pending", "wip", "work in progress"
+    ],
+    "accepted": [
+      "acepted", "accpeted", "acceptd", "acceped",
+      "approved", "active", "implemented", "done"
+    ],
+    "rejected": [
+      "rejectd", "rejcted", "declined", "denied", "refused"
+    ],
+    "superseded": [
+      "superceded", "superseeded", "superseed", "replaced", "obsolete"
+    ],
+    "deprecated": [
+      "deprected", "depricated", "depracated", "legacy", "retired"
+    ]
+  }
+}

@@ -12,6 +12,7 @@ Exit codes:
 """
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -20,7 +21,8 @@ from pathlib import Path
 
 import yaml
 
-from tools.scripts.paths import VALIDATION_EXCLUDE_DIRS
+from tools.scripts.git import detect_repo_root
+from tools.scripts.paths import VALIDATION_EXCLUDE_DIRS, get_config_path
 
 # ======================
 # Configuration
@@ -57,18 +59,18 @@ CODE_FENCE_PATTERN = re.compile(r"```.*?```", re.DOTALL)
 # (hyphen), so references must use {term}`ADR-26001` (hyphen), NOT
 # {term}`ADR 26001` (space).
 #
-# See adr_config.yaml term_reference section for the Single Source of Truth.
+# See adr.conf.json term_reference section for the Single Source of Truth.
 # These defaults are fallbacks if config doesn't specify patterns.
 # =============================================================================
 DEFAULT_BROKEN_TERM_PATTERN = r"\{term\}`ADR (\d+)`"
 DEFAULT_TERM_SEPARATOR = "-"
 
-# Config file path
-ADR_CONFIG_PATH = Path("architecture/adr/adr_config.yaml")
+# Config file path — resolved via pyproject.toml [tool.vadocs] convention
+ADR_CONFIG_PATH = get_config_path(detect_repo_root(), "adr")
 
 
 def load_adr_config() -> dict:
-    """Load ADR configuration from YAML file.
+    """Load ADR configuration from JSON file.
 
     Returns:
         Configuration dictionary with statuses, sections, and default_status.
@@ -79,8 +81,40 @@ def load_adr_config() -> dict:
     if not ADR_CONFIG_PATH.exists():
         raise FileNotFoundError(f"ADR config not found: {ADR_CONFIG_PATH}")
 
-    content = ADR_CONFIG_PATH.read_text(encoding="utf-8")
-    return yaml.safe_load(content)
+    with open(ADR_CONFIG_PATH, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _load_parent_tags(config: dict) -> set[str]:
+    """Load tags from parent config (hub).
+
+    The hub config stores tags as a dict with descriptions.
+    This function extracts just the tag names as a set.
+
+    Args:
+        config: Loaded spoke configuration with parent_config pointer.
+
+    Returns:
+        Set of valid tag names.
+
+    Raises:
+        FileNotFoundError: If parent config doesn't exist.
+    """
+    parent_rel = config.get("parent_config", "")
+    parent_path = Path(parent_rel)
+
+    if not parent_path.exists():
+        raise FileNotFoundError(f"Parent config not found: {parent_path}")
+
+    with open(parent_path, encoding="utf-8") as f:
+        parent = json.load(f)
+
+    # Tags in hub are dict: {"architecture": {"description": "..."}, ...}
+    tags = parent.get("tags", {})
+    if isinstance(tags, dict):
+        return set(tags.keys())
+    # Fallback for flat list format
+    return set(tags)
 
 
 def _build_status_sections(config: dict) -> dict[str, str]:
@@ -124,11 +158,19 @@ DEFAULT_STATUS: str = _config.get("default_status", "proposed")
 SECTION_ORDER: list[str] = list(_config.get("sections", {}).keys())
 STATUS_CORRECTIONS: dict[str, str] = _build_status_corrections(_config)
 REQUIRED_FIELDS: list[str] = _config.get("required_fields", [])
-VALID_TAGS: set[str] = set(_config.get("tags", []))
+VALID_TAGS: set[str] = _load_parent_tags(_config)
 REQUIRED_SECTIONS: list[str] = _config.get("required_sections", [])
 ALLOWED_SECTIONS: set[str] = set(_config.get("allowed_sections", []))
 CONDITIONAL_SECTIONS: dict[str, list[str]] = _config.get("conditional_sections", {})
-DATE_FORMAT_PATTERN: str = _config.get("date_format", r"^\d{4}-\d{2}-\d{2}$")
+# date_format from parent config (hub), with spoke fallback
+_parent_rel = _config.get("parent_config", "")
+_parent_path = Path(_parent_rel)
+if _parent_path.exists():
+    with open(_parent_path, encoding="utf-8") as _f:
+        _parent_config = json.load(_f)
+    DATE_FORMAT_PATTERN: str = _parent_config.get("date_format", r"^\d{4}-\d{2}-\d{2}$")
+else:
+    DATE_FORMAT_PATTERN: str = r"^\d{4}-\d{2}-\d{2}$"
 
 # Term reference validation (from config or defaults)
 _term_config = _config.get("term_reference", {})

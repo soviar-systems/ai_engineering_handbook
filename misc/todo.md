@@ -1,5 +1,7 @@
 ai_engineering_book
 
+
+
 entire ecosystem description
 - should be in hub, this is the entry point. brainstorm is needed
 
@@ -12,12 +14,6 @@ code design
 TDD analysis
 - https://t.me/turboproject/3505
 - important question touching the code development workflow in the ecosystem
-
-ADR:
-- should we use only one tag so we can change the adr_index to be sectioned, not the huge list of titles?
- - adr_index
-    - can we move the check to git add stage, not post-commit?
-    - divide History section into rejected and superseded
 
 - The Security Implications section must be added as a required field for proposed and accepted ADRs.
 
@@ -37,3 +33,15 @@ Development environment configuration
     - ./4_orchestration/workflows/requirements_engineering
     - ./4_orchestration/workflows/release_notes_generation
     - ./mlops
+    
+    
+DONE
+
+Path constants stay in `tools/scripts/paths.py`
+- this is non-standard way, and we should consider moving paths to the configs, like in .vadocs/conf.yaml so it can be moved then to the vadocs package distribution mechanism
+
+ADR:
+- should we use only one tag so we can change the adr_index to be sectioned, not the huge list of titles?
+ - adr_index
+    - can we move the check to git add stage, not post-commit?
+    - divide History section into rejected and superseded

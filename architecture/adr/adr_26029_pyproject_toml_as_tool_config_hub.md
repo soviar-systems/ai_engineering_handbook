@@ -55,7 +55,7 @@ VALID_TYPES: list[str] = _CONFIG["valid-types"]
 - **Path constants** → `tools/scripts/paths.py` (Python-native, imports cleanly)
 - **Build/CI config** → `.pre-commit-config.yaml`, `quality.yml` (tool-specific formats)
 - **MyST config** → `myst.yml` (MyST-specific toolchain)
-- **ADR validation rules** → `adr_config.yaml` (YAML-native, already established)
+- **Governance validation rules** → `.vadocs/` directory ({term}`ADR-26036`, {term}`ADR-26054`)
 
 ### First use
 
@@ -72,7 +72,7 @@ VALID_TYPES: list[str] = _CONFIG["valid-types"]
 
 ### Negative / Risks
 
-- **TOML is less expressive than YAML** for deeply nested or complex config (no anchors, limited nesting). **Mitigation**: keep `[tool.X]` sections flat; use YAML for inherently complex config like `adr_config.yaml`.
+- **TOML is less expressive than YAML** for deeply nested or complex config (no anchors, limited nesting). **Mitigation**: keep `[tool.X]` sections flat; use governance configs in `.vadocs/` for deeply nested validation rules ({term}`ADR-26036`).
 - **File size growth**: as more tools add `[tool.X]` sections, `pyproject.toml` grows. **Mitigation**: each section is self-contained and clearly commented; the file remains navigable.
 
 ## Alternatives

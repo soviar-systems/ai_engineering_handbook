@@ -40,7 +40,7 @@ The ADR template (`adr_template.md`) defined expected structure, but there was n
 
 ## Decision
 
-We will implement comprehensive ADR format validation in `check_adr.py` with config-driven rules stored in `adr_config.yaml`.
+We will implement comprehensive ADR format validation in `check_adr.py` with config-driven rules stored in `adr.conf.json`.
 
 **Validation rules added:**
 1. **Required frontmatter fields**: id, title, date, status, tags
@@ -55,7 +55,7 @@ We will implement comprehensive ADR format validation in `check_adr.py` with con
 - Adds default tags
 
 **Single Source of Truth:**
-All validation rules defined in `adr_config.yaml` to avoid drift between template and validator.
+All validation rules defined in `adr.conf.json` to avoid drift between template and validator.
 
 ## Consequences
 
@@ -63,7 +63,7 @@ All validation rules defined in `adr_config.yaml` to avoid drift between templat
 
 - Consistent ADR format across all records
 - Early error detection during CI/pre-commit
-- Self-documenting configuration (adr_config.yaml)
+- Self-documenting configuration (adr.conf.json)
 - Legacy ADRs can be migrated automatically
 - ADRs are parseable by other tools (documentation generators, search)
 
@@ -83,7 +83,7 @@ All validation rules defined in `adr_config.yaml` to avoid drift between templat
 ## References
 
 - [ADR template](/architecture/adr/adr_template.md)
-- [ADR configuration](/architecture/adr/adr_config.yaml)
+- {term}`ADR-26036` — Config file location and naming conventions (`.vadocs/` directory)
 - [ADR 26016: Metadata-Driven ADR Lifecycle](/architecture/adr/adr_26016_metadata_driven_architectural_records_life.md)
 - [check_adr.py documentation](/tools/docs/scripts_instructions/check_adr_py_script.ipynb)
 

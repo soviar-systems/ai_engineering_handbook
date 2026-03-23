@@ -53,25 +53,89 @@ This session discovered two unplanned architectural decisions:
 - Tags with inline descriptions (no separate policy doc)
 - Date format
 
-### 7. Migrate scripts to load tags from `.vadocs/conf.yaml` — NEXT SESSION
+### 7. Migrate configs to JSON, establish `.vadocs/` subdirectory structure, migrate scripts — IN PROGRESS
 
-This step involves code changes (TDD required) and should start in a fresh context.
+This step involves config format migration, directory restructuring, and code changes (TDD required).
 
-- Remove `tags:` from `architecture/adr/adr_config.yaml` (keep as `adr.conf.yaml` candidate)
-- Add `parent_config: ../../.vadocs/conf.yaml` to `adr_config.yaml`
-- Update `tools/scripts/check_adr.py` to load tags from shared config
-- Update `tools/scripts/check_evidence.py` similarly (currently loads from `architecture.config.yaml`)
-- Assess `architecture/architecture.config.yaml` — likely fully absorbed into `.vadocs/conf.yaml`
-- Rename `adr_config.yaml` → `adr.conf.yaml`, `evidence.config.yaml` → `evidence.conf.yaml`
-- Update all `parent_config` pointers and `pyproject.toml` references
+**7a. YAML → JSON migration (A-26013, ADR-26054):**
+
+Brainstorming (2026-03-23) identified that YAML governance configs are hitting their
+limits: no native schema validation, ambiguous parsing, custom format invention needed
+for complex fields (authors, tags). JSON + JSON Schema is the standard solution:
+- `json` module is Python stdlib (zero dependencies vs PyYAML)
+- JSON Schema validates both config files and the frontmatter they govern
+- Field format definitions (authors, dates, statuses) become standard JSON Schema
+- Descriptions live in the schema itself — comments unnecessary
+
+Analysis: A-26013 (YAML → JSON config format migration)
+ADR: ADR-26054 (JSON as Governance Config Format)
+
+- Convert `.vadocs/conf.yaml` → `.vadocs/conf.json`
+- Create `.vadocs/conf.schema.json` defining the hub config structure
+- Convert spoke configs to JSON during move (7b)
+- Update all scripts from `yaml.safe_load` → `json.load` for config loading
+- Note: document frontmatter stays YAML (embedded in markdown) — only `.vadocs/` configs migrate
+
+**7b. Establish `.vadocs/` subdirectory structure:**
+
+Brainstorming (2026-03-23) concluded that `.vadocs/` must use subdirectories by concern,
+anticipating vadocs package extraction (Phase 1.3). Flat layout rejected — mixes governance
+vocabulary with operational rules and won't scale to plugins.
+
+Target layout:
+```
+.vadocs/
+  conf.json                  # hub — shared vocabulary (fields, blocks, types, tags)
+  conf.schema.json           # JSON Schema for hub config
+  types/
+    adr.conf.json            # spoke — ADR operational rules
+    evidence.conf.json       # spoke — evidence operational rules
+  validation/
+    excludes.conf.json       # operational — paths.py content (separate task)
+```
+
+- Create `.vadocs/types/` directory
+- Move `adr_config.yaml` → `.vadocs/types/adr.conf.json` (convert to JSON)
+- Move `evidence.config.yaml` → `.vadocs/types/evidence.conf.json` (convert to JSON)
+- Delete `architecture/architecture.config.yaml` (fully absorbed into `conf.json`)
+- Delete `.vadocs/conf.yaml` (replaced by `conf.json`)
+- ADR-26036 revision needed: update from flat YAML to subdirectory JSON structure
+
+**7c. Config content migration:**
+
+- Remove `tags:` from adr spoke config (now in `conf.json`)
+- Remove `date_format:` from both spoke configs (now in `conf.json`)
+- Add `parent_config: .vadocs/conf.json` to both spoke configs
+- Define `authors` format in JSON Schema: array of `{name, email}` objects
+
+**7d. Script migration (TDD):**
+
+- Update `tools/scripts/check_adr.py`: `yaml.safe_load` → `json.load`, load tags from
+  shared config via parent_config (tags in hub are dict with descriptions → extract keys)
+- Update `tools/scripts/check_evidence.py` similarly
+- Update `pyproject.toml` pointers: `.vadocs/types/adr.conf.json`, `.vadocs/types/evidence.conf.json`
+- Update `.pre-commit-config.yaml` file patterns
 - Tests: `test_check_adr.py`, `test_check_evidence.py`
+
+**7e. Documentation and ADR updates:**
+
+- Write ADR-26054 (JSON as Governance Config Format)
+- Revise ADR-26036 (update from flat YAML to subdirectory JSON)
+- Update `adr_template.md` comment (config path)
+- Update `tools/docs/scripts_instructions/` for both scripts
+- Update `CLAUDE.md` config hierarchy description
+
+**Deferred to separate task:**
+
+- Migrate `paths.py` → `.vadocs/validation/excludes.conf.json`
 
 ### 8. ~~Update memory~~ DONE
 
 ## Verification (for step 7)
 
-- `uv run tools/scripts/check_adr.py --fix` passes (tags loaded from `.vadocs/conf.yaml`)
+- `uv run tools/scripts/check_adr.py --fix` passes (tags loaded from `.vadocs/conf.json`)
 - `uv run pytest tools/tests/test_check_adr.py` passes
 - `uv run tools/scripts/check_evidence.py` passes (no regression)
 - `uv run pytest tools/tests/test_check_evidence.py` passes
 - `uv run tools/scripts/check_broken_links.py` passes (no stale links)
+- `.vadocs/conf.json` validates against `.vadocs/conf.schema.json`

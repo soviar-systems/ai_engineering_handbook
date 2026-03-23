@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soviar-systems.github.io/ai_engineering_handbook/.vadocs/conf.schema.json",
+  "title": "vadocs Shared Governance Config",
+  "description": "Validates .vadocs/conf.json — the hub config defining shared vocabulary for all governed document types.",
+  "type": "object",
+  "required": ["field_registry", "blocks", "types", "tags", "date_format"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema self-reference"
+    },
+    "$comment": {
+      "description": "File-level documentation (array of strings for readability)"
+    },
+    "field_registry": {
+      "type": "object",
+      "description": "Every governed frontmatter field defined once. Fields are the atoms; blocks compose them; types compose blocks.",
+      "additionalProperties": {
+        "$ref": "#/$defs/field_entry"
+      }
+    },
+    "blocks": {
+      "type": "object",
+      "description": "Composable groups of fields (DITA specialization principle). Types compose blocks additively.",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "List of field names from field_registry"
+      }
+    },
+    "types": {
+      "type": "object",
+      "description": "Document type registry — which blocks each type composes plus type-specific fields.",
+      "additionalProperties": {
+        "$ref": "#/$defs/type_entry"
+      }
+    },
+    "tags": {
+      "type": "object",
+      "description": "Shared tag vocabulary for all governed documents. Alphabetical order. Each tag has a description defining its scope.",
+      "additionalProperties": {
+        "$ref": "#/$defs/tag_entry"
+      }
+    },
+    "date_format": {
+      "type": "string",
+      "description": "Regex pattern for ISO 8601 date validation (YYYY-MM-DD)"
+    }
+  },
+  "$defs": {
+    "field_entry": {
+      "type": "object",
+      "required": ["description", "maintenance", "myst_native"],
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "What this field represents and how to use it"
+        },
+        "maintenance": {
+          "type": "string",
+          "enum": ["human", "auto", "human+auto"],
+          "description": "Who maintains this field: human (author sets), auto (hook maintains), human+auto (human bumps, hook validates)"
+        },
+        "myst_native": {
+          "type": "boolean",
+          "description": "true = top-level YAML key rendered by MyST site; false = lives under options.*, invisible to MyST"
+        }
+      }
+    },
+    "type_entry": {
+      "type": "object",
+      "required": ["blocks", "required", "optional"],
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Block names from the blocks section"
+        },
+        "required": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Type-specific required fields (beyond block fields)"
+        },
+        "optional": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Type-specific optional fields"
+        }
+      }
+    },
+    "tag_entry": {
+      "type": "object",
+      "required": ["description"],
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Scope definition — use this to decide which tag fits a document"
+        }
+      }
+    },
+    "authors_item": {
+      "type": "object",
+      "required": ["name", "email"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Full name"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Contact email"
+        }
+      },
+      "description": "Author object per MyST spec. Ecosystem minimum: name + email."
+    }
+  }
+}

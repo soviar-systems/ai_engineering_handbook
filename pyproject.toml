@@ -28,6 +28,9 @@ formats = "ipynb,md:myst"
 # Consumed by: tools/scripts/validate_commit_msg.py, tools/scripts/generate_changelog.py
 # Defined in: tools/docs/git/01_production_git_workflow_standards.md
 # Decision record: architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md
+[tool.vadocs]
+config_dir = ".vadocs"
+
 [tool.commit-convention]
 valid-types = ["feat", "fix", "docs", "adr", "ci", "refactor", "perf", "chore", "pr"]
 archtag-required-types = ["refactor", "perf"]
@@ -45,11 +48,3 @@ refactor = "Refactoring"
 perf = "Performance"
 pr = "Public Relations"
 
-# Config pointer registry (ADR-26036) — scripts resolve their config path from here.
-# Consumed by: tools/scripts/check_adr.py (after migration to pointer-based loading)
-[tool.check-adr]
-config = "architecture/adr/adr_config.yaml"
-
-# Consumed by: tools/scripts/check_evidence.py
-[tool.check-evidence]
-config = "architecture/evidence/evidence.config.yaml"

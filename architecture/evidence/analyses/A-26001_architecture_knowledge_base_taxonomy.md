@@ -175,7 +175,7 @@ The three-commit workflow solves a dilemma: transcripts are too large and noisy 
 The taxonomy is designed to be portable to any repository:
 
 **To adopt:**
-1. Copy [evidence.config.yaml](/architecture/evidence/evidence.config.yaml) — adapt tags and sections to your domain
+1. Copy the `.vadocs/` evidence config — adapt tags and sections to your domain
 2. Copy [check_evidence.py](/tools/scripts/check_evidence.py) — runs against the config
 3. Create the `evidence/` directory structure
 4. (Optional) Add pre-commit hook and CI job
@@ -198,8 +198,7 @@ The taxonomy is designed to be portable to any repository:
 - [ADR-26016: Metadata-Driven Architectural Records Lifecycle](/architecture/adr/adr_26016_metadata_driven_architectural_records_life.md)
 - [ADR-26017: ADR Format Validation Workflow](/architecture/adr/adr_26017_adr_format_validation_workflow.md)
 - [ADR-26036: Config File Location and Naming Conventions](/architecture/adr/adr_26036_config_file_location_and_naming_conventions.md)
-- [evidence.config.yaml](/architecture/evidence/evidence.config.yaml) — evidence artifact specification
-- [architecture.config.yaml](/architecture/architecture.config.yaml) — shared architectural vocabulary
+- [ADR-26042: Common Frontmatter Standard](/architecture/adr/adr_26042_common_frontmatter_standard.md) — shared governance vocabulary
 - [MADR — Markdown Any Decision Records](https://adr.github.io/madr/)
 - [Michael Nygard — Documenting Architecture Decisions](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
 - [KEP process documentation](https://github.com/kubernetes/enhancements/tree/master/keps)

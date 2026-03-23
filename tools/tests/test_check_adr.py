@@ -127,7 +127,7 @@ def create_empty_index(path: Path) -> None:
 def create_adr_config(path: Path) -> None:
     """Copy real ADR config to test directory.
 
-    Sources from the production adr_config.yaml (Single Source of Truth)
+    Sources from the production adr.conf.json (Single Source of Truth)
     to avoid maintaining a duplicate hardcoded config in tests.
 
     Args:
@@ -135,7 +135,22 @@ def create_adr_config(path: Path) -> None:
     """
     import shutil
 
-    real_config = Path(__file__).resolve().parent.parent.parent / "architecture" / "adr" / "adr_config.yaml"
+    real_config = Path(__file__).resolve().parent.parent.parent / ".vadocs" / "types" / "adr.conf.json"
+    shutil.copy2(real_config, path)
+
+
+def create_hub_config(path: Path) -> None:
+    """Copy real hub config to test directory.
+
+    Sources from the production conf.json (Single Source of Truth)
+    for shared vocabulary (tags, date_format).
+
+    Args:
+        path: Path to write config file
+    """
+    import shutil
+
+    real_config = Path(__file__).resolve().parent.parent.parent / ".vadocs" / "conf.json"
     shutil.copy2(real_config, path)
 
 
@@ -285,19 +300,33 @@ def adr_env(tmp_path, monkeypatch):
     adr_dir = tmp_path / "architecture" / "adr"
     adr_dir.mkdir(parents=True)
     index_path = tmp_path / "architecture" / "adr_index.md"
-    config_path = adr_dir / "adr_config.yaml"
+
+    # Create .vadocs/ structure mirroring production layout
+    vadocs_dir = tmp_path / ".vadocs"
+    types_dir = vadocs_dir / "types"
+    types_dir.mkdir(parents=True)
+
+    hub_config_path = vadocs_dir / "conf.json"
+    spoke_config_path = types_dir / "adr.conf.json"
+
+    # Create hub config (tags, date_format)
+    create_hub_config(hub_config_path)
+
+    # Create spoke config — rewrite parent_config to point to test hub
+    create_adr_config(spoke_config_path)
+    import json
+    spoke = json.loads(spoke_config_path.read_text(encoding="utf-8"))
+    spoke["parent_config"] = str(hub_config_path)
+    spoke_config_path.write_text(json.dumps(spoke), encoding="utf-8")
 
     # Create the template file (should be excluded)
     template = adr_dir / "adr_template.md"
     template.write_text("# ADR Template\n\nUse this as a template.\n", encoding="utf-8")
 
-    # Create config file
-    create_adr_config(config_path)
-
     # Monkeypatch to use test directories
     monkeypatch.setattr("tools.scripts.check_adr.ADR_DIR", adr_dir)
     monkeypatch.setattr("tools.scripts.check_adr.INDEX_PATH", index_path)
-    monkeypatch.setattr("tools.scripts.check_adr.ADR_CONFIG_PATH", config_path)
+    monkeypatch.setattr("tools.scripts.check_adr.ADR_CONFIG_PATH", spoke_config_path)
 
     # Reload config with test paths
     import tools.scripts.check_adr as module
@@ -307,9 +336,14 @@ def adr_env(tmp_path, monkeypatch):
     monkeypatch.setattr(module, "DEFAULT_STATUS", config.get("default_status", "proposed"))
     monkeypatch.setattr(module, "SECTION_ORDER", list(config.get("sections", {}).keys()))
     monkeypatch.setattr(module, "STATUS_CORRECTIONS", module._build_status_corrections(config))
+    monkeypatch.setattr(module, "REQUIRED_FIELDS", config.get("required_fields", []))
+    monkeypatch.setattr(module, "VALID_TAGS", module._load_parent_tags(config))
     monkeypatch.setattr(module, "REQUIRED_SECTIONS", config.get("required_sections", []))
     monkeypatch.setattr(module, "ALLOWED_SECTIONS", set(config.get("allowed_sections", [])))
     monkeypatch.setattr(module, "CONDITIONAL_SECTIONS", config.get("conditional_sections", {}))
+    # date_format from hub
+    _hub = json.loads(hub_config_path.read_text(encoding="utf-8"))
+    monkeypatch.setattr(module, "DATE_FORMAT_PATTERN", _hub.get("date_format", r"^\d{4}-\d{2}-\d{2}$"))
 
     return AdrTestEnv(adr_dir=adr_dir, index_path=index_path, root=tmp_path)
 

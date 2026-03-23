@@ -73,7 +73,7 @@ repos:
         name: Check ADR Index
         entry: uv run --active tools/scripts/check_adr.py --fix
         language: python
-        files: ^architecture/(adr/adr_.*\.md|adr_index\.md)$
+        files: ^(architecture/(adr/adr_.*\.md|adr_index\.md)|\.vadocs/(conf\.json|types/adr\.conf\.json))$
         pass_filenames: false
         stages: [pre-commit, manual]
 
@@ -165,16 +165,23 @@ repos:
         files: ^(tools/(scripts/generate_changelog\.py|tests/test_generate_changelog\.py)|pyproject\.toml)$
         pass_filenames: false
 
+      - id: test-git
+        name: Test git utilities module
+        entry: uv run --active pytest tools/tests/test_git.py
+        language: system
+        pass_filenames: false
+        files: ^tools/(scripts/git\.py|tests/test_git\.py)$
+
       - id: test-check-evidence
         name: Test check_evidence
         entry: uv run --active pytest tools/tests/test_check_evidence.py
         language: system
         pass_filenames: false
-        files: ^(tools/scripts/check_evidence\.py|tools/tests/test_check_evidence\.py|tools/scripts/paths\.py|architecture/evidence/evidence\.config\.yaml)$
+        files: ^(tools/scripts/(check_evidence|git|paths)\.py|tools/tests/test_check_evidence\.py|\.vadocs/(conf\.json|types/evidence\.conf\.json))$
 
       - id: test-check-adr-index
         name: Test Check ADR Index script
         entry: uv run --active pytest tools/tests/test_check_adr.py
         language: python
-        files: ^tools/(scripts/check_adr\.py|tests/test_check_adr\.py)$
+        files: ^(tools/scripts/(check_adr|git|paths)\.py|tools/tests/test_check_adr\.py|\.vadocs/(conf\.json|types/adr\.conf\.json))$
         pass_filenames: false

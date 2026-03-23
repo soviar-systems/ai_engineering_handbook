@@ -7,7 +7,7 @@ Tests are organized following the behavior-based testing principle:
 - Parametrize from config, not hardcoded lists (SSoT-driven)
 
 Test classes and their contracts:
-- TestConfigLoading: Config loads from pyproject.toml pointer, resolves parent_config tags
+- TestConfigLoading: Config loads from .vadocs/types/evidence.conf.json, resolves parent_config tags
 - TestValidateNaming: Filenames match regex patterns from config per artifact type
 - TestValidateFrontmatter: Required fields present, valid statuses/severity/tags per type
 - TestValidateSections: Required sections present, no unexpected sections
@@ -16,8 +16,8 @@ Test classes and their contracts:
 - TestCli: Exit codes 0 (valid) / 1 (errors), --verbose and --check-staged flags
 """
 
+import json
 import shutil
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from unittest.mock import patch
@@ -31,30 +31,32 @@ import tools.scripts.check_evidence as _module
 # ======================
 # Config-driven constants (SSoT)
 # ======================
-# All paths resolve from pyproject.toml → evidence.config.yaml → parent_config.
-# No hardcoded directory paths or field lists.
+# All paths resolve from convention: .vadocs/types/evidence.conf.json → parent_config.
+# No pyproject.toml indirection — .vadocs/ directory IS the convention.
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
-# Entry point: pyproject.toml [tool.check-evidence] config pointer
-with open(_REPO_ROOT / "pyproject.toml", "rb") as _f:
-    _PYPROJECT = tomllib.load(_f)
-_EVIDENCE_CONFIG_REL = _PYPROJECT["tool"]["check-evidence"]["config"]
+# Convention-based config path
+_EVIDENCE_CONFIG_REL = ".vadocs/types/evidence.conf.json"
 _EVIDENCE_CONFIG_PATH = _REPO_ROOT / _EVIDENCE_CONFIG_REL
 
 # Evidence config → parent_config relative path → parent config
-_EVIDENCE_CONFIG = yaml.safe_load(_EVIDENCE_CONFIG_PATH.read_text(encoding="utf-8"))
+with open(_EVIDENCE_CONFIG_PATH, encoding="utf-8") as _f:
+    _EVIDENCE_CONFIG = json.load(_f)
 _PARENT_CONFIG_REL = _EVIDENCE_CONFIG["parent_config"]
 _PARENT_CONFIG_PATH = _REPO_ROOT / _PARENT_CONFIG_REL
-_PARENT_CONFIG = yaml.safe_load(_PARENT_CONFIG_PATH.read_text(encoding="utf-8"))
+with open(_PARENT_CONFIG_PATH, encoding="utf-8") as _f:
+    _PARENT_CONFIG = json.load(_f)
 
 # Derived constants — all from config, nothing hardcoded
 _ARTIFACT_TYPES = _EVIDENCE_CONFIG["artifact_types"]
 _NAMING_PATTERNS = _EVIDENCE_CONFIG["naming_patterns"]
 _LIFECYCLE = _EVIDENCE_CONFIG["lifecycle"]
 _COMMON_REQUIRED_FIELDS = _EVIDENCE_CONFIG["common_required_fields"]
-_DATE_FORMAT = _EVIDENCE_CONFIG["date_format"]
-_VALID_TAGS = _PARENT_CONFIG["tags"]
+_DATE_FORMAT = _PARENT_CONFIG.get("date_format", r"^\d{4}-\d{2}-\d{2}$")
+# Tags in hub are dict with descriptions — extract keys for validation
+_tags_raw = _PARENT_CONFIG["tags"]
+_VALID_TAGS = list(_tags_raw.keys()) if isinstance(_tags_raw, dict) else _tags_raw
 
 # Default values for common fields, keyed by field name.
 # "id" and "date" need type-aware formatting; handled in _build_valid_frontmatter.
@@ -101,8 +103,13 @@ def _resolve_field_default(field: str, type_config: dict) -> object:
             return type_config[plural][0]
 
     # 3. Parent config match (e.g., tags → parent_config["tags"])
-    if field in _PARENT_CONFIG and isinstance(_PARENT_CONFIG[field], list) and _PARENT_CONFIG[field]:
-        return [_PARENT_CONFIG[field][0]]
+    if field in _PARENT_CONFIG:
+        val = _PARENT_CONFIG[field]
+        if isinstance(val, dict) and val:
+            # Hub tags are dict with descriptions — return first key
+            return [next(iter(val))]
+        if isinstance(val, list) and val:
+            return [val[0]]
 
     # 4. Free-text fallback
     return f"test-{field}-value"
@@ -111,7 +118,7 @@ def _resolve_field_default(field: str, type_config: dict) -> object:
 def _build_valid_frontmatter(artifact_type: str, **overrides) -> dict:
     """Build a valid frontmatter dict for any artifact type, fully config-driven.
 
-    Common fields come from evidence.config.yaml common_required_fields.
+    Common fields come from evidence.conf.json common_required_fields.
     Type-specific fields resolved via _resolve_field_default heuristic.
     Individual fields can be overridden via kwargs for negative testing.
     """
@@ -217,49 +224,57 @@ def create_evidence_config(path: Path) -> None:
     shutil.copy2(_EVIDENCE_CONFIG_PATH, path)
 
 
-def create_parent_config(path: Path) -> None:
-    """Copy real architecture config to test directory (SSoT)."""
+def create_hub_config(path: Path) -> None:
+    """Copy real hub config to test directory (SSoT)."""
     shutil.copy2(_PARENT_CONFIG_PATH, path)
 
 
 @pytest.fixture
 def evidence_env(tmp_path, monkeypatch):
     """Create isolated evidence environment with configurable state."""
-    # Mirror real directory structure — all paths derived from config
-    config_path = tmp_path / _EVIDENCE_CONFIG_REL
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    evidence_dir = config_path.parent
+    # Mirror .vadocs/ structure
+    vadocs_dir = tmp_path / ".vadocs"
+    types_dir = vadocs_dir / "types"
+    types_dir.mkdir(parents=True)
 
+    hub_config_path = vadocs_dir / "conf.json"
+    spoke_config_path = types_dir / "evidence.conf.json"
+
+    # Copy real configs
+    create_hub_config(hub_config_path)
+    create_evidence_config(spoke_config_path)
+
+    # Rewrite parent_config to point to test hub (absolute path for test isolation)
+    spoke = json.loads(spoke_config_path.read_text(encoding="utf-8"))
+    spoke["parent_config"] = str(hub_config_path)
+    spoke_config_path.write_text(json.dumps(spoke), encoding="utf-8")
+
+    # Reload config with test paths
+    config = _module.load_evidence_config(spoke_config_path)
+    parent_config = _module.load_parent_config(config, tmp_path)
+
+    # Create evidence artifact directories at evidence_dir from config
+    evidence_rel = config.get("evidence_dir", "architecture/evidence")
+    evidence_dir = tmp_path / evidence_rel
+    evidence_dir.mkdir(parents=True, exist_ok=True)
     for type_config in _ARTIFACT_TYPES.values():
         (evidence_dir / type_config["directory_name"]).mkdir(exist_ok=True)
 
-    # Copy real configs to test directory
-    create_evidence_config(config_path)
+    # Tags from hub are dict with descriptions — extract keys
+    tags_raw = parent_config.get("tags", {})
+    valid_tags = set(tags_raw.keys()) if isinstance(tags_raw, dict) else set(tags_raw)
 
-    parent_config_path = tmp_path / _PARENT_CONFIG_REL
-    parent_config_path.parent.mkdir(parents=True, exist_ok=True)
-    create_parent_config(parent_config_path)
-
-    # pyproject.toml with the same relative path as production
-    pyproject_path = tmp_path / "pyproject.toml"
-    pyproject_path.write_text(
-        f'[tool.check-evidence]\nconfig = "{_EVIDENCE_CONFIG_REL}"\n',
-        encoding="utf-8",
-    )
-
-    # Monkeypatch module-level constants — all through _module reference
+    # Monkeypatch module-level constants
     monkeypatch.setattr(_module, "REPO_ROOT", tmp_path)
-    monkeypatch.setattr(_module, "EVIDENCE_CONFIG_PATH", config_path)
-
-    # Reload config with test paths
-    config = _module.load_evidence_config(config_path)
-    parent_config = _module.load_parent_config(config, tmp_path)
-
+    monkeypatch.setattr(_module, "EVIDENCE_CONFIG_PATH", spoke_config_path)
     monkeypatch.setattr(_module, "EVIDENCE_CONFIG", config)
-    monkeypatch.setattr(_module, "VALID_TAGS", set(parent_config.get("tags", [])))
+    monkeypatch.setattr(_module, "EVIDENCE_DIR", evidence_dir)
+    monkeypatch.setattr(_module, "VALID_TAGS", valid_tags)
     monkeypatch.setattr(_module, "ARTIFACT_TYPES", config.get("artifact_types", {}))
     monkeypatch.setattr(_module, "NAMING_PATTERNS", config.get("naming_patterns", {}))
     monkeypatch.setattr(_module, "LIFECYCLE", config.get("lifecycle", {}))
+    monkeypatch.setattr(_module, "COMMON_REQUIRED_FIELDS", config.get("common_required_fields", []))
+    monkeypatch.setattr(_module, "DATE_FORMAT_PATTERN", parent_config.get("date_format", r"^\d{4}-\d{2}-\d{2}$"))
 
     return EvidenceTestEnv(
         evidence_dir=evidence_dir,
@@ -273,56 +288,51 @@ def evidence_env(tmp_path, monkeypatch):
 
 
 class TestConfigLoading:
-    """Contract: Config loads from YAML, resolves parent_config for shared tags."""
+    """Contract: Config loads from JSON, resolves parent_config for shared tags."""
 
     def test_loads_evidence_config(self, evidence_env):
         """Should load evidence config with artifact_types, naming_patterns, lifecycle."""
-        config = _module.load_evidence_config(evidence_env.evidence_dir / "evidence.config.yaml")
+        config = _module.EVIDENCE_CONFIG
 
         assert "artifact_types" in config
         assert "naming_patterns" in config
         assert "lifecycle" in config
 
     def test_loads_parent_config_tags(self, evidence_env):
-        """Should resolve parent_config and load shared tags."""
-        config = _module.load_evidence_config(evidence_env.evidence_dir / "evidence.config.yaml")
+        """Should resolve parent_config and load shared tags from hub."""
+        config = _module.EVIDENCE_CONFIG
         parent = _module.load_parent_config(config, evidence_env.root)
 
         assert "tags" in parent
         assert len(parent["tags"]) > 0
 
     def test_parent_config_tags_match_production(self, evidence_env):
-        """Tags from parent config should match the real architecture.config.yaml."""
-        config = _module.load_evidence_config(evidence_env.evidence_dir / "evidence.config.yaml")
+        """Tags from parent config should match the real hub config."""
+        config = _module.EVIDENCE_CONFIG
         parent = _module.load_parent_config(config, evidence_env.root)
+        tags_raw = parent["tags"]
+        loaded_tags = set(tags_raw.keys()) if isinstance(tags_raw, dict) else set(tags_raw)
 
-        assert set(parent["tags"]) == set(_VALID_TAGS)
+        assert loaded_tags == set(_VALID_TAGS)
 
     def test_missing_config_raises_error(self, tmp_path):
         """Should raise FileNotFoundError when config file doesn't exist."""
-
         with pytest.raises(FileNotFoundError):
-            _module.load_evidence_config(tmp_path / "nonexistent.yaml")
+            _module.load_evidence_config(tmp_path / "nonexistent.json")
 
     def test_missing_parent_config_raises_error(self, evidence_env):
         """Should raise FileNotFoundError when parent config doesn't exist."""
-        config = _module.load_evidence_config(evidence_env.evidence_dir / "evidence.config.yaml")
-        config["parent_config"] = "nonexistent/config.yaml"
+        config = dict(_module.EVIDENCE_CONFIG)
+        config["parent_config"] = "nonexistent/config.json"
 
         with pytest.raises(FileNotFoundError):
             _module.load_parent_config(config, evidence_env.root)
 
     def test_all_artifact_types_present(self, evidence_env):
         """Should load all artifact types defined in config."""
-        config = _module.load_evidence_config(evidence_env.evidence_dir / "evidence.config.yaml")
-        loaded_types = set(config["artifact_types"].keys())
+        loaded_types = set(_module.ARTIFACT_TYPES.keys())
 
         assert loaded_types == set(_ARTIFACT_TYPES.keys())
-
-    def test_config_from_pyproject_pointer(self, evidence_env):
-        """Should resolve config path from pyproject.toml [tool.check-evidence]."""
-        config_path = _module.resolve_config_path(evidence_env.root)
-        assert config_path.exists()
 
 
 # ======================

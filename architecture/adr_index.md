@@ -110,6 +110,9 @@ ADR-26043
 ADR-26044
 : [Skills as Progressive Disclosure Units](/architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md)
 
+ADR-26054
+: [JSON as Governance Config Format](/architecture/adr/adr_26054_json_as_governance_config_format.md)
+
 :::
 
 ## Historical Context

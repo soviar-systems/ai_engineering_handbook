@@ -1,0 +1,59 @@
+{
+  "$comment": "Evidence Configuration — operational rules for evidence artifacts (analyses, retrospectives, sources). Tags and date_format inherited from parent config.",
+  "parent_config": ".vadocs/conf.json",
+
+  "evidence_dir": "architecture/evidence",
+  "common_required_fields": ["id", "title", "date"],
+
+  "naming_patterns": {
+    "analysis": "^A-(\\d{2})(\\d{3})_[a-z][a-z0-9_]*$",
+    "retrospective": "^R-(\\d{2})(\\d{3})_[a-z][a-z0-9_]*$",
+    "source": "^S-(\\d{2})(\\d{3})_[a-z][a-z0-9_]*$"
+  },
+
+  "artifact_types": {
+    "analysis": {
+      "directory_name": "analyses",
+      "id_prefix": "A",
+      "required_fields": ["status", "tags"],
+      "optional_fields": ["sources", "produces"],
+      "statuses": ["active", "absorbed", "superseded"],
+      "required_sections": ["Problem Statement", "References"],
+      "optional_sections": [
+        "Research Pipeline Model", "Approach Evaluation",
+        "Taxonomy Design", "Rejected Ideas", "Key Insights",
+        "Portability Design"
+      ]
+    },
+
+    "retrospective": {
+      "directory_name": "retrospective",
+      "id_prefix": "R",
+      "required_fields": ["status", "severity", "tags"],
+      "optional_fields": ["produces"],
+      "statuses": ["active", "resolved", "superseded"],
+      "severity": ["low", "medium", "high", "critical"],
+      "required_sections": ["Executive Summary", "References"],
+      "optional_sections": [
+        "Introduction", "Technical Diagnosis", "Root Cause",
+        "Impact Assessment", "Corrective Actions",
+        "Preventive Measures", "Final Mandate"
+      ]
+    },
+
+    "source": {
+      "directory_name": "sources",
+      "id_prefix": "S",
+      "required_fields": ["model"],
+      "optional_fields": ["extracted_into"],
+      "statuses": [],
+      "required_sections": [],
+      "optional_sections": []
+    }
+  },
+
+  "lifecycle": {
+    "source_deletion_requires_extraction": true,
+    "orphan_warning_days": 30
+  }
+}

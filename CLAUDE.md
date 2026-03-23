@@ -71,28 +71,31 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Composable blocks: identity (`title`, `type`, `authors`), discovery (`description`, `tags`, `token_size`), lifecycle (`date`, `birth`, `version`)
 - MyST-native fields (top-level): `title`, `authors`, `date`, `description`, `tags` — verified against https://mystmd.org/guide/frontmatter
 - All other fields under `options.*` (ecosystem fields invisible to MyST)
-- Schema SSoT: `.vadocs/conf.yaml` (field registry, blocks, type registry, tags with descriptions)
+- Schema SSoT: `.vadocs/conf.json` (field registry, blocks, type registry, tags with descriptions)
 - Author email: `rudakow.wadim@gmail.com` (not `lefthand67@gmail.com`)
 - Docs already in production use version `1.0.0`+, not `0.x`
 
 **Tool Configuration (ADR-26029, ADR-26036):**
-- Machine-readable tool config goes in `pyproject.toml [tool.X]` sections, loaded via `tomllib` (stdlib)
+- Config discovery: `pyproject.toml [tool.vadocs].config_dir` → `.vadocs/` (single entry point)
+- Scripts resolve configs via `paths.get_config_path(repo_root, "evidence")` — convention encoded once
 - Governance configs live in `.vadocs/` directory at project root (ADR-26036, scope-isolated pattern)
-- Config hierarchy: `.vadocs/conf.yaml` (shared vocabulary) → `.vadocs/<doc_type>.conf.yaml` (scoped rules) via `parent_config` pointer
-- Path constants stay in `tools/scripts/paths.py`
-- Config naming: `<doc_type>.conf.yaml` (e.g., `adr.conf.yaml`, `evidence.conf.yaml`)
+- Config hierarchy: `.vadocs/conf.json` (hub vocabulary) → `.vadocs/types/<doc_type>.conf.json` (spoke rules) via `parent_config` pointer
+- Config format: JSON + JSON Schema (ADR-26054). Document frontmatter stays YAML (embedded in markdown)
+- Operational rules (excludes, patterns) go in `.vadocs/validation/`
+- Shared utilities: `tools/scripts/git.py` (repo root, staged files), `tools/scripts/paths.py` (config discovery, exclusion constants)
+- Path constants in `paths.py` will migrate to `.vadocs/validation/excludes.conf.json`
 - Track intentional tech debt in `misc/plan/techdebt.md` with date, location, and migration path
 
 **ADRs and Evidence Artifacts:**
 - To validate artifacts, run the script (e.g., `check_evidence.py`). Only run the script's test suite (`pytest test_check_evidence.py`) when the script itself was modified
 - Writing quality standards, evidence pipeline, status transitions, and operational rules: see [Architecture Decision Workflow](/architecture/architecture_decision_workflow_guide.md)
-- Evidence artifact sections are validated by `check_evidence.py` against `evidence.config.yaml`
+- Evidence artifact sections are validated by `check_evidence.py` against `.vadocs/types/evidence.conf.json`
 - `check_adr.py` operates on all ADRs at once (no file arguments)
-- ADR frontmatter `status` determines index section placement (see `adr_config.yaml`)
+- ADR frontmatter `status` determines index section placement (see `.vadocs/types/adr.conf.json`)
 - ADR filenames use truncated slugs — always glob (`architecture/adr/adr_26NNN*.md`) to verify the exact filename before creating links
 - Internal file references must use markdown links `[Title](/repo-root-relative/path)` — backtick paths bypass `check_broken_links.py` validation. Example paths in docs must use patterns from `BROKEN_LINKS_EXCLUDE_LINK_STRINGS` in `tools/scripts/paths.py` to avoid false positives
 - Persistent artifacts (ADRs, analyses, retrospectives) must always be referenced via markdown links `[A-26009](/repo-root-relative/path)`, never plain backtick IDs — md links are navigable by both agents and humans
-- Backtick references are only for ephemeral files (sources in `evidence/sources/`, files in `misc/`)
+- Backtick references are for ephemeral files (sources in `evidence/sources/`, files in `misc/`) AND config files (`.vadocs/` configs change paths on restructuring — use backtick filenames like `adr.conf.json`, never markdown links)
 - When linking to a Jupytext-paired file, always use the `.ipynb` extension — `check-link-format` hook rejects `.md` links when a paired `.ipynb` exists
 - Before committing, run `uv run tools/scripts/check_broken_links.py` and `uv run tools/scripts/check_link_format.py` to find stale links — fix them proactively instead of waiting for hook failures
 - ADR frontmatter `date` is currently the birth date (ADR-26042 will unify `date` = last meaningful update, `options.birth` = creation date — migration pending)
@@ -100,7 +103,7 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Never reference "planned ADR-NNNNN" in documents — either link to an existing ADR or reference the problem/tracking location (e.g., `techdebt.md`)
 - **ADR Decision sections must be concise statements, NOT implementation details.** No bash commands, no code blocks showing how to run things, no specific tool invocations. Evidence details and measurements belong in Consequences. Risk mitigations should not name specific implementations (e.g., "Traefik handles routing") — use generic descriptions
 - When ADRs reference external projects (e.g., `mentor_generator`, `vadocs`), provide inline context — ADRs are long-living documents read without prior session knowledge
-- Evidence source files: `S-YYNNN_<slug>.md` naming with frontmatter fields `id`, `title`, `date`, `model`, `extracted_into` (see `evidence.config.yaml`)
+- Evidence source files: `S-YYNNN_<slug>.md` naming with frontmatter fields `id`, `title`, `date`, `model`, `extracted_into` (see `.vadocs/types/evidence.conf.json`)
 - When given a raw LLM dialogue file, save it as a proper source artifact (`S-YYNNN`) with frontmatter, then create an analysis (`A-YYNNN`) extracting actionable insights
 - One ADR = one decision. If two concerns have independent justifications and alternatives, split them
 - ADR examples should be generic (e.g., `project_alpha`), not tied to specific ecosystem projects — ADRs outlive current project details

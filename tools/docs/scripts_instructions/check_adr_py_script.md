@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.19.0
+    jupytext_version: 1.19.1
 kernelspec:
   name: bash
   display_name: Bash
@@ -44,7 +44,7 @@ It ensures:
 - **Code Fence Awareness**: `##` headers inside fenced code blocks (` ``` `) are ignored during section extraction
 - **Term References**: MyST `{term}` cross-references use correct hyphen format (`{term}`ADR-26001``)
 
-All validation rules are defined in [`adr_config.yaml`](/architecture/adr/adr_config.yaml) (Single Source of Truth).
+All validation rules are defined in `adr.conf.json` (Single Source of Truth).
 
 This tool is designed to serve as a quality gate in CI/CD, ensuring consistent ADR format and index synchronization.
 
@@ -213,7 +213,7 @@ When run with `--migrate`, the script adds YAML frontmatter to legacy ADRs:
 
 ### F. Configuration (`adr_config.yaml`)
 
-All validation rules are defined in [`adr_config.yaml`](/architecture/adr/adr_config.yaml):
+All validation rules are defined in `adr.conf.json`:
 
 ```yaml
 # Required frontmatter fields
@@ -226,7 +226,7 @@ date_format: "^\\d{4}-\\d{2}-\\d{2}$"
 tags: [architecture, documentation, hardware, model, workflow, ...]
 
 # Required/allowed sections and conditional rules
-# Full SSoT: [adr_config.yaml](/architecture/adr/adr_config.yaml)
+# Full SSoT: adr.conf.json in .vadocs/types/
 required_sections: [Context, Decision, Consequences, ...]
 allowed_sections: [Title, Date, Status, Rejection Rationale, ...]
 conditional_sections: { rejected: [Rejection Rationale] }

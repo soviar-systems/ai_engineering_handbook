@@ -227,9 +227,10 @@ Two-phase automated migration implementing ADR-26042:
 - Scan governed directories, detect missing fields per `frontmatter.config.yaml` type registry
 - Auto-add: `options.type` (inferred from directory), `options.token_size` (computed), `options.birth` (git log), `date` (git log)
 - Human fields (`description`, `tags`): set `TODO` placeholders
-- Rename `adr_config.yaml` → `adr.config.yaml` (dot-separated naming consistency)
-- Create `frontmatter.config.yaml` hub config referenced from `pyproject.toml [tool.frontmatter]`
-- Migrate `common_required_fields` from `evidence.config.yaml` to hub (resolves TD-001)
+- Config renames already done in step 7: `adr_config.yaml` → `.vadocs/types/adr.conf.yaml`,
+  `evidence.config.yaml` → `.vadocs/types/evidence.conf.yaml`
+- Hub config already exists: `.vadocs/conf.yaml` (created in step 6)
+- Migrate `common_required_fields` from evidence spoke to hub (resolves TD-001)
 
 ### 1.2 Implement Validation Scripts in Hub
 

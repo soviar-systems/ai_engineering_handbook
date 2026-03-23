@@ -11,7 +11,7 @@ options:
 
 ---
 
-This guide covers the full lifecycle of an architectural decision — from understanding what an ADR is, through evidence gathering and writing, to validation. It complements the [ADR template](/architecture/adr/adr_template.md) (structure and fields) and [adr_config.yaml](/architecture/adr/adr_config.yaml) (validation rules).
+This guide covers the full lifecycle of an architectural decision — from understanding what an ADR is, through evidence gathering and writing, to validation. It complements the [ADR template](/architecture/adr/adr_template.md) (structure and fields) and `adr.conf.json` (validation rules).
 
 **Guiding principle:** Write for the reader 3 years from now who has no context about today's implementation.
 
@@ -34,7 +34,7 @@ All ADRs live in `architecture/adr/` as a flat directory — files are never mov
 To create a new ADR:
 
 1. Copy the [ADR template](/architecture/adr/adr_template.md)
-2. Follow the structure, required fields, valid statuses, and tags defined in [adr_config.yaml](/architecture/adr/adr_config.yaml) — this file is the Single Source of Truth for all ADR validation rules
+2. Follow the structure, required fields, valid statuses, and tags defined in `adr.conf.json` — this file is the Single Source of Truth for all ADR validation rules
 3. [check_adr.py](/tools/scripts/check_adr.py) validates ADRs against the config and auto-updates the [ADR index](/architecture/adr_index.md) — never edit the index manually. Run: `uv run tools/scripts/check_adr.py --fix` (see [script docs](/tools/docs/scripts_instructions/check_adr_py_script.ipynb))
 4. Follow the [quality guidelines](#writing-the-adr--core-discipline) and review the [anti-patterns checklist](#anti-patterns-checklist) before requesting promotion
 
@@ -51,7 +51,7 @@ In this project, `proposed` ADRs serve as RFCs (Requests for Comments). There is
 
 ## Status Transitions: Rejection, Supersession, Deprecation
 
-Not every ADR reaches `accepted`. The [ADR template](/architecture/adr/adr_template.md) and [adr_config.yaml](/architecture/adr/adr_config.yaml) define five statuses: `proposed`, `accepted`, `rejected`, `superseded`, and `deprecated`. The first two are covered above; this section covers the terminal statuses that remove an ADR from active architecture.
+Not every ADR reaches `accepted`. The [ADR template](/architecture/adr/adr_template.md) and `adr.conf.json` define five statuses: `proposed`, `accepted`, `rejected`, `superseded`, and `deprecated`. The first two are covered above; this section covers the terminal statuses that remove an ADR from active architecture.
 
 All terminal-status ADRs remain in `architecture/adr/` (flat directory, no archive — {term}`ADR-26016`) and appear under **Historical Context** in the [ADR index](/architecture/adr_index.md).
 
@@ -62,7 +62,7 @@ Reject an ADR when its approach is **fundamentally incompatible** with current m
 **How to reject:**
 
 1. Set `status: rejected` in frontmatter (keep `superseded_by: null`)
-2. Add a `## Rejection Rationale` section (required by [adr_config.yaml](/architecture/adr/adr_config.yaml) for rejected ADRs)
+2. Add a `## Rejection Rationale` section (required by `adr.conf.json` for rejected ADRs)
 3. In the rationale, explain *why* the approach is incompatible — reference the principle or methodology evolution that invalidates it
 4. Acknowledge any valid concepts and state where they are documented without the problematic coupling
 
@@ -84,7 +84,7 @@ Supersede an ADR when its **core principle is still valid** but a newer ADR prov
 
 Deprecate an ADR when the decision is **no longer relevant** — the problem it addressed no longer exists, or the domain has changed enough that the decision provides no guidance. Unlike supersession, no replacement ADR is created.
 
-> **Not yet formalized.** The `deprecated` status is defined in [adr_config.yaml](/architecture/adr/adr_config.yaml) but has no template support (no conditional section like `Rejection Rationale`), no validation rules in [check_adr.py](/tools/scripts/check_adr.py), and no ADRs have used it yet. The steps below are provisional — expect them to change when deprecation is formally specified. See `misc/plan/techdebt.md` TD-003.
+> **Not yet formalized.** The `deprecated` status is defined in `adr.conf.json` but has no template support (no conditional section like `Rejection Rationale`), no validation rules in [check_adr.py](/tools/scripts/check_adr.py), and no ADRs have used it yet. The steps below are provisional — they will be formalized when the first ADR needs deprecation.
 
 **Provisional steps:**
 
@@ -93,7 +93,7 @@ Deprecate an ADR when the decision is **no longer relevant** — the problem it 
 
 ### Valid Status Transitions
 
-Not all transitions are valid. The starting status constrains which terminal statuses are reachable. The valid transitions are defined in [adr_config.yaml](/architecture/adr/adr_config.yaml) `status_transitions` (SSoT) and enforced by [check_adr.py](/tools/scripts/check_adr.py).
+Not all transitions are valid. The starting status constrains which terminal statuses are reachable. The valid transitions are defined in `adr.conf.json` `status_transitions` (SSoT) and enforced by [check_adr.py](/tools/scripts/check_adr.py).
 
 **Key rule:** Only `accepted` ADRs can be superseded or deprecated. Proposed ADRs that don't survive review are rejected — even if valid concepts within them are absorbed into other ADRs.
 
@@ -122,7 +122,7 @@ Skip evidence when the decision is straightforward with clear alternatives and n
 
 ### Evidence Artifact Types
 
-All evidence artifacts live in `architecture/evidence/` and are governed by [evidence.config.yaml](/architecture/evidence/evidence.config.yaml). See {term}`ADR-26035` for the full specification.
+All evidence artifacts live in `architecture/evidence/` and are governed by `evidence.conf.json`. See {term}`ADR-26035` for the full specification.
 
 **Sources (S-YYNNN)** — Ephemeral transcripts and raw inputs.
 Sources follow a three-commit lifecycle: capture → extract → delete. The source file is removed after its value is extracted into an analysis; git history preserves the original. See [Sources README](/architecture/evidence/sources/README.ipynb) for the full workflow.

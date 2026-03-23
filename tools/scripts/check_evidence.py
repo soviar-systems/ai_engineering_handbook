@@ -3,7 +3,21 @@
 Evidence Artifact Validator.
 
 Validates evidence artifacts (analyses, retrospectives, sources) in
-architecture/evidence/ against the schema defined in evidence.config.yaml.
+architecture/evidence/ against the schema defined in .vadocs/types/evidence.conf.json.
+
+Scope: validates naming, frontmatter, and sections of evidence artifacts.
+Does NOT modify files — read-only validation with exit codes.
+
+Public interface:
+    main() — CLI entry point (--verbose, --check-staged)
+    validate_naming(), validate_frontmatter(), validate_sections() — pure validators
+    discover_artifacts() — scans evidence directories
+    detect_orphaned_sources() — warns about unextracted sources
+
+Dependencies:
+    - .vadocs/types/evidence.conf.json (evidence rules)
+    - .vadocs/conf.json (shared tags, date_format via parent_config pointer)
+    - yaml (frontmatter parsing only — config is JSON)
 
 Exit codes:
     0: All artifacts are valid
@@ -11,15 +25,17 @@ Exit codes:
 """
 
 import argparse
+import json
 import re
-import subprocess
 import sys
-import tomllib
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
 
 import yaml
+
+from tools.scripts.git import detect_repo_root, get_staged_files
+from tools.scripts.paths import get_config_path
 
 
 # ======================
@@ -56,49 +72,12 @@ SECTION_HEADER_PATTERN = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 CODE_FENCE_PATTERN = re.compile(r"```.*?```", re.DOTALL)
 
 
-def _detect_repo_root() -> Path:
-    """Detect repository root via git, with __file__ fallback."""
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return Path(result.stdout.strip()).resolve()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return Path(__file__).resolve().parent.parent.parent
-
-
-def resolve_config_path(repo_root: Path) -> Path:
-    """Resolve evidence config path from pyproject.toml [tool.check-evidence].
-
-    Args:
-        repo_root: Repository root directory.
-
-    Returns:
-        Absolute path to evidence.config.yaml.
-
-    Raises:
-        FileNotFoundError: If pyproject.toml doesn't exist.
-        KeyError: If [tool.check-evidence] section is missing.
-    """
-    pyproject_path = repo_root / "pyproject.toml"
-    if not pyproject_path.exists():
-        raise FileNotFoundError(f"pyproject.toml not found: {pyproject_path}")
-
-    with open(pyproject_path, "rb") as f:
-        pyproject = tomllib.load(f)
-
-    rel_path = pyproject["tool"]["check-evidence"]["config"]
-    return repo_root / rel_path
-
 
 def load_evidence_config(config_path: Path) -> dict:
-    """Load evidence configuration from YAML file.
+    """Load evidence configuration from JSON file.
 
     Args:
-        config_path: Path to evidence.config.yaml.
+        config_path: Path to evidence.conf.json.
 
     Returns:
         Configuration dictionary.
@@ -109,43 +88,52 @@ def load_evidence_config(config_path: Path) -> dict:
     if not config_path.exists():
         raise FileNotFoundError(f"Evidence config not found: {config_path}")
 
-    return yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    with open(config_path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def load_parent_config(evidence_config: dict, repo_root: Path) -> dict:
-    """Load parent config (shared tags) resolved via parent_config pointer.
+    """Load parent config (shared tags, date_format) via parent_config pointer.
 
     Args:
         evidence_config: Loaded evidence configuration.
         repo_root: Repository root directory.
 
     Returns:
-        Parent configuration dictionary (architecture.config.yaml).
+        Parent configuration dictionary (.vadocs/conf.json).
 
     Raises:
         FileNotFoundError: If parent config file doesn't exist.
     """
     parent_rel = evidence_config.get("parent_config", "")
-    parent_path = repo_root / parent_rel
+    parent_path = Path(parent_rel)
+
+    # Support both relative-to-repo-root and absolute paths (tests use absolute)
+    if not parent_path.is_absolute():
+        parent_path = repo_root / parent_path
 
     if not parent_path.exists():
         raise FileNotFoundError(f"Parent config not found: {parent_path}")
 
-    return yaml.safe_load(parent_path.read_text(encoding="utf-8"))
+    with open(parent_path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 # Module-level constants — loaded once at import time, monkeypatched in tests
-REPO_ROOT: Path = _detect_repo_root()
-EVIDENCE_CONFIG_PATH: Path = resolve_config_path(REPO_ROOT)
+REPO_ROOT: Path = detect_repo_root()
+EVIDENCE_CONFIG_PATH: Path = get_config_path(REPO_ROOT, "evidence")
 EVIDENCE_CONFIG: dict = load_evidence_config(EVIDENCE_CONFIG_PATH)
 _parent_config: dict = load_parent_config(EVIDENCE_CONFIG, REPO_ROOT)
 
-VALID_TAGS: set[str] = set(_parent_config.get("tags", []))
+# Tags in hub are dict with descriptions — extract keys for validation
+_tags_raw = _parent_config.get("tags", {})
+VALID_TAGS: set[str] = set(_tags_raw.keys()) if isinstance(_tags_raw, dict) else set(_tags_raw)
 ARTIFACT_TYPES: dict = EVIDENCE_CONFIG.get("artifact_types", {})
 NAMING_PATTERNS: dict = EVIDENCE_CONFIG.get("naming_patterns", {})
 LIFECYCLE: dict = EVIDENCE_CONFIG.get("lifecycle", {})
 COMMON_REQUIRED_FIELDS: list[str] = EVIDENCE_CONFIG.get("common_required_fields", [])
-DATE_FORMAT_PATTERN: str = EVIDENCE_CONFIG.get("date_format", r"^\d{4}-\d{2}-\d{2}$")
+EVIDENCE_DIR: Path = REPO_ROOT / EVIDENCE_CONFIG.get("evidence_dir", "architecture/evidence")
+DATE_FORMAT_PATTERN: str = _parent_config.get("date_format", r"^\d{4}-\d{2}-\d{2}$")
 
 
 # ======================
@@ -164,7 +152,7 @@ def main() -> None:
     all_warnings: list[ValidationError] = []
     artifact_count = 0
 
-    staged_files = _get_staged_files() if args.check_staged else None
+    staged_files = get_staged_files() if args.check_staged else None
 
     for artifact_type in ARTIFACT_TYPES:
         artifacts = discover_artifacts(artifact_type)
@@ -198,7 +186,7 @@ def main() -> None:
     # Orphaned source detection
     source_type = next((k for k, v in ARTIFACT_TYPES.items() if not v.get("statuses")), None)
     if source_type:
-        sources_dir = EVIDENCE_CONFIG_PATH.parent / ARTIFACT_TYPES[source_type]["directory_name"]
+        sources_dir = EVIDENCE_DIR / ARTIFACT_TYPES[source_type]["directory_name"]
         all_warnings.extend(detect_orphaned_sources(sources_dir))
 
     # Report
@@ -446,8 +434,7 @@ def discover_artifacts(artifact_type: str) -> list[EvidenceArtifact]:
     type_config = ARTIFACT_TYPES.get(artifact_type, {})
     directory_name = type_config.get("directory_name", "")
 
-    evidence_dir = EVIDENCE_CONFIG_PATH.parent
-    target_dir = evidence_dir / directory_name
+    target_dir = EVIDENCE_DIR / directory_name
 
     if not target_dir.exists():
         return []
@@ -490,19 +477,6 @@ def _extract_sections(content: str) -> list[str]:
     stripped = CODE_FENCE_PATTERN.sub("", content)
     return SECTION_HEADER_PATTERN.findall(stripped)
 
-
-def _get_staged_files() -> set[str]:
-    """Get list of staged files from git."""
-    try:
-        result = subprocess.run(
-            ["git", "diff", "--cached", "--name-only"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return {line.strip() for line in result.stdout.splitlines() if line.strip()}
-    except subprocess.CalledProcessError:
-        return set()
 
 
 if __name__ == "__main__":
