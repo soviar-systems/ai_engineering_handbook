@@ -1,0 +1,913 @@
+"""
+Test suite for check_frontmatter.py — Config-driven frontmatter validator.
+
+Tests the hub+spoke frontmatter validation pipeline: config loading, YAML
+parsing, type resolution, field presence/format/value checking, file scanning,
+and CLI behavior.
+
+What belongs here:
+    - All frontmatter validation contracts (field presence, format, values)
+    - Config loading and merge semantics
+    - File scanning and directory exclusion
+    - CLI exit codes and error reporting structure
+
+What does NOT belong here:
+    - Structural validation (sections, naming) — test_check_adr.py, test_check_evidence.py
+    - Config file content correctness — validated by JSON Schema
+
+Test classes and their contracts:
+    - TestLoadConfigChain: Hub loads, hub+spoke for known types, None spoke for unknown
+    - TestParseFrontmatter: Extracts YAML dict from .md; returns None when absent
+    - TestResolveType: Reads options.type; returns None when missing
+    - TestGetRequiredFields: Union of hub blocks + hub types.required + spoke required_fields
+    - TestValidateFieldPresence: Detects missing required fields; passes when all present
+    - TestValidateDateFormat: Accepts YYYY-MM-DD; rejects other formats
+    - TestValidateTags: Accepts known tags; rejects unknown; handles empty
+    - TestValidateStatus: Accepts spoke-defined statuses; rejects invalid
+    - TestValidateAuthors: Accepts list of {name, email}; rejects malformed
+    - TestOptionsNamespace: Non-myst_native at top level produces warnings (not errors)
+    - TestWarningNoType: Files with frontmatter but no options.type produce warning
+    - TestScanPaths: File args as-is; directories walked with exclusions; format filter
+    - TestMainExitCodes: Exit 0 valid; exit 1 errors; warnings don't affect code
+    - TestErrorMessages: FrontmatterError dataclass fields populated correctly
+    - TestValidateFrontmatterConvenience: Convenience wrapper returns [] for no-fm / no-type
+    - TestUnknownType: Unknown options.type produces blocking error
+    - TestAuthorNonDict: String author entries rejected
+    - TestParseEdgeCases: Malformed JSON/YAML returns None gracefully
+    - TestFindFieldBlockFallback: Config source attribution for spoke-only fields
+
+Naming convention: one test class per contract, method names describe behavior.
+"""
+
+import json
+import shutil
+from datetime import date
+from pathlib import Path
+
+import pytest
+import yaml
+
+import tools.scripts.check_frontmatter as _module
+
+# ======================
+# Config-driven constants (SSoT)
+# ======================
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+_HUB_CONFIG_REL = ".vadocs/conf.json"
+_HUB_CONFIG_PATH = _REPO_ROOT / _HUB_CONFIG_REL
+
+with open(_HUB_CONFIG_PATH, encoding="utf-8") as _f:
+    _HUB_CONFIG = json.load(_f)
+
+_BLOCKS = _HUB_CONFIG["blocks"]
+_TYPES = _HUB_CONFIG["types"]
+_FIELD_REGISTRY = _HUB_CONFIG["field_registry"]
+_VALID_TAGS = list(_HUB_CONFIG["tags"].keys())
+_DATE_FORMAT = _HUB_CONFIG.get("date_format", r"^\d{4}-\d{2}-\d{2}$")
+
+# Load spoke configs for types that have them
+_SPOKE_CONFIGS: dict[str, dict] = {}
+for _type_name in _TYPES:
+    _spoke_path = _REPO_ROOT / f".vadocs/types/{_type_name}.conf.json"
+    if _spoke_path.exists():
+        with open(_spoke_path, encoding="utf-8") as _f:
+            _SPOKE_CONFIGS[_type_name] = json.load(_f)
+
+
+# ======================
+# Test Helpers
+# ======================
+
+
+def _build_valid_frontmatter(doc_type: str) -> dict:
+    """Build a valid frontmatter dict for a given type, derived from config.
+
+    Uses hub blocks + hub types.required + spoke required_fields to determine
+    which fields are needed, then populates with valid values from config.
+    """
+    type_def = _TYPES[doc_type]
+    spoke = _SPOKE_CONFIGS.get(doc_type)
+
+    # Collect required fields from all three sources
+    required = set()
+    for block_name in type_def.get("blocks", []):
+        required.update(_BLOCKS.get(block_name, []))
+    required.update(type_def.get("required", []))
+    if spoke:
+        required.update(spoke.get("required_fields", []))
+
+    fm: dict = {"options": {"type": doc_type}}
+
+    for field in required:
+        if field == "title":
+            fm["title"] = f"Test {doc_type.capitalize()} Title"
+        elif field == "type":
+            # Already in options.type
+            pass
+        elif field == "authors":
+            fm["authors"] = [{"name": "Test Author", "email": "test@example.com"}]
+        elif field == "description":
+            fm["description"] = "Test description"
+        elif field == "tags":
+            fm["tags"] = [_VALID_TAGS[0]] if _VALID_TAGS else []
+        elif field == "token_size":
+            fm.setdefault("options", {})["token_size"] = 100
+        elif field == "date":
+            fm["date"] = "2026-01-15"
+        elif field == "birth":
+            fm.setdefault("options", {})["birth"] = "2026-01-01"
+        elif field == "version":
+            fm.setdefault("options", {})["version"] = "1.0.0"
+        elif field == "id":
+            if doc_type == "adr":
+                fm["id"] = 26099
+            else:
+                fm["id"] = "X-26099"
+        elif field == "status":
+            if spoke and "statuses" in spoke:
+                statuses = spoke["statuses"]
+            elif spoke and "artifact_types" in spoke:
+                # evidence spoke: statuses per artifact sub-type
+                for at in spoke["artifact_types"].values():
+                    if at.get("statuses"):
+                        statuses = at["statuses"]
+                        break
+                else:
+                    statuses = ["active"]
+            else:
+                statuses = ["active"]
+            fm["status"] = statuses[0] if statuses else "active"
+        elif field == "severity":
+            if spoke and "artifact_types" in spoke:
+                for at in spoke["artifact_types"].values():
+                    if "severity" in at:
+                        fm["severity"] = at["severity"][0]
+                        break
+            else:
+                fm["severity"] = "low"
+        elif field == "model":
+            fm["model"] = "test-model"
+        else:
+            fm[field] = f"test-{field}"
+
+    return fm
+
+
+def _frontmatter_to_md(fm: dict) -> str:
+    """Convert a frontmatter dict to markdown file content with YAML fences."""
+    return f"---\n{yaml.dump(fm, default_flow_style=False)}---\n\n# Test Document\n"
+
+
+# ======================
+# Fixtures
+# ======================
+
+
+@pytest.fixture()
+def frontmatter_env(tmp_path, monkeypatch):
+    """Isolated test environment with .vadocs/ configs copied from real repo.
+
+    Monkeypatches module-level constants for test isolation.
+    """
+    # Copy .vadocs/ configs to tmp
+    vadocs_src = _REPO_ROOT / ".vadocs"
+    vadocs_dst = tmp_path / ".vadocs"
+    shutil.copytree(vadocs_src, vadocs_dst)
+
+    # Rewrite parent_config pointers to use absolute paths in test env
+    for spoke_file in (tmp_path / ".vadocs" / "types").glob("*.conf.json"):
+        spoke_data = json.loads(spoke_file.read_text(encoding="utf-8"))
+        if "parent_config" in spoke_data:
+            spoke_data["parent_config"] = str(vadocs_dst / "conf.json")
+            spoke_file.write_text(
+                json.dumps(spoke_data, indent=2), encoding="utf-8"
+            )
+
+    # Create pyproject.toml so get_config_path() works in test env
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.vadocs]\nconfig_dir = ".vadocs"\n', encoding="utf-8"
+    )
+
+    # Load hub config from test env
+    hub_config = json.loads(
+        (vadocs_dst / "conf.json").read_text(encoding="utf-8")
+    )
+
+    # Monkeypatch module-level constants
+    monkeypatch.setattr(_module, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(_module, "HUB_CONFIG_PATH", vadocs_dst / "conf.json")
+    monkeypatch.setattr(_module, "HUB_CONFIG", hub_config)
+    monkeypatch.setattr(
+        _module, "VALID_TAGS", set(hub_config.get("tags", {}).keys())
+    )
+    monkeypatch.setattr(
+        _module, "VALID_TYPES", set(hub_config.get("types", {}).keys())
+    )
+    monkeypatch.setattr(
+        _module,
+        "DATE_FORMAT_PATTERN",
+        hub_config.get("date_format", r"^\d{4}-\d{2}-\d{2}$"),
+    )
+    monkeypatch.setattr(_module, "FIELD_REGISTRY", hub_config.get("field_registry", {}))
+    monkeypatch.setattr(_module, "BLOCKS", hub_config.get("blocks", {}))
+    monkeypatch.setattr(_module, "TYPES", hub_config.get("types", {}))
+    monkeypatch.setattr(_module, "_config_cache", {})
+
+    return tmp_path
+
+
+# ======================
+# Tests: Config Loading
+# ======================
+
+
+class TestLoadConfigChain:
+    """Contract: load_config_chain returns (hub, spoke) tuple.
+
+    Hub always loaded. Spoke loaded when doc_type has a .conf.json file,
+    None otherwise. Results cached per doc_type.
+    """
+
+    def test_hub_only_when_no_doc_type(self, frontmatter_env):
+        """No doc_type → returns (hub_dict, None)."""
+        hub, spoke = _module.load_config_chain(frontmatter_env, doc_type=None)
+        assert isinstance(hub, dict)
+        assert "field_registry" in hub
+        assert "blocks" in hub
+        assert "types" in hub
+        assert spoke is None
+
+    def test_hub_plus_spoke_for_known_type(self, frontmatter_env):
+        """Known type with spoke config → returns (hub_dict, spoke_dict)."""
+        hub, spoke = _module.load_config_chain(frontmatter_env, doc_type="adr")
+        assert isinstance(hub, dict)
+        assert isinstance(spoke, dict)
+        assert "required_fields" in spoke or "statuses" in spoke
+
+    def test_none_spoke_for_type_without_config(self, frontmatter_env):
+        """Type defined in hub but no spoke .conf.json → (hub_dict, None)."""
+        hub, spoke = _module.load_config_chain(frontmatter_env, doc_type="tutorial")
+        assert isinstance(hub, dict)
+        assert spoke is None
+
+    def test_caches_results(self, frontmatter_env):
+        """Second call with same doc_type returns cached result."""
+        result1 = _module.load_config_chain(frontmatter_env, doc_type="adr")
+        result2 = _module.load_config_chain(frontmatter_env, doc_type="adr")
+        assert result1[0] is result2[0]  # same object, not re-loaded
+        assert result1[1] is result2[1]
+
+    def test_different_types_cached_independently(self, frontmatter_env):
+        """Different doc_types have independent cache entries."""
+        _, spoke_adr = _module.load_config_chain(frontmatter_env, doc_type="adr")
+        _, spoke_evidence = _module.load_config_chain(
+            frontmatter_env, doc_type="evidence"
+        )
+        assert spoke_adr is not spoke_evidence
+
+
+# ======================
+# Tests: Frontmatter Parsing
+# ======================
+
+
+class TestParseFrontmatter:
+    """Contract: parse_frontmatter extracts YAML dict from content.
+
+    Returns dict when valid YAML frontmatter found between --- fences.
+    Returns None when no frontmatter present.
+    """
+
+    def test_extracts_yaml_from_md(self):
+        """Standard markdown with YAML fences → parsed dict."""
+        content = "---\ntitle: Test\ndate: 2026-01-01\n---\n\n# Body\n"
+        result = _module.parse_frontmatter(content)
+        assert isinstance(result, dict)
+        assert result["title"] == "Test"
+        # yaml.safe_load converts date strings to datetime.date
+        assert result["date"] == date(2026, 1, 1)
+
+    def test_returns_none_when_no_frontmatter(self):
+        """Markdown without --- fences → None."""
+        content = "# Just a heading\n\nSome text.\n"
+        result = _module.parse_frontmatter(content)
+        assert result is None
+
+    def test_returns_none_for_empty_content(self):
+        """Empty string → None."""
+        result = _module.parse_frontmatter("")
+        assert result is None
+
+    def test_handles_nested_options(self):
+        """Frontmatter with options.type → nested dict preserved."""
+        content = "---\ntitle: Test\noptions:\n  type: adr\n  birth: 2026-01-01\n---\n\n# Body\n"
+        result = _module.parse_frontmatter(content)
+        assert result["options"]["type"] == "adr"
+        assert result["options"]["birth"] == date(2026, 1, 1)
+
+    def test_handles_list_fields(self):
+        """Tags as list → preserved as list."""
+        content = "---\ntitle: Test\ntags: [governance, ci]\n---\n\n# Body\n"
+        result = _module.parse_frontmatter(content)
+        assert result["tags"] == ["governance", "ci"]
+
+    def test_ipynb_extracts_from_first_markdown_cell(self):
+        """ipynb JSON with frontmatter in first markdown cell → parsed dict."""
+        notebook = {
+            "cells": [
+                {
+                    "cell_type": "markdown",
+                    "source": [
+                        "---\n",
+                        "title: Notebook Test\n",
+                        "date: 2026-03-25\n",
+                        "---\n",
+                        "\n",
+                        "# Content\n",
+                    ],
+                    "metadata": {},
+                }
+            ],
+            "metadata": {},
+            "nbformat": 4,
+            "nbformat_minor": 5,
+        }
+        content = json.dumps(notebook)
+        result = _module.parse_frontmatter(content, file_path=Path("test.ipynb"))
+        assert isinstance(result, dict)
+        assert result["title"] == "Notebook Test"
+
+    def test_ipynb_returns_none_for_empty_notebook(self):
+        """ipynb with no cells → None."""
+        notebook = {"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}
+        content = json.dumps(notebook)
+        result = _module.parse_frontmatter(content, file_path=Path("test.ipynb"))
+        assert result is None
+
+    def test_ipynb_returns_none_when_no_frontmatter(self):
+        """ipynb without YAML fences in first cell → None."""
+        notebook = {
+            "cells": [
+                {
+                    "cell_type": "markdown",
+                    "source": ["# Just a heading\n"],
+                    "metadata": {},
+                }
+            ],
+            "metadata": {},
+            "nbformat": 4,
+            "nbformat_minor": 5,
+        }
+        content = json.dumps(notebook)
+        result = _module.parse_frontmatter(content, file_path=Path("test.ipynb"))
+        assert result is None
+
+
+# ======================
+# Tests: Type Resolution
+# ======================
+
+
+class TestResolveType:
+    """Contract: resolve_type reads options.type from parsed frontmatter.
+
+    Returns type string when present, None when missing.
+    """
+
+    def test_returns_type_from_options(self):
+        """options.type present → returns type string."""
+        fm = {"title": "Test", "options": {"type": "adr"}}
+        assert _module.resolve_type(fm) == "adr"
+
+    def test_returns_none_when_no_options(self):
+        """No options key → None."""
+        fm = {"title": "Test"}
+        assert _module.resolve_type(fm) is None
+
+    def test_returns_none_when_options_has_no_type(self):
+        """options exists but no type key → None."""
+        fm = {"title": "Test", "options": {"birth": "2026-01-01"}}
+        assert _module.resolve_type(fm) is None
+
+    def test_returns_none_for_empty_frontmatter(self):
+        """Empty dict → None."""
+        assert _module.resolve_type({}) is None
+
+
+# ======================
+# Tests: Required Fields Merge
+# ======================
+
+
+class TestGetRequiredFields:
+    """Contract: _get_required_fields returns union of three sources.
+
+    1. Hub block fields (expanded from type's block list)
+    2. Hub types.<type>.required
+    3. Spoke required_fields (if spoke exists)
+
+    Union deduplicates. Types without spoke use only hub sources.
+    """
+
+    def test_adr_includes_block_fields(self):
+        """ADR type has identity+discovery+lifecycle blocks → all block fields present."""
+        required = _module._get_required_fields("adr", _HUB_CONFIG, _SPOKE_CONFIGS.get("adr"))
+        # identity block fields
+        for field in _BLOCKS["identity"]:
+            assert field in required
+        # lifecycle block fields
+        for field in _BLOCKS["lifecycle"]:
+            assert field in required
+
+    def test_adr_includes_hub_type_required(self):
+        """ADR hub types.adr.required (id, status) included."""
+        required = _module._get_required_fields("adr", _HUB_CONFIG, _SPOKE_CONFIGS.get("adr"))
+        for field in _TYPES["adr"]["required"]:
+            assert field in required
+
+    def test_adr_includes_spoke_required_fields(self):
+        """ADR spoke required_fields merged in."""
+        spoke = _SPOKE_CONFIGS.get("adr")
+        if spoke and "required_fields" in spoke:
+            required = _module._get_required_fields("adr", _HUB_CONFIG, spoke)
+            for field in spoke["required_fields"]:
+                assert field in required
+
+    def test_type_without_spoke_uses_hub_only(self):
+        """Tutorial has no spoke → required = block fields + hub type required."""
+        required = _module._get_required_fields("tutorial", _HUB_CONFIG, None)
+        tutorial_def = _TYPES["tutorial"]
+        expected = set()
+        for block_name in tutorial_def["blocks"]:
+            expected.update(_BLOCKS[block_name])
+        expected.update(tutorial_def["required"])
+        assert required == expected
+
+    def test_source_has_no_lifecycle_block(self):
+        """Source type only has identity+discovery blocks, not lifecycle."""
+        required = _module._get_required_fields("source", _HUB_CONFIG, _SPOKE_CONFIGS.get("source"))
+        # lifecycle fields should NOT be required for source
+        for field in _BLOCKS.get("lifecycle", []):
+            if field not in _TYPES["source"].get("required", []):
+                assert field not in required
+
+    @pytest.mark.parametrize("doc_type", list(_TYPES.keys()))
+    def test_all_types_return_set(self, doc_type):
+        """Every hub type returns a non-empty set."""
+        spoke = _SPOKE_CONFIGS.get(doc_type)
+        required = _module._get_required_fields(doc_type, _HUB_CONFIG, spoke)
+        assert isinstance(required, set)
+        assert len(required) > 0  # at minimum, identity block fields
+
+
+# ======================
+# Tests: Field Validation
+# ======================
+
+
+class TestValidateFieldPresence:
+    """Contract: missing required fields produce errors.
+
+    Field lookup checks both top-level and options.* (pre-migration compat).
+    """
+
+    def test_valid_frontmatter_no_errors(self, frontmatter_env):
+        """Complete valid frontmatter for ADR → no errors."""
+        fm = _build_valid_frontmatter("adr")
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        field_errors = [e for e in errors if e.error_type == "missing_field"]
+        assert len(field_errors) == 0
+
+    def test_missing_required_field_detected(self, frontmatter_env):
+        """Frontmatter missing 'title' → error with error_type 'missing_field'."""
+        fm = _build_valid_frontmatter("adr")
+        fm.pop("title", None)
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        missing = [e for e in errors if e.error_type == "missing_field" and e.field == "title"]
+        assert len(missing) > 0
+
+    def test_field_under_options_counts_as_present(self, frontmatter_env):
+        """Field at options.birth (not top-level) → not flagged as missing."""
+        fm = _build_valid_frontmatter("adr")
+        # birth should already be under options from _build_valid_frontmatter
+        assert "birth" in fm.get("options", {})
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        birth_errors = [e for e in errors if e.field == "birth"]
+        assert len(birth_errors) == 0
+
+
+class TestValidateDateFormat:
+    """Contract: date and birth fields must match YYYY-MM-DD pattern."""
+
+    def test_valid_date_accepted(self, frontmatter_env):
+        """Standard date format → no date format errors."""
+        fm = _build_valid_frontmatter("adr")
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        date_errors = [e for e in errors if e.error_type == "invalid_format" and e.field in ("date", "birth")]
+        assert len(date_errors) == 0
+
+    def test_invalid_date_rejected(self, frontmatter_env):
+        """Non-YYYY-MM-DD date → format error."""
+        fm = _build_valid_frontmatter("adr")
+        fm["date"] = "January 2026"
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        date_errors = [e for e in errors if e.error_type == "invalid_format" and e.field == "date"]
+        assert len(date_errors) > 0
+
+
+class TestValidateTags:
+    """Contract: tags must be from hub vocabulary."""
+
+    def test_valid_tags_accepted(self, frontmatter_env):
+        """Known tags → no tag errors."""
+        fm = _build_valid_frontmatter("adr")
+        fm["tags"] = [_VALID_TAGS[0]]
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        tag_errors = [e for e in errors if e.error_type == "invalid_value" and e.field == "tags"]
+        assert len(tag_errors) == 0
+
+    def test_unknown_tag_rejected(self, frontmatter_env):
+        """Unknown tag → value error."""
+        fm = _build_valid_frontmatter("adr")
+        fm["tags"] = ["nonexistent_tag_xyz"]
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        tag_errors = [e for e in errors if e.error_type == "invalid_value" and e.field == "tags"]
+        assert len(tag_errors) > 0
+
+
+class TestValidateStatus:
+    """Contract: status must match spoke-defined allowed values."""
+
+    def test_valid_status_accepted(self, frontmatter_env):
+        """Spoke-defined status → no errors."""
+        fm = _build_valid_frontmatter("adr")
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        status_errors = [e for e in errors if e.error_type == "invalid_value" and e.field == "status"]
+        assert len(status_errors) == 0
+
+    def test_invalid_status_rejected(self, frontmatter_env):
+        """Non-allowed status → value error."""
+        fm = _build_valid_frontmatter("adr")
+        fm["status"] = "nonexistent_status"
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        status_errors = [e for e in errors if e.error_type == "invalid_value" and e.field == "status"]
+        assert len(status_errors) > 0
+
+
+class TestValidateAuthors:
+    """Contract: authors must be list of {name, email} objects."""
+
+    def test_valid_authors_accepted(self, frontmatter_env):
+        """List of {name, email} dicts → no errors."""
+        fm = _build_valid_frontmatter("adr")
+        fm["authors"] = [{"name": "Test", "email": "test@example.com"}]
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        author_errors = [e for e in errors if e.field == "authors"]
+        assert len(author_errors) == 0
+
+    def test_non_list_authors_rejected(self, frontmatter_env):
+        """String author instead of list → format error."""
+        fm = _build_valid_frontmatter("adr")
+        fm["authors"] = "Just A Name"
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        author_errors = [e for e in errors if e.field == "authors"]
+        assert len(author_errors) > 0
+
+    def test_author_missing_email_rejected(self, frontmatter_env):
+        """Author dict without email → format error."""
+        fm = _build_valid_frontmatter("adr")
+        fm["authors"] = [{"name": "Test"}]
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        author_errors = [e for e in errors if e.field == "authors"]
+        assert len(author_errors) > 0
+
+
+class TestOptionsNamespace:
+    """Contract: non-myst_native fields at top level produce warnings.
+
+    Until Phase 1.15 migration, this is a warning (not error).
+    """
+
+    def test_myst_native_at_top_level_no_warning(self, frontmatter_env):
+        """title, date, tags at top level (myst_native=true) → no namespace warnings."""
+        fm = _build_valid_frontmatter("adr")
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        namespace_errors = [e for e in errors if e.error_type == "namespace_warning"]
+        # myst_native fields at top level should not produce warnings
+        myst_warnings = [e for e in namespace_errors if e.field in ("title", "date", "tags", "description", "authors")]
+        assert len(myst_warnings) == 0
+
+    def test_non_myst_native_at_top_level_produces_warning(self, frontmatter_env):
+        """id at top level (myst_native=false) → namespace warning."""
+        fm = _build_valid_frontmatter("adr")
+        # id is non-myst_native but currently at top level in most files
+        assert "id" in fm  # should be at top level from _build_valid_frontmatter
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        namespace_warnings = [e for e in errors if e.error_type == "namespace_warning" and e.field == "id"]
+        assert len(namespace_warnings) > 0
+
+
+# ======================
+# Tests: File Scanning
+# ======================
+
+
+class TestScanPaths:
+    """Contract: scan_paths resolves inputs to file list.
+
+    Files returned as-is. Directories walked recursively with exclusions.
+    Format filter applied when scanning directories.
+    """
+
+    def test_file_path_returned_as_is(self, frontmatter_env):
+        """Explicit file path → returned in list unchanged."""
+        f = frontmatter_env / "test.md"
+        f.write_text("# test", encoding="utf-8")
+        result = _module.scan_paths([f], frontmatter_env)
+        assert f in result
+
+    def test_directory_scanned_recursively(self, frontmatter_env):
+        """Directory path → all .md files found recursively."""
+        subdir = frontmatter_env / "docs" / "sub"
+        subdir.mkdir(parents=True)
+        f1 = frontmatter_env / "docs" / "a.md"
+        f2 = subdir / "b.md"
+        f1.write_text("# a", encoding="utf-8")
+        f2.write_text("# b", encoding="utf-8")
+        result = _module.scan_paths([frontmatter_env / "docs"], frontmatter_env)
+        assert f1 in result
+        assert f2 in result
+
+    def test_excluded_dirs_skipped(self, frontmatter_env):
+        """Files inside VALIDATION_EXCLUDE_DIRS not returned."""
+        misc_dir = frontmatter_env / "misc"
+        misc_dir.mkdir()
+        f = misc_dir / "note.md"
+        f.write_text("# misc", encoding="utf-8")
+        result = _module.scan_paths([frontmatter_env], frontmatter_env)
+        assert f not in result
+
+    def test_format_filter_md(self, frontmatter_env):
+        """fmt='md' → only .md files, not .ipynb."""
+        f_md = frontmatter_env / "test.md"
+        f_ipynb = frontmatter_env / "test.ipynb"
+        f_md.write_text("# md", encoding="utf-8")
+        f_ipynb.write_text("{}", encoding="utf-8")
+        result = _module.scan_paths([frontmatter_env], frontmatter_env, fmt="md")
+        assert f_md in result
+        assert f_ipynb not in result
+
+    def test_format_filter_ipynb(self, frontmatter_env):
+        """fmt='ipynb' → only .ipynb files, not .md."""
+        f_md = frontmatter_env / "test.md"
+        f_ipynb = frontmatter_env / "test.ipynb"
+        f_md.write_text("# md", encoding="utf-8")
+        f_ipynb.write_text("{}", encoding="utf-8")
+        result = _module.scan_paths([frontmatter_env], frontmatter_env, fmt="ipynb")
+        assert f_ipynb in result
+        assert f_md not in result
+
+    def test_mixed_file_and_dir_args(self, frontmatter_env):
+        """Mix of file and directory → both resolved."""
+        subdir = frontmatter_env / "docs"
+        subdir.mkdir()
+        f1 = frontmatter_env / "root.md"
+        f2 = subdir / "nested.md"
+        f1.write_text("# root", encoding="utf-8")
+        f2.write_text("# nested", encoding="utf-8")
+        result = _module.scan_paths([f1, subdir], frontmatter_env)
+        assert f1 in result
+        assert f2 in result
+
+
+# ======================
+# Tests: CLI and Error Reporting
+# ======================
+
+
+class TestMainExitCodes:
+    """Contract: main() returns 0 for valid files, 1 for errors.
+
+    Warnings (namespace, missing type) do not affect exit code.
+    """
+
+    def test_exit_0_all_valid(self, frontmatter_env):
+        """All files valid → exit 0."""
+        fm = _build_valid_frontmatter("adr")
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        exit_code = _module.main([str(md_file)])
+        assert exit_code == 0
+
+    def test_exit_1_on_errors(self, frontmatter_env):
+        """File with missing required field → exit 1."""
+        fm = _build_valid_frontmatter("adr")
+        fm.pop("title", None)
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        exit_code = _module.main([str(md_file)])
+        assert exit_code == 1
+
+    def test_warnings_dont_affect_exit_code(self, frontmatter_env):
+        """File with namespace warnings but no errors → exit 0."""
+        fm = _build_valid_frontmatter("adr")
+        # id at top level produces namespace_warning, not error
+        assert "id" in fm
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        exit_code = _module.main([str(md_file)])
+        assert exit_code == 0
+
+    def test_no_args_scans_repo_root(self, frontmatter_env):
+        """No args → scans from repo root."""
+        # Create a valid file in the test env root
+        fm = _build_valid_frontmatter("guide")
+        md_file = frontmatter_env / "test_guide.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        # Should not crash — scans from REPO_ROOT (monkeypatched to tmp)
+        exit_code = _module.main([])
+        assert isinstance(exit_code, int)
+
+
+class TestWarningNoType:
+    """Contract: files with frontmatter but no options.type get a warning."""
+
+    def test_warning_printed_for_missing_type(self, frontmatter_env, capsys):
+        """File with frontmatter but no options.type → warning on stderr."""
+        content = "---\ntitle: Untyped Document\ndate: 2026-01-01\n---\n\n# Body\n"
+        md_file = frontmatter_env / "untyped.md"
+        md_file.write_text(content, encoding="utf-8")
+        _module.main([str(md_file)])
+        captured = capsys.readouterr()
+        assert "no options.type" in captured.err.lower() or "warning" in captured.err.lower()
+
+
+class TestErrorMessages:
+    """Contract: FrontmatterError fields are populated correctly.
+
+    Tests dataclass field population, not message wording.
+    """
+
+    def test_error_has_file_path(self, frontmatter_env):
+        """Every error includes the file path."""
+        fm = _build_valid_frontmatter("adr")
+        fm.pop("title", None)
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        for error in errors:
+            assert error.file_path == md_file
+
+    def test_error_has_config_source(self, frontmatter_env):
+        """Every error includes the config source reference."""
+        fm = _build_valid_frontmatter("adr")
+        fm.pop("title", None)
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        missing_errors = [e for e in errors if e.error_type == "missing_field"]
+        for error in missing_errors:
+            assert error.config_source  # non-empty string
+            assert ".vadocs/" in error.config_source  # points to a config
+
+    def test_error_has_field_name(self, frontmatter_env):
+        """Missing field errors include the field name."""
+        fm = _build_valid_frontmatter("adr")
+        fm.pop("title", None)
+        md_file = frontmatter_env / "test.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        title_errors = [e for e in errors if e.field == "title"]
+        assert len(title_errors) > 0
+
+
+# ======================
+# Tests: Coverage Gaps
+# ======================
+
+
+class TestValidateFrontmatterConvenience:
+    """Contract: validate_frontmatter() reads file, parses, and delegates."""
+
+    def test_returns_empty_when_no_frontmatter(self, frontmatter_env):
+        """File without frontmatter → empty list (not an error)."""
+        md_file = frontmatter_env / "no_fm.md"
+        md_file.write_text("# Just a heading\n\nNo frontmatter here.\n", encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        assert errors == []
+
+    def test_returns_empty_when_no_type(self, frontmatter_env):
+        """File with frontmatter but no options.type → empty list."""
+        content = "---\ntitle: Untyped\ndate: 2026-01-01\n---\n\n# Body\n"
+        md_file = frontmatter_env / "untyped.md"
+        md_file.write_text(content, encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        assert errors == []
+
+
+class TestUnknownType:
+    """Contract: unknown options.type is a blocking error."""
+
+    def test_unknown_type_returns_error(self, frontmatter_env):
+        """options.type not in conf.json → unknown_type error."""
+        content = "---\ntitle: Bad Type\noptions:\n  type: nonexistent_type\n---\n\n# Body\n"
+        md_file = frontmatter_env / "bad_type.md"
+        md_file.write_text(content, encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        assert any(e.error_type == "unknown_type" for e in errors)
+        assert any(e.field == "options.type" for e in errors)
+
+
+
+class TestAuthorNonDict:
+    """Contract: author entries must be dicts, not strings."""
+
+    def test_string_author_rejected(self, frontmatter_env):
+        """Author as plain string instead of {name, email} → invalid_format."""
+        fm = _build_valid_frontmatter("adr")
+        fm["authors"] = ["Jane Doe"]  # string, not dict
+        md_file = frontmatter_env / "bad_author.md"
+        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
+        errors = _module.validate_frontmatter(md_file, frontmatter_env)
+        author_errors = [e for e in errors if e.field == "authors"]
+        assert len(author_errors) > 0
+        assert author_errors[0].error_type == "invalid_format"
+
+
+class TestParseEdgeCases:
+    """Contract: parse_frontmatter handles malformed input gracefully."""
+
+    def test_ipynb_invalid_json(self):
+        """Broken JSON in .ipynb → None (not an exception)."""
+        result = _module.parse_frontmatter("not json at all", file_path=Path("test.ipynb"))
+        assert result is None
+
+    def test_malformed_yaml_returns_none(self):
+        """Invalid YAML between --- fences → None."""
+        content = "---\n[invalid yaml: {\n---\n\n# Body\n"
+        result = _module.parse_frontmatter(content)
+        assert result is None
+
+
+class TestFindFieldBlockFallback:
+    """Contract: _find_field_block returns correct source for all three paths."""
+
+    def test_spoke_required_fields_fallback(self, frontmatter_env):
+        """Field only in spoke required_fields → spoke config source string."""
+        # Find a field that's in a spoke's required_fields but NOT in any
+        # hub block or hub types.X.required — so _find_field_block falls
+        # through to the spoke fallback path.
+        hub_block_fields = set()
+        for block_fields in _BLOCKS.values():
+            hub_block_fields.update(block_fields)
+
+        spoke_only_field = None
+        spoke_type = None
+        for type_name, spoke in _SPOKE_CONFIGS.items():
+            hub_type_required = set(_TYPES.get(type_name, {}).get("required", []))
+            for field in spoke.get("required_fields", []):
+                if field not in hub_block_fields and field not in hub_type_required:
+                    spoke_only_field = field
+                    spoke_type = type_name
+                    break
+            if spoke_only_field:
+                break
+
+        if spoke_only_field is None:
+            pytest.skip("No spoke-only required field found in current config")
+
+        hub, _ = _module.load_config_chain(frontmatter_env, spoke_type)
+        source = _module._find_field_block(spoke_only_field, spoke_type, hub)
+        # Contract: spoke-only fields point to spoke config, not hub
+        assert f"{spoke_type}.conf.json" in source

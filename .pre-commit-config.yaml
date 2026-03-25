@@ -61,6 +61,14 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
+      - id: check-frontmatter
+        name: Validate frontmatter (ADR-26042)
+        entry: uv run --active python -m tools.scripts.check_frontmatter
+        language: system
+        pass_filenames: true
+        files: \.md$
+        stages: [pre-commit, manual]
+
       - id: check-evidence
         name: Validate evidence artifacts
         entry: uv run --active tools/scripts/check_evidence.py --check-staged
@@ -171,6 +179,13 @@ repos:
         language: system
         pass_filenames: false
         files: ^tools/(scripts/git\.py|tests/test_git\.py)$
+
+      - id: test-check-frontmatter
+        name: Test check_frontmatter
+        entry: uv run --active pytest tools/tests/test_check_frontmatter.py
+        language: system
+        pass_filenames: false
+        files: ^(tools/scripts/(check_frontmatter|git|paths)\.py|tools/tests/test_check_frontmatter\.py|\.vadocs/(conf\.json|types/(adr|evidence)\.conf\.json))$
 
       - id: test-check-evidence
         name: Test check_evidence

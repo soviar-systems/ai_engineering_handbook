@@ -1,0 +1,675 @@
+#!/usr/bin/env python3
+"""
+Config-Driven Frontmatter Validator.
+
+Validates YAML frontmatter in governed markdown files against the hub+spoke
+config chain defined in .vadocs/. Enforces ADR-26042 (Common Frontmatter
+Standard): block composition, field presence, format, and allowed values.
+
+Scope:
+    - ALL frontmatter validation: field presence, format, allowed values
+    - Hub-level rules (blocks, field registry, tags, date format)
+    - Spoke-level rules (type-specific required fields, statuses, severity)
+
+Does NOT own:
+    - Structural validation (sections, section order) — domain scripts
+    - Naming patterns (filename format, ID format) — domain scripts
+    - Index generation — check_adr.py
+    - Auto-fix (status_corrections) — check_adr.py
+    - --fix mode — deferred to Phase 1.15
+
+Public interface:
+    main() — CLI entry point (--format)
+    parse_frontmatter() — extract YAML frontmatter from file content
+    resolve_type() — read options.type from parsed frontmatter
+    load_config_chain() — load hub + optional spoke config
+    validate_frontmatter() — validate a file's frontmatter (reads file)
+    validate_parsed_frontmatter() — validate already-parsed frontmatter dict
+    scan_paths() — resolve input paths to file list
+
+Dependencies:
+    - .vadocs/conf.json (hub — shared vocabulary, blocks, types, tags)
+    - .vadocs/types/<type>.conf.json (spoke — type-specific rules)
+    - yaml (frontmatter parsing only — config is JSON)
+    - tools/scripts/paths.py (config discovery, VALIDATION_EXCLUDE_DIRS)
+    - tools/scripts/git.py (detect_repo_root)
+
+Exit codes:
+    0: All validated files pass (warnings may still be printed)
+    1: One or more validation errors found
+
+Design evidence:
+    - A-26015: Frontmatter Validator Architecture (Approach C, WRC 0.90)
+    - S-26014: DevOps Consultant Assessment (SVA analysis, scope boundary)
+"""
+
+import argparse
+import json
+import logging
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from tools.scripts.git import detect_repo_root
+from tools.scripts.paths import VALIDATION_EXCLUDE_DIRS, get_config_path
+
+logger = logging.getLogger(__name__)
+
+
+# ======================
+# Data Classes
+# ======================
+
+
+@dataclass
+class FrontmatterError:
+    """Represents a frontmatter validation error or warning.
+
+    error_type taxonomy (used by main() to separate blocking vs non-blocking):
+        "missing_field"      — required field absent (blocking)
+        "invalid_format"     — field present but wrong format, e.g. bad date (blocking)
+        "invalid_value"      — field value not in allowed set, e.g. unknown tag (blocking)
+        "unknown_type"       — options.type not in conf.json types registry (blocking)
+        "namespace_warning"  — non-myst_native field at top level instead of options.* (non-blocking)
+
+    main() treats "namespace_warning" as stderr-only; all others cause exit 1.
+    """
+
+    file_path: Path
+    error_type: str  # see taxonomy above
+    field: str | None  # which field failed (None for file-level errors)
+    message: str  # agent-friendly: what's wrong + what would fix it
+    config_source: str  # which config defines the rule, e.g. ".vadocs/conf.json → blocks.identity"
+
+
+# ======================
+# Configuration
+# ======================
+
+# Matches YAML frontmatter between --- fences at the start of a file.
+# Same regex used in check_adr.py and check_evidence.py — will be consolidated
+# in Phase 2 when domain scripts delegate to this module.
+FRONTMATTER_PATTERN = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+
+# Config cache — keyed by doc_type string (or None for hub-only).
+# Populated on first load_config_chain() call per type, cleared in tests
+# via monkeypatch. Avoids re-reading JSON + re-parsing pyproject.toml per file.
+_config_cache: dict[str | None, tuple[dict, dict | None]] = {}
+
+# ---------------------------------------------------------------------------
+# Module-level constants — loaded once at import time, monkeypatched in tests.
+#
+# These are derived from .vadocs/conf.json (the hub config). They provide
+# fast lookup during validation without re-reading the config per file.
+# The hub defines the complete type system (ADR-26042): field registry,
+# block composition, type registry, tag vocabulary, date format.
+# ---------------------------------------------------------------------------
+REPO_ROOT: Path = detect_repo_root()
+HUB_CONFIG_PATH: Path = get_config_path(REPO_ROOT)
+HUB_CONFIG: dict = json.loads(HUB_CONFIG_PATH.read_text(encoding="utf-8"))
+
+# Tags in hub are dict with descriptions — extract keys for validation set
+VALID_TAGS: set[str] = set(HUB_CONFIG.get("tags", {}).keys())
+# 10 types defined: 9 content + 1 service (see conf.json "types" registry)
+VALID_TYPES: set[str] = set(HUB_CONFIG.get("types", {}).keys())
+DATE_FORMAT_PATTERN: str = HUB_CONFIG.get("date_format", r"^\d{4}-\d{2}-\d{2}$")
+# field_registry maps field names → {description, maintenance, myst_native}
+FIELD_REGISTRY: dict = HUB_CONFIG.get("field_registry", {})
+# blocks maps block names → list of field names (e.g. identity → [title, type, authors])
+BLOCKS: dict = HUB_CONFIG.get("blocks", {})
+# types maps type names → {blocks, required, optional}
+TYPES: dict = HUB_CONFIG.get("types", {})
+
+
+# ======================
+# Main
+# ======================
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point. Parse args, scan, validate, report, return exit code.
+
+    When no args provided, resolves to [repo_root] for full-repo scan.
+
+    Exit codes:
+        0 — all files pass (warnings may still be printed to stderr)
+        1 — one or more validation errors found
+
+    Output:
+        stdout — error report, one line per error with file:field:source format
+        stderr — warnings (missing type, namespace) for agent visibility
+    """
+    # -- Argument parsing ------------------------------------------------
+    parser = argparse.ArgumentParser(
+        description="Validate frontmatter against .vadocs/ config chain (ADR-26042).",
+    )
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        help="Files or directories to validate. Defaults to repo root.",
+    )
+    parser.add_argument(
+        "--format",
+        dest="fmt",
+        choices=["md", "ipynb"],
+        default="md",
+        help="File extension to scan for in directories (default: md).",
+    )
+    args = parser.parse_args(argv)
+
+    # -- Resolve input paths ---------------------------------------------
+    # Empty paths → scan from repo root (monkeypatched in tests)
+    input_paths = [Path(p) for p in args.paths] if args.paths else [REPO_ROOT]
+    files = scan_paths(input_paths, REPO_ROOT, fmt=args.fmt)
+
+    # -- Validate each file -----------------------------------------------
+    # NOTE: This loop intentionally does NOT call validate_frontmatter() directly.
+    # validate_frontmatter() silently returns [] for files with no type — but
+    # main() needs to print a WARNING for those files so agents see them.
+    # The parse → resolve_type → validate_parsed pipeline is split here to
+    # insert the warning step. Do not refactor to validate_frontmatter() without
+    # preserving the warning behavior.
+    all_errors: list[FrontmatterError] = []
+    for file_path in files:
+        content = file_path.read_text(encoding="utf-8")
+        frontmatter = parse_frontmatter(content, file_path=file_path)
+
+        # Files without frontmatter are silently skipped — they are not
+        # governed documents (e.g. README, plain scripts).
+        if frontmatter is None:
+            continue
+
+        # Files with frontmatter but no options.type: warn and skip.
+        # These are ungoverned-by-type until Phase 1.15 adds type to all files.
+        # This warning is critical for migration visibility — it tells agents
+        # which files still need options.type added.
+        doc_type = resolve_type(frontmatter)
+        if doc_type is None:
+            print(
+                f"WARNING: {file_path} — has frontmatter but no options.type, skipping type-specific validation",
+                file=sys.stderr,
+            )
+            continue
+
+        errors = validate_parsed_frontmatter(frontmatter, file_path, REPO_ROOT)
+        all_errors.extend(errors)
+
+    # -- Separate errors from warnings ------------------------------------
+    # namespace_warning is a warning, not a blocking error (Phase 1.15 TODO)
+    real_errors = [e for e in all_errors if e.error_type != "namespace_warning"]
+    warnings = [e for e in all_errors if e.error_type == "namespace_warning"]
+
+    # -- Report warnings to stderr ----------------------------------------
+    for w in warnings:
+        print(
+            f"WARNING: {w.file_path}:{w.field} — {w.message} [{w.config_source}]",
+            file=sys.stderr,
+        )
+
+    # -- Report errors to stdout ------------------------------------------
+    for e in real_errors:
+        # Format: file_path:field — message [config_source]
+        # Agent-friendly: file path for navigation, field for quick fix,
+        # config_source for rule lookup.
+        field_part = f":{e.field}" if e.field else ""
+        print(f"{e.file_path}{field_part} — {e.message} [{e.config_source}]")
+
+    # -- Exit code: 0 if no real errors, 1 otherwise ----------------------
+    return 1 if real_errors else 0
+
+
+# ======================
+# Scanning
+# ======================
+
+
+def scan_paths(
+    paths: list[Path], repo_root: Path, fmt: str = "md"
+) -> list[Path]:
+    """Resolve input paths to file list.
+
+    Files are returned as-is. Directories are walked recursively,
+    filtered by format extension and VALIDATION_EXCLUDE_DIRS.
+    The fmt parameter controls which extension to glob for when scanning
+    directories ('md' or 'ipynb'). Ignored for explicit file paths.
+    """
+    extension = f".{fmt}"
+    files: list[Path] = []
+
+    for path in paths:
+        if path.is_file():
+            files.append(path)
+        elif path.is_dir():
+            for child in sorted(path.rglob(f"*{extension}")):
+                # Skip files inside excluded directories
+                if any(part in VALIDATION_EXCLUDE_DIRS for part in child.parts):
+                    continue
+                files.append(child)
+
+    return files
+
+
+# ======================
+# Validation — public
+# ======================
+
+
+def validate_frontmatter(
+    file_path: Path, repo_root: Path
+) -> list[FrontmatterError]:
+    """Validate a single file's frontmatter against hub + spoke rules.
+
+    Orchestrates: read file -> parse -> resolve type -> load configs -> check.
+    Returns empty list if valid or if file has no frontmatter.
+    """
+    content = file_path.read_text(encoding="utf-8")
+    frontmatter = parse_frontmatter(content, file_path=file_path)
+    if frontmatter is None:
+        return []
+    return validate_parsed_frontmatter(frontmatter, file_path, repo_root)
+
+
+def validate_parsed_frontmatter(
+    frontmatter: dict, file_path: Path, repo_root: Path
+) -> list[FrontmatterError]:
+    """Validate already-parsed frontmatter dict against hub + spoke rules.
+
+    For use by domain scripts (check_adr.py, check_evidence.py) that have
+    already parsed frontmatter for their own structural validation. This
+    avoids double-parsing during the migration period where both the domain
+    script and check_frontmatter.py run on the same files.
+
+    Returns [] for files with no options.type — caller is responsible for
+    deciding whether to warn (main() does, domain scripts may not).
+    """
+    # Step 1: Determine document type from options.type field.
+    # Files without options.type are not governed — caller (main) issues a
+    # warning for files that have frontmatter but no type. This is expected
+    # during the pre-migration period before Phase 1.15 adds options.type
+    # to all governed files.
+    doc_type = resolve_type(frontmatter)
+    if doc_type is None:
+        return []
+
+    # Step 2: Reject unknown types early — all 10 valid types are in conf.json.
+    if doc_type not in VALID_TYPES:
+        return [
+            FrontmatterError(
+                file_path=file_path,
+                error_type="unknown_type",
+                field="options.type",
+                message=f"unknown type '{doc_type}', expected one of {sorted(VALID_TYPES)}",
+                config_source=".vadocs/conf.json → types",
+            )
+        ]
+
+    # Step 3: Load the config chain for this type.
+    # Hub config is always loaded. Spoke config loaded only for types that have
+    # a .conf.json in .vadocs/types/ (currently: adr, evidence). Types without
+    # a spoke config (tutorial, guide, etc.) are validated against hub rules only.
+    hub, spoke = load_config_chain(repo_root, doc_type)
+
+    # Step 4: Compute the full required field set from three sources (union merge).
+    # See _get_required_fields docstring for the merge semantics (ADR-26042).
+    required = _get_required_fields(doc_type, hub, spoke)
+    errors: list[FrontmatterError] = []
+
+    # Step 5: Check required field presence (at top level OR under options.*).
+    for field in required:
+        if not _field_present(frontmatter, field):
+            block_source = _find_field_block(field, doc_type, hub)
+            errors.append(
+                FrontmatterError(
+                    file_path=file_path,
+                    error_type="missing_field",
+                    field=field,
+                    message=f"missing required field '{field}'",
+                    config_source=block_source,
+                )
+            )
+
+    # Step 6: Validate values of present fields (dates, tags, status, authors).
+    for field in required:
+        value = _get_field_value(frontmatter, field)
+        if value is None:
+            continue
+        error = _validate_field_value(field, value, file_path, hub, spoke)
+        if error is not None:
+            errors.append(error)
+
+    # Step 7: Check options.* namespace compliance (warnings only until Phase 1.15).
+    errors.extend(_check_options_namespace(frontmatter, file_path, hub))
+
+    return errors
+
+
+# ======================
+# Validation — internal
+# ======================
+
+
+def _field_present(frontmatter: dict, field: str) -> bool:
+    """Check if a field exists at top level or under options.*
+
+    Pre-migration compatibility: non-myst_native fields like id, status are
+    currently at top level in existing files. After Phase 1.15 they move to
+    options.*. This function checks both locations so validation works in
+    both the pre- and post-migration state.
+    """
+    if field in frontmatter:
+        return True
+    options = frontmatter.get("options", {})
+    if isinstance(options, dict) and field in options:
+        return True
+    return False
+
+
+def _get_field_value(frontmatter: dict, field: str) -> Any:
+    """Get field value, checking top level first, then options.*
+
+    Top level takes precedence — if a field exists at both levels (shouldn't
+    happen in well-formed files), the top-level value is used for validation.
+    """
+    if field in frontmatter:
+        return frontmatter[field]
+    options = frontmatter.get("options", {})
+    if isinstance(options, dict) and field in options:
+        return options[field]
+    return None
+
+
+def _find_field_block(field: str, doc_type: str, hub_config: dict) -> str:
+    """Determine which config source requires this field.
+
+    Used for agent-friendly error messages — tells the agent exactly which
+    config file and key defines the requirement so it can look up the rule.
+    Search order: hub blocks → hub types.required → spoke required_fields.
+    """
+    blocks = hub_config.get("blocks", {})
+    for block_name, block_fields in blocks.items():
+        if field in block_fields:
+            return f".vadocs/conf.json → blocks.{block_name}"
+    types = hub_config.get("types", {})
+    type_def = types.get(doc_type, {})
+    if field in type_def.get("required", []):
+        return f".vadocs/conf.json → types.{doc_type}.required"
+    return f".vadocs/types/{doc_type}.conf.json → required_fields"
+
+
+def _get_required_fields(
+    doc_type: str, hub_config: dict, spoke_config: dict | None
+) -> set[str]:
+    """Merge hub block fields + hub types.required + spoke required_fields.
+
+    Three sources, union merge (additive inheritance per ADR-26042):
+    1. Hub blocks — expand field names for this type's block list
+    2. Hub types.<type>.required — type-specific fields from hub
+    3. Spoke required_fields — operational required fields from spoke config
+    """
+    blocks = hub_config.get("blocks", {})
+    types = hub_config.get("types", {})
+    type_def = types.get(doc_type, {})
+
+    required: set[str] = set()
+
+    # 1. Expand block composition
+    for block_name in type_def.get("blocks", []):
+        required.update(blocks.get(block_name, []))
+
+    # 2. Hub type-specific required
+    required.update(type_def.get("required", []))
+
+    # 3. Spoke required_fields
+    if spoke_config is not None:
+        required.update(spoke_config.get("required_fields", []))
+
+    return required
+
+
+def _validate_field_value(
+    field: str,
+    value: Any,
+    file_path: Path,
+    hub_config: dict,
+    spoke_config: dict | None,
+) -> FrontmatterError | None:
+    """Check a single field's value against config rules.
+
+    Dispatches to field-specific validation based on field name.
+    Returns None if the value is valid, or a FrontmatterError describing
+    exactly what's wrong, what was expected, and which config defines the rule.
+
+    Validation rules come from two sources:
+    - Hub config: date_format regex, tag vocabulary, authors format, field_registry
+    - Spoke config: allowed statuses, severity values (type-specific)
+    """
+    # Date format validation (date, birth) — regex from hub config
+    if field in ("date", "birth"):
+        date_pattern = hub_config.get("date_format", r"^\d{4}-\d{2}-\d{2}$")
+        # yaml.safe_load converts dates to datetime.date — stringify for regex
+        str_value = str(value)
+        if not re.match(date_pattern, str_value):
+            return FrontmatterError(
+                file_path=file_path,
+                error_type="invalid_format",
+                field=field,
+                message=f"field '{field}' has value '{str_value}', expected format YYYY-MM-DD",
+                config_source=".vadocs/conf.json → date_format",
+            )
+
+    # Tags validation — each tag must exist in hub vocabulary (.vadocs/conf.json → tags)
+    if field == "tags":
+        valid_tags = set(hub_config.get("tags", {}).keys())
+        if isinstance(value, list):
+            invalid = [t for t in value if t not in valid_tags]
+            if invalid:
+                return FrontmatterError(
+                    file_path=file_path,
+                    error_type="invalid_value",
+                    field="tags",
+                    message=f"unknown tags {invalid}, expected from {sorted(valid_tags)}",
+                    config_source=".vadocs/conf.json → tags",
+                )
+
+    # Status validation — allowed values defined per doc type in spoke config.
+    # ADR: proposed/accepted/rejected/superseded/deprecated
+    # Evidence: active/absorbed/superseded (analyses), active/resolved/superseded (retros)
+    if field == "status" and spoke_config is not None:
+        allowed = spoke_config.get("statuses", [])
+        if allowed and value not in allowed:
+            return FrontmatterError(
+                file_path=file_path,
+                error_type="invalid_value",
+                field="status",
+                message=f"field 'status' has value '{value}', expected one of {allowed}",
+                config_source=f".vadocs/types/{spoke_config.get('parent_config', '?')!s} → statuses",
+            )
+
+    # Severity validation — only applies to evidence retrospectives.
+    # The evidence spoke config nests severity under artifact_types.retrospective,
+    # not at the top level. This is a quirk of the evidence config structure.
+    # NOTE: Currently unreachable because load_config_chain("retrospective")
+    # finds no .vadocs/types/retrospective.conf.json — severity rules are inside
+    # evidence.conf.json. check_evidence.py handles severity validation today.
+    # Will become reachable when spoke config resolution maps sub-types to
+    # their parent spoke (Phase 2 config chain enhancement).
+    if field == "severity" and spoke_config is not None:  # pragma: no cover
+        allowed = spoke_config.get("severity", [])
+        if not allowed and "artifact_types" in spoke_config:
+            for at in spoke_config["artifact_types"].values():
+                if "severity" in at:
+                    allowed = at["severity"]
+                    break
+        if allowed and value not in allowed:
+            return FrontmatterError(
+                file_path=file_path,
+                error_type="invalid_value",
+                field="severity",
+                message=f"field 'severity' has value '{value}', expected one of {allowed}",
+                config_source=".vadocs/types/evidence.conf.json → severity",
+            )
+
+    # Authors format — MyST spec requires list of {name, email} objects.
+    # Ecosystem minimum (conf.json → field_registry.authors): both name and
+    # email required for every author entry.
+    if field == "authors":
+        if not isinstance(value, list):
+            return FrontmatterError(
+                file_path=file_path,
+                error_type="invalid_format",
+                field="authors",
+                message=f"field 'authors' must be a list of {{name, email}} objects, got {type(value).__name__}",
+                config_source=".vadocs/conf.json → field_registry.authors",
+            )
+        for i, author in enumerate(value):
+            if not isinstance(author, dict):
+                return FrontmatterError(
+                    file_path=file_path,
+                    error_type="invalid_format",
+                    field="authors",
+                    message=f"author[{i}] must be a {{name, email}} object, got {type(author).__name__}",
+                    config_source=".vadocs/conf.json → field_registry.authors",
+                )
+            if "name" not in author or "email" not in author:
+                missing = [k for k in ("name", "email") if k not in author]
+                return FrontmatterError(
+                    file_path=file_path,
+                    error_type="invalid_format",
+                    field="authors",
+                    message=f"author[{i}] missing required keys: {missing}",
+                    config_source=".vadocs/conf.json → field_registry.authors",
+                )
+
+    return None
+
+
+def _check_options_namespace(
+    frontmatter: dict, file_path: Path, hub_config: dict
+) -> list[FrontmatterError]:
+    """Warn when non-myst_native fields are not under options.*
+
+    ADR-26042 says: MyST-native fields (title, authors, date, description,
+    tags) live at top level; all others belong under options.*. The hub config
+    field_registry has a myst_native boolean per field.
+
+    Currently returns namespace_warning (non-blocking) because most existing
+    files predate this convention. main() routes these to stderr only.
+
+    # TODO: Promote to error after Phase 1.15 migration restructures
+    # frontmatter. Change error_type from "namespace_warning" to
+    # "invalid_namespace" and main() will treat it as blocking.
+    """
+    warnings: list[FrontmatterError] = []
+    field_registry = hub_config.get("field_registry", {})
+
+    for key in frontmatter:
+        if key == "options":
+            continue
+        if key in field_registry and not field_registry[key].get("myst_native", False):
+            warnings.append(
+                FrontmatterError(
+                    file_path=file_path,
+                    error_type="namespace_warning",
+                    field=key,
+                    message=f"field '{key}' is not MyST-native and should be under options.* (will be enforced after Phase 1.15 migration)",
+                    config_source=".vadocs/conf.json → field_registry",
+                )
+            )
+
+    return warnings
+
+
+# ======================
+# Parsing
+# ======================
+
+
+def parse_frontmatter(content: str, file_path: Path | None = None) -> dict | None:
+    """Extract YAML frontmatter from markdown or notebook content.
+
+    For .md files: parse YAML between --- fences.
+    For .ipynb files: extract first markdown cell source, then parse fences.
+
+    Returns parsed dict, or None if no frontmatter found.
+    """
+    # .ipynb files store frontmatter in the first markdown cell's source.
+    # Jupytext pairs .md ↔ .ipynb, so the YAML frontmatter appears as
+    # the source of the first markdown cell (list of strings or a single
+    # string). We join and then fall through to the same regex-based
+    # YAML fence parsing used for .md files.
+    if file_path is not None and file_path.suffix == ".ipynb":
+        try:
+            notebook = json.loads(content)
+        except (json.JSONDecodeError, ValueError):
+            return None
+        cells = notebook.get("cells", [])
+        if not cells or cells[0].get("cell_type") != "markdown":
+            return None
+        source = cells[0].get("source", [])
+        content = "".join(source) if isinstance(source, list) else source
+
+    match = FRONTMATTER_PATTERN.match(content)
+    if not match:
+        return None
+    try:
+        return yaml.safe_load(match.group(1))
+    except yaml.YAMLError:
+        return None
+
+
+def resolve_type(frontmatter: dict) -> str | None:
+    """Read options.type from parsed frontmatter.
+
+    Returns type string, or None if not present.
+    """
+    options = frontmatter.get("options")
+    if not isinstance(options, dict):
+        return None
+    return options.get("type")
+
+
+# ======================
+# Config Loading
+# ======================
+
+
+def load_config_chain(
+    repo_root: Path, doc_type: str | None = None
+) -> tuple[dict, dict | None]:
+    """Load hub config and optional spoke config for a document type.
+
+    Uses paths.get_config_path() for config discovery.
+    Returns (hub_config, spoke_config_or_None).
+    Configs are cached per doc_type after first load.
+    """
+    if doc_type in _config_cache:
+        return _config_cache[doc_type]
+
+    # get_config_path reads pyproject.toml [tool.vadocs].config_dir each call.
+    # We cache per doc_type so pyproject.toml is parsed at most once per type
+    # per run, not once per file.
+    hub_path = get_config_path(repo_root)
+    hub = json.loads(hub_path.read_text(encoding="utf-8"))
+
+    spoke = None
+    if doc_type is not None:
+        # Spoke config may not exist — types like tutorial, guide, policy have
+        # no spoke config yet. They are validated against hub rules only.
+        spoke_path = get_config_path(repo_root, doc_type)
+        if spoke_path.exists():
+            spoke = json.loads(spoke_path.read_text(encoding="utf-8"))
+
+    _config_cache[doc_type] = (hub, spoke)
+    return hub, spoke
+
+
+# ======================
+# Entry Point
+# ======================
+
+if __name__ == "__main__":
+    sys.exit(main())

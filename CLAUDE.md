@@ -21,6 +21,9 @@ uv run pytest tools/tests/test_file.py --cov=tools.tests.test_file --cov-report=
 # Check broken links in markdown files
 uv run tools/scripts/check_broken_links.py --pattern "*.md"
 
+# Validate frontmatter against .vadocs/ config chain (ADR-26042)
+uv run python -m tools.scripts.check_frontmatter [PATHS...] [--format {md,ipynb}]
+
 # Validate all ADRs and auto-fix index
 uv run tools/scripts/check_adr.py --fix
 
