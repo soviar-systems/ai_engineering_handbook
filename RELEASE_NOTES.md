@@ -1,5 +1,91 @@
 # Release Notes
 
+## release v2.8.0 "The Prompt Physics"
+
+### Summary of Changes
+
+v2.7.0 settled the ecosystem's strategic direction: context engineering over multi-agent orchestration. v2.8.0 turns that principle into empirical engineering. The release delivers a three-article series on prompt format — with real measurements, plots, and reproducible code — backed by three new analyses grounding every claim in reviewed evidence. The central finding challenges a common assumption: token cost is not a property of the format alone. It is a function of format, serializer, and tokenizer together, and the relative ranking of YAML vs. JSON can flip depending on which Python library you use to generate the YAML.
+
+Alongside the research, this release closes the governance infrastructure loop: all configs migrated to JSON, the frontmatter validator deployed and enforced at commit time. The two threads — empirical prompt research and governance automation — serve the same goal from the ecosystem roadmap: build the evidence base and the tooling foundation before writing the first production application.
+
+Three strategic themes define v2.8.0:
+
+1. **Prompt Format as Engineering Science** — The [Format as Architecture](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) series answers a question that most practitioners answer by intuition: which format should a system prompt use? The answer is not a preference — it has a mechanistic explanation rooted in BPE tokenizer architecture and transformer attention. JSON is optimal for development artifacts (validation, tooling). YAML is optimal for runtime instructions (low structural noise). XML provides scope isolation where injection resistance matters. The series includes token measurements across four formats on a production prompt, validated across three tokenizers (cl100k\_base, o200k\_base, Qwen-72B).
+
+2. **Two-Stage Consultant Workflow** — The prompt engineering toolchain gains a structured two-phase workflow. [ai_brainstorming_colleague.json](/ai_system/3_prompts/consultants/ai_brainstorming_colleague.json) (v0.2.0) is the first stage: unconstrained ideation, architectural discussion, "what-if" scenarios. When a direction needs formal validation, it hands off explicitly to [ai_systems_consultant_hybrid.json](/ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json) or [devops_consultant.json](/ai_system/3_prompts/consultants/devops_consultant.json) — the strict reviewers with WRC scoring and SVA compliance. The brainstorming colleague enforces this boundary itself: when it detects validation-intent keywords, it executes the handoff protocol rather than attempting a review it is not designed for. This prevents the common failure mode of asking an exploratory tool for production-grade architectural judgement.
+
+3. **Governance Infrastructure Operational** — [ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md) and [ADR-26036: Config File Location and Naming Conventions](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) / [ADR-26054: JSON as Governance Config Format](architecture/adr/adr_26054_json_as_governance_config_format.md) move from specified to enforced. [check_frontmatter.py](/tools/scripts/check_frontmatter.py) (work in progress) validates document frontmatter at commit time against the composable schema. All governance configs are migrated from YAML to JSON. The `.vadocs/` configuration system is complete: `conf.json` hub → `types/*.conf.json` spokes → `pyproject.toml` entry point for all tools.
+
+### Architecture Decisions
+
+*   **[ADR-26054: JSON as Governance Config Format](architecture/adr/adr_26054_json_as_governance_config_format.md) — Config Serialization**:
+    Governance configs use JSON (not YAML, not TOML) because JSON Schema is the de-facto standard for machine-validated structured configuration with mature tooling in Python (`jsonschema` library) and across the broader ecosystem. YAML was rejected despite its readability advantage because schema tooling for YAML is fragmented and no dominant standard exists. TOML has no schema standard at all. Document frontmatter stays YAML (MyST-native, human-authored) — JSON governs only machine-read governance configs in `.vadocs/`. A JSON Schema companion [conf.schema.json](/.vadocs/conf.schema.json) validates the hub config structure.
+
+*   **[ADR-26044: Skills as Progressive Disclosure Units](architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md) — Skills Architecture**:
+    ADR-26044 formally defines a skill as a self-contained instruction block injected into the agent's context on demand. Skills are not subagents — they carry no separate LLM calls, no state, no negotiation. They are loaded when needed (progressive disclosure) and expire when the conversation ends. This definition sharpens the boundary introduced in ADR-26038: managing what the agent sees (context budget) is the primary engineering constraint, and skills are the mechanism for doing so without spawning multiple agents. The `sv-` namespace in Claude Code demonstrates the pattern in practice: six consultant prompts loaded as skills via symlinks to their JSON sources in `ai_system/3_prompts/consultants/`. The two validation-focused skills (`sv-ai-systems-consultant-hybrid`, `sv-devops-consultant`) use WRC scoring — Weighted Response Confidence, a 0–1 metric composed of empirical benchmark evidence (35%), enterprise production adoption (25%), and predicted performance on the target stack (40%); currently defined inside the prompt, pending a governing ADR (tracked in `techdebt.md` TD-006) — and SVA compliance ([ADR-26037: Smallest Viable Architecture Constraint Framework](architecture/adr/adr_26037_smallest_viable_architecture_constraint_framework.md)) as their output standard — making formal architectural review available on demand without context pollution between exploration and validation phases.
+
+*   **[ADR-26036: Config File Location and Naming Conventions](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) and [ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md) — Now Operational**:
+    Both ADRs were proposed in v2.7.0. This release marks their operational transition: `.vadocs/` contains all governance configs in JSON (ADR-26036), and `check_frontmatter.py` enforces the composable frontmatter schema (ADR-26042) at commit time. Promotion to accepted awaits ecosystem-wide validation in the next release cycle.
+
+### Accepted ADRs (Promoted in This Release)
+
+No ADRs were promoted in this release. v2.8.0 is a research and operationalization cycle: the prompt engineering series builds the empirical foundation; the governance tooling enforces v2.7.0 decisions. Promotion of [ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md), [ADR-26036: Config File Location and Naming Conventions](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md), and [ADR-26054: JSON as Governance Config Format](architecture/adr/adr_26054_json_as_governance_config_format.md) to accepted requires validation across the full ecosystem, which begins next cycle.
+
+### Open RFCs (Proposed ADRs)
+
+New proposed ADRs introduced in this release:
+
+| ADR | Title | Theme |
+| :--- | :--- | :--- |
+| [ADR-26054](architecture/adr/adr_26054_json_as_governance_config_format.md) | JSON as Governance Config Format | Governance |
+| [ADR-26044](architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md) | Skills as Progressive Disclosure Units | Context Management |
+
+Carry-over proposed ADRs (open for review and comment):
+
+| ADR | Title | Theme |
+| :--- | :--- | :--- |
+| [ADR-26042](architecture/adr/adr_26042_common_frontmatter_standard.md) | Common Frontmatter Standard | Governance |
+| [ADR-26036](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) | Config File Location and Naming Conventions | Governance |
+| [ADR-26043](architecture/adr/adr_26043_ecosystem_package_boundary.md) | Ecosystem Package Boundary | Governance |
+| [ADR-26039](architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md) | pgvector as Ecosystem Database Standard | Data Infrastructure |
+| [ADR-26041](architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md) | Client-Side Logic with Server-Side Retrieval | Data Infrastructure |
+| [ADR-26032](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md) | Tiered Cognitive Memory: Procedural Skills vs. Declarative RAG | Skills Architecture |
+| [ADR-26033](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md) | Virtual Monorepo via Package-Driven Dependency Management | Governance |
+| [ADR-26030](architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md) | Stateless JIT Context Injection for Agentic Git Workflows | Context Management |
+
+### New Features and Articles Added
+
+*   **Prompt Engineering Series** (3 articles + 3 analyses):
+
+    The core deliverable of this release — an empirically grounded series on how prompt format affects LLM behavior:
+
+    - [Format as Architecture: Signal-to-Noise in Prompt Delivery](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) — qualitative format comparison, training-distribution effects, the two-audience principle (compiler vs. runtime model), security analysis, and the decision framework. Central claim: structural tokens (brackets, quotes, commas) are not ignored — the model processes each one to determine it is irrelevant, incurring compute cost and receiving a lower but non-zero attention weight. Their presence dilutes the share of attention available to instructional content. The more structural noise in the prompt, the harder the model has to work to extract the actual signal. For the technical mechanics see [A-26016: Causal Masking and Attention Mechanics — Implications for Prompt Format](architecture/evidence/analyses/A-26016_causal_masking_attention_mechanics_for_prompt_engineering.md).
+    - [Token Economics of Prompt Delivery](/ai_system/3_prompts/token_economics_of_prompt_delivery.ipynb) — the empirical companion: BPE tokenizer mechanics (space+word merging, indentation cost, punctuation merging), measured token costs across four formats on a production prompt, cross-tokenizer validation (cl100k\_base, o200k\_base, Qwen-72B).
+    - [Appendix: YAML Serializer Variance](/ai_system/3_prompts/appendix_yaml_serializer_variance.ipynb) — the unexpected finding: PyYAML and yq produce semantically equivalent YAML from the same JSON source yet differ by 100+ tokens on a 150-line production prompt, and the YAML Literal vs. Pretty JSON ranking **flips** depending on the serializer. Token cost is `f(format, serializer, tokenizer)` — three variables, not one. Validated across 5 prompt files.
+
+    Three analyses ground the series in reviewed evidence:
+    - [A-26016: Causal Masking and Attention Mechanics — Implications for Prompt Format](architecture/evidence/analyses/A-26016_causal_masking_attention_mechanics_for_prompt_engineering.md) — grounds the "attention anchors" and "reasoning capacity" claims in transformer architecture
+    - [A-26017: YAML Serializer Variance — Token Economics of Format Choice](architecture/evidence/analyses/A-26017_yaml_serializer_variance_token_economics.md) — verifies the three-variable finding with independent measurements across serializers
+    - [A-26018: XML Tags as Scope Boundaries — Prompt Architecture and Injection Resistance](architecture/evidence/analyses/A-26018_xml_tags_scope_isolation_prompt_architecture.md) — covers the hybrid YAML+XML pattern and the JSON-list injection boundary technique
+
+*   **[check_frontmatter.py](/tools/scripts/check_frontmatter.py) — Frontmatter Enforcement** (work in progress; 67 tests, 97% coverage on implemented scope):
+    Validates document frontmatter against the composable schema from [ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md). Resolves the hub-spoke config chain dynamically — one validator, all document types. Two pre-commit hooks: `check-frontmatter` (validates on stage) and `test-check-frontmatter` (runs the test suite on script/config changes). Architecture analysis [A-26015: Frontmatter Validator Architecture](architecture/evidence/analyses/A-26015_frontmatter_validator_architecture.md) evaluated three approaches; Approach C (module+CLI) selected.
+
+### Updates in Existing Files
+
+*   **[ai_brainstorming_colleague.json](/ai_system/3_prompts/consultants/ai_brainstorming_colleague.json) (v0.2.0)**: Refocused as the first stage of a two-stage workflow. Removed stack-specific defaults. Added `interaction_rules` (technical language, no filler, falsifiable claims only) and `handoff_target: ai_systems_consultant_hybrid`. Overhauled output structure with Critical Diagnosis and Root Cause Analysis steps. When it detects validation-intent keywords, it executes the handoff protocol instead of attempting formal review.
+
+*   **Governance Config Migration** (`.vadocs/`): All configs migrated from YAML to JSON. Deleted: `conf.yaml`, `adr_config.yaml`, `architecture.config.yaml`, `evidence.config.yaml`. New layout: `conf.json` + `conf.schema.json` (hub) → `types/adr.conf.json`, `types/evidence.conf.json` (spokes). New shared modules: `git.py` (repo root detection, staged files) and `paths.py` (convention-based config discovery via `get_config_path()`). `pyproject.toml` gains `[tool.vadocs]` entry point.
+
+### Existing Files Moved or Renamed
+
+| Original Path | New Path |
+| :--- | :--- |
+| `.vadocs/conf.yaml` | `.vadocs/conf.json` (+ `conf.schema.json`) |
+| `architecture/adr/adr_config.yaml` | `.vadocs/types/adr.conf.json` |
+| `architecture/evidence/evidence.config.yaml` | `.vadocs/types/evidence.conf.json` |
+| `architecture/architecture.config.yaml` | Absorbed into `.vadocs/conf.json` (hub) |
+
 ## release v2.7.0 "The Context Engineering Pivot"
 
 ### Summary of Changes

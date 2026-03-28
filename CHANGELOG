@@ -1,0 +1,124 @@
+release 2.8.0
+* **New Features:**
+    - Update ai_brainstorming_colleague to v0.2.0
+        - Updated: ai_system/3_prompts/consultants/ai_brainstorming_colleague.json — bump to v0.2.0: remove stack-specific defaults, add interaction_rules (no filler, technical language only, falsifiable claims), overhaul output structure with Critical Diagnosis and Root Cause Analysis steps, fix owner email
+    - Add config-driven frontmatter validator (ADR-26042)
+        - Created: tools/scripts/check_frontmatter.py — hub+spoke frontmatter validation with CLI entry point (Approach C, WRC 0.90)
+        - Created: tools/tests/test_check_frontmatter.py — 67 tests, 97% coverage, config-driven and non-brittle
+        - Updated: .pre-commit-config.yaml — added check-frontmatter and test-check-frontmatter hooks
+        - Created: architecture/evidence/analyses/A-26015_frontmatter_validator_architecture.md — SVA/WRC analysis of three approaches
+        - Created: architecture/evidence/sources/S-26014_devops_consultant_frontmatter_validator_assessment.md — DevOps consultant assessments
+        - Created: tools/docs/scripts_instructions/check_frontmatter_py_script.md — placeholder pending TD-004 triad relaxation
+    - Add Claude Code skills for consultant prompts with sv- namespace
+        - Created: .claude/skills/sv-ai-brainstorm-colleague/SKILL.md — skill wrapper for brainstorming colleague prompt
+        - Created: .claude/skills/sv-ai-systems-consultant-hybrid/SKILL.md — skill wrapper for hybrid AI systems consultant prompt
+        - Created: .claude/skills/sv-devops-consultant/SKILL.md — skill wrapper for DevOps consultant prompt
+        - Created: .claude/skills/sv-handbook-reviewer/SKILL.md — skill wrapper for handbook peer reviewer prompt
+        - Created: .claude/skills/sv-local-ai-systems-consultant/SKILL.md — skill wrapper for local AI systems consultant prompt
+        - Created: .claude/skills/sv-python-test-architect/SKILL.md — skill wrapper for pytest generation prompt
+        - Created: .claude/skills/sv-*/prompt.json — relative symlinks to source JSONs in ai_system/3_prompts/consultants/
+        - Created: tools/docs/ai_agents/claude/creating_consultant_skills.md — recipe doc for the symlink-to-source skill pattern
+    - Add two-level ADR index sectioning by status and primary tag
+        - Updated: architecture/adr/adr_2600[1-9]*.md — re-tagged 7 ADRs from [architecture] to specific domain tags
+        - Updated: architecture/adr/adr_260[1-4]*.md — demoted architecture from primary position in 21 ADRs
+        - Updated: architecture/adr/adr_26038_context_engineering_as_core_design_principle.md — prototype ADR-26042 frontmatter with description, authors, options.*
+        - Updated: .vadocs/types/adr.conf.json — split Historical Context into Rejected/Superseded/Deprecated, added primary_tag_sectioning
+        - Updated: tools/scripts/check_adr.py — two-level index generation (status × primary tag) with description support and bold headings
+        - Updated: tools/tests/test_check_adr.py — added TestTwoLevelIndex (10 tests), description param in helper
+        - Updated: architecture/adr/adr_template.md — primary tag convention and description field
+        - Updated: architecture/architecture_decision_workflow_guide.md — tagging guidance
+        - Updated: architecture/adr_index.md — regenerated with two-level structure
+        - Updated: tools/docs/scripts_instructions/check_adr_py_script.md — two-level index docs, version 0.7.0
+    - Migrate governance configs from YAML to JSON with hub-spoke structure
+        - Created: .vadocs/conf.json — hub config (migrated from .vadocs/conf.yaml)
+        - Created: .vadocs/conf.schema.json — JSON Schema for hub config validation
+        - Created: .vadocs/types/adr.conf.json — ADR spoke config (migrated from architecture/adr/adr_config.yaml)
+        - Created: .vadocs/types/evidence.conf.json — evidence spoke config (migrated from architecture/evidence/evidence.config.yaml)
+        - Created: .vadocs/README.md — directory layout and convention documentation
+        - Deleted: .vadocs/conf.yaml — replaced by conf.json
+        - Deleted: architecture/adr/adr_config.yaml — replaced by .vadocs/types/adr.conf.json
+        - Deleted: architecture/architecture.config.yaml — absorbed into hub config
+        - Deleted: architecture/evidence/evidence.config.yaml — replaced by .vadocs/types/evidence.conf.json
+        - Created: tools/scripts/git.py — shared git utilities (detect_repo_root, get_staged_files)
+        - Created: tools/tests/test_git.py — 8 tests, 100% coverage
+        - Created: tools/docs/scripts_instructions/git_py_script.md — shared module documentation
+        - Updated: tools/scripts/paths.py — convention-based config discovery via get_config_path()
+        - Updated: tools/scripts/check_adr.py — migrated to JSON config, imports from git.py and paths.py
+        - Updated: tools/scripts/check_evidence.py — migrated to JSON config, imports from git.py and paths.py
+        - Updated: tools/tests/test_check_adr.py — adapted to JSON config loading
+        - Updated: tools/tests/test_check_evidence.py — adapted to JSON config loading
+        - Updated: pyproject.toml — added [tool.vadocs] config_dir entry point
+        - Updated: .pre-commit-config.yaml — added test-git hook, updated trigger patterns
+        - Created: architecture/adr/adr_26054_json_as_governance_config_format.md — JSON format decision
+        - Updated: architecture/adr/adr_26036_config_file_location_and_naming_conventions.md — format-agnostic rewrite with hub-spoke structure
+        - Updated: architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md — replaced stale YAML references
+        - Updated: architecture/adr/adr_26017_adr_format_validation_workflow.md — replaced stale config references
+        - Updated: architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md — replaced config links with ADR refs
+        - Updated: architecture/adr_index.md — added ADR-26054
+        - Updated: architecture/architecture_decision_workflow_guide.md — config links to backtick filenames
+        - Updated: architecture/evidence/analyses/A-26001_architecture_knowledge_base_taxonomy.md — config links to ADR refs
+        - Created: architecture/evidence/analyses/A-26012_adr_index_restructuring_tag_sectioning.md — tag-based sectioning analysis
+        - Created: architecture/evidence/analyses/A-26013_json_as_governance_config_format.md — format comparison analysis
+        - Created: architecture/evidence/analyses/A-26014_script_suite_doc_redundancy.md — triad-to-dyad analysis
+        - Updated: tools/docs/scripts_instructions/check_adr_py_script.md — config refs to backtick filenames
+        - Updated: tools/docs/scripts_instructions/check_evidence_py_script.md — config refs to backtick filenames
+    - Add ai_brainstorming_colleague agent configuration
+        - Created: ai_system/3_prompts/consultants/ai_brainstorming_colleague.json — new brainstorming agent for AI systems exploration and ideation
+* **Documentation:**
+    - Split format-as-architecture into two-part series
+        - Updated: ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.md — Part 1 conceptual revision: added XML tags subsection (scope boundaries vs noise, injection resistance), fixed training-distribution hedge, replaced S-26016 backtick refs with A-26018 md links, added MyST block cross-references, removed all code cells (moved to Part 2), fixed summary table rank order (YAML Literal ~16% < Pretty JSON ~18%), frontmatter fixes (authors plural, type, description, tags)
+        - Updated: ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb — synced with .md via Jupytext
+        - Created: ai_system/3_prompts/token_economics_of_prompt_delivery.md — Part 2 measurement handbook: BPE tokenizer mechanics (space+word merging, indentation cost, vocab-size heuristic), cl100k vs o200k comparison, multi-tokenizer cross-validation (GPT-2/Llama 3/GigaChat/Qwen3/Gemma 2) with HF_MODELS single-source-of-truth registry, pandas tables with highlight_min/highlight_max, dynamic bar chart with Set2 color palette, language-effect analysis (Russian vs English)
+        - Created: ai_system/3_prompts/token_economics_of_prompt_delivery.ipynb — synced with .md via Jupytext
+        - Created: ai_system/3_prompts/appendix_yaml_serializer_variance.md — empirical PyYAML vs yq serializer variance: measures ~18% vs ~21% token gap for YAML Literal, YAML 1.1 implicit-type edge cases (yes/no/on/off), LiteralDumper subclass pattern, width=float('inf') mandate
+        - Created: ai_system/3_prompts/appendix_yaml_serializer_variance.ipynb — synced with .md via Jupytext
+        - Created: architecture/evidence/analyses/A-26016_causal_masking_attention_mechanics_for_prompt_engineering.md — causal masking, KV cache, softmax normalization, prefill/decode distinction and their implications for prompt format; corrects "attention budget" and "reasoning capacity" language from the handbook
+        - Created: architecture/evidence/analyses/A-26017_yaml_serializer_variance_token_economics.md — PyYAML width=80 wrapping adds ~100 tokens vs yq; format cost rankings are serializer-dependent; width=float('inf') required for fair comparison
+        - Created: architecture/evidence/analyses/A-26018_xml_tags_scope_isolation_prompt_architecture.md — XML tags as named scope boundaries (hard) vs Markdown headers (soft), training distribution in chat templates, hybrid YAML+XML pattern, JSON-list injection boundary technique
+        - Renamed: architecture/evidence/sources/2026_semantic_checker/S-26013_lean_as_grpo_verifier_formal_hybrid_generation.md → architecture/evidence/sources/ — moved to root per S-YYNNN placement convention (no subdirectories)
+        - Created: architecture/evidence/sources/S-26015_handbook_peer_review_format_as_architecture.md — peer review source that drove the series split
+        - Created: architecture/evidence/sources/S-26016_gemini_prompt_tags_noise_or_anchors.md — Gemini dialogue on XML prompt tags, extracted into A-26018
+        - Created: architecture/evidence/sources/S-26017_qwen_causal_masking_kv_cache.md — Qwen dialogue on causal masking and KV cache, extracted into A-26016
+        - Created: architecture/evidence/sources/S-26018_yaml_serializer_token_variance.md — empirical session data on PyYAML vs yq token variance, extracted into A-26017
+        - Updated: .vadocs/conf.json — added 'prompts' tag (prompt engineering — format, structure, token economics, injection resistance, delivery patterns); justified by dedicated ai_system/3_prompts/ layer with no existing tag coverage
+    - Add separation-of-concerns rule and anti-pattern to ADR workflow guide
+        - Updated: architecture/architecture_decision_workflow_guide.md — added Rule 4 (separate concerns between ADRs) with ADR-26036/26054 example, added anti-pattern #11 (embedded sibling concerns)
+    - Create .vadocs/conf.yaml and align ADR-26042 with MyST spec
+        - Created: .vadocs/conf.yaml — shared governance config with field registry, blocks, type registry, described tags, date format
+        - Updated: architecture/adr/adr_26042_common_frontmatter_standard.md — author→authors (MyST-native plural), remove hardcoded field lists from prose to reduce brittleness
+    - Add ADR-26044 and refine ADR-26036, ADR-26042, A-26010, manifesto
+        - Created: architecture/evidence/analyses/A-26010_config_file_distribution_patterns.md — three Linux config patterns (monolithic, drop-in, scope-isolated) with vadocs application
+        - Updated: architecture/adr/adr_26036_config_file_location_and_naming_conventions.md — rewrite from co-location to .vadocs/ centralized directory with scope-isolated files
+        - Updated: architecture/adr/adr_26042_common_frontmatter_standard.md — section 6 references ADR-26036 instead of deleted ADR-26045, {term} refs for ADR cross-references
+        - Updated: architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md — convert md links to {term} references for ADR cross-references
+        - Updated: architecture/manifesto.md — add POSIX standard framing and replacement test to Hub row
+    - Add Lean-vadocs analogy source and analysis
+        - Created: architecture/evidence/sources/2026_semantic_checker/S-26013_lean_as_grpo_verifier_formal_hybrid_generation.md — raw analysis of Lean as GRPO verifier and formal-guided hybrid generation methodology
+        - Created: architecture/evidence/analyses/A-26011_vadocs_as_structural_type_checker_lean_analogy.md — analysis mapping vadocs to Lean's architectural slot as structural type checker for documentation
+    - Add ADR-26044 and refine ADR-26038 and ADR-26034
+        - Created: architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md — skills as progressive disclosure units: SKILL.md structure, inject vs fork boundary, MCP role, security gate for community skills
+        - Updated: architecture/adr/adr_26038_context_engineering_as_core_design_principle.md — remove implementation details from Decision (litellm.token_counter, course_history variable, mentor-specific examples); add ADR-26044 reference; convert {term} refs to md links in References
+        - Updated: architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md — fix wrong forward reference from "future ADR-26042" to ADR-26044
+        - Updated: architecture/adr_index.md — add ADR-26044 entry
+    - Document commit subject alignment with changelog-visible bullets
+        - Updated: tools/docs/scripts_instructions/generate_changelog_py_script.md — tip admonition added after exclusion verification section explaining same rule
+    - Add ADR workflow Rule 4 and database design principles source
+        - Updated: architecture/architecture_decision_workflow_guide.md — Rule 4 added to Decision guidance: decide at capability level, not tool level
+        - Created: architecture/evidence/sources/S-26012_adr_001_database_ecosystem_design_principles.md — adr_001 preserved as evidence source before deletion from soviar-systems root
+    - Correct Kilo Code CLI guide and add philosophy warning
+        - Updated: tools/docs/ai_agents/05_kilocode_cli_setup.md — rewrote guide to reflect actual CLI capabilities: Kilo platform gateway only, no Ollama, no BYOK; removed incorrect sections 4/5/6 (Ollama, DashScope, BYOK cloud providers); added free-tier model list from live kilo models output; added uninstall section; bumped version to 1.1.0
+        - Updated: tools/docs/ai_agents/05_kilocode_cli_setup.ipynb — synced Jupytext pair
+    - Add Kilo Code CLI setup guide with ADR-26042 frontmatter
+        - Created: tools/docs/ai_agents/05_kilocode_cli_setup.md — Installation and setup guide for Kilo Code CLI (Roo Code/Cline fork); covers npm install, Ollama local models, DashScope/Qwen cloud, and multi-provider BYOK; Block 2 frontmatter follows ADR-26042 guide type schema
+        - Created: tools/docs/ai_agents/05_kilocode_cli_setup.ipynb — Jupytext-paired notebook
+    - Apply ADR-26042 frontmatter to A-26009 compass analysis
+        - Updated: architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md — Added author, description, options.type/birth/version; updated date to 2026-03-16; description scoped to production viability verdict and context-engineering pivot
+    - Fix Nginx absolute_redirect bug in multi-site deployment guide
+        - Updated: tools/docs/website/02_self_hosted_deployment.md — add absolute_redirect off fix for non-default ports, add troubleshooting entry and warning admonition, add cross-ref labels, align frontmatter to ADR-26042 standard (type, description, tags, version bump 1.0.0→1.1.0, date 2026-03-16)
+        - Updated: tools/docs/website/configs/multi-site/nginx.conf — add absolute_redirect off to port-81 server block
+        - Updated: tools/docs/website/02_self_hosted_deployment.ipynb — sync with .md pair
+* **Maintenance:**
+    - Add myst package and bump ansible to 13.4.0
+        - Added: pyproject.toml — add myst>=1.0.4 dependency
+        - Updated: uv.lock — lock myst 1.0.4 and ansible 13.4.0 with new hashes
+

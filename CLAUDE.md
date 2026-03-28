@@ -30,8 +30,8 @@ uv run tools/scripts/check_adr.py --fix
 # Validate a commit message (used by commit-msg hook)
 uv run tools/scripts/validate_commit_msg.py .git/COMMIT_EDITMSG
 
-# Generate CHANGELOG from git history
-uv run tools/scripts/generate_changelog.py
+# Generate CHANGELOG from git history and prepend to CHANGELOG file
+uv run tools/scripts/generate_changelog.py <prev-tag>..HEAD --version <next-version> --prepend CHANGELOG
 
 # Build documentation site
 npm install -g mystmd && myst build --html

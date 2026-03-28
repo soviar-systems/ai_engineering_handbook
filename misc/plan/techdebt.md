@@ -37,6 +37,14 @@ Traceable record of intentional shortcuts. Each entry has a date, location, and 
 - **Migration path:** (1) Create `check_frontmatter.py` validating hub blocks + spoke rules for all .md files, (2) refactor domain scripts to delegate frontmatter checks, (3) add pre-commit hook. Plan exists conceptually — needs formal plan file.
 - **Introduced by:** step 7 config migration session (2026-03-23)
 
+### TD-006: WRC scoring has no governing ADR (2026-03-29)
+
+- **Location:** `ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json`, `ai_system/3_prompts/consultants/devops_consultant.json`
+- **Context:** WRC (Weighted Response Confidence) is a scoring metric embedded directly in two consultant prompts. It is referenced in ADR-26037 (SVA framework) and in release notes, but there is no ADR defining its scope, formula rationale, component weights, or lifecycle. It is currently an undocumented architectural decision — the metric exists and is in use, but its authority comes from the prompt JSON, not from a governed decision record.
+- **Current state:** Formula and component definitions live in the `system_context` block of `ai_systems_consultant_hybrid.json`. ADR-26037 references WRC as an implementation detail of SVA penalties but does not define it.
+- **Migration path:** Write ADR-260xx defining WRC as an ecosystem evaluation standard: formula, component definitions (E/A/P), weight rationale, threshold semantics (≥0.89 = production-ready), and relationship to SVA constraints. Update prompt JSONs to reference the ADR rather than embed the authoritative definition.
+- **Introduced by:** v2.8.0 release notes session (2026-03-29)
+
 ## Resolved
 
 ### TD-001: common_required_fields in evidence.config.yaml (2026-02-27)

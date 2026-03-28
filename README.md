@@ -1,9 +1,9 @@
 ---
 title: "AI Engineering Handbook"
 author: rudakow.wadim@gmail.com
-date: 2026-03-14
+date: 2026-03-29
 options:
-  version: 2.7.0
+  version: 2.8.0
   birth: 2025-10-19
 ---
 
@@ -19,23 +19,20 @@ Content is **generated through a hybrid LLM methodology**, **cross-validated by 
 
 ## What's new?
 
+v2.8.0 — "The Prompt Physics"
+* **Prompt Engineering Research**: A three-article series with real measurements and reproducible code — [Format as Architecture](ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb), [Token Economics of Prompt Delivery](ai_system/3_prompts/token_economics_of_prompt_delivery.ipynb), and an [Appendix on YAML Serializer Variance](ai_system/3_prompts/appendix_yaml_serializer_variance.ipynb). Central finding: token cost is `f(format, serializer, tokenizer)` — PyYAML vs. yq on the same JSON source can differ by 100+ tokens on a 150-line prompt and flip the YAML vs. JSON ranking. Backed by three analyses ([A-26016](architecture/evidence/analyses/A-26016_causal_masking_attention_mechanics_for_prompt_engineering.md), [A-26017](architecture/evidence/analyses/A-26017_yaml_serializer_variance_token_economics.md), [A-26018](architecture/evidence/analyses/A-26018_xml_tags_scope_isolation_prompt_architecture.md)).
+* **Two-Stage Consultant Workflow**: [ai_brainstorming_colleague.json](ai_system/3_prompts/consultants/ai_brainstorming_colleague.json) (v0.2.0) handles exploration; it hands off explicitly to the strict reviewers ([ai_systems_consultant_hybrid.json](ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json), [devops_consultant.json](ai_system/3_prompts/consultants/devops_consultant.json)) when formal validation is needed. The handoff is enforced by the prompt itself.
+* **Governance Enforcement**: All governance configs migrated from YAML to JSON (`.vadocs/`). [check_frontmatter.py](tools/scripts/check_frontmatter.py) (work in progress) enforces [ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md) at commit time. Two new proposed ADRs: [ADR-26044: Skills as Progressive Disclosure Units](architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md) and [ADR-26054: JSON as Governance Config Format](architecture/adr/adr_26054_json_as_governance_config_format.md).
+
 v2.7.0 — "The Context Engineering Pivot"
-* **From Agentic OS to Context Engineering**: v2.6.0 explored an ambitious vision — agents as operating systems. That research produced valuable insights, but the key finding was simpler: what matters is not how many agents you have, but what each agent sees. [ADR-26038](architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) adopts context engineering as the core principle — one agent, skills loaded on demand, context window as the primary constraint. The multi-agent vs single-agent boundary will be analyzed more thoroughly in future releases.
+* **From Agentic OS to Context Engineering**: v2.6.0 explored an ambitious vision — agents as operating systems. That research produced valuable insights, but the key finding was simpler: what matters is not how many agents you have, but what each agent sees. [ADR-26038: Context Engineering as Core Design Principle](architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) adopts context engineering as the core principle — one agent, skills loaded on demand, context window as the primary constraint. The multi-agent vs single-agent boundary will be analyzed more thoroughly in future releases.
 * **Infrastructure Blueprint**: 7 new ADRs define the technical stack for the ecosystem's next phase — database, deployment, data access, metadata format, and governance packaging. The goal: everything needed to deploy a working application from a single `podman play kube` command plus an API key.
 * **First Consolidation**: 4 ADRs promoted to accepted standards, 3 rejected with their insights absorbed. The ecosystem moves from pure exploration to selective commitment.
-* **Toolchain**: Changelog generator bug fixed, format_string script modernized, post-commit changelog preview hook added. Evidence pipeline proven with 4 analyses grounding 5 architectural decisions.
 
 v2.6.0 — "The Cognitive Architecture"
 * **Skills Architecture**: Three ADRs (26032–26034) define how AI agents should organize knowledge and capabilities — tiered cognitive memory, virtual monorepo for package-driven ecosystems, and the Agentic OS paradigm where skills are composable applications discovered at runtime.
-* **Architecture Knowledge Base**: ADR-26035/26036 formalize a taxonomy for evidence artifacts (analyses, sources, retrospectives) with `check_evidence.py` enforcing it automatically (75 tests). The ecosystem now documents how it documents.
+* **Architecture Knowledge Base**: [ADR-26035](architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md)/[ADR-26036](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) formalize a taxonomy for evidence artifacts (analyses, sources, retrospectives) with `check_evidence.py` enforcing it automatically (75 tests). The ecosystem now documents how it documents.
 * **Ecosystem Scaling**: ADR-26030 (stateless JIT context injection) eliminates context accumulation across agent sessions; ADR-26031 (prefixed namespaces) ensures ADR identifiers stay unique across spoke repositories.
-* **7 Open RFCs**: All new ADRs enter as proposed — open for review and feedback before promotion to accepted standards.
-
-v2.5.0 — "The Self-Documenting System"
-* **Automated CHANGELOG**: `validate_commit_msg.py` enforces structured commits at commit time; `generate_changelog.py` transforms that history into hierarchical CHANGELOG entries — no manual curation needed.
-* **Tool-Agnostic Architecture**: ADR-26004..26008 (tool-specific) superseded by ADR-26027/26028 (cognitive roles); `aidx` rewritten as the generic Multi-Phase AI Pipeline.
-* **Promotion Gate**: ADR-26025 formalizes RFC→ADR workflow; `check_adr.py` enforces promotion criteria. 6 ADRs promoted to accepted.
-* **Ecosystem Cleanup**: Research extracted to dedicated monorepo (ADR-26026); `pyproject.toml` formalized as tool config SSoT (ADR-26029).
 
 
 ## Live Documentation Site
@@ -67,7 +64,7 @@ See the full rationale in [architecture/manifesto.md](/architecture/manifesto.md
 
 ADRs are the **main context for development** in this repository. Every structural, methodological, or tooling decision is recorded as an ADR before implementation.
 
-- **16 active ADRs** govern the repo — see the full list in [architecture/adr_index.md](/architecture/adr_index.md)
+- **22 active ADRs** govern the repo — see the full list in [architecture/adr_index.md](/architecture/adr_index.md)
 - **RFC→ADR workflow**: proposed ADRs serve as living RFCs; accepted ADRs are authoritative (ADR-26025)
 - **Machine-readable metadata**: YAML frontmatter with status, date, tags enables AI filtering (ADR-26016, ADR-26017)
 - **Automated validation**: `check_adr.py` enforces format, required sections, term references, and index partitioning (ADR-26017)
@@ -161,7 +158,7 @@ The repository uses automated validation to enforce documentation quality:
 - **Jupytext pairing** with sync-guard: `.ipynb` and `.md` files stay synchronized; CI blocks unsynced changes (ADR-26014, ADR-26015)
 - **Tool configuration** centralized in `pyproject.toml [tool.X]` sections (ADR-26029)
 - **CI/CD pipelines**: `quality.yml` (broken links, jupytext sync, script tests) + `deploy.yml` (GitHub Pages deployment)
-- **Validation scripts**: `check_adr.py`, `check_evidence.py`, `check_broken_links.py`, `validate_commit_msg.py`, `check_link_format.py`
+- **Validation scripts**: `check_adr.py`, `check_evidence.py`, `check_frontmatter.py`, `check_broken_links.py`, `validate_commit_msg.py`, `check_link_format.py`
 
 
 ## Authorship & Contact
