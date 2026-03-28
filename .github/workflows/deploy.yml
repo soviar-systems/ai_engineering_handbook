@@ -5,7 +5,6 @@ on:
     # Universal trigger for team validation
     branches: ["**"]
     paths-ignore:
-      - 'RELEASE_NOTES.md'
       - 'CLAUDE.md'
       - 'misc/in_progress/*'
       - 'misc/pr/*'
