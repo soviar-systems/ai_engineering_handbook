@@ -202,6 +202,9 @@
     "model": {
       "description": "AI models — selection criteria, taxonomy, capabilities, benchmarks"
     },
+    "prompts": {
+      "description": "Prompt engineering — format, structure, token economics, injection resistance, delivery patterns"
+    },
     "security": {
       "description": "Security policies — API key management, access control, vulnerability scanning"
     },
