@@ -63,6 +63,7 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Always preserve MyST directive syntax exactly
 - Notebooks (.ipynb) and markdown (.md) files are paired via Jupytext - editing one requires syncing
 - **Always read `.md` files, never `.ipynb`** — `.ipynb` is JSON and expensive to parse; the `.md` Jupytext pair contains the same content
+- For internal cross-references within a notebook, use MyST labels and `{ref}` — never `§N` or bare section names. Add `(label)=` above the target heading and reference with `` {ref}`label` ``
 
 **Python:**
 - Use `pathlib.Path`, never `os` library
@@ -124,6 +125,14 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 
 **Ephemeral Files:**
 - `misc/todo.md` is plain text (no markdown formatting) — treat as an ephemeral scratch notebook
+
+**Evidence Source Hygiene:**
+- Raw source files (`.txt`, `.json`) in `evidence/sources/` must be deleted once content is captured in a `S-YYNNN` artifact — never leave both coexisting
+- `S-YYNNN` files must live directly in `architecture/evidence/sources/`, not in subdirectories
+
+**PyYAML Token Gotcha:**
+- `yaml.dump()` defaults to `width=80` (line wrapping) — adds ~100 tokens vs yq on a 150-line prompt and can flip format rankings; specify `width` explicitly when comparing serializers
+- YAML format cost rankings (e.g., "YAML Literal is most expensive") are serializer-dependent — always qualify with the tool used
 
 ## CI/CD Pipeline
 
