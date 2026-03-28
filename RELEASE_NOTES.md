@@ -14,22 +14,22 @@ Three strategic themes define v2.8.0:
 
 2. **Two-Stage Consultant Workflow** — The prompt engineering toolchain gains a structured two-phase workflow. [ai_brainstorming_colleague.json](/ai_system/3_prompts/consultants/ai_brainstorming_colleague.json) (v0.2.0) is the first stage: unconstrained ideation, architectural discussion, "what-if" scenarios. When a direction needs formal validation, it hands off explicitly to [ai_systems_consultant_hybrid.json](/ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json) or [devops_consultant.json](/ai_system/3_prompts/consultants/devops_consultant.json) — the strict reviewers with WRC scoring and SVA compliance. The brainstorming colleague enforces this boundary itself: when it detects validation-intent keywords, it executes the handoff protocol rather than attempting a review it is not designed for. This prevents the common failure mode of asking an exploratory tool for production-grade architectural judgement.
 
-3. **Governance Infrastructure Operational** — [ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md) and [ADR-26036: Config File Location and Naming Conventions](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) / [ADR-26054: JSON as Governance Config Format](architecture/adr/adr_26054_json_as_governance_config_format.md) move from specified to enforced. [check_frontmatter.py](/tools/scripts/check_frontmatter.py) (work in progress) validates document frontmatter at commit time against the composable schema. All governance configs are migrated from YAML to JSON. The `.vadocs/` configuration system is complete: `conf.json` hub → `types/*.conf.json` spokes → `pyproject.toml` entry point for all tools.
+3. **Governance Infrastructure Operational** — {term}`ADR-26042` and {term}`ADR-26036` / {term}`ADR-26054` move from specified to enforced. [check_frontmatter.py](/tools/scripts/check_frontmatter.py) (work in progress) validates document frontmatter at commit time against the composable schema. All governance configs are migrated from YAML to JSON. The `.vadocs/` configuration system is complete: `conf.json` hub → `types/*.conf.json` spokes → `pyproject.toml` entry point for all tools.
 
 ### Architecture Decisions
 
-*   **[ADR-26054: JSON as Governance Config Format](architecture/adr/adr_26054_json_as_governance_config_format.md) — Config Serialization**:
+*   **{term}`ADR-26054` — Config Serialization**:
     Governance configs use JSON (not YAML, not TOML) because JSON Schema is the de-facto standard for machine-validated structured configuration with mature tooling in Python (`jsonschema` library) and across the broader ecosystem. YAML was rejected despite its readability advantage because schema tooling for YAML is fragmented and no dominant standard exists. TOML has no schema standard at all. Document frontmatter stays YAML (MyST-native, human-authored) — JSON governs only machine-read governance configs in `.vadocs/`. A JSON Schema companion [conf.schema.json](/.vadocs/conf.schema.json) validates the hub config structure.
 
-*   **[ADR-26044: Skills as Progressive Disclosure Units](architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md) — Skills Architecture**:
-    ADR-26044 formally defines a skill as a self-contained instruction block injected into the agent's context on demand. Skills are not subagents — they carry no separate LLM calls, no state, no negotiation. They are loaded when needed (progressive disclosure) and expire when the conversation ends. This definition sharpens the boundary introduced in ADR-26038: managing what the agent sees (context budget) is the primary engineering constraint, and skills are the mechanism for doing so without spawning multiple agents. The `sv-` namespace in Claude Code demonstrates the pattern in practice: six consultant prompts loaded as skills via symlinks to their JSON sources in `ai_system/3_prompts/consultants/`. The two validation-focused skills (`sv-ai-systems-consultant-hybrid`, `sv-devops-consultant`) use WRC scoring — Weighted Response Confidence, a 0–1 metric composed of empirical benchmark evidence (35%), enterprise production adoption (25%), and predicted performance on the target stack (40%); currently defined inside the prompt, pending a governing ADR (tracked in `techdebt.md` TD-006) — and SVA compliance ([ADR-26037: Smallest Viable Architecture Constraint Framework](architecture/adr/adr_26037_smallest_viable_architecture_constraint_framework.md)) as their output standard — making formal architectural review available on demand without context pollution between exploration and validation phases.
+*   **{term}`ADR-26044` — Skills Architecture**:
+    {term}`ADR-26044` formally defines a skill as a self-contained instruction block injected into the agent's context on demand. Skills are not subagents — they carry no separate LLM calls, no state, no negotiation. They are loaded when needed (progressive disclosure) and expire when the conversation ends. This definition sharpens the boundary introduced in {term}`ADR-26038`: managing what the agent sees (context budget) is the primary engineering constraint, and skills are the mechanism for doing so without spawning multiple agents. The `sv-` namespace in Claude Code demonstrates the pattern in practice: six consultant prompts loaded as skills via symlinks to their JSON sources in `ai_system/3_prompts/consultants/`. The two validation-focused skills (`sv-ai-systems-consultant-hybrid`, `sv-devops-consultant`) use WRC scoring — Weighted Response Confidence, a 0–1 metric composed of empirical benchmark evidence (35%), enterprise production adoption (25%), and predicted performance on the target stack (40%); currently defined inside the prompt, pending a governing ADR (tracked in `techdebt.md` TD-006) — and SVA compliance ({term}`ADR-26037`) as their output standard — making formal architectural review available on demand without context pollution between exploration and validation phases.
 
-*   **[ADR-26036: Config File Location and Naming Conventions](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) and [ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md) — Now Operational**:
-    Both ADRs were proposed in v2.7.0. This release marks their operational transition: `.vadocs/` contains all governance configs in JSON (ADR-26036), and `check_frontmatter.py` enforces the composable frontmatter schema (ADR-26042) at commit time. Promotion to accepted awaits ecosystem-wide validation in the next release cycle.
+*   **{term}`ADR-26036` and {term}`ADR-26042` — Now Operational**:
+    Both ADRs were proposed in v2.7.0. This release marks their operational transition: `.vadocs/` contains all governance configs in JSON ({term}`ADR-26036`), and `check_frontmatter.py` enforces the composable frontmatter schema ({term}`ADR-26042`) at commit time. Promotion to accepted awaits ecosystem-wide validation in the next release cycle.
 
 ### Accepted ADRs (Promoted in This Release)
 
-No ADRs were promoted in this release. v2.8.0 is a research and operationalization cycle: the prompt engineering series builds the empirical foundation; the governance tooling enforces v2.7.0 decisions. Promotion of [ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md), [ADR-26036: Config File Location and Naming Conventions](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md), and [ADR-26054: JSON as Governance Config Format](architecture/adr/adr_26054_json_as_governance_config_format.md) to accepted requires validation across the full ecosystem, which begins next cycle.
+No ADRs were promoted in this release. v2.8.0 is a research and operationalization cycle: the prompt engineering series builds the empirical foundation; the governance tooling enforces v2.7.0 decisions. Promotion of {term}`ADR-26042`, {term}`ADR-26036`, and {term}`ADR-26054` to accepted requires validation across the full ecosystem, which begins next cycle.
 
 ### Open RFCs (Proposed ADRs)
 
@@ -37,21 +37,21 @@ New proposed ADRs introduced in this release:
 
 | ADR | Title | Theme |
 | :--- | :--- | :--- |
-| [ADR-26054](architecture/adr/adr_26054_json_as_governance_config_format.md) | JSON as Governance Config Format | Governance |
-| [ADR-26044](architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md) | Skills as Progressive Disclosure Units | Context Management |
+| {term}`ADR-26054` | JSON as Governance Config Format | Governance |
+| {term}`ADR-26044` | Skills as Progressive Disclosure Units | Context Management |
 
 Carry-over proposed ADRs (open for review and comment):
 
 | ADR | Title | Theme |
 | :--- | :--- | :--- |
-| [ADR-26042](architecture/adr/adr_26042_common_frontmatter_standard.md) | Common Frontmatter Standard | Governance |
-| [ADR-26036](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) | Config File Location and Naming Conventions | Governance |
-| [ADR-26043](architecture/adr/adr_26043_ecosystem_package_boundary.md) | Ecosystem Package Boundary | Governance |
-| [ADR-26039](architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md) | pgvector as Ecosystem Database Standard | Data Infrastructure |
-| [ADR-26041](architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md) | Client-Side Logic with Server-Side Retrieval | Data Infrastructure |
-| [ADR-26032](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md) | Tiered Cognitive Memory: Procedural Skills vs. Declarative RAG | Skills Architecture |
-| [ADR-26033](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md) | Virtual Monorepo via Package-Driven Dependency Management | Governance |
-| [ADR-26030](architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md) | Stateless JIT Context Injection for Agentic Git Workflows | Context Management |
+| {term}`ADR-26042` | Common Frontmatter Standard | Governance |
+| {term}`ADR-26036` | Config File Location and Naming Conventions | Governance |
+| {term}`ADR-26043` | Ecosystem Package Boundary | Governance |
+| {term}`ADR-26039` | pgvector as Ecosystem Database Standard | Data Infrastructure |
+| {term}`ADR-26041` | Client-Side Logic with Server-Side Retrieval | Data Infrastructure |
+| {term}`ADR-26032` | Tiered Cognitive Memory: Procedural Skills vs. Declarative RAG | Skills Architecture |
+| {term}`ADR-26033` | Virtual Monorepo via Package-Driven Dependency Management | Governance |
+| {term}`ADR-26030` | Stateless JIT Context Injection for Agentic Git Workflows | Context Management |
 
 ### New Features and Articles Added
 
@@ -69,7 +69,7 @@ Carry-over proposed ADRs (open for review and comment):
     - [A-26018: XML Tags as Scope Boundaries — Prompt Architecture and Injection Resistance](architecture/evidence/analyses/A-26018_xml_tags_scope_isolation_prompt_architecture.md) — covers the hybrid YAML+XML pattern and the JSON-list injection boundary technique
 
 *   **[check_frontmatter.py](/tools/scripts/check_frontmatter.py) — Frontmatter Enforcement** (work in progress; 67 tests, 97% coverage on implemented scope):
-    Validates document frontmatter against the composable schema from [ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md). Resolves the hub-spoke config chain dynamically — one validator, all document types. Two pre-commit hooks: `check-frontmatter` (validates on stage) and `test-check-frontmatter` (runs the test suite on script/config changes). Architecture analysis [A-26015: Frontmatter Validator Architecture](architecture/evidence/analyses/A-26015_frontmatter_validator_architecture.md) evaluated three approaches; Approach C (module+CLI) selected.
+    Validates document frontmatter against the composable schema from {term}`ADR-26042`. Resolves the hub-spoke config chain dynamically — one validator, all document types. Two pre-commit hooks: `check-frontmatter` (validates on stage) and `test-check-frontmatter` (runs the test suite on script/config changes). Architecture analysis [A-26015: Frontmatter Validator Architecture](architecture/evidence/analyses/A-26015_frontmatter_validator_architecture.md) evaluated three approaches; Approach C (module+CLI) selected.
 
 ### Updates in Existing Files
 
@@ -98,28 +98,28 @@ This is also the ecosystem's **first consolidation release**: 4 ADRs promoted to
 
 Three strategic themes define v2.7.0:
 
-1. **Context Engineering Pivot** — v2.6.0's Agentic OS exploration (ADR-26032, ADR-26033, ADR-26034) asked how agents should organize knowledge. The [Compass analysis](architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) — a comprehensive review of the state of agentic AI in early 2026 — showed that multi-agent swarms (systems where independent agents negotiate with each other) suffer from context isolation: each agent makes decisions without the other's knowledge. [ADR-26038](architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) adopts a simpler model: one agent loads skills as injected instructions on demand, and the primary engineering challenge is managing the context window — what the agent sees, not how many agents there are. The boundary between skill injection and subagent delegation (as used by production tools like Claude Code) remains an open research question that will be analyzed in future releases.
+1. **Context Engineering Pivot** — v2.6.0's Agentic OS exploration ({term}`ADR-26032`, {term}`ADR-26033`, {term}`ADR-26034`) asked how agents should organize knowledge. The [Compass analysis](architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md) — a comprehensive review of the state of agentic AI in early 2026 — showed that multi-agent swarms (systems where independent agents negotiate with each other) suffer from context isolation: each agent makes decisions without the other's knowledge. {term}`ADR-26038` adopts a simpler model: one agent loads skills as injected instructions on demand, and the primary engineering challenge is managing the context window — what the agent sees, not how many agents there are. The boundary between skill injection and subagent delegation (as used by production tools like Claude Code) remains an open research question that will be analyzed in future releases.
 
-2. **Ecosystem Infrastructure Blueprint** — Seven proposed ADRs define the technical stack: [ADR-26039](architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md) (pgvector — one Postgres for structured data and vector embeddings), [ADR-26040](architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md) (Podman Kube YAML — one manifest from dev to prod), [ADR-26041](architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md) (Python owns logic, SQL owns retrieval), [ADR-26042](architecture/adr/adr_26042_common_frontmatter_standard.md) (composable frontmatter with 10 document types), [ADR-26043](architecture/adr/adr_26043_ecosystem_package_boundary.md) (vadocs as an installable governance package). Together they answer a practical question: what does the ecosystem need to deploy its first application?
+2. **Ecosystem Infrastructure Blueprint** — Seven proposed ADRs define the technical stack: {term}`ADR-26039` (pgvector — one Postgres for structured data and vector embeddings), {term}`ADR-26040` (Podman Kube YAML — one manifest from dev to prod), {term}`ADR-26041` (Python owns logic, SQL owns retrieval), {term}`ADR-26042` (composable frontmatter with 10 document types), {term}`ADR-26043` (vadocs as an installable governance package). Together they answer a practical question: what does the ecosystem need to deploy its first application?
 
-3. **Evidence-Driven Architecture** — The release demonstrates the Architecture Knowledge Base (ADR-26035) as a proven workflow: 4 new analyses ([A-26006](architecture/evidence/analyses/A-26006_agent_runtime_architecture_rag_infrastructure.md) through [A-26009](architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md)) grounded 5 ADRs in empirical evidence. Source artifacts were created, their insights extracted into analyses, and the sources deleted — the three-commit lifecycle model works. The SVA constraint framework (ADR-26037) was formalized from an informal guideline into six canonical constraints.
+3. **Evidence-Driven Architecture** — The release demonstrates the Architecture Knowledge Base ({term}`ADR-26035`) as a proven workflow: 4 new analyses ([A-26006](architecture/evidence/analyses/A-26006_agent_runtime_architecture_rag_infrastructure.md) through [A-26009](architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md)) grounded 5 ADRs in empirical evidence. Source artifacts were created, their insights extracted into analyses, and the sources deleted — the three-commit lifecycle model works. The SVA constraint framework ({term}`ADR-26037`) was formalized from an informal guideline into six canonical constraints.
 
 ### Architecture Decisions
 
-*   **[ADR-26038: Context Engineering as Core Design Principle](architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) — The Pivot**:
+*   **{term}`ADR-26038` — The Pivot**:
     The most significant decision of the release. Instead of building an "Agentic OS" with tiered memory, tag-filtered registries, and runtime skill discovery, the ecosystem adopts a simpler model: one agent, skills loaded as injected instructions on demand (progressive disclosure), and context window budget as the first-class constraint. The Compass analysis (A-26009) shows that multi-agent swarms — systems where independent agents negotiate with each other — suffer from context isolation between agents. The ecosystem avoids this by keeping everything in one conversation: skills inject instructions into the agent's context rather than spawning separate agents. However, production tools like Claude Code use subagent patterns (forked child processes with their own LLM calls) that don't fit neatly into either category. The boundary between skill injection and subagent delegation is an open research question scheduled for future analysis.
 
-*   **[ADR-26039: pgvector as Ecosystem Database Standard](architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md), [ADR-26041: Client-Side Logic with Server-Side Retrieval](architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md) — Data Infrastructure**:
-    One Postgres instance serves the entire ecosystem — structured data and vector embeddings in the same database, isolated by schema-per-project. ADR-26041 complements this with the Logic-in-View pattern: Python owns orchestration logic, SQL functions own retrieval. Since LLM inference dominates latency (seconds), the millisecond advantage of server-side logic is irrelevant.
+*   **{term}`ADR-26039`, {term}`ADR-26041` — Data Infrastructure**:
+    One Postgres instance serves the entire ecosystem — structured data and vector embeddings in the same database, isolated by schema-per-project. {term}`ADR-26041` complements this with the Logic-in-View pattern: Python owns orchestration logic, SQL functions own retrieval. Since LLM inference dominates latency (seconds), the millisecond advantage of server-side logic is irrelevant.
 
-*   **[ADR-26040: Podman Kube YAML as Deployment Standard](architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md) — Deployment**:
+*   **{term}`ADR-26040` — Deployment**:
     Kube YAML manifests are the single deployment artifact. `podman-kube@.service` systemd template manages lifecycle. Rootless by default, no Docker daemon, no Compose — the same manifest runs locally and in production.
 
-*   **[ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md), [ADR-26043: Ecosystem Package Boundary](architecture/adr/adr_26043_ecosystem_package_boundary.md) — Governance Infrastructure**:
-    ADR-26042 defines a composable frontmatter schema with three blocks (identity, discovery, lifecycle) and 10 document types. Hub-and-spoke configuration ensures consistency across repositories. ADR-26043 draws the boundary for vadocs: 15 governance scripts organized by concern (core, docs, git, init), with a CLI that mirrors the structure. Together, they prepare the ecosystem for multi-repository governance.
+*   **{term}`ADR-26042`, {term}`ADR-26043` — Governance Infrastructure**:
+    {term}`ADR-26042` defines a composable frontmatter schema with three blocks (identity, discovery, lifecycle) and 10 document types. Hub-and-spoke configuration ensures consistency across repositories. {term}`ADR-26043` draws the boundary for vadocs: 15 governance scripts organized by concern (core, docs, git, init), with a CLI that mirrors the structure. Together, they prepare the ecosystem for multi-repository governance.
 
-*   **ADR Rejections — [ADR-26031](architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md), [ADR-26034](architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md), [ADR-26003](architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md)**:
-    ADR-26031 (prefixed namespaces) rejected — string prefix approach is weaker than the Postgres namespace model from A-26005. ADR-26034 (Agentic OS paradigm) rejected — the grand OS framing is replaced by context engineering; valid concepts (skills, procedural/declarative split) are absorbed into ADR-26038. ADR-26003 (gitlint) rejected — commit validation is solved by custom `validate_commit_msg.py` (ADR-26024); branch naming will be addressed in a future vadocs-git plugin.
+*   **ADR Rejections — {term}`ADR-26031`, {term}`ADR-26034`, {term}`ADR-26003`**:
+    {term}`ADR-26031` (prefixed namespaces) rejected — string prefix approach is weaker than the Postgres namespace model from A-26005. {term}`ADR-26034` (Agentic OS paradigm) rejected — the grand OS framing is replaced by context engineering; valid concepts (skills, procedural/declarative split) are absorbed into {term}`ADR-26038`. {term}`ADR-26003` (gitlint) rejected — commit validation is solved by custom `validate_commit_msg.py` ({term}`ADR-26024`); branch naming will be addressed in a future vadocs-git plugin.
 
 ### Accepted ADRs (Promoted in This Release)
 
@@ -127,10 +127,10 @@ Four ADRs promoted from proposed to accepted, marking the transition from explor
 
 | ADR | Title | Rationale |
 | :--- | :--- | :--- |
-| [ADR-26011](architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md) | Mandatory Script Suite Workflow | Triad (script + tests + docs) enforced via pre-commit hooks |
-| [ADR-26024](architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md) | Structured Commit Bodies for Automated CHANGELOG | validate_commit_msg.py + generate_changelog.py operational |
-| [ADR-26038](architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) | Context Engineering as Core Design Principle | Core principle driving ADR rejections and ecosystem direction |
-| [ADR-26040](architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md) | Podman Kube YAML as Deployment Standard | Production templates exist, CLAUDE.md mandates Podman |
+| {term}`ADR-26011` | Mandatory Script Suite Workflow | Triad (script + tests + docs) enforced via pre-commit hooks |
+| {term}`ADR-26024` | Structured Commit Bodies for Automated CHANGELOG | validate_commit_msg.py + generate_changelog.py operational |
+| {term}`ADR-26038` | Context Engineering as Core Design Principle | Core principle driving ADR rejections and ecosystem direction |
+| {term}`ADR-26040` | Podman Kube YAML as Deployment Standard | Production templates exist, CLAUDE.md mandates Podman |
 
 ### Open RFCs (Proposed ADRs)
 
@@ -138,19 +138,19 @@ All infrastructure ADRs introduced in this release are in **proposed** status �
 
 | ADR | Title | Theme |
 | :--- | :--- | :--- |
-| [ADR-26039](architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md) | pgvector as Ecosystem Database Standard | Data Infrastructure |
-| [ADR-26041](architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md) | Client-Side Logic with Server-Side Retrieval | Data Infrastructure |
-| [ADR-26042](architecture/adr/adr_26042_common_frontmatter_standard.md) | Common Frontmatter Standard | Governance |
-| [ADR-26043](architecture/adr/adr_26043_ecosystem_package_boundary.md) | Ecosystem Package Boundary | Governance |
-| [ADR-26032](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md) | Tiered Cognitive Memory | Skills Architecture |
-| [ADR-26033](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md) | Virtual Monorepo | Skills Architecture |
+| {term}`ADR-26039` | pgvector as Ecosystem Database Standard | Data Infrastructure |
+| {term}`ADR-26041` | Client-Side Logic with Server-Side Retrieval | Data Infrastructure |
+| {term}`ADR-26042` | Common Frontmatter Standard | Governance |
+| {term}`ADR-26043` | Ecosystem Package Boundary | Governance |
+| {term}`ADR-26032` | Tiered Cognitive Memory | Skills Architecture |
+| {term}`ADR-26033` | Virtual Monorepo | Skills Architecture |
 
 ### New Features and Articles Added
 
 *   **Evidence Pipeline Maturation**:
     Four new analyses (A-26006 through A-26009) demonstrate the Architecture Knowledge Base as a working system: raw dialogues formalized as sources, insights extracted into analyses, analyses grounding ADRs. The Compass analysis (A-26009) — a comprehensive assessment of the realistic state of agentic AI in 2026 — directly drove the rejection of the Agentic OS paradigm and the adoption of context engineering. Evidence source artifacts (S-26006 through S-26011) were created, extracted, and deleted per the three-commit workflow, proving the lifecycle model.
 
-*   **SVA Constraint Framework (ADR-26037)**:
+*   **SVA Constraint Framework ({term}`ADR-26037`)**:
     The Smallest Viable Architecture principle, previously an informal guideline, is now formalized as six canonical constraints (C1–C6) derived from first principles (UNIX, YAGNI, Twelve-Factor, SRE, GitOps, ISO 29148). Consultant prompts updated to reference the canonical framework.
 
 *   **Post-Commit Changelog Preview**:
@@ -164,7 +164,7 @@ All infrastructure ADRs introduced in this release are in **proposed** status �
 
 *   **Architecture Decision Workflow Guide**: Gained Valid Status Transitions section referencing `adr_config.yaml` as SSoT, with transition rules (proposed → accepted/rejected only, terminal states locked).
 
-*   **AI Systems Consultant Prompt (Hybrid)**: Refined specialization, updated tooling lists, replaced ad-hoc SVA constraints with canonical C1–C6 from ADR-26037.
+*   **AI Systems Consultant Prompt (Hybrid)**: Refined specialization, updated tooling lists, replaced ad-hoc SVA constraints with canonical C1–C6 from {term}`ADR-26037`.
 
 ### Existing Files Moved or Renamed
 
@@ -184,26 +184,26 @@ Simultaneously, the release introduces a formal **Architecture Knowledge Base** 
 
 Three strategic themes define v2.6.0:
 
-1. **Skills Architecture** — Three interconnected ADRs ([ADR-26032](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md), [ADR-26033](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md), [ADR-26034](architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md)) define a coherent vision for AI agent operation: tiered cognitive memory separates fast procedural skills from slow declarative retrieval; a virtual monorepo connects ecosystem projects without coupling them; and the Agentic OS paradigm treats skills as composable applications that agents discover and execute at runtime. This is the conceptual leap of the release — from "what tools do we use" to "how should AI agents organize knowledge and capabilities."
-2. **Architecture Knowledge Base** — [ADR-26035](architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md) and [ADR-26036](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) formalize how architectural knowledge itself is classified and stored. A new `check_evidence.py` validator (75 config-driven tests) enforces the taxonomy automatically. Evidence artifacts — analyses, sources, retrospectives — are now first-class citizens with naming conventions, required metadata, and validation gates. The knowledge base that informs architectural decisions is now as governed as the decisions themselves.
-3. **Ecosystem Scaling** — [ADR-26030](architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md) formalizes stateless JIT context injection, eliminating context accumulation across agent sessions and reducing token costs. [ADR-26031](architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md) introduces prefixed namespaces for architectural records, so that ADR identifiers remain unique and unambiguous as the ecosystem grows across multiple repositories. Together, they prepare the infrastructure for a multi-repo ecosystem where each spoke can maintain its own decision history without collision.
+1. **Skills Architecture** — Three interconnected ADRs ({term}`ADR-26032`, {term}`ADR-26033`, {term}`ADR-26034`) define a coherent vision for AI agent operation: tiered cognitive memory separates fast procedural skills from slow declarative retrieval; a virtual monorepo connects ecosystem projects without coupling them; and the Agentic OS paradigm treats skills as composable applications that agents discover and execute at runtime. This is the conceptual leap of the release — from "what tools do we use" to "how should AI agents organize knowledge and capabilities."
+2. **Architecture Knowledge Base** — {term}`ADR-26035` and {term}`ADR-26036` formalize how architectural knowledge itself is classified and stored. A new `check_evidence.py` validator (75 config-driven tests) enforces the taxonomy automatically. Evidence artifacts — analyses, sources, retrospectives — are now first-class citizens with naming conventions, required metadata, and validation gates. The knowledge base that informs architectural decisions is now as governed as the decisions themselves.
+3. **Ecosystem Scaling** — {term}`ADR-26030` formalizes stateless JIT context injection, eliminating context accumulation across agent sessions and reducing token costs. {term}`ADR-26031` introduces prefixed namespaces for architectural records, so that ADR identifiers remain unique and unambiguous as the ecosystem grows across multiple repositories. Together, they prepare the infrastructure for a multi-repo ecosystem where each spoke can maintain its own decision history without collision.
 
 ### Architecture Decisions
 
-*   **[ADR-26032: Tiered Cognitive Memory](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md), [ADR-26033: Virtual Monorepo](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md), [ADR-26034: Agentic OS Paradigm](architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md) — Skills Architecture**:
-    The most significant conceptual contribution of this release. ADR-26032 separates agent memory into three tiers: procedural skills (fast, always-loaded), declarative RAG (slow, on-demand retrieval), and episodic context (session-specific). ADR-26033 proposes a virtual monorepo where ecosystem packages share conventions without physical coupling — a package-driven dependency model that avoids the complexity of a real monorepo. ADR-26034 crowns the vision: agents operate like an OS, discovering and composing skills at runtime through tag-filtered registries. Together, these three ADRs chart the path from today's tool-specific automation to tomorrow's composable AI workforce.
+*   **{term}`ADR-26032`, {term}`ADR-26033`, {term}`ADR-26034` — Skills Architecture**:
+    The most significant conceptual contribution of this release. {term}`ADR-26032` separates agent memory into three tiers: procedural skills (fast, always-loaded), declarative RAG (slow, on-demand retrieval), and episodic context (session-specific). {term}`ADR-26033` proposes a virtual monorepo where ecosystem packages share conventions without physical coupling — a package-driven dependency model that avoids the complexity of a real monorepo. {term}`ADR-26034` crowns the vision: agents operate like an OS, discovering and composing skills at runtime through tag-filtered registries. Together, these three ADRs chart the path from today's tool-specific automation to tomorrow's composable AI workforce.
 
-*   **[ADR-26035: Architecture Knowledge Base Taxonomy](architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md)**:
-    Before this ADR, analyses and source transcripts were unstructured files in ad-hoc locations. ADR-26035 introduces a formal taxonomy: **analyses** (A-prefixed, structured conclusions from sources), **sources** (S-prefixed, raw evidence like dialogue transcripts), and **retrospectives** (R-prefixed, post-hoc evaluations). Each type has naming conventions, required metadata, and a defined lifecycle. This makes the evidence base machine-queryable — an AI agent can now distinguish a raw Gemini transcript from a curated architectural analysis.
+*   **{term}`ADR-26035`**:
+    Before this ADR, analyses and source transcripts were unstructured files in ad-hoc locations. {term}`ADR-26035` introduces a formal taxonomy: **analyses** (A-prefixed, structured conclusions from sources), **sources** (S-prefixed, raw evidence like dialogue transcripts), and **retrospectives** (R-prefixed, post-hoc evaluations). Each type has naming conventions, required metadata, and a defined lifecycle. This makes the evidence base machine-queryable — an AI agent can now distinguish a raw Gemini transcript from a curated architectural analysis.
 
-*   **[ADR-26036: Config File Location and Naming Conventions](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md)**:
-    As the number of config files grew (adr_config.yaml, evidence.config.yaml, architecture.config.yaml), inconsistent naming and placement created confusion. ADR-26036 standardizes the pattern: `<domain>.config.yaml` files live in their domain directory, with a `parent_config` pointer for shared vocabulary. This is the config counterpart to ADR-26029 (pyproject.toml for tool config) — together they establish a complete configuration hierarchy.
+*   **{term}`ADR-26036`**:
+    As the number of config files grew (adr_config.yaml, evidence.config.yaml, architecture.config.yaml), inconsistent naming and placement created confusion. {term}`ADR-26036` standardizes the pattern: `<domain>.config.yaml` files live in their domain directory, with a `parent_config` pointer for shared vocabulary. This is the config counterpart to {term}`ADR-26029` (pyproject.toml for tool config) — together they establish a complete configuration hierarchy.
 
-*   **[ADR-26030: Stateless JIT Context Injection](architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md)**:
-    Agent sessions that accumulate context over time become expensive and brittle — stale instructions mix with current state, token budgets grow unboundedly. ADR-26030 formalizes the stateless observer pattern: each agent invocation receives exactly the context it needs, assembled just-in-time from repository state. No session memory, no accumulated drift. This is the architectural foundation for scalable agent workflows.
+*   **{term}`ADR-26030`**:
+    Agent sessions that accumulate context over time become expensive and brittle — stale instructions mix with current state, token budgets grow unboundedly. {term}`ADR-26030` formalizes the stateless observer pattern: each agent invocation receives exactly the context it needs, assembled just-in-time from repository state. No session memory, no accumulated drift. This is the architectural foundation for scalable agent workflows.
 
-*   **[ADR-26031: Prefixed Namespace System for Architectural Records](architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md)**:
-    As the ecosystem spawns spoke repositories (vadocs, research monorepo), ADR numbering will collide — ADR-26001 in the hub means something different from ADR-26001 in a spoke. This ADR proposes prefix-based namespacing so that each repository's decisions are globally unique and cross-referenceable.
+*   **{term}`ADR-26031`**:
+    As the ecosystem spawns spoke repositories (vadocs, research monorepo), ADR numbering will collide — {term}`ADR-26001` in the hub means something different from {term}`ADR-26001` in a spoke. This ADR proposes prefix-based namespacing so that each repository's decisions are globally unique and cross-referenceable.
 
 ### Accepted ADRs (Promoted in This Release)
 
@@ -211,35 +211,35 @@ No ADRs were promoted from proposed to accepted in this release. All 7 new ADRs 
 
 ### Open RFCs (Proposed ADRs)
 
-All architectural decisions introduced in this release are in **proposed** status — they are living RFCs, open for analysis and feedback. They become binding standards only after passing the promotion gate (ADR-26025).
+All architectural decisions introduced in this release are in **proposed** status — they are living RFCs, open for analysis and feedback. They become binding standards only after passing the promotion gate ({term}`ADR-26025`).
 
 | ADR | Title | Theme |
 | :--- | :--- | :--- |
-| [ADR-26030](architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md) | Stateless JIT Context Injection for Agentic Git Workflows | Ecosystem Scaling |
-| [ADR-26031](architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md) | Prefixed Namespace System for Architectural Records | Ecosystem Scaling |
-| [ADR-26032](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md) | Tiered Cognitive Memory: Procedural Skills vs. Declarative RAG | Skills Architecture |
-| [ADR-26033](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md) | Virtual Monorepo via Package-Driven Dependency Management | Skills Architecture |
-| [ADR-26034](architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md) | Agentic OS Paradigm: Skills as Composable Applications | Skills Architecture |
-| [ADR-26035](architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md) | Architecture Knowledge Base Taxonomy | Knowledge Base |
-| [ADR-26036](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) | Config File Location and Naming Conventions | Knowledge Base |
+| {term}`ADR-26030` | Stateless JIT Context Injection for Agentic Git Workflows | Ecosystem Scaling |
+| {term}`ADR-26031` | Prefixed Namespace System for Architectural Records | Ecosystem Scaling |
+| {term}`ADR-26032` | Tiered Cognitive Memory: Procedural Skills vs. Declarative RAG | Skills Architecture |
+| {term}`ADR-26033` | Virtual Monorepo via Package-Driven Dependency Management | Skills Architecture |
+| {term}`ADR-26034` | Agentic OS Paradigm: Skills as Composable Applications | Skills Architecture |
+| {term}`ADR-26035` | Architecture Knowledge Base Taxonomy | Knowledge Base |
+| {term}`ADR-26036` | Config File Location and Naming Conventions | Knowledge Base |
 
 ### New Features and Articles Added
 
 *   **Evidence Artifact Validation (`check_evidence.py`)**:
-    A new validation script that enforces the Architecture Knowledge Base taxonomy. It validates evidence artifacts against `evidence.config.yaml` — checking naming patterns, required frontmatter fields, date formats, and artifact type classification. The script follows the established Script Suite convention (ADR-26011): script + 75 config-driven tests + instruction document. Integrated into pre-commit hooks and the CI quality pipeline.
+    A new validation script that enforces the Architecture Knowledge Base taxonomy. It validates evidence artifacts against `evidence.config.yaml` — checking naming patterns, required frontmatter fields, date formats, and artifact type classification. The script follows the established Script Suite convention ({term}`ADR-26011`): script + 75 config-driven tests + instruction document. Integrated into pre-commit hooks and the CI quality pipeline.
 
 *   **Architecture Knowledge Base Infrastructure**:
     The `architecture/evidence/` directory gains formal structure: `evidence.config.yaml` defines the validation schema with common required fields and date format as SSoT; `architecture.config.yaml` provides shared architectural vocabulary (tags) as a parent config; `sources/README.md` documents the source lifecycle and git archaeology guide.
 
 *   **A-26002: Agentic OS Analysis**:
-    A comprehensive analysis extracting 11 architectural insights from the Gemini dialogue S-26001 — covering the Agentic OS paradigm, three-tier cognitive memory, tag-filtered skill discovery, package-driven virtual monorepo, builder/runtime separation, and the evolution from prompt engineering to software engineering. This analysis directly informed ADR-26032, ADR-26033, and ADR-26034.
+    A comprehensive analysis extracting 11 architectural insights from the Gemini dialogue S-26001 — covering the Agentic OS paradigm, three-tier cognitive memory, tag-filtered skill discovery, package-driven virtual monorepo, builder/runtime separation, and the evolution from prompt engineering to software engineering. This analysis directly informed {term}`ADR-26032`, {term}`ADR-26033`, and {term}`ADR-26034`.
 
 *   **S-26001: Gemini Dialogue on Skills Architecture**:
-    The raw source transcript of a Gemini 3.0 Flash consultation on skills architectures, cognitive memory tiers, and package-driven infrastructure. Preserved as evidence per ADR-26035 taxonomy — the source that seeded the skills architecture vision.
+    The raw source transcript of a Gemini 3.0 Flash consultation on skills architectures, cognitive memory tiers, and package-driven infrastructure. Preserved as evidence per {term}`ADR-26035` taxonomy — the source that seeded the skills architecture vision.
 
 ### Updates in Existing Files
 
-*   **Commit Convention Cleanup**: Removed the backtick wrapping requirement from structured commit body bullets across ADR-26024, git workflow docs, validation script docs, and CHANGELOG format docs. The commit convention in `pyproject.toml` is now the single source of truth — added `adr` type, removed `test` type.
+*   **Commit Convention Cleanup**: Removed the backtick wrapping requirement from structured commit body bullets across {term}`ADR-26024`, git workflow docs, validation script docs, and CHANGELOG format docs. The commit convention in `pyproject.toml` is now the single source of truth — added `adr` type, removed `test` type.
 
 *   **format_string.py**: Added dash (`—`) to the list of special symbols replaced during string formatting. Corresponding documentation updated.
 
@@ -262,28 +262,28 @@ The release also crystallizes the project's identity. The **Documentation-as-Cod
 Three strategic themes define v2.5.0:
 
 1. **Automated Commit Governance** — `validate_commit_msg.py` enforces conventional commit format with structured body bullets at commit time; `generate_changelog.py` transforms that structured history into hierarchical CHANGELOG entries; `configure_repo.py` auto-installs the commit-msg hook during setup. Together, they form a self-documenting commit lifecycle where no manual CHANGELOG curation is needed.
-2. **Tool-Agnostic Architecture** — [ADR-26004: Agentic RAG](architecture/adr/adr_26004_implementation_of_agentic_rag_for_autonom.md) through [ADR-26008: Reasoning-Class Models for Abstract Synthesis](architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md) were written around specific tools (Aider, Gemini Flash). As the project matured, it became clear that cognitive roles matter more than tool names. [ADR-26027: Model Taxonomy](architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md) and [ADR-26028: Tool-Agnostic Phase 0](architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md) replace them with tool-independent definitions: reasoning-class models for synthesis, agentic-class for execution. The `aidx` framework was rewritten as the generic Multi-Phase AI Pipeline.
-3. **Ecosystem Consolidation** — Research projects that added noise to the main repo were extracted to a dedicated monorepo ([ADR-26026: Dedicated Research Monorepo](architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md)). The RFC-to-ADR promotion gate ([ADR-26025: RFC→ADR Workflow Formalization](architecture/adr/adr_26025_rfc_adr_workflow_formalization.md)) prevents premature decisions from becoming authoritative. `pyproject.toml` was formalized as the single source of truth for tool configuration ([ADR-26029: pyproject.toml as Tool Config Hub](architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md)), eliminating scattered config files.
+2. **Tool-Agnostic Architecture** — {term}`ADR-26004` through {term}`ADR-26008` were written around specific tools (Aider, Gemini Flash). As the project matured, it became clear that cognitive roles matter more than tool names. {term}`ADR-26027` and {term}`ADR-26028` replace them with tool-independent definitions: reasoning-class models for synthesis, agentic-class for execution. The `aidx` framework was rewritten as the generic Multi-Phase AI Pipeline.
+3. **Ecosystem Consolidation** — Research projects that added noise to the main repo were extracted to a dedicated monorepo ({term}`ADR-26026`). The RFC-to-ADR promotion gate ({term}`ADR-26025`) prevents premature decisions from becoming authoritative. `pyproject.toml` was formalized as the single source of truth for tool configuration ({term}`ADR-26029`), eliminating scattered config files.
 
 ### Architecture Decisions
 
-*   **[ADR-26025: RFC→ADR Workflow Formalization](architecture/adr/adr_26025_rfc_adr_workflow_formalization.md) — Promotion Gate**:
-    Without a formal gate, proposed ADRs could be silently accepted without review. This ADR formalizes the workflow where proposed ADRs serve as living RFCs, and `check_adr.py` enforces promotion criteria before a status change is allowed. The feature was dogfooded during this very release: the promotion gate validated its own ADR-26025 alongside 5 other ADRs being promoted from proposed to accepted.
+*   **{term}`ADR-26025` — Promotion Gate**:
+    Without a formal gate, proposed ADRs could be silently accepted without review. This ADR formalizes the workflow where proposed ADRs serve as living RFCs, and `check_adr.py` enforces promotion criteria before a status change is allowed. The feature was dogfooded during this very release: the promotion gate validated its own {term}`ADR-26025` alongside 5 other ADRs being promoted from proposed to accepted.
 
-*   **[ADR-26027: Model Taxonomy](architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md), [ADR-26028: Tool-Agnostic Phase 0](architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md) — Tool-Agnostic Model Taxonomy**:
-    The original ADRs (26004–26008) named specific tools — Aider as the editor, Gemini Flash as the architect model. This coupling meant every tool change required an ADR amendment. ADR-26027 defines cognitive roles instead: reasoning-class models handle synthesis and planning, agentic-class models handle execution and structure. ADR-26028 redefines Phase 0 (Intent Synthesis) as tool-agnostic human-led discovery. The tools change; the cognitive model stays.
+*   **{term}`ADR-26027`, {term}`ADR-26028` — Tool-Agnostic Model Taxonomy**:
+    The original ADRs (26004–26008) named specific tools — Aider as the editor, Gemini Flash as the architect model. This coupling meant every tool change required an ADR amendment. {term}`ADR-26027` defines cognitive roles instead: reasoning-class models handle synthesis and planning, agentic-class models handle execution and structure. {term}`ADR-26028` redefines Phase 0 (Intent Synthesis) as tool-agnostic human-led discovery. The tools change; the cognitive model stays.
 
-*   **[ADR-26029: pyproject.toml as Tool Configuration Hub](architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md)**:
-    Tool configuration was scattered across individual config files. ADR-26029 formalizes `pyproject.toml [tool.X]` sections as the canonical location for machine-readable tool configuration, loaded via `tomllib` (stdlib). This is the SSoT for commit conventions, validation rules, and script parameters.
+*   **{term}`ADR-26029`**:
+    Tool configuration was scattered across individual config files. {term}`ADR-26029` formalizes `pyproject.toml [tool.X]` sections as the canonical location for machine-readable tool configuration, loaded via `tomllib` (stdlib). This is the SSoT for commit conventions, validation rules, and script parameters.
 
-*   **[ADR-26026: Dedicated Research Monorepo](architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md)**:
+*   **{term}`ADR-26026`**:
     Research projects (e.g., `slm_from_scratch`) added volatility and noise to the main repository. This ADR extracts them to a dedicated monorepo — only distilled insights are retained in the hub.
 
 *   **ADR Triage (26004–26008)**:
-    [ADR-26004: Agentic RAG](architecture/adr/adr_26004_implementation_of_agentic_rag_for_autonom.md) and [ADR-26005: Aider as Primary Orchestrator](architecture/adr/adr_26005_formalization_of_aider_as_primary_agentic.md) rejected — too tool-specific for an evolving ecosystem. [ADR-26006: Agentic-Class Models for Architect Phase](architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md), [ADR-26007: Phase 0 Intent Synthesis](architecture/adr/adr_26007_formalization_of_phase_0_intent_synthesi.md), [ADR-26008: Reasoning-Class Models for Abstract Synthesis](architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md) superseded by ADR-26027 and ADR-26028, preserving the cognitive model while removing tool coupling.
+    {term}`ADR-26004` and {term}`ADR-26005` rejected — too tool-specific for an evolving ecosystem. {term}`ADR-26006`, {term}`ADR-26007`, {term}`ADR-26008` superseded by {term}`ADR-26027` and {term}`ADR-26028`, preserving the cognitive model while removing tool coupling.
 
 *   **ADR Promotions**:
-    6 ADRs promoted from proposed to accepted — [ADR-26015: Mandatory Sync-Guard & Diff Suppression](architecture/adr/adr_26015_mandatory_sync_guard_and_diff_suppression.md), [ADR-26017: ADR Format Validation Workflow](architecture/adr/adr_26017_adr_format_validation_workflow.md), [ADR-26020: Hub-and-Spoke Ecosystem](architecture/adr/adr_26020_hub_spoke_ecosystem_documentation.md), [ADR-26021: Content Lifecycle Policy](architecture/adr/adr_26021_content_lifecycle_policy_for_rag_consumed.md), [ADR-26022: GitHub Pages Hosting](architecture/adr/adr_26022_standardization_of_public_documentation_hosting.md), [ADR-26025: RFC→ADR Workflow](architecture/adr/adr_26025_rfc_adr_workflow_formalization.md) — marking the transition from exploratory proposals to authoritative architecture.
+    6 ADRs promoted from proposed to accepted — {term}`ADR-26015`, {term}`ADR-26017`, {term}`ADR-26020`, {term}`ADR-26021`, {term}`ADR-26022`, {term}`ADR-26025` — marking the transition from exploratory proposals to authoritative architecture.
 
 ### New Features and Articles Added
 
@@ -303,7 +303,7 @@ Three strategic themes define v2.5.0:
     Working with AI models means accumulating web chat transcripts (Gemini, Qwen, ChatGPT sessions saved as HTML/MHTML). `extract_html_text.py` extracts clean text from these files — a token-saving mechanism that lets you feed conversation history to another model without the HTML overhead (36 tests, 85% coverage).
 
 *   **Superseded Annotation in ADR Index**:
-    When [ADR-26006: Agentic-Class Models](architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md) is superseded by [ADR-26027: Model Taxonomy](architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md), the generated index now shows this relationship explicitly. Without this, readers had to open each ADR to discover its status — breaking the "index as overview" contract.
+    When {term}`ADR-26006` is superseded by {term}`ADR-26027`, the generated index now shows this relationship explicitly. Without this, readers had to open each ADR to discover its status — breaking the "index as overview" contract.
 
 ### Updates in Existing Files
 
@@ -313,7 +313,7 @@ Three strategic themes define v2.5.0:
 
 *   **README.md**: Full structural rewrite with Documentation-as-Code framing, Architectural Governance section, Hub-and-Spoke Ecosystem description, and tool-agnostic Methodology. All tool/model name references removed in favor of cognitive-role language.
 
-*   **CLAUDE.md**: Updated with new scripts (`validate_commit_msg.py`, `generate_changelog.py`), tool configuration conventions ([ADR-26029: pyproject.toml as Tool Config Hub](architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md)), ADR index management rules, and de-emphasized tool-specific references.
+*   **CLAUDE.md**: Updated with new scripts (`validate_commit_msg.py`, `generate_changelog.py`), tool configuration conventions ({term}`ADR-26029`), ADR index management rules, and de-emphasized tool-specific references.
 
 *   **CI/CD**: `deploy.yml` gated to `main` branch only — previously, pushes to any branch could trigger deployment. `quality.yml` gains dedicated test jobs for `validate_commit_msg.py` and `generate_changelog.py`.
 
@@ -322,10 +322,10 @@ Three strategic themes define v2.5.0:
 | Original | New |
 | :--- | :--- |
 | `ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.md` | `multi_phase_ai_pipeline.md` (rewritten as tool-agnostic) |
-| `misc/research/slm_from_scratch/` | Extracted to dedicated research monorepo ([ADR-26026: Dedicated Research Monorepo](architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md)) |
+| `misc/research/slm_from_scratch/` | Extracted to dedicated research monorepo ({term}`ADR-26026`) |
 | `BROKEN_LINKS_EXCLUDE_DIRS` (in `paths.py` + 10 files) | `VALIDATION_EXCLUDE_DIRS` |
-| [ADR-26004: Agentic RAG](architecture/adr/adr_26004_implementation_of_agentic_rag_for_autonom.md), [ADR-26005: Aider as Primary Orchestrator](architecture/adr/adr_26005_formalization_of_aider_as_primary_agentic.md) | Rejected (tool-agnostic shift) |
-| [ADR-26006: Agentic-Class Models](architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md), [ADR-26007: Phase 0 Intent Synthesis](architecture/adr/adr_26007_formalization_of_phase_0_intent_synthesi.md), [ADR-26008: Reasoning-Class Models](architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md) | Superseded by [ADR-26027: Model Taxonomy](architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md), [ADR-26028: Tool-Agnostic Phase 0](architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md) |
+| {term}`ADR-26004`, {term}`ADR-26005` | Rejected (tool-agnostic shift) |
+| {term}`ADR-26006`, {term}`ADR-26007`, {term}`ADR-26008` | Superseded by {term}`ADR-26027`, {term}`ADR-26028` |
 
 ## release v2.4.0 "The Governed Architecture"
 
@@ -344,16 +344,16 @@ Three strategic themes define v2.4.0:
 *   **Machine-Readable ADR Governance**:
     Every ADR now carries YAML frontmatter with status, date, and tags — making the entire decision history searchable by AI agents and filterable in RAG pipelines. The new `check_adr.py` enforces this standard automatically, catching formatting drift before it reaches the main branch.
 
-*   **Content Lifecycle Policy (ADR-26021)**:
+*   **Content Lifecycle Policy ({term}`ADR-26021`)**:
     Superseded articles are now deleted rather than accumulating as stale context. This directly improves RAG retrieval quality — AI agents no longer surface outdated patterns when querying the knowledge base. Git history serves as the archive.
 
-*   **Hub-Spoke Ecosystem (ADR-26020)**:
+*   **Hub-Spoke Ecosystem ({term}`ADR-26020`)**:
     Establishes this repository as the architectural standards hub. Extracted packages (like vadocs) maintain their own implementation decisions while inheriting ecosystem-wide conventions. This enables teams to adopt individual tools without importing the entire monorepo.
 
 *   **vadocs — Documentation Validation Engine**:
     Completed its full lifecycle within this release: designed, scaffolded, tested, and [extracted to its own repository](https://github.com/lefthand67/vadocs). Validates ADR structure, frontmatter completeness, and MyST cross-references — the same checks that protect this repo, now available to any documentation project.
 
-*   **GitHub Pages Hosting (ADR-26022)**:
+*   **GitHub Pages Hosting ({term}`ADR-26022`)**:
     Replaces the self-hosted Podman/Traefik/Nginx stack with GitHub Pages. Eliminates infrastructure maintenance, improves uptime, and simplifies the deployment pipeline to a single `myst build --html` step in CI.
 
 *   **Layer 5 — Context (New Articles)**:
@@ -369,7 +369,7 @@ Three strategic themes define v2.4.0:
 
 *   **Cross-Reference Integrity**: Fixed broken MyST `{term}` references across 14 files. These caused silent build errors — terms like `ADR 26001` failed to resolve because the glossary uses hyphenated `ADR-26001`. The new `--check-terms` flag prevents future regressions.
 
-*   **ADR-26019 Corrected**: The original decision described an HTML-anchor mechanism that was never implemented. Rewritten to formalize the positional pattern already in use across 20+ articles — documenting what actually works rather than aspirational infrastructure.
+*   **{term}`ADR-26019` Corrected**: The original decision described an HTML-anchor mechanism that was never implemented. Rewritten to formalize the positional pattern already in use across 20+ articles — documenting what actually works rather than aspirational infrastructure.
 
 *   **CI/CD Pipeline**: Updated for the `check_adr_index.py` → `check_adr.py` transition. `misc/` excluded from broken-link validation to prevent false positives on planning documents.
 
@@ -385,7 +385,7 @@ Three strategic themes define v2.4.0:
 | `tools/tests/test_check_adr_index.py` | `tools/tests/test_check_adr.py` (Rewritten) |
 | `tools/docs/scripts_instructions/check_adr_index_py_script.md` | `tools/docs/scripts_instructions/check_adr_py_script.md` (Rewritten) |
 | `packages/vadoc/*` | *Extracted to [github.com/lefthand67/vadocs](https://github.com/lefthand67/vadocs)* |
-| `ai_system/4_orchestration/patterns/llm_usage_patterns.md` | *Deleted per ADR-26021 content lifecycle policy* |
+| `ai_system/4_orchestration/patterns/llm_usage_patterns.md` | *Deleted per {term}`ADR-26021` content lifecycle policy* |
 
 ## release v2.3.0 "The Validated Ecosystem"
 

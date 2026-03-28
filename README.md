@@ -22,22 +22,22 @@ Content is **generated through a hybrid LLM methodology**, **cross-validated by 
 v2.8.0 — "The Prompt Physics"
 * **Prompt Engineering Research**: A three-article series with real measurements and reproducible code — [Format as Architecture](ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb), [Token Economics of Prompt Delivery](ai_system/3_prompts/token_economics_of_prompt_delivery.ipynb), and an [Appendix on YAML Serializer Variance](ai_system/3_prompts/appendix_yaml_serializer_variance.ipynb). Central finding: token cost is `f(format, serializer, tokenizer)` — PyYAML vs. yq on the same JSON source can differ by 100+ tokens on a 150-line prompt and flip the YAML vs. JSON ranking. Backed by three analyses ([A-26016](architecture/evidence/analyses/A-26016_causal_masking_attention_mechanics_for_prompt_engineering.md), [A-26017](architecture/evidence/analyses/A-26017_yaml_serializer_variance_token_economics.md), [A-26018](architecture/evidence/analyses/A-26018_xml_tags_scope_isolation_prompt_architecture.md)).
 * **Two-Stage Consultant Workflow**: [ai_brainstorming_colleague.json](ai_system/3_prompts/consultants/ai_brainstorming_colleague.json) (v0.2.0) handles exploration; it hands off explicitly to the strict reviewers ([ai_systems_consultant_hybrid.json](ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json), [devops_consultant.json](ai_system/3_prompts/consultants/devops_consultant.json)) when formal validation is needed. The handoff is enforced by the prompt itself.
-* **Governance Enforcement**: All governance configs migrated from YAML to JSON (`.vadocs/`). [check_frontmatter.py](tools/scripts/check_frontmatter.py) (work in progress) enforces [ADR-26042: Common Frontmatter Standard](architecture/adr/adr_26042_common_frontmatter_standard.md) at commit time. Two new proposed ADRs: [ADR-26044: Skills as Progressive Disclosure Units](architecture/adr/adr_26044_skills_as_progressive_disclosure_units.md) and [ADR-26054: JSON as Governance Config Format](architecture/adr/adr_26054_json_as_governance_config_format.md).
+* **Governance Enforcement**: All governance configs migrated from YAML to JSON (`.vadocs/`). [check_frontmatter.py](tools/scripts/check_frontmatter.py) (work in progress) enforces {term}`ADR-26042` at commit time. Two new proposed ADRs: {term}`ADR-26044` and {term}`ADR-26054`.
 
 v2.7.0 — "The Context Engineering Pivot"
-* **From Agentic OS to Context Engineering**: v2.6.0 explored an ambitious vision — agents as operating systems. That research produced valuable insights, but the key finding was simpler: what matters is not how many agents you have, but what each agent sees. [ADR-26038: Context Engineering as Core Design Principle](architecture/adr/adr_26038_context_engineering_as_core_design_principle.md) adopts context engineering as the core principle — one agent, skills loaded on demand, context window as the primary constraint. The multi-agent vs single-agent boundary will be analyzed more thoroughly in future releases.
+* **From Agentic OS to Context Engineering**: v2.6.0 explored an ambitious vision — agents as operating systems. That research produced valuable insights, but the key finding was simpler: what matters is not how many agents you have, but what each agent sees. {term}`ADR-26038` adopts context engineering as the core principle — one agent, skills loaded on demand, context window as the primary constraint. The multi-agent vs single-agent boundary will be analyzed more thoroughly in future releases.
 * **Infrastructure Blueprint**: 7 new ADRs define the technical stack for the ecosystem's next phase — database, deployment, data access, metadata format, and governance packaging. The goal: everything needed to deploy a working application from a single `podman play kube` command plus an API key.
 * **First Consolidation**: 4 ADRs promoted to accepted standards, 3 rejected with their insights absorbed. The ecosystem moves from pure exploration to selective commitment.
 
 v2.6.0 — "The Cognitive Architecture"
 * **Skills Architecture**: Three ADRs (26032–26034) define how AI agents should organize knowledge and capabilities — tiered cognitive memory, virtual monorepo for package-driven ecosystems, and the Agentic OS paradigm where skills are composable applications discovered at runtime.
-* **Architecture Knowledge Base**: [ADR-26035](architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md)/[ADR-26036](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) formalize a taxonomy for evidence artifacts (analyses, sources, retrospectives) with `check_evidence.py` enforcing it automatically (75 tests). The ecosystem now documents how it documents.
-* **Ecosystem Scaling**: ADR-26030 (stateless JIT context injection) eliminates context accumulation across agent sessions; ADR-26031 (prefixed namespaces) ensures ADR identifiers stay unique across spoke repositories.
+* **Architecture Knowledge Base**: {term}`ADR-26035`/{term}`ADR-26036` formalize a taxonomy for evidence artifacts (analyses, sources, retrospectives) with `check_evidence.py` enforcing it automatically (75 tests). The ecosystem now documents how it documents.
+* **Ecosystem Scaling**: {term}`ADR-26030` (stateless JIT context injection) eliminates context accumulation across agent sessions; {term}`ADR-26031` (prefixed namespaces) ensures ADR identifiers stay unique across spoke repositories.
 
 
 ## Live Documentation Site
 
-The rendered knowledge base is published on GitHub Pages (ADR-26022). GitHub is the **source of truth**; the site is the **rendered view** for reading.
+The rendered knowledge base is published on GitHub Pages ({term}`ADR-26022`). GitHub is the **source of truth**; the site is the **rendered view** for reading.
 
 
 ## Documentation as Source Code for AI
@@ -46,12 +46,12 @@ Traditional documentation is written for humans to read after the fact. In AI-ba
 
 This repository implements the Documentation-as-Code paradigm:
 
-- **Docs = source code**: versioned, diffed, tested via Jupytext pairing (ADR-26014)
-- **Metadata = API contract**: MyST-native frontmatter makes every document machine-queryable (ADR-26023, ADR-26016)
-- **Lifecycle = garbage collection**: superseded content is deleted to prevent RAG noise; ADRs are preserved as negative knowledge (ADR-26021)
-- **Structure = architecture**: repository layout is deliberate design, not accumulation; restructuring is governed by ADRs like refactoring is governed by tests (ADR-26020, ADR-26026)
-- **ADRs = development backbone**: every major decision is an ADR; proposed ADRs serve as living RFCs (ADR-26025)
-- **CI/CD = deployment**: automated validation, sync-guard, broken-link checks (ADR-26015)
+- **Docs = source code**: versioned, diffed, tested via Jupytext pairing ({term}`ADR-26014`)
+- **Metadata = API contract**: MyST-native frontmatter makes every document machine-queryable ({term}`ADR-26023`, {term}`ADR-26016`)
+- **Lifecycle = garbage collection**: superseded content is deleted to prevent RAG noise; ADRs are preserved as negative knowledge ({term}`ADR-26021`)
+- **Structure = architecture**: repository layout is deliberate design, not accumulation; restructuring is governed by ADRs like refactoring is governed by tests ({term}`ADR-26020`, {term}`ADR-26026`)
+- **ADRs = development backbone**: every major decision is an ADR; proposed ADRs serve as living RFCs ({term}`ADR-26025`)
+- **CI/CD = deployment**: automated validation, sync-guard, broken-link checks ({term}`ADR-26015`)
 
 This stands in direct opposition to pre-AI knowledge bases — collections of articles with no enforced structure, no traceability, and no automated verification.
 
@@ -65,18 +65,18 @@ See the full rationale in [architecture/manifesto.md](/architecture/manifesto.md
 ADRs are the **main context for development** in this repository. Every structural, methodological, or tooling decision is recorded as an ADR before implementation.
 
 - **22 active ADRs** govern the repo — see the full list in [architecture/adr_index.md](/architecture/adr_index.md)
-- **RFC→ADR workflow**: proposed ADRs serve as living RFCs; accepted ADRs are authoritative (ADR-26025)
-- **Machine-readable metadata**: YAML frontmatter with status, date, tags enables AI filtering (ADR-26016, ADR-26017)
-- **Automated validation**: `check_adr.py` enforces format, required sections, term references, and index partitioning (ADR-26017)
-- **Asymmetric lifecycle**: articles are deleted when superseded; ADRs are preserved as negative knowledge — decision history is never lost (ADR-26021)
+- **RFC→ADR workflow**: proposed ADRs serve as living RFCs; accepted ADRs are authoritative ({term}`ADR-26025`)
+- **Machine-readable metadata**: YAML frontmatter with status, date, tags enables AI filtering ({term}`ADR-26016`, {term}`ADR-26017`)
+- **Automated validation**: `check_adr.py` enforces format, required sections, term references, and index partitioning ({term}`ADR-26017`)
+- **Asymmetric lifecycle**: articles are deleted when superseded; ADRs are preserved as negative knowledge — decision history is never lost ({term}`ADR-26021`)
 
 
 ## Hub-and-Spoke Ecosystem
 
-This repository is the **standards hub** — it holds conventions, specifications, and ecosystem ADRs (ADR-26020). Implementation lives in independent spokes:
+This repository is the **standards hub** — it holds conventions, specifications, and ecosystem ADRs ({term}`ADR-26020`). Implementation lives in independent spokes:
 
 - **Extracted packages** (e.g., [vadocs](https://github.com/lefthand67/vadocs)) are independent spokes with their own implementation decisions
-- **Research** is extracted to a dedicated monorepo (ADR-26026) — only distilled insights are retained in the hub
+- **Research** is extracted to a dedicated monorepo ({term}`ADR-26026`) — only distilled insights are retained in the hub
 - The hub holds the **"why"**; spokes hold the **"how"**
 
 
@@ -84,9 +84,9 @@ This repository is the **standards hub** — it holds conventions, specification
 
 Content generation follows a tool-agnostic, cognitive-model approach:
 
-- **Model taxonomy**: reasoning-class models (synthesis, requirements) vs. agentic-class models (execution, structure) — selected by capability, not by name (ADR-26027)
-- **Phase 0: Intent Synthesis**: human-led discovery with a reasoning-class model before any automated execution (ADR-26028)
-- **Consultant prompts** in `ai_system/3_prompts/consultants/` encode methodology as JIT-transformable JSON (ADR-26013)
+- **Model taxonomy**: reasoning-class models (synthesis, requirements) vs. agentic-class models (execution, structure) — selected by capability, not by name ({term}`ADR-26027`)
+- **Phase 0: Intent Synthesis**: human-led discovery with a reasoning-class model before any automated execution ({term}`ADR-26028`)
+- **Consultant prompts** in `ai_system/3_prompts/consultants/` encode methodology as JIT-transformable JSON ({term}`ADR-26013`)
 
 ```mermaid
 graph LR
@@ -154,9 +154,9 @@ Read more in [A Multi-Layered AI System Architecture](/0_intro/a_multi_layered_a
 
 The repository uses automated validation to enforce documentation quality:
 
-- **Pre-commit hooks** in OOP Python style (ADR-26001) within the pre-commit framework (ADR-26002)
-- **Jupytext pairing** with sync-guard: `.ipynb` and `.md` files stay synchronized; CI blocks unsynced changes (ADR-26014, ADR-26015)
-- **Tool configuration** centralized in `pyproject.toml [tool.X]` sections (ADR-26029)
+- **Pre-commit hooks** in OOP Python style ({term}`ADR-26001`) within the pre-commit framework ({term}`ADR-26002`)
+- **Jupytext pairing** with sync-guard: `.ipynb` and `.md` files stay synchronized; CI blocks unsynced changes ({term}`ADR-26014`, {term}`ADR-26015`)
+- **Tool configuration** centralized in `pyproject.toml [tool.X]` sections ({term}`ADR-26029`)
 - **CI/CD pipelines**: `quality.yml` (broken links, jupytext sync, script tests) + `deploy.yml` (GitHub Pages deployment)
 - **Validation scripts**: `check_adr.py`, `check_evidence.py`, `check_frontmatter.py`, `check_broken_links.py`, `validate_commit_msg.py`, `check_link_format.py`
 
