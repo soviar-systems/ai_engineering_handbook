@@ -115,6 +115,7 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - ADR examples should be generic (e.g., `project_alpha`), not tied to specific ecosystem projects — ADRs outlive current project details
 - Do not import external evaluation frameworks (e.g., WRC scores) into ADRs — reference conclusions, not foreign metrics
 - Do not include unverified benchmark numbers — either cite the source or remove
+- ADR cross-references: use `` {term}`ADR-NNNNN` `` — renders titles automatically from adr_index.md glossary. **MyST-rendered files only** (ADRs, articles, `README.md`). In GitHub-only files (`RELEASE_NOTES.md`, `CHANGELOG`) use plain markdown links — `{term}` renders as literal text on GitHub
 
 **Configuration:**
 - Use placeholders like `[IP_ADDRESS]` or `[DOMAIN]` instead of real values
@@ -177,6 +178,7 @@ Package manager: `uv` (never use pip directly)
 **Commit Conventions (ADR-26024):**
 - Use conventional commits with prefixes from `pyproject.toml [tool.commit-convention]` `valid-types`
 - `pr:` prefix is for promotional/announcement posts
+- There is no `revert:` type — use `docs:`, `chore:`, or `fix:` depending on what the revert corrects
 - Keep commit subjects concise (50 chars max), focusing on the "what"
 - Commit bodies **MUST** contain structured bullets: `- <Verb>: <file-path> — <what and why>`
 - `<file-path>` is relative to repo root (e.g., `tools/scripts/check_adr.py`). No abstract targets — every change lives in a file
