@@ -45,6 +45,15 @@ Traceable record of intentional shortcuts. Each entry has a date, location, and 
 - **Migration path:** Write ADR-260xx defining WRC as an ecosystem evaluation standard: formula, component definitions (E/A/P), weight rationale, threshold semantics (≥0.89 = production-ready), and relationship to SVA constraints. Update prompt JSONs to reference the ADR rather than embed the authoritative definition.
 - **Introduced by:** v2.8.0 release notes session (2026-03-29)
 
+### TD-007: Format as model-specific semantic contract — open research question (2026-03-29)
+
+- **Location:** ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.md, Section 4
+- **Context:** If format response is learned from training corpus, the same format primes different cognitive modes in models trained on different corpora. Format becomes a hidden variable in cross-model instruction-following benchmarks.
+- **Evidence needed:** Controlled experiment — same semantic content × multiple formats (JSON/YAML/Markdown) × multiple models (Claude, Qwen, GigaChat, Gemini) × behavioral outcome (instruction adherence rate, section survival, field preservation).
+- **Collection opportunity:** Local AI community meetup presentation — audience uses multiple models across Cursor/Cline/LangFlow, can contribute informal observations.
+- **Future artifact:** S-YYNNN (collected evidence) → A-26019 (analysis) → Section 4 update
+- **Introduced by:** meetup talk brainstorming session (2026-03-29)
+
 ## Resolved
 
 ### TD-001: common_required_fields in evidence.config.yaml (2026-02-27)

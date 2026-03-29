@@ -220,6 +220,8 @@ The hypothesis: when a model reads a system prompt in JSON format, the training-
 
 The case study in {ref}`faa-case-study` is consistent with this hypothesis but is confounded by a simultaneous structural change — the format effect cannot be isolated from a single observation. We do not have controlled multi-model benchmarks to confirm or refute it.
 
+> **Open question:** If format response is learned from training corpus, the same format may prime different cognitive modes in different models — YAML may mean "execute" to a model trained heavily on DevOps corpora and "describe" to a model trained on scientific literature. This makes format a hidden variable in cross-model instruction-following benchmarks: comparisons may be measuring format familiarity, not underlying capability. No controlled experiment (same content × multiple formats × multiple models × behavioral outcome) exists yet. Tracked in `techdebt.md` (TD-007).
+
 +++
 
 (faa-case-study)=
