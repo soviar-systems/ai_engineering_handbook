@@ -19,6 +19,7 @@ Test classes and their contracts:
 import json
 import shutil
 from dataclasses import dataclass
+from datetime import date, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -26,6 +27,11 @@ import pytest
 import yaml
 
 import tools.scripts.check_evidence as _module
+
+
+def _recent_date() -> str:
+    """Return an ISO date 5 days ago — always within the orphan threshold."""
+    return (date.today() - timedelta(days=5)).isoformat()
 
 
 # ======================
@@ -622,7 +628,7 @@ class TestDetectOrphanedSources:
         create_artifact_file(
             sources_dir,
             artifact_type="source",
-            frontmatter_overrides={"extracted_into": None, "date": "2026-02-27"},
+            frontmatter_overrides={"extracted_into": None, "date": _recent_date()},
         )
         warnings = _module.detect_orphaned_sources(sources_dir)
         assert len(warnings) == 0

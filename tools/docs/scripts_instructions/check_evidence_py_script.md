@@ -14,9 +14,9 @@ kernelspec:
 ---
 title: Instruction on check_evidence.py script
 author: Vadim Rudakov, rudakow.wadim@gmail.com
-date: 2026-02-27
+date: 2026-03-30
 options:
-  version: 0.1.0
+  version: 0.1.1
   birth: 2026-02-27
 ---
 

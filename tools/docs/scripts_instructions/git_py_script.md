@@ -17,12 +17,12 @@ type: doc
 authors:
   - name: Vadim Rudakov
     email: rudakow.wadim@gmail.com
-description: Shared git utilities module — repo root detection and staged file queries
+description: Shared git utilities module — repo root detection, staged file queries, and historical path discovery
 tags: [git, ci]
-date: 2026-03-23
+date: 2026-03-30
 options:
   birth: 2026-03-23
-  version: 0.1.0
+  version: 0.2.0
 ---
 
 +++
@@ -49,6 +49,7 @@ On vadocs package extraction, this module becomes `vadocs.git` or `vadocs.vcs`.
 |---|---|---|
 | `detect_repo_root()` | `Path` | Resolved repo root; falls back to `__file__`-based path |
 | `get_staged_files()` | `set[str]` | Repo-relative paths of staged files; empty set on failure |
+| `get_historical_paths(directory)` | `set[str]` | All repo-relative paths that ever existed in a directory (including deleted files) |
 
 +++
 
@@ -79,6 +80,7 @@ On vadocs package extraction, this module becomes `vadocs.git` or `vadocs.vcs`.
 | [check_broken_links.py](/tools/scripts/check_broken_links.py) | `detect_repo_root` (migration pending) |
 | [check_link_format.py](/tools/scripts/check_link_format.py) | `detect_repo_root` (migration pending) |
 | [check_script_suite.py](/tools/scripts/check_script_suite.py) | `get_staged_files` (migration pending) |
+| [convert_qwen_json_export_to_md.py](/tools/scripts/convert_qwen_json_export_to_md.py) | `detect_repo_root`, `get_historical_paths` |
 
 +++
 
