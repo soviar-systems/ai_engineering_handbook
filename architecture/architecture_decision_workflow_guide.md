@@ -4,9 +4,9 @@
 
 title: "Architecture Decision Workflow"
 author: rudakow.wadim@gmail.com
-date: 2026-03-07
+date: 2026-04-01
 options:
-  version: 1.0.1
+  version: 1.1.0
   birth: 2026-03-02
 
 ---
@@ -104,6 +104,20 @@ Not all transitions are valid. The starting status constrains which terminal sta
 | Approach conflicts with current principles | `rejected` | No |
 | Principle valid, better solution exists | `superseded` | Yes — required |
 | Decision no longer relevant to the project | `deprecated` | No |
+
+### Version Semantics
+
+The `options.version` field follows semver and is tied to the ADR's status:
+
+| Status | Version range | Rationale |
+|---|---|---|
+| `proposed` | `0.x.y` | The decision is not yet accepted — pre-1.0 signals instability |
+| `accepted` | `≥ 1.0.0` | Acceptance is the stability guarantee — bump to 1.0.0 on promotion |
+| `superseded` / `rejected` / `deprecated` | Frozen | Terminal statuses do not receive further edits |
+
+**Bump rules within a status:**
+- `proposed`: patch (`0.1.0` → `0.1.1`) for fixes, minor (`0.1.0` → `0.2.0`) for structural changes to the decision
+- `accepted`: patch for typos/formatting, minor for Consequences updates or new evidence, major for scope changes (which likely warrant a new ADR instead)
 
 ## Evidence Gathering
 

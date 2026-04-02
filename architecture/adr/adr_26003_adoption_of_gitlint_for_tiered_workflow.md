@@ -1,10 +1,19 @@
 ---
 id: 26003
-title: Adoption of `gitlint` for Tiered Workflow Enforcement
-date: 2026-01-24
-status: rejected
+title: "Adoption of `gitlint` for Tiered Workflow Enforcement"
+authors:
+  - name: Vadim Rudakov
+    email: rudakow.wadim@gmail.com
+date: 2026-04-01
+description: "gitlint adoption for tiered Git commit validation was rejected in favor of a custom Python validator capable of the conditional Tier 3 ArchTag logic that gitlint could not express."
 tags: [git]
+token_size: 2500
+status: rejected
 superseded_by: null
+options:
+  type: adr
+  birth: 2026-01-24
+  version: 1.0.1
 ---
 
 # ADR-26003: Adoption of `gitlint` for Tiered Workflow Enforcement
@@ -17,7 +26,9 @@ Standardizing Git Commit Validation using `gitlint` to Enforce Three-Tier Archit
 
 Rejected
 
-Commit message validation is handled by a custom Python script `validate_commit_msg.py` (see [ADR-26024](/architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md)). Branch naming validation (Tier 1) will be addressed in a future Git Three-Tier ADR as a `vadocs-git` plugin.
+## Rejection Rationale
+
+Commit message validation is handled by a custom Python script `validate_commit_msg.py` (see {term}`ADR-26024`). Branch naming validation (Tier 1) will be addressed in a future Git Three-Tier ADR as a `vadocs-git` plugin.
 
 ## Date
 

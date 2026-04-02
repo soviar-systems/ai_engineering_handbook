@@ -16,14 +16,25 @@
   ],
 
   "allowed_sections": [
-    "Title", "Date", "Status", "Rejection Rationale",
+    "Title", "Date", "Status",
+    "Rejection Rationale", "Supersession Rationale", "Deprecation Rationale",
     "Context", "Decision", "Consequences", "Alternatives",
     "References", "Participants"
   ],
 
   "conditional_sections": {
-    "rejected": ["Rejection Rationale"]
+    "rejected": ["Rejection Rationale"],
+    "superseded": ["Supersession Rationale"],
+    "deprecated": ["Deprecation Rationale"]
   },
+
+  "conditional_fields": {
+    "superseded": {
+      "superseded_by": {"type": "adr_reference", "required": true}
+    }
+  },
+
+  "min_conditional_section_words": 3,
 
   "recommended_subsections": {
     "Consequences": ["Positive", "Negative / Risks"]

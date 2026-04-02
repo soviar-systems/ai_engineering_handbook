@@ -54,10 +54,10 @@ repos:
         stages: [pre-commit]
 
       - id: check-script-suite
-        name: Check Script Suite (script + test + doc)
+        name: Check Script Suite (script + test)
         entry: uv run --active tools/scripts/check_script_suite.py
         language: python
-        files: ^tools/(scripts/.*\.py|tests/test_.*\.py|docs/scripts_instructions/.*_py_script\.md)$
+        files: ^tools/(scripts/.*\.py|tests/test_.*\.py)$
         pass_filenames: false
         stages: [pre-commit]
 
@@ -109,6 +109,7 @@ repos:
         language: python
         files: ^tools/(scripts/check_broken_links\.py|scripts/paths\.py|tests/test_check_broken_links\.py)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: test-check-link-format
         name: Test Check Link Format script
@@ -116,6 +117,7 @@ repos:
         language: python
         files: ^tools/(scripts/check_link_format\.py|scripts/paths\.py|tests/test_check_link_format\.py)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: test-jupytext-sync
         name: Test Jupytext Sync script
@@ -123,6 +125,7 @@ repos:
         language: python
         files: ^tools/(scripts/jupytext_sync\.py|scripts/paths\.py|tests/test_jupytext_sync\.py)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: test-jupytext-verify-pair
         name: Test Jupytext Verify Pair script
@@ -130,6 +133,7 @@ repos:
         language: python
         files: ^tools/(scripts/jupytext_verify_pair\.py|scripts/paths\.py|tests/test_jupytext_verify_pair\.py)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: test-check-api-keys
         name: Test Check API Keys script
@@ -137,6 +141,7 @@ repos:
         language: python
         files: ^tools/(scripts/check_api_keys\.py|scripts/paths\.py|tests/test_check_api_keys\.py)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: test-check-json-files
         name: Test JSON validation script
@@ -144,6 +149,7 @@ repos:
         language: system
         files: ^tools/(scripts/check_json_files\.py|scripts/paths\.py|tests/test_check_json_files\.py)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: test-prepare-prompt
         name: Test Prepare Prompt script
@@ -151,6 +157,7 @@ repos:
         language: python
         files: ^tools/(scripts/prepare_prompt\.py|scripts/paths\.py|tests/test_prepare_prompt\.py)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: test-check-script-suite
         name: Test Check Script Suite script
@@ -158,6 +165,7 @@ repos:
         language: python
         files: ^tools/(scripts/check_script_suite\.py|scripts/paths\.py|tests/test_check_script_suite\.py)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: test-validate-commit-msg
         name: Test Validate Commit Msg script
@@ -165,6 +173,7 @@ repos:
         language: python
         files: ^(tools/(scripts/validate_commit_msg\.py|tests/test_validate_commit_msg\.py)|pyproject\.toml)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: test-generate-changelog
         name: Test Generate Changelog script
@@ -172,6 +181,7 @@ repos:
         language: python
         files: ^(tools/(scripts/generate_changelog\.py|tests/test_generate_changelog\.py)|pyproject\.toml)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: test-git
         name: Test git utilities module
@@ -179,6 +189,7 @@ repos:
         language: system
         pass_filenames: false
         files: ^tools/(scripts/git\.py|tests/test_git\.py)$
+        stages: [pre-commit]
 
       - id: test-check-frontmatter
         name: Test check_frontmatter
@@ -186,6 +197,7 @@ repos:
         language: system
         pass_filenames: false
         files: ^(tools/scripts/(check_frontmatter|git|paths)\.py|tools/tests/test_check_frontmatter\.py|\.vadocs/(conf\.json|types/(adr|evidence)\.conf\.json))$
+        stages: [pre-commit]
 
       - id: test-check-evidence
         name: Test check_evidence
@@ -193,6 +205,7 @@ repos:
         language: system
         pass_filenames: false
         files: ^(tools/scripts/(check_evidence|git|paths)\.py|tools/tests/test_check_evidence\.py|\.vadocs/(conf\.json|types/evidence\.conf\.json))$
+        stages: [pre-commit]
 
       - id: test-check-adr-index
         name: Test Check ADR Index script
@@ -200,3 +213,4 @@ repos:
         language: python
         files: ^(tools/scripts/(check_adr|git|paths)\.py|tools/tests/test_check_adr\.py|\.vadocs/(conf\.json|types/adr\.conf\.json))$
         pass_filenames: false
+        stages: [pre-commit]

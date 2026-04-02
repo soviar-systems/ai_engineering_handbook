@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""Check that each script has a complete suite: script, test, and documentation.
+"""Check that each script has a matching test file (dyad convention).
+
+Scope: Enforces the script+test dyad. Contract docstrings (ADR-26045) serve
+as the authoritative documentation — no separate instruction docs required.
+Supersedes the former triad convention (ADR-26011).
 
 Naming convention:
 - Script: tools/scripts/<name>.py
 - Test:   tools/tests/test_<name>.py
-- Doc:    tools/docs/scripts_instructions/<name>_py_script.md
 
 Validates:
-1. Each script has matching test and doc files (naming convention)
-2. When script/test changes, corresponding doc must be staged
-3. When doc is renamed, config files must be staged
+1. Each script has a matching test file (naming convention)
+
+Does NOT validate: documentation existence, doc staging, config co-staging.
 """
 
 import argparse
@@ -19,13 +22,9 @@ from pathlib import Path
 
 SCRIPTS_DIR = Path("tools/scripts")
 TESTS_DIR = Path("tools/tests")
-DOCS_DIR = Path("tools/docs/scripts_instructions")
 
-# Scripts excluded from documentation requirement
+# Scripts excluded from test requirement
 EXCLUDED_SCRIPTS = {"paths.py", "__init__.py"}
-
-# Config files that must be updated when doc is renamed
-CONFIG_FILES = {".pre-commit-config.yaml", ".github/workflows/quality.yml"}
 
 
 def get_staged_files() -> set[str]:
@@ -91,12 +90,11 @@ def has_content_changed(file_path: str, staged_files: set[str]) -> bool:
     return file_path in staged_files and not is_mode_only_change(file_path)
 
 
-def script_name_to_paths(name: str) -> tuple[Path, Path, Path]:
-    """Convert script name to script, test, and doc paths."""
+def script_name_to_paths(name: str) -> tuple[Path, Path]:
+    """Convert script name to script and test paths."""
     script = SCRIPTS_DIR / f"{name}.py"
     test = TESTS_DIR / f"test_{name}.py"
-    doc = DOCS_DIR / f"{name}_py_script.md"
-    return script, test, doc
+    return script, test
 
 
 def get_all_scripts() -> list[str]:
@@ -111,64 +109,23 @@ def get_all_scripts() -> list[str]:
 
 
 def check_naming_convention(verbose: bool = False) -> list[str]:
-    """Check that each script has matching test and doc files."""
+    """Check that each script has a matching test file."""
     errors = []
     for name in get_all_scripts():
-        script, test, doc = script_name_to_paths(name)
+        script, test = script_name_to_paths(name)
 
         if not test.exists():
             errors.append(f"Missing test: {test} (for script {script})")
-        if not doc.exists():
-            errors.append(f"Missing doc: {doc} (for script {script})")
 
-        if verbose and test.exists() and doc.exists():
-            print(f"OK: {name} has script, test, and doc")
-
-    return errors
-
-
-def check_doc_staged(staged: set[str], verbose: bool = False) -> list[str]:
-    """Check that doc is staged when script or test changes."""
-    errors = []
-    for name in get_all_scripts():
-        script, test, doc = script_name_to_paths(name)
-
-        script_content_changed = has_content_changed(str(script), staged)
-        test_content_changed = has_content_changed(str(test), staged)
-
-        doc_required = script_content_changed or test_content_changed
-        doc_is_staged = str(doc) in staged
-
-        if doc_required and not doc_is_staged:
-            trigger = str(script) if script_content_changed else str(test)
-            errors.append(f"Doc not staged: {doc} (triggered by change in {trigger})")
-        elif verbose and doc_required and doc_is_staged:
-            print(f"OK: {doc} is staged with its script/test")
-
-    return errors
-
-
-def check_doc_rename(staged: set[str], verbose: bool = False) -> list[str]:
-    """Check that config files are staged when doc is renamed."""
-    errors = []
-    renamed = get_renamed_files()
-
-    for old_path, new_path in renamed.items():
-        if old_path.startswith(str(DOCS_DIR)) and old_path.endswith("_py_script.md"):
-            for config in CONFIG_FILES:
-                if config not in staged:
-                    errors.append(
-                        f"Config not staged: {config} (doc renamed: {old_path} -> {new_path})"
-                    )
-            if verbose:
-                print(f"Doc renamed: {old_path} -> {new_path}")
+        if verbose and test.exists():
+            print(f"OK: {name} has script and test")
 
     return errors
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Check that each script has a complete suite (script, test, doc)."
+        description="Check that each script has a matching test (dyad convention)."
     )
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Show detailed output"
@@ -182,14 +139,8 @@ def main() -> int:
 
     errors = []
 
-    # Always check naming convention
+    # Check naming convention (every script has a test)
     errors.extend(check_naming_convention(args.verbose))
-
-    # Check staging unless --check-convention-only
-    if not args.check_convention_only:
-        staged = get_staged_files()
-        errors.extend(check_doc_staged(staged, args.verbose))
-        errors.extend(check_doc_rename(staged, args.verbose))
 
     if errors:
         print("\nErrors found:")

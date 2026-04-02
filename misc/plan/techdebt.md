@@ -20,15 +20,6 @@ Traceable record of intentional shortcuts. Each entry has a date, location, and 
 - **Migration path:** When the first ADR needs deprecation: (1) add a conditional `Deprecation Rationale` section to `adr_template.md`, (2) add validation rules to `adr_config.yaml` and `check_adr.py`, (3) remove the "not yet formalized" caveat from the guide.
 - **Introduced by:** plan_20260302_adr_writing_guide.md
 
-### TD-004: Script suite triad doc requirement is redundant (2026-03-23)
-
-- **Location:** ADR-26011, `tools/scripts/check_script_suite.py`, `tools/docs/scripts_instructions/`
-- **Context:** ADR-26011 mandates script + test + doc triad. With contract docstrings now required in every module (CLAUDE.md convention) and tests documenting contracts by example, the per-script instruction docs duplicate what's already in the code. Docs fall out of sync on every config change (e.g., YAML→JSON migration required bulk doc updates). When vadocs is extracted as a package, API docs auto-generate from docstrings — per-script docs won't survive.
-- **Current state:** Triad enforced by `check_script_suite.py` pre-commit hook. 15+ doc files in `tools/docs/scripts_instructions/`, each Jupytext-paired (.md + .ipynb).
-- **Analysis:** [A-26014](/architecture/evidence/analyses/A-26014_script_suite_doc_redundancy.md)
-- **Migration path:** (1) Supersede ADR-26011 with new ADR relaxing triad to script + test (doc optional), (2) update `check_script_suite.py` to drop doc requirement, (3) let existing docs age out, (4) new modules only need docstrings. Plan as dedicated task after step 7 completion.
-- **Introduced by:** step 7 config migration session (2026-03-23)
-
 ### TD-005: check_frontmatter.py needed for hub-level validation (2026-03-23)
 
 - **Location:** `.vadocs/conf.json` (field_registry, blocks), `check_adr.py`, `check_evidence.py`
@@ -59,3 +50,7 @@ Traceable record of intentional shortcuts. Each entry has a date, location, and 
 ### TD-001: common_required_fields in evidence.config.yaml (2026-02-27)
 - Resolved by ADR-26042 (Common Frontmatter Standard) — hub-and-spoke config replaces fragmented common_required_fields
 - Resolved: 2026-03-11
+
+### TD-004: Script suite triad doc requirement is redundant (2026-03-23)
+- Resolved by ADR-26045 (AI-Native Development — Code as Primary Documentation) superseding ADR-26011. Doc requirement dropped from `check_script_suite.py` and pre-commit hook. Existing docs in `tools/docs/scripts_instructions/` left to age out.
+- Resolved: 2026-04-01

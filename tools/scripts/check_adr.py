@@ -162,6 +162,8 @@ VALID_TAGS: set[str] = _load_parent_tags(_config)
 REQUIRED_SECTIONS: list[str] = _config.get("required_sections", [])
 ALLOWED_SECTIONS: set[str] = set(_config.get("allowed_sections", []))
 CONDITIONAL_SECTIONS: dict[str, list[str]] = _config.get("conditional_sections", {})
+CONDITIONAL_FIELDS: dict[str, dict] = _config.get("conditional_fields", {})
+MIN_CONDITIONAL_SECTION_WORDS: int = _config.get("min_conditional_section_words", 3)
 PRIMARY_TAG_SECTIONING: bool = _config.get("primary_tag_sectioning", False)
 # date_format from parent config (hub), with spoke fallback
 _parent_rel = _config.get("parent_config", "")
@@ -460,7 +462,12 @@ def validate_sections(adr_file: AdrFile) -> list[ValidationError]:
                 )
             )
 
-    # Check conditional sections (e.g. Rejection Rationale only for rejected)
+    # Check conditional sections: status ↔ section bidirectional enforcement.
+    #
+    # CONDITIONAL_SECTIONS maps status → list of section names.
+    # Two rules:
+    #   1. Section present + wrong status → "conditional_section_violation"
+    #   2. Right status + section absent → "missing_conditional_section"
     if CONDITIONAL_SECTIONS:
         # Build reverse map: section_name -> set of statuses that allow it
         allowed_statuses: dict[str, set[str]] = {}
@@ -469,6 +476,8 @@ def validate_sections(adr_file: AdrFile) -> list[ValidationError]:
                 allowed_statuses.setdefault(section, set()).add(status)
 
         effective_status = adr_file.status or ""
+
+        # Rule 1: section present but status doesn't allow it
         for section_name, valid_statuses in allowed_statuses.items():
             if section_name in found_sections and effective_status not in valid_statuses:
                 errors.append(
@@ -481,6 +490,165 @@ def validate_sections(adr_file: AdrFile) -> list[ValidationError]:
                         ),
                     )
                 )
+
+        # Rule 2: status requires section but it's absent
+        for status, required_section_names in CONDITIONAL_SECTIONS.items():
+            if effective_status == status:
+                for section_name in required_section_names:
+                    if section_name not in found_sections:
+                        errors.append(
+                            ValidationError(
+                                number=adr_file.number,
+                                error_type="missing_conditional_section",
+                                message=(
+                                    f"ADR {adr_file.number} has status '{effective_status}' "
+                                    f"but is missing required section: '## {section_name}'"
+                                ),
+                            )
+                        )
+
+    return errors
+
+
+def validate_conditional_fields(
+    adr_file: AdrFile,
+    all_adr_numbers: set[int] | None = None,
+) -> list[ValidationError]:
+    """Check status-dependent frontmatter fields are present and valid.
+
+    CONDITIONAL_FIELDS maps status → dict of field rules from adr.conf.json.
+    Unlike CONDITIONAL_SECTIONS (which validates markdown ## sections in the
+    body), this validates YAML frontmatter fields.
+
+    Supported types:
+    - "adr_reference": must be a string in "ADR-NNNNN" format (e.g., "ADR-26045").
+      Extracts the numeric part for existence checking against all_adr_numbers.
+
+    Example: when status is 'superseded', the 'superseded_by' field must be
+    a non-null ADR reference pointing to an existing ADR.
+
+    Args:
+        adr_file: ADR file to validate.
+        all_adr_numbers: Set of all known ADR numbers for reference validation.
+            If None, reference existence is not checked.
+
+    Returns:
+        List of ValidationError for conditional field violations.
+    """
+    errors = []
+
+    if not adr_file.frontmatter or not adr_file.status:
+        return errors
+
+    field_rules = CONDITIONAL_FIELDS.get(adr_file.status, {})
+    for field_name, rules in field_rules.items():
+        value = adr_file.frontmatter.get(field_name)
+
+        # Required field missing or null
+        if rules.get("required") and not value:
+            errors.append(
+                ValidationError(
+                    number=adr_file.number,
+                    error_type="missing_conditional_field",
+                    message=(
+                        f"ADR {adr_file.number} has status '{adr_file.status}' "
+                        f"but '{field_name}' is missing or null"
+                    ),
+                )
+            )
+            continue
+
+        if not value:
+            continue
+
+        # Type check and number extraction
+        expected_type = rules.get("type")
+        if expected_type == "adr_reference":
+            ref_number = _parse_adr_reference(value)
+            if ref_number is None:
+                errors.append(
+                    ValidationError(
+                        number=adr_file.number,
+                        error_type="invalid_field_type",
+                        message=(
+                            f"ADR {adr_file.number} field '{field_name}' must be "
+                            f"in 'ADR-NNNNN' format (e.g., 'ADR-26045'), "
+                            f"got: {value}"
+                        ),
+                    )
+                )
+                continue
+
+            # Reference existence check
+            if all_adr_numbers is not None and ref_number not in all_adr_numbers:
+                errors.append(
+                    ValidationError(
+                        number=adr_file.number,
+                        error_type="invalid_field_reference",
+                        message=(
+                            f"ADR {adr_file.number} field '{field_name}' references "
+                            f"ADR {ref_number} which does not exist"
+                        ),
+                    )
+                )
+
+    return errors
+
+
+def _parse_adr_reference(value: str | int) -> int | None:
+    """Extract ADR number from a reference string.
+
+    Only accepts "ADR-NNNNN" format (e.g., "ADR-26045" → 26045).
+    Bare integers and other formats are rejected.
+
+    Returns:
+        The ADR number as int, or None if the format is invalid.
+    """
+    if not isinstance(value, str):
+        return None
+    match = re.match(r"^ADR-(\d+)$", value)
+    return int(match.group(1)) if match else None
+
+
+def validate_conditional_section_content(
+    adr_file: AdrFile,
+) -> list[ValidationError]:
+    """Check that conditional sections have meaningful content.
+
+    Conditional sections (Rejection Rationale, Supersession Rationale, etc.)
+    must contain at least MIN_CONDITIONAL_SECTION_WORDS words. This catches
+    empty sections and placeholder text like 'TBD'.
+
+    Uses _extract_section_body() to get the body text between the section
+    header and the next ## header.
+
+    Args:
+        adr_file: ADR file to validate.
+
+    Returns:
+        List of ValidationError for empty/vacuous conditional sections.
+    """
+    errors = []
+
+    if not adr_file.content or not adr_file.status:
+        return errors
+
+    section_names = CONDITIONAL_SECTIONS.get(adr_file.status, [])
+    for section_name in section_names:
+        body = _extract_section_body(adr_file.content, section_name)
+        word_count = len(body.split()) if body else 0
+
+        if word_count < MIN_CONDITIONAL_SECTION_WORDS:
+            errors.append(
+                ValidationError(
+                    number=adr_file.number,
+                    error_type="empty_conditional_section",
+                    message=(
+                        f"ADR {adr_file.number} section '## {section_name}' has "
+                        f"{word_count} word(s), minimum is {MIN_CONDITIONAL_SECTION_WORDS}"
+                    ),
+                )
+            )
 
     return errors
 
@@ -941,9 +1109,18 @@ def validate_sync(
     for adr in adr_files:
         errors.extend(validate_tags(adr))
 
-    # Check for required sections
+    # Check for required/allowed sections and conditional section rules
     for adr in adr_files:
         errors.extend(validate_sections(adr))
+
+    # Check conditional frontmatter fields (e.g., superseded_by for superseded)
+    all_numbers = {adr.number for adr in adr_files}
+    for adr in adr_files:
+        errors.extend(validate_conditional_fields(adr, all_numbers))
+
+    # Check conditional section content is non-empty
+    for adr in adr_files:
+        errors.extend(validate_conditional_section_content(adr))
 
     # Check for title mismatch between header and frontmatter
     for adr in adr_files:
@@ -1288,6 +1465,25 @@ def fix_index() -> list[str]:
         effective_status = adr.status if adr.status else DEFAULT_STATUS
         section = STATUS_SECTIONS.get(effective_status, STATUS_SECTIONS[DEFAULT_STATUS])
         sections[section].append(adr)
+
+    # Check for duplicate ADR numbers before building index
+    # Track where each ADR number appears (status/primary_tag combination)
+    seen_numbers: dict[int, list[str]] = {}
+    for adr in adr_files:
+        status = adr.status if adr.status else DEFAULT_STATUS
+        tag = _get_primary_tag(adr)
+        location = f"{status}/{tag}"
+        if adr.number not in seen_numbers:
+            seen_numbers[adr.number] = []
+        seen_numbers[adr.number].append(location)
+
+    # Print warnings for duplicates found
+    for number, locations in seen_numbers.items():
+        if len(locations) > 1:
+            print(
+                f"WARNING: ADR-{number} appears in multiple index locations: {', '.join(locations)}",
+                file=sys.stderr
+            )
 
     # Build new index content with partitioned sections
     lines = ["# ADR Index\n"]

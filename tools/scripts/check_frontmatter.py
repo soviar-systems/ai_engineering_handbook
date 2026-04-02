@@ -640,11 +640,17 @@ def resolve_type(frontmatter: dict) -> str | None:
 def load_config_chain(
     repo_root: Path, doc_type: str | None = None
 ) -> tuple[dict, dict | None]:
-    """Load hub config and optional spoke config for a document type.
+    """Load hub config and optional child config for a document type.
 
     Uses paths.get_config_path() for config discovery.
-    Returns (hub_config, spoke_config_or_None).
+    Returns (hub_config, child_config_or_None).
     Configs are cached per doc_type after first load.
+
+    Sub-type resolution (TD-005):
+    When doc_type is a sub-type (e.g., "analysis", "retrospective", "source"),
+    the parent config (evidence) is loaded, and the sub_type_rules are extracted
+    from artifact_types.<sub_type>. The returned child_config contains the merged
+    common rules + sub-type-specific rules.
     """
     if doc_type in _config_cache:
         return _config_cache[doc_type]
@@ -655,16 +661,52 @@ def load_config_chain(
     hub_path = get_config_path(repo_root)
     hub = json.loads(hub_path.read_text(encoding="utf-8"))
 
-    spoke = None
+    child_config = None
     if doc_type is not None:
-        # Spoke config may not exist — types like tutorial, guide, policy have
-        # no spoke config yet. They are validated against hub rules only.
-        spoke_path = get_config_path(repo_root, doc_type)
-        if spoke_path.exists():
-            spoke = json.loads(spoke_path.read_text(encoding="utf-8"))
+        # Sub-type → parent config resolution (TD-005)
+        # paths.get_config_path() already resolves sub-types to parent config
+        child_path = get_config_path(repo_root, doc_type)
+        if child_path.exists():
+            child_config = json.loads(child_path.read_text(encoding="utf-8"))
+            # Extract sub-type rules if this is a sub-type (TD-005)
+            child_config = _resolve_subtype_rules(child_config, doc_type)
 
-    _config_cache[doc_type] = (hub, spoke)
-    return hub, spoke
+    _config_cache[doc_type] = (hub, child_config)
+    return hub, child_config
+
+
+def _resolve_subtype_rules(
+    parent_config: dict, doc_type: str
+) -> dict | None:
+    """Extract sub-type rules from parent config's artifact_types (TD-005).
+
+    For evidence sub-types (analysis, retrospective, source), the parent
+    config contains artifact_types.<sub_type> with type-specific rules.
+    This function merges common rules with sub-type-specific rules.
+
+    Args:
+        parent_config: Loaded parent config (e.g., evidence.conf.json)
+        doc_type: The sub-type name (e.g., "analysis")
+
+    Returns:
+        Merged config with common_required_fields + sub-type required_fields,
+        or None if doc_type is not a sub-type or has no artifact_types entry.
+    """
+    artifact_types = parent_config.get("artifact_types", {})
+    if doc_type not in artifact_types:
+        return parent_config  # Not a sub-type, return as-is
+
+    sub_type_rules = artifact_types[doc_type]
+    # Merge common + sub-type required fields
+    common_fields = parent_config.get("common_required_fields", [])
+    sub_type_fields = sub_type_rules.get("required_fields", [])
+    merged_fields = list(common_fields) + list(sub_type_fields)
+
+    # Return merged config
+    result = dict(parent_config)
+    result["common_required_fields"] = merged_fields
+    result["artifact_type"] = doc_type  # Mark which sub-type we resolved
+    return result
 
 
 # ======================

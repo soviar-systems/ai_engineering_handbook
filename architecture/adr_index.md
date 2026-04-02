@@ -31,6 +31,16 @@ ADR-26038
 
 :::
 
+### development
+
+:::{glossary}
+ADR-26045
+: [AI-Native Development — Code as Primary Documentation](/architecture/adr/adr_26045_ai_native_development_code_as_primary_documentation.md)
+
+  Contract docstrings are mandatory for all code in all languages across the ecosystem. Code structure is the primary documentation layer for both human and agent consumers.
+
+:::
+
 ### devops
 
 :::{glossary}
@@ -67,9 +77,6 @@ ADR-26002
 ### governance
 
 :::{glossary}
-ADR-26011
-: [Formalization of the Mandatory Script Suite Workflow](/architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md)
-
 ADR-26017
 : [ADR Format Validation Workflow](/architecture/adr/adr_26017_adr_format_validation_workflow.md)
 
@@ -200,6 +207,8 @@ ADR-26034
 ADR-26003
 : [Adoption of `gitlint` for Tiered Workflow Enforcement](/architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md)
 
+  gitlint adoption for tiered Git commit validation was rejected in favor of a custom Python validator capable of the conditional Tier 3 ArchTag logic that gitlint could not express.
+
 :::
 
 ### governance
@@ -223,11 +232,18 @@ ADR-26005
 ### governance
 
 :::{glossary}
+ADR-26011
+: [Formalization of the Mandatory Script Suite Workflow](/architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md) — superseded by {term}`ADR-26045`
+
 ADR-26018
 : [Universal YAML Frontmatter Adoption for Machine-Readable Documentation](/architecture/adr/adr_26018_universal_yaml_frontmatter_adoption.md) — superseded by {term}`ADR-26023`
 
+  YAML frontmatter is mandated as the universal machine-readable interface for all documentation artifacts, requiring owner, version, and last_modified fields on every file.
+
 ADR-26019
 : [Mirroring YAML Metadata to Document Body for Human Verification](/architecture/adr/adr_26019_mirroring_yaml_metadata_to_document_body.md) — superseded by {term}`ADR-26023`
+
+  A pre-commit hook automatically mirrors YAML frontmatter fields into a prose reflection block in the document body, making metadata visible on the MyST-rendered static site.
 
 :::
 
@@ -237,8 +253,12 @@ ADR-26019
 ADR-26006
 : [Requirement for Agentic-Class Models for the Architect Phase](/architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md) — superseded by {term}`ADR-26027`
 
+  Agentic-Class models (high instruction adherence) are required for the aidx Architect phase to prevent instruction drift in generated plans.
+
 ADR-26008
 : [Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)](/architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md) — superseded by {term}`ADR-26027`
+
+  Reasoning-Class models (high abstract synthesis) are required for Phase 0 to resolve requirements ambiguity before the aidx pipeline engages local hardware.
 
 :::
 
@@ -247,5 +267,7 @@ ADR-26008
 :::{glossary}
 ADR-26007
 : [Formalization of Phase 0: Intent Synthesis (Requirements Engineering)](/architecture/adr/adr_26007_formalization_of_phase_0_intent_synthesi.md) — superseded by {term}`ADR-26028`
+
+  Phase 0 Intent Synthesis is a mandatory human-lead + reasoning-model gateway before any aidx session, producing a Mission artifact that grounds all subsequent phases.
 
 :::

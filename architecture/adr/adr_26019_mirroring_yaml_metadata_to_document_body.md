@@ -1,10 +1,19 @@
 ---
 id: 26019
 title: "Mirroring YAML Metadata to Document Body for Human Verification"
-date: 2026-02-01
+authors:
+  - name: Vadim Rudakov
+    email: rudakow.wadim@gmail.com
+date: 2026-04-01
+description: "A pre-commit hook automatically mirrors YAML frontmatter fields into a prose reflection block in the document body, making metadata visible on the MyST-rendered static site."
+tags: [governance, documentation, context_management]
+token_size: 4500
 status: superseded
 superseded_by: ADR-26023
-tags: [governance, documentation, context_management]
+options:
+  type: adr
+  birth: 2026-02-01
+  version: 1.0.1
 ---
 
 # ADR-26019: Mirroring YAML Metadata to Document Body for Human Verification
@@ -18,6 +27,10 @@ tags: [governance, documentation, context_management]
 superseded
 
 Superseded by: {term}`ADR-26023`
+
+## Supersession Rationale
+
+The reflection block script was a workaround for custom frontmatter fields ({term}`ADR-26018`) being invisible in the MyST-rendered site. When {term}`ADR-26023` replaced non-standard field names with MyST-native equivalents, the renderer natively displays them — eliminating the need for a prose projection layer.
 
 ## Context
 

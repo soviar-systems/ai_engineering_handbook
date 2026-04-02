@@ -1,5 +1,5 @@
 {
-  "$comment": "Evidence Configuration — operational rules for evidence artifacts (analyses, retrospectives, sources). Tags and date_format inherited from parent config.",
+  "$comment": "Evidence Configuration — operational rules for evidence artifacts (analyses, retrospectives, sources). Tags and date_format inherited from parent config.\n\nSub-type resolution (TD-005): The artifact_types key defines three sub-types (analysis, retrospective, source). These are NOT separate child configs — they are resolved to this parent config (evidence) by tools/scripts/paths.py (SUBTYPE_PARENT_MAP). When validating an analysis file, check_frontmatter.py loads this config and extracts artifact_types.analysis rules.",
   "parent_config": ".vadocs/conf.json",
 
   "evidence_dir": "architecture/evidence",

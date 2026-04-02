@@ -8,14 +8,14 @@ Designed for extraction into the vadocs standalone package.
 - **Entry point**: `pyproject.toml [tool.vadocs].config_dir` points here. Scripts discover configs via `paths.get_config_path()`.
 - **Add a tag**: add to `conf.json` → `tags` (alphabetical). The description defines scope.
 - **Add a document type**: add to `conf.json` → `types`, create `types/<doc_type>.conf.json`.
-- **Spoke configs** inherit from `conf.json` via `parent_config` — they add constraints, never remove.
+- **Child configs** inherit from `conf.json` via `parent_config` — they add constraints, never remove.
 
 ## Directory Layout
 
 ```
 conf.json              Hub — shared vocabulary (fields, blocks, types, tags)
 conf.schema.json       JSON Schema for hub config and frontmatter validation
-types/                 Spoke configs (one per governed document type)
+types/                 Child configs (one per governed document type)
 validation/            Operational rules for validation scripts
 ```
 

@@ -1,10 +1,19 @@
 ---
 id: 26006
 title: Requirement for Agentic-Class Models for the Architect Phase
-date: 2026-01-24
-status: superseded
+authors:
+  - name: Vadim Rudakov
+    email: rudakow.wadim@gmail.com
+date: 2026-04-01
+description: "Agentic-Class models (high instruction adherence) are required for the aidx Architect phase to prevent instruction drift in generated plans."
 tags: [model, workflow]
+token_size: 3200
+status: superseded
 superseded_by: ADR-26027
+options:
+  type: adr
+  birth: 2026-01-24
+  version: 1.0.1
 ---
 
 # ADR-26006: Requirement for Agentic-Class Models for the Architect Phase
@@ -18,6 +27,10 @@ Standardizing the use of Agentic-Class LLMs for the `aidx` Architect Phase to En
 Superseded
 
 Superseded by: {term}`ADR-26027`
+
+## Supersession Rationale
+
+This ADR bound the model selection taxonomy (Agentic-Class vs. Reasoning-Class) to the `aidx` orchestration framework, creating unnecessary coupling between a general selection principle and a particular toolchain. {term}`ADR-26027` decouples the taxonomy into a tool-agnostic selection heuristic applicable to any agent orchestration approach.
 
 ## Date
 

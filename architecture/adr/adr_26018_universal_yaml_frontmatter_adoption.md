@@ -1,10 +1,19 @@
 ---
 id: 26018
 title: "Universal YAML Frontmatter Adoption for Machine-Readable Documentation"
-date: 2026-02-01
+authors:
+  - name: Vadim Rudakov
+    email: rudakow.wadim@gmail.com
+date: 2026-04-01
+description: "YAML frontmatter is mandated as the universal machine-readable interface for all documentation artifacts, requiring owner, version, and last_modified fields on every file."
+tags: [governance, documentation, context_management]
+token_size: 2600
 status: superseded
 superseded_by: ADR-26023
-tags: [governance, documentation, context_management]
+options:
+  type: adr
+  birth: 2026-02-01
+  version: 1.0.1
 ---
 
 # ADR-26018: Universal YAML Frontmatter Adoption for Machine-Readable Documentation
@@ -22,6 +31,10 @@ Universal YAML Frontmatter Adoption for Machine-Readable Documentation
 superseded
 
 Superseded by: {term}`ADR-26023`
+
+## Supersession Rationale
+
+The field names mandated here (`owner`, `version`, `birth`, `last_modified`) do not match the MyST frontmatter API and are silently ignored by the renderer. {term}`ADR-26023` replaced them with MyST-native field names, preserving the machine-readability goal while ensuring fields are visible in the rendered static site.
 
 ## Context
 Our repository contains heterogeneous documentation formats, including MyST Markdown handbooks (`.md`) and Jupytext-paired notebooks (`.ipynb`). Currently, metadata such as ownership, versioning, and status are often embedded as unstructured markdown text in the document body.

@@ -1,10 +1,19 @@
 ---
 id: 26008
 title: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
-date: 2026-01-24
+authors:
+  - name: Vadim Rudakov
+    email: rudakow.wadim@gmail.com
+date: 2026-04-01
+description: "Reasoning-Class models (high abstract synthesis) are required for Phase 0 to resolve requirements ambiguity before the aidx pipeline engages local hardware."
+tags: [model, workflow]
+token_size: 3000
 status: superseded
-tags: [model]
 superseded_by: ADR-26027
+options:
+  type: adr
+  birth: 2026-01-24
+  version: 1.0.1
 ---
 
 # ADR-26008: Selection of Reasoning-Class Models for Abstract Synthesis (Phase 0)
@@ -18,6 +27,10 @@ Mandating the use of General-Purpose "Reasoning-Class" LLMs for Phase 0 to ensur
 Superseded
 
 Superseded by: {term}`ADR-26027`
+
+## Supersession Rationale
+
+This ADR bound the Reasoning-Class model requirement to Phase 0 of the `aidx` framework, coupling a general selection heuristic to a specific toolchain. Together with {term}`ADR-26006`, it was superseded by {term}`ADR-26027`, which defines the Reasoning-Class vs. Agentic-Class taxonomy as a tool-agnostic selection principle.
 
 ## Date
 

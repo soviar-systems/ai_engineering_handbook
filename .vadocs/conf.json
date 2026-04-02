@@ -12,7 +12,7 @@
     "  .vadocs/",
     "    conf.json              <- this file (hub)",
     "    conf.schema.json       <- JSON Schema for this file",
-    "    types/                 <- doc-type spoke configs",
+    "    types/                 <- doc-type child configs",
     "      adr.conf.json",
     "      evidence.conf.json",
     "    validation/            <- operational rules (excludes, patterns)",
@@ -183,6 +183,9 @@
     },
     "context_management": {
       "description": "AI context engineering — token budgets, progressive disclosure, memory, RAG"
+    },
+    "development": {
+      "description": "Development methodology — code conventions, docstring contracts, AI-native workflows, language-agnostic practices"
     },
     "devops": {
       "description": "Infrastructure and deployment — containers, databases, hosting, environments"

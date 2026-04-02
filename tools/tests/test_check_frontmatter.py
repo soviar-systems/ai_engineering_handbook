@@ -225,33 +225,52 @@ def frontmatter_env(tmp_path, monkeypatch):
 
 
 class TestLoadConfigChain:
-    """Contract: load_config_chain returns (hub, spoke) tuple.
+    """Contract: load_config_chain returns (hub_config, child_config) tuple.
 
-    Hub always loaded. Spoke loaded when doc_type has a .conf.json file,
-    None otherwise. Results cached per doc_type.
+    Hub config always loaded. Child config loaded when doc_type has a .conf.json
+    file, None otherwise. Results cached per doc_type.
+
+    Sub-type resolution (TD-005):
+    - Sub-types (analysis, retrospective, source) resolve to parent config (evidence)
+    - Sub-type rules extracted from artifact_types.<sub_type>
+    - common_required_fields merged with sub-type required_fields
     """
 
     def test_hub_only_when_no_doc_type(self, frontmatter_env):
         """No doc_type → returns (hub_dict, None)."""
-        hub, spoke = _module.load_config_chain(frontmatter_env, doc_type=None)
-        assert isinstance(hub, dict)
-        assert "field_registry" in hub
-        assert "blocks" in hub
-        assert "types" in hub
-        assert spoke is None
+        hub_config, child_config = _module.load_config_chain(frontmatter_env, doc_type=None)
+        assert isinstance(hub_config, dict)
+        assert "field_registry" in hub_config
+        assert "blocks" in hub_config
+        assert "types" in hub_config
+        assert child_config is None
 
-    def test_hub_plus_spoke_for_known_type(self, frontmatter_env):
-        """Known type with spoke config → returns (hub_dict, spoke_dict)."""
-        hub, spoke = _module.load_config_chain(frontmatter_env, doc_type="adr")
-        assert isinstance(hub, dict)
-        assert isinstance(spoke, dict)
-        assert "required_fields" in spoke or "statuses" in spoke
+    def test_hub_plus_child_for_known_type(self, frontmatter_env):
+        """Known type with child config → returns (hub_dict, child_dict)."""
+        hub_config, child_config = _module.load_config_chain(frontmatter_env, doc_type="adr")
+        assert isinstance(hub_config, dict)
+        assert isinstance(child_config, dict)
+        assert "required_fields" in child_config or "statuses" in child_config
 
-    def test_none_spoke_for_type_without_config(self, frontmatter_env):
-        """Type defined in hub but no spoke .conf.json → (hub_dict, None)."""
-        hub, spoke = _module.load_config_chain(frontmatter_env, doc_type="tutorial")
-        assert isinstance(hub, dict)
-        assert spoke is None
+    def test_none_child_for_type_without_config(self, frontmatter_env):
+        """Type defined in hub but no child .conf.json → (hub_dict, None)."""
+        # Find a type without a child config file (config-driven, not hardcoded)
+        hub_config = json.loads(_module.HUB_CONFIG_PATH.read_text())
+        types_without_config = []
+        for type_name in hub_config.get("types", {}).keys():
+            config_path = _module.get_config_path(frontmatter_env, type_name)
+            if not config_path.exists():
+                types_without_config.append(type_name)
+
+        if not types_without_config:
+            # All types have configs — skip instead of fail
+            pytest.skip("All hub types have child config files")
+
+        # Use first type without config
+        test_type = types_without_config[0]
+        hub_config_result, child_config = _module.load_config_chain(frontmatter_env, doc_type=test_type)
+        assert isinstance(hub_config_result, dict)
+        assert child_config is None
 
     def test_caches_results(self, frontmatter_env):
         """Second call with same doc_type returns cached result."""
@@ -262,11 +281,96 @@ class TestLoadConfigChain:
 
     def test_different_types_cached_independently(self, frontmatter_env):
         """Different doc_types have independent cache entries."""
-        _, spoke_adr = _module.load_config_chain(frontmatter_env, doc_type="adr")
-        _, spoke_evidence = _module.load_config_chain(
+        _, child_adr = _module.load_config_chain(frontmatter_env, doc_type="adr")
+        _, child_evidence = _module.load_config_chain(
             frontmatter_env, doc_type="evidence"
         )
-        assert spoke_adr is not spoke_evidence
+        assert child_adr is not child_evidence
+
+    # ======================
+    # Tests: Sub-type Resolution (TD-005)
+    # ======================
+
+    def test_subtype_resolves_to_parent_config(self, frontmatter_env):
+        """Sub-type resolves to parent config with artifact_type marker."""
+        # Load sub-type from config, not hardcoded
+        evidence_config_path = _module.get_config_path(frontmatter_env, "evidence")
+        evidence_config = json.loads(evidence_config_path.read_text())
+        subtypes = list(evidence_config["artifact_types"].keys())
+        test_subtype = subtypes[0]  # Use first available sub-type
+
+        hub_config, child_config = _module.load_config_chain(
+            frontmatter_env, doc_type=test_subtype
+        )
+        assert isinstance(hub_config, dict)
+        assert child_config is not None
+        # Should have artifact_type marker matching input
+        assert child_config.get("artifact_type") == test_subtype
+
+    def test_subtype_merges_required_fields(self, frontmatter_env):
+        """Sub-type merges common + sub-type required_fields (config-driven)."""
+        # Load expected from config using module's path resolver, not hardcoded
+        evidence_config_path = _module.get_config_path(frontmatter_env, "evidence")
+        evidence_config = json.loads(evidence_config_path.read_text())
+        common = evidence_config.get("common_required_fields", [])
+        analysis_fields = evidence_config["artifact_types"]["analysis"]["required_fields"]
+        expected_merged = set(common) | set(analysis_fields)
+
+        _, child_config = _module.load_config_chain(
+            frontmatter_env, doc_type="analysis"
+        )
+        merged_fields = set(child_config.get("common_required_fields", []))
+        assert merged_fields == expected_merged
+
+    def test_retrospective_subtype_resolves_correctly(self, frontmatter_env):
+        """Sub-type 'retrospective' loads evidence parent config with merged fields."""
+        # Load expected from config using module's path resolver, not hardcoded
+        evidence_config_path = _module.get_config_path(frontmatter_env, "evidence")
+        evidence_config = json.loads(evidence_config_path.read_text())
+        common = evidence_config.get("common_required_fields", [])
+        retro_fields = evidence_config["artifact_types"]["retrospective"]["required_fields"]
+        expected_merged = set(common) | set(retro_fields)
+
+        _, child_config = _module.load_config_chain(
+            frontmatter_env, doc_type="retrospective"
+        )
+        assert child_config is not None
+        assert child_config.get("artifact_type") == "retrospective"
+        merged_fields = set(child_config.get("common_required_fields", []))
+        assert merged_fields == expected_merged
+
+    def test_source_subtype_resolves_correctly(self, frontmatter_env):
+        """Sub-type 'source' loads evidence parent config with merged fields."""
+        # Load expected from config using module's path resolver, not hardcoded
+        evidence_config_path = _module.get_config_path(frontmatter_env, "evidence")
+        evidence_config = json.loads(evidence_config_path.read_text())
+        common = evidence_config.get("common_required_fields", [])
+        source_fields = evidence_config["artifact_types"]["source"]["required_fields"]
+        expected_merged = set(common) | set(source_fields)
+
+        _, child_config = _module.load_config_chain(
+            frontmatter_env, doc_type="source"
+        )
+        assert child_config is not None
+        assert child_config.get("artifact_type") == "source"
+        merged_fields = set(child_config.get("common_required_fields", []))
+        assert merged_fields == expected_merged
+
+    def test_subtype_preserves_artifact_types_structure(self, frontmatter_env):
+        """Sub-type resolution preserves artifact_types dict for downstream use."""
+        # Load expected sub-types from config using module's path resolver
+        evidence_config_path = _module.get_config_path(frontmatter_env, "evidence")
+        evidence_config = json.loads(evidence_config_path.read_text())
+        expected_subtypes = set(evidence_config["artifact_types"].keys())
+
+        _, child_config = _module.load_config_chain(
+            frontmatter_env, doc_type="analysis"
+        )
+        # artifact_types should still be accessible for other validation logic
+        assert "artifact_types" in child_config
+        # All sub-types should be preserved
+        preserved_subtypes = set(child_config["artifact_types"].keys())
+        assert preserved_subtypes == expected_subtypes
 
 
 # ======================

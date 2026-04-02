@@ -2,9 +2,9 @@
 id: 26011
 title: Formalization of the Mandatory Script Suite Workflow
 date: 2026-01-31
-status: accepted
-tags: [governance]
-superseded_by: null
+status: superseded
+tags: [governance, development]
+superseded_by: ADR-26045
 ---
 
 # ADR-26011: Formalization of the Mandatory Script Suite Workflow
@@ -15,7 +15,11 @@ Mandating a synchronized 1:1:1 ratio for Scripts, Tests, and Documentation.
 
 ## Status
 
-Accepted
+Superseded by {term}`ADR-26045`
+
+## Supersession Rationale
+
+The documentation requirement (third leg of the triad) is replaced by contract docstrings governed ecosystem-wide by {term}`ADR-26045`. Evidence in [A-26014](/architecture/evidence/analyses/A-26014_script_suite_doc_redundancy.md) showed that per-script instruction docs drifted silently during config migrations, duplicated content already in docstrings and tests, and created co-staging friction. The script + test pairing remains enforced as an operational convention.
 
 ## Date
 

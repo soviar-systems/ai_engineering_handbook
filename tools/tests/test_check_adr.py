@@ -345,6 +345,8 @@ def adr_env(tmp_path, monkeypatch):
     monkeypatch.setattr(module, "REQUIRED_SECTIONS", config.get("required_sections", []))
     monkeypatch.setattr(module, "ALLOWED_SECTIONS", set(config.get("allowed_sections", [])))
     monkeypatch.setattr(module, "CONDITIONAL_SECTIONS", config.get("conditional_sections", {}))
+    monkeypatch.setattr(module, "CONDITIONAL_FIELDS", config.get("conditional_fields", {}))
+    monkeypatch.setattr(module, "MIN_CONDITIONAL_SECTION_WORDS", config.get("min_conditional_section_words", 3))
     monkeypatch.setattr(module, "PRIMARY_TAG_SECTIONING", config.get("primary_tag_sectioning", False))
     # date_format from hub
     _hub = json.loads(hub_config_path.read_text(encoding="utf-8"))
@@ -4058,3 +4060,398 @@ class TestTwoLevelIndex:
         content = adr_env.index_path.read_text(encoding="utf-8")
         assert "superseded by" in content
         assert "ADR-26002" in content
+
+
+# Helper: minimal ADR content for conditional section/field tests
+def _adr_content(number, title, status, extra_sections="", superseded_by="null"):
+    """Build minimal valid ADR content with optional extra sections."""
+    return f"""---
+id: {number}
+title: {title}
+date: 2024-01-15
+status: {status}
+tags: [architecture]
+superseded_by: {superseded_by}
+---
+
+# ADR-{number}: {title}
+
+## Date
+2024-01-15
+
+## Status
+{status}
+
+{extra_sections}## Context
+Some context.
+
+## Decision
+Some decision.
+
+## Consequences
+Some consequences.
+
+## Alternatives
+- **Option A**: First alternative.
+- **Option B**: Second alternative.
+
+## References
+Some references.
+
+## Participants
+1. Author
+"""
+
+
+class TestConditionalSectionsMissing:
+    """Contract: when a status requires a conditional section, its absence is an error.
+
+    This is the inverse of TestConditionalSections which tests that conditional
+    sections are rejected for wrong statuses. Here we test that they are
+    required for the right statuses.
+    """
+
+    def test_rejected_adr_without_rejection_rationale_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = _adr_content(26060, "Missing Rationale", "rejected")
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26060_test.md",
+            number=26060, title="Missing Rationale",
+            status="rejected", content=content,
+        )
+        errors = validate_sections(adr)
+        missing = [e for e in errors if e.error_type == "missing_conditional_section"]
+        assert any(e.number == 26060 for e in missing)
+
+    def test_superseded_adr_without_supersession_rationale_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = _adr_content(26061, "Missing Supersession", "superseded",
+                               superseded_by="ADR-26099")
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26061_test.md",
+            number=26061, title="Missing Supersession",
+            status="superseded", content=content,
+        )
+        errors = validate_sections(adr)
+        missing = [e for e in errors if e.error_type == "missing_conditional_section"]
+        assert any(e.number == 26061 for e in missing)
+
+    def test_superseded_adr_with_supersession_rationale_passes(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        extra = "## Supersession Rationale\nReplaced by a better approach.\n\n"
+        content = _adr_content(26062, "Proper Supersession", "superseded",
+                               extra_sections=extra, superseded_by="ADR-26099")
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26062_test.md",
+            number=26062, title="Proper Supersession",
+            status="superseded", content=content,
+        )
+        errors = validate_sections(adr)
+        conditional = [e for e in errors
+                       if e.error_type in ("missing_conditional_section",
+                                           "conditional_section_violation")]
+        assert conditional == []
+
+    def test_deprecated_adr_without_deprecation_rationale_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = _adr_content(26063, "Missing Deprecation", "deprecated")
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26063_test.md",
+            number=26063, title="Missing Deprecation",
+            status="deprecated", content=content,
+        )
+        errors = validate_sections(adr)
+        missing = [e for e in errors if e.error_type == "missing_conditional_section"]
+        assert any(e.number == 26063 for e in missing)
+
+    def test_proposed_adr_without_conditional_sections_passes(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_sections
+
+        content = _adr_content(26064, "Plain Proposed", "proposed")
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26064_test.md",
+            number=26064, title="Plain Proposed",
+            status="proposed", content=content,
+        )
+        errors = validate_sections(adr)
+        conditional = [e for e in errors
+                       if e.error_type in ("missing_conditional_section",
+                                           "conditional_section_violation")]
+        assert conditional == []
+
+
+class TestValidateConditionalFields:
+    """Contract: status-dependent frontmatter fields must be present and valid.
+
+    When status is 'superseded', superseded_by must be a non-null
+    'ADR-NNNNN' string referencing an existing ADR.
+    """
+
+    def test_superseded_with_null_superseded_by_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_conditional_fields
+
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26070_test.md",
+            number=26070, title="Null Successor",
+            status="superseded",
+            frontmatter={"id": 26070, "title": "Null Successor",
+                         "date": "2024-01-15", "status": "superseded",
+                         "tags": ["architecture"], "superseded_by": None},
+        )
+        errors = validate_conditional_fields(adr)
+        assert any(e.error_type == "missing_conditional_field" for e in errors)
+
+    def test_superseded_with_valid_superseded_by_passes(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_conditional_fields
+
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26071_test.md",
+            number=26071, title="Valid Successor",
+            status="superseded",
+            frontmatter={"id": 26071, "title": "Valid Successor",
+                         "date": "2024-01-15", "status": "superseded",
+                         "tags": ["architecture"], "superseded_by": "ADR-26099"},
+        )
+        errors = validate_conditional_fields(adr, all_adr_numbers={26071, 26099})
+        assert errors == []
+
+    def test_superseded_with_nonexistent_successor_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_conditional_fields
+
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26072_test.md",
+            number=26072, title="Ghost Successor",
+            status="superseded",
+            frontmatter={"id": 26072, "title": "Ghost Successor",
+                         "date": "2024-01-15", "status": "superseded",
+                         "tags": ["architecture"], "superseded_by": "ADR-99999"},
+        )
+        errors = validate_conditional_fields(adr, all_adr_numbers={26072})
+        assert any(e.error_type == "invalid_field_reference" for e in errors)
+
+    def test_accepted_adr_ignores_superseded_by(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_conditional_fields
+
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26073_test.md",
+            number=26073, title="Normal Accepted",
+            status="accepted",
+            frontmatter={"id": 26073, "title": "Normal Accepted",
+                         "date": "2024-01-15", "status": "accepted",
+                         "tags": ["architecture"], "superseded_by": None},
+        )
+        errors = validate_conditional_fields(adr)
+        assert errors == []
+
+    def test_superseded_by_must_be_adr_reference_format(self, adr_env):
+        """Bare integers are rejected — must use 'ADR-NNNNN' string format."""
+        from tools.scripts.check_adr import AdrFile, validate_conditional_fields
+
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26074_test.md",
+            number=26074, title="Bare Integer",
+            status="superseded",
+            frontmatter={"id": 26074, "title": "Bare Integer",
+                         "date": "2024-01-15", "status": "superseded",
+                         "tags": ["architecture"], "superseded_by": 26099},
+        )
+        errors = validate_conditional_fields(adr)
+        assert any(e.error_type == "invalid_field_type" for e in errors)
+
+
+class TestConditionalSectionContent:
+    """Contract: conditional sections must have meaningful content.
+
+    Minimum word count is config-driven (min_conditional_section_words).
+    """
+
+    def test_empty_conditional_section_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_conditional_section_content
+
+        extra = "## Rejection Rationale\n\n"
+        content = _adr_content(26080, "Empty Rationale", "rejected",
+                               extra_sections=extra)
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26080_test.md",
+            number=26080, title="Empty Rationale",
+            status="rejected", content=content,
+        )
+        errors = validate_conditional_section_content(adr)
+        assert any(e.error_type == "empty_conditional_section" for e in errors)
+
+    def test_whitespace_only_conditional_section_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_conditional_section_content
+
+        extra = "## Rejection Rationale\n   \n   \n\n"
+        content = _adr_content(26081, "Whitespace Rationale", "rejected",
+                               extra_sections=extra)
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26081_test.md",
+            number=26081, title="Whitespace Rationale",
+            status="rejected", content=content,
+        )
+        errors = validate_conditional_section_content(adr)
+        assert any(e.error_type == "empty_conditional_section" for e in errors)
+
+    def test_below_minimum_word_count_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_conditional_section_content
+
+        extra = "## Rejection Rationale\nTBD\n\n"
+        content = _adr_content(26082, "TBD Rationale", "rejected",
+                               extra_sections=extra)
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26082_test.md",
+            number=26082, title="TBD Rationale",
+            status="rejected", content=content,
+        )
+        errors = validate_conditional_section_content(adr)
+        assert any(e.error_type == "empty_conditional_section" for e in errors)
+
+    def test_substantive_content_passes(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_conditional_section_content
+
+        extra = "## Rejection Rationale\nThis approach was rejected because it conflicts with principles.\n\n"
+        content = _adr_content(26083, "Good Rationale", "rejected",
+                               extra_sections=extra)
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26083_test.md",
+            number=26083, title="Good Rationale",
+            status="rejected", content=content,
+        )
+        errors = validate_conditional_section_content(adr)
+        assert errors == []
+
+    def test_empty_supersession_rationale_fails(self, adr_env):
+        from tools.scripts.check_adr import AdrFile, validate_conditional_section_content
+
+        extra = "## Supersession Rationale\n\n"
+        content = _adr_content(26084, "Empty Supersession", "superseded",
+                               extra_sections=extra, superseded_by="ADR-26099")
+        adr = AdrFile(
+            path=adr_env.adr_dir / "adr_26084_test.md",
+            number=26084, title="Empty Supersession",
+            status="superseded", content=content,
+        )
+        errors = validate_conditional_section_content(adr)
+        assert any(e.error_type == "empty_conditional_section" for e in errors)
+
+
+# ======================
+# Tests: fix_index() Duplicate Detection
+# ======================
+
+
+class TestFixIndexDuplicateDetection:
+    """Contract: fix_index() warns when same ADR number appears in multiple index locations.
+
+    Non-brittle design:
+    - Uses unique high ADR numbers (269XX) to avoid conflicts with real ADRs
+    - Asserts on error_type and location patterns, not exact message strings
+    - Self-contained test data, no dependency on external config state
+    - Mocks INDEX_PATH to avoid corrupting real index file
+    """
+
+    def test_duplicate_adr_prints_warning(self, tmp_path, capsys, monkeypatch):
+        """Same ADR number in different status/tag combinations produces warning."""
+        from tools.scripts.check_adr import AdrFile, fix_index, INDEX_PATH
+
+        # Use high ADR numbers to avoid conflicts with real ADRs
+        test_number = 26999
+
+        # Mock get_adr_files to return two ADRs with same number but different status
+        def mock_get_adr_files():
+            return [
+                AdrFile(
+                    path=tmp_path / f"adr_{test_number}_test1.md",
+                    number=test_number,
+                    title="Test ADR",
+                    status="accepted",
+                    frontmatter={
+                        "id": test_number,
+                        "title": "Test ADR",
+                        "status": "accepted",
+                        "tags": ["governance"],
+                        "date": "2026-01-01"
+                    }
+                ),
+                AdrFile(
+                    path=tmp_path / f"adr_{test_number}_test2.md",
+                    number=test_number,
+                    title="Test ADR Duplicate",
+                    status="rejected",
+                    frontmatter={
+                        "id": test_number,
+                        "title": "Test ADR Duplicate",
+                        "status": "rejected",
+                        "tags": ["governance"],
+                        "date": "2026-01-01"
+                    }
+                )
+            ]
+
+        # Mock INDEX_PATH to write to temp file instead of real index
+        temp_index = tmp_path / "test_adr_index.md"
+        monkeypatch.setattr("tools.scripts.check_adr.INDEX_PATH", temp_index)
+        monkeypatch.setattr("tools.scripts.check_adr.get_adr_files", mock_get_adr_files)
+
+        # Call fix_index
+        fix_index()
+
+        # Check warning was printed to stderr (semantic assertion on pattern, not exact string)
+        captured = capsys.readouterr()
+        assert f"ADR-{test_number}" in captured.err
+        assert "multiple index locations" in captured.err
+        # Verify both locations are mentioned (order-independent)
+        err_lines = captured.err.split('\n')
+        assert any("accepted" in line for line in err_lines)
+        assert any("rejected" in line for line in err_lines)
+
+    def test_no_duplicate_no_warning(self, tmp_path, capsys, monkeypatch):
+        """Unique ADR numbers produce no warnings."""
+        from tools.scripts.check_adr import AdrFile, fix_index, INDEX_PATH
+
+        def mock_get_adr_files():
+            return [
+                AdrFile(
+                    path=tmp_path / "adr_26997_test1.md",
+                    number=26997,
+                    title="Test ADR 1",
+                    status="accepted",
+                    frontmatter={
+                        "id": 26997,
+                        "title": "Test ADR 1",
+                        "status": "accepted",
+                        "tags": ["governance"],
+                        "date": "2026-01-01"
+                    }
+                ),
+                AdrFile(
+                    path=tmp_path / "adr_26998_test2.md",
+                    number=26998,
+                    title="Test ADR 2",
+                    status="rejected",
+                    frontmatter={
+                        "id": 26998,
+                        "title": "Test ADR 2",
+                        "status": "rejected",
+                        "tags": ["governance"],
+                        "date": "2026-01-01"
+                    }
+                )
+            ]
+
+        # Mock INDEX_PATH to write to temp file instead of real index
+        temp_index = tmp_path / "test_adr_index.md"
+        monkeypatch.setattr("tools.scripts.check_adr.INDEX_PATH", temp_index)
+        monkeypatch.setattr("tools.scripts.check_adr.get_adr_files", mock_get_adr_files)
+
+        # Call fix_index
+        fix_index()
+
+        # Check no duplicate warning was printed
+        captured = capsys.readouterr()
+        assert "multiple index locations" not in captured.err

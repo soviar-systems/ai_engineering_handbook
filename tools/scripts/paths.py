@@ -44,17 +44,37 @@ def get_config_path(repo_root: Path, doc_type: str | None = None) -> Path:
         repo_root: Repository root directory.
         doc_type: Document type name (e.g., "evidence", "adr").
                   If None, returns the hub config path.
+                  Sub-types (e.g., "analysis", "retrospective") are resolved
+                  to their parent config (e.g., "evidence") automatically.
 
     Returns:
         Hub:   <config_dir>/conf.json
-        Spoke: <config_dir>/types/<doc_type>.conf.json
+        Type:  <config_dir>/types/<doc_type>.conf.json
+
+    Sub-type resolution (TD-005):
+        "analysis" → "evidence" (parent config)
+        "retrospective" → "evidence" (parent config)
+        "source" → "evidence" (parent config)
     """
     with open(repo_root / "pyproject.toml", "rb") as f:
         config_dir = tomllib.load(f)["tool"][_TOOL_SECTION][_CONFIG_DIR_KEY]
     base = repo_root / config_dir
     if doc_type is None:
         return base / _HUB_CONFIG_NAME
-    return base / _TYPES_DIR / f"{doc_type}{_SPOKE_SUFFIX}"
+    # Sub-type → parent config resolution (TD-005)
+    resolved_type = SUBTYPE_PARENT_MAP.get(doc_type, doc_type)
+    return base / _TYPES_DIR / f"{resolved_type}{_SPOKE_SUFFIX}"
+
+
+# Sub-type → parent config mapping for evidence artifacts (TD-005).
+# Sub-types are defined under artifact_types in the parent config.
+# When resolving config for a sub-type, load the parent config and extract
+# the sub-type rules from artifact_types.<sub_type>.
+SUBTYPE_PARENT_MAP = {
+    "analysis": "evidence",
+    "retrospective": "evidence",
+    "source": "evidence",
+}
 
 
 # Directories excluded from all validation scripts (links, jupytext, ADR, etc.)
