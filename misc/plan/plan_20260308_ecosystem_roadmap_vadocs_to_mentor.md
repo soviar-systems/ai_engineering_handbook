@@ -104,25 +104,42 @@ In dependency order:
     - Branch naming (Tier 1) is the unimplemented gap
     - Target: vadocs-git plugin
 
-11. ADR-26048: AI-Native Development Methodology — Code as Primary Documentation
+11. ADR-26045: AI-Native Development — Code as Primary Documentation ✅
+    - **Done:** A-26020 (analysis), ADR-26045 (proposed)
     - Core thesis: in AI-native ecosystems, code structure IS the documentation layer — agents read code faster than prose
-    - **Contract-in-code**: class docstrings capture guarantees and boundaries, not implementation steps. Method names are self-documenting. Pipeline-aware docs rot on refactor
-    - **Test diagnostics for agents**: parametrize multi-case tests (pytest shows which input failed) instead of custom assertion messages. Assertion messages are documentation-in-implementation anti-pattern — they couple to intent the test name should convey
-    - **Diagnostics hierarchy**: test name → pytest introspection → contract docstring. Custom messages only where failure mode is genuinely ambiguous
-    - **Broader scope**: this shapes the entire ecosystem development workflow — how we write tests, document functions, structure modules so that agents can navigate and modify code with minimal context injection
-    - Research questions: Do agents benefit from structured error codes in test output? Should test suites export machine-readable contract schemas? How does this interact with ADR-26042 (frontmatter as machine-readable metadata)?
-    - Key insight: this is TDD optimized for agent consumers, not just TDD for humans. Three emerging principles:
+    - **Contract-in-code**: class docstrings capture guarantees and boundaries, not implementation steps. Language-agnostic, ecosystem-wide (any code, any language)
+    - **Three agent-native TDD principles** (formalized in A-26020):
       1. Names over messages — test method names are the primary diagnostic channel
-      2. Parametrize over multiply-assert — pytest infrastructure provides the diagnostics, not hand-written strings
+      2. Parametrize over multiply-assert — test framework provides diagnostics, not hand-written strings
       3. Contracts over pipelines — docstrings describe what survives refactoring, not what breaks on refactoring
     - Connects to ADR-26038 (context engineering): if code structure is the documentation, context window budget is spent on code, not on redundant prose that paraphrases the code
+
+    **Follow-up items (not yet planned):**
+
+    a. ADR: Auto-generated API documentation from docstrings
+       - Decision: adopt sphinx/typedoc/language-specific generators as the API doc pipeline
+       - Scope: tool selection per language, build pipeline integration, relationship to vadocs package extraction
+       - Prerequisite: ADR-26045 accepted (docstrings must exist before auto-generation makes sense)
+
+    b. Docstring linting — tool selection and pre-commit hooks
+       - Choose enforcement tools per ecosystem language: Python (pydocstyle or custom), Bash (custom header check), YAML/JSON (schema description fields), SQL (COMMENT ON)
+       - Create pre-commit hooks for each, following ADR-26011/ADR-26045 enforcement model
+       - Incremental rollout: Python first, then Bash, then others
+
+    c. Research: AST/CST for code and docs semantic checking
+       - AST (Abstract Syntax Tree) gives structure: function signatures, class hierarchy, docstring presence — sufficient for existence checks
+       - CST (Concrete Syntax Tree) preserves formatting: comments, whitespace, docstring content structure — needed if we want to validate docstring *sections* (e.g., "contains a Dependencies heading")
+       - Question: should vadocs tooling use AST/CST parsing for deeper validation beyond regex? Trade-off: precision vs. language-specific parser dependency per language
+       - Related: how does this interact with ADR-26042 (frontmatter as machine-readable metadata)?
+
+    d. Research: Do agents benefit from structured error codes in test output? Should test suites export machine-readable contract schemas?
 
 ### 1.12 DB Layer and Ecosystem Context ADRs
 
 These ADRs formalise conventions that exist informally today. They were identified during
 the un_votes/postgres_connector migration into soviar-systems (session 2026-03-18;
 integration plan in `misc/plan/` or `misc/plan/implemented/` — plans are ephemeral).
-ADR writing is deferred here to avoid number conflicts with 26044–26048 above.
+ADR numbers are assigned at creation time (no pre-allocation).
 
 **Prerequisites:** ADR-26039 (pgvector, schema-per-project) ✅
 

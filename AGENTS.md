@@ -77,6 +77,28 @@ When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_
 - Author email: `rudakow.wadim@gmail.com` (not `lefthand67@gmail.com`)
 - Docs already in production use version `1.0.0`+, not `0.x`
 
+**ADR frontmatter template (canonical field order):**
+```yaml
+id: <NNNNN>
+title: "<Title>"
+authors:
+  - name: Vadim Rudakov
+    email: rudakow.wadim@gmail.com
+date: <YYYY-MM-DD>
+description: "<one-line elevator pitch>"
+tags: [<primary-tag>, ...]
+status: <proposed|accepted|rejected|superseded|deprecated>
+superseded_by: <ADR-NNNNN or null>
+options:
+  type: adr
+  birth: <YYYY-MM-DD>
+  version: <semver>
+```
+- `id`, `status`, `superseded_by` are ADR-specific top-level fields (not under `options.*` despite being non-MyST)
+- `date` = last meaningful update — bump on every commit that touches the file; `options.birth` = creation date, set once, never changes
+- `options.version` SemVer: `0.x.y` while proposed, `≥1.0.0` once accepted; patch bump on every edit, minor for content additions, major for decision changes
+- When editing any ADR: always update `date` to today and patch-bump `options.version`
+
 **Tool Configuration (ADR-26029, ADR-26036):**
 - Config discovery: `pyproject.toml [tool.vadocs].config_dir` → `.vadocs/` (single entry point)
 - Scripts resolve configs via `paths.get_config_path(repo_root, "evidence")` — convention encoded once
