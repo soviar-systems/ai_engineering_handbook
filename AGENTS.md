@@ -146,6 +146,7 @@ options:
 
 **Ephemeral Files:**
 - `misc/todo.md` is plain text (no markdown formatting) — treat as an ephemeral scratch notebook
+- `misc/insights.md` is plain text — ephemeral scratch file for session insights, same conventions as `todo.md`
 
 **Evidence Source Hygiene:**
 - Raw source files (`.txt`, `.json`) in `evidence/sources/` must be deleted once content is captured in a `S-YYNNN` artifact — never leave both coexisting
