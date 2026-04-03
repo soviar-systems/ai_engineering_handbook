@@ -365,7 +365,14 @@ Hub scripts become thin wrappers calling vadocs.
 
 ### 1.4 Extract vadocs-git v0.1.0
 
-- validate_commit_msg.py -> vadocs-git
+- validate_commit_msg.py — does not enforce the `verb: path — what and why` body format
+  defined in ADR-26024. Allows free-form bullets without file paths or rationale.
+  Must reject commits where bullets lack the `<Verb>: <file-path> — <what and why>` structure.
+  **Examples from session 2026-04-04 that passed validation but should have been rejected:**
+  - `Fixed: GQA weight matrix dimensions in Section 1.1 diagram` — no file path, no rationale
+  - `Fixed: orphaned code fence after Section 4.1 {note} admonition` — same problem
+  - `Fixed: arXiv link for StreamingLLM (2309.1745 → 2309.17453)` — no file path, no rationale
+  The corrected version (`Fixed: ai_system/1_execution/what_kv_cache_actually_contains.md — fix GQA weight matrix dimensions...`) demonstrates the expected format.
 - generate_changelog.py -> vadocs-git
 - check_script_suite.py -> vadocs-git
 - Pre-commit hooks orchestrate both vadocs and vadocs-git
