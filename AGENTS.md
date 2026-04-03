@@ -64,6 +64,12 @@ Track intentional tech debt in `misc/plan/techdebt.md` with date, location, and 
 - Notebooks (.ipynb) and markdown (.md) files are paired via Jupytext - editing one requires syncing
 - **Always read `.md` files, never `.ipynb`** — `.ipynb` is JSON and expensive to parse; the `.md` Jupytext pair contains the same content
 - For internal cross-references within a notebook, use MyST labels and `{ref}` — never `§N` or bare section names. Add `(label)=` above the target heading and reference with `` {ref}`label` ``
+- Use MyST admonitions for callout blocks in documentation — never `> blockquotes` for notes, tips, warnings, or insights. Available types: `::{note}`, `::{tip}`, `::{warning}`, `::{seealso}`, `::{important}`. Example:
+  ```
+  :::{tip}
+  Brief actionable insight or context.
+  :::
+  ```
 
 **Python:**
 - Use `pathlib.Path`, never `os` library

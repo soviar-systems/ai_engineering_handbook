@@ -159,6 +159,22 @@ In dependency order:
     - Document frontmatter stays YAML (embedded in markdown)
     - Grounded in A-26013 (YAML→JSON config format migration analysis)
 
+### 1.13 ADR Content Format vs Context Window Efficiency
+
+**Problem discovered (session 2026-04-03):** ADRs are authored as human-readable Markdown, which is optimal for human consumption but inefficient when loaded into agent context windows. An ADR loaded as prose for context costs significantly more tokens than the same decision encoded as structured data. This is the same format-as-architecture tension from `ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.md` applied to governance documents.
+
+**Evidence:** During a session analyzing consultant prompt overlap, ~2000+ tokens were spent on prose discussion of structural differences that a `jq` diff could have produced at zero token cost. The same pattern applies to ADRs: when an agent reads 10 ADRs for context, the markdown formatting (headers, bold, prose explanations) inflates the token budget far beyond the decision content (the actual structured facts: decision, alternatives, rationale, consequences).
+
+**Key questions to resolve:**
+- Should ADRs have a dual format: human Markdown (for docs site, human review) + structured JSON/YAML (for agent context injection)?
+- Is there an "ADR summary block" format — 200-300 tokens capturing the decision essence — that agents load instead of the full prose?
+- How does this interact with the block prompt architecture (Phase 2.1)? An agent reading ADRs for context is the same audience problem as an LLM reading system prompts.
+- Does `format as contract` (TD-007) extend to ADRs — should ADR sections be machine-parseable blocks with defined schemas?
+
+**Related artifacts:** TD-007 (format-as-contract research), `format_as_architecture_signal_noise_in_prompt_delivery.md`, `token_economics_of_prompt_delivery.md`
+
+**Roadmap placement:** This is a cross-cutting concern between Phase 1 (governance automation — ADRs are governed content) and Phase 2 (agent runtime — agents consume ADRs as context). It should be resolved before Phase 2.1 (Skill Dispatcher) because the skill system needs to know how to load and inject ADR decisions into context windows efficiently.
+
 ### 1.12 DB Layer and Ecosystem Context ADRs
 
 These ADRs formalise conventions that exist informally today. They were identified during
@@ -388,7 +404,20 @@ Analyze internals of aider, gemini-cli, qwen-code, claude-code:
 - Tool integration approaches
 - What to leverage (like litellm from aider)
 
-### 2.05 Research: Skills vs Subagents — Architectural Boundary
+### 2.05 ADR: Block Prompt Compilation Architecture
+
+**Analysis complete:** A-26021 (from S-26020)
+
+Consultant prompts share 85-90% structure (WRC, SVA, response protocols). Extract into:
+- `blocks/decision_kernel.json` — shared decision logic (WRC, SVA, protocols)
+- `blocks/heuer_tradecraft.json` — shared Heuer methodology (ACH, disconfirmation)
+- `blocks/<persona>.json` — thin archetype-specific skins
+- Manifest files declare block lists; `prepare_prompt.py` assembles + converts JSON→YAML (`width=float('inf')`)
+- Static `_includes` (manifest-declared) over dynamic conditional resolution
+
+Token savings: ~500-800 tokens across 3 prompts from dedup + ~100-180 per consultant from YAML vs Pretty JSON.
+
+### 2.1 Research: Skills vs Subagents — Architectural Boundary
 
 **Problem**: ADR-26038 defines skills as "injected instructions, not sub-agents." But production tools (Claude Code, aider) use subagent patterns — child processes with their own LLM calls forked from the parent agent. This creates an unresolved tension:
 
@@ -404,14 +433,14 @@ Analyze internals of aider, gemini-cli, qwen-code, claude-code:
 
 **Output**: Analysis (A-YYNNN) grounding the distinction, potentially a new ADR clarifying the skill/subagent boundary for the ecosystem
 
-### 2.1 ADR: Skill Dispatcher Architecture
+### 2.2 ADR: Skill Dispatcher Architecture
 
-In mentor_generator, informed by 2.0 and 2.05 research:
+In mentor_generator, informed by 2.0 and 2.1 research:
 - Skill registration and dispatch
 - Shared context management (the "kernel")
 - Tool integration via litellm tool_call / MCP
 
-### 2.2 ADR: Context Window Management
+### 2.3 ADR: Context Window Management
 
 Three scenarios the mentor must handle:
 - (a) Context almost full -> summarize and continue (page fault -> swap)
@@ -419,20 +448,20 @@ Three scenarios the mentor must handle:
 - (c) Session goals complete -> fill session log template (exit(0))
 Token counting via litellm.token_counter() per provider.
 
-### 2.3 pgvector + Podman Pod
+### 2.4 pgvector + Podman Pod
 
 - Kube YAML manifest for Postgres + pgvector
 - podman play kube for local deployment
 - Schema for structured data + vector embeddings
 
-### 2.4 RAG Indexer + Hybrid Retriever
+### 2.5 RAG Indexer + Hybrid Retriever
 
 - CLI command to index books/articles (PDF, EPUB, markdown)
 - Hybrid search: pgvector similarity + tsvector keyword
 - Exposed as a tool to the agent
 - Embedding model configurable (local sentence-transformers or API)
 
-### 2.5 Tool Integration
+### 2.6 Tool Integration
 
 - litellm tool_call for LLM-native tool use
 - MCP where appropriate for external services
