@@ -34,7 +34,7 @@ config_dir = ".vadocs"
 [tool.commit-convention]
 valid-types = ["feat", "fix", "docs", "adr", "ci", "refactor", "perf", "chore", "pr"]
 archtag-required-types = ["refactor", "perf"]
-changelog-exclude-patterns = ["CLAUDE.md", "AGENTS.md", "QWEN.md", "aider", "misc/", "jupytext sync"]
+changelog-exclude-patterns = ["CLAUDE.md", "AGENTS.md", "QWEN.md", "aider", "misc/", "jupytext sync", "Jupytext-synced"]
 
 [tool.commit-convention.changelog-sections]
 # Key order defines CHANGELOG section ordering
