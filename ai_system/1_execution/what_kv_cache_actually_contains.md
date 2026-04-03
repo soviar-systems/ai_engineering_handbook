@@ -11,6 +11,20 @@ kernelspec:
   language: python
 ---
 
+---
+title: What the KV Cache Actually Contains
+authors:
+  - name: Vadim Rudakov
+    email: rudakow.wadim@gmail.com
+date: 2026-04-04
+description: Deep dive into KV cache internals — what tensors are stored, how attention uses them, prefix caching strategies, and why this is a hardware memory problem.
+tags: [hardware, model]
+options:
+  type: guide
+  birth: 2026-04-04
+  version: 1.0.0
+---
+
 :::{seealso}
 [Local LLM Inference: A Practical Handbook for Hybrid Host/Device Execution and KV Cache Offloading](/ai_system/1_execution/hybrid_execution_and_kv_cache_offloading.ipynb) for the companion document on host/device scheduling and KV cache offloading.
 :::
@@ -85,12 +99,22 @@ Embeddings: [6 × 4096] tensor  ← ~100 KB (tiny!)
                     ↓ Pass through 32 transformer layers
                     ↓
 Per layer, compute Q, K, V projections:
+
+  === Full Multi-Head Attention (MHA, 32 heads) ===
   Q = X @ W_Q    [6 × 4096] × [4096 × 4096] → [6 × 4096]
   K = X @ W_K    [6 × 4096] × [4096 × 4096] → [6 × 4096]  ← CACHED
   V = X @ W_V    [6 × 4096] × [4096 × 4096] → [6 × 4096]  ← CACHED
 
+  === Grouped-Query Attention (GQA, 8 KV heads, head_dim=128) ===
+  Q = X @ W_Q    [6 × 4096] × [4096 × 4096] → [6 × 4096]
+  K = X @ W_K    [6 × 4096] × [4096 × 1024] → [6 × 1024]  ← CACHED  (8 × 128)
+  V = X @ W_V    [6 × 4096] × [4096 × 1024] → [6 × 1024]  ← CACHED  (8 × 128)
+
 The KV Cache stores ALL K and V tensors from ALL layers.
 ```
+
+Modern models (Mistral, Qwen, Llama 3) use GQA — 4× smaller K/V than MHA.
+See {ref}`gqa-vs-mha` for the comparison.
 
 ### 1.2 KV Cache Size Formula
 
@@ -128,13 +152,30 @@ The KV Cache grows **linearly** with sequence length, but the **constant factor 
 
 ### 1.3 KV Cache vs. Other Memory Consumers
 
+**Scenario A: Full precision (FP16 weights — will NOT fit 8 GB GPU):**
+
 ```
-Mistral 7B, FP16, 8GB VRAM GPU:
+Mistral 7B, FP16, 8 GB VRAM GPU:
 
 ┌─────────────────────────────────────────────────┐
-│ Component              │ Size   │ % of 8GB VRAM │
+│ Component              │ Size   │ % of 8 GB VRAM│
 ├────────────────────────┼────────┼───────────────┤
-│ Model weights          │ 14 GB  │ N/A (won't fit, needs quantization) │
+│ Model weights (FP16)   │ 14 GB  │ 175% — won't fit│
+│ KV Cache (512 tokens)  │ 64 MB  │ 0.8%          │
+│ KV Cache (4096 tokens) │ 512 MB │ 6.4%          │
+│ KV Cache (32K tokens)  │ 3.9 GB │ 49%           │
+│ Activations (runtime)  │ ~200 MB│ 2.5%          │
+└─────────────────────────────────────────────────┘
+```
+
+**Scenario B: Quantized serving (Q4_K_M weights — fits 8 GB GPU):**
+
+```
+Mistral 7B, Q4_K_M weights, 8 GB VRAM GPU:
+
+┌─────────────────────────────────────────────────┐
+│ Component              │ Size   │ % of 8 GB VRAM│
+├────────────────────────┼────────┼───────────────┤
 │ Weights (Q4_K_M)       │ 4.4 GB │ 55%           │
 │ KV Cache (512 tokens)  │ 64 MB  │ 0.8%          │
 │ KV Cache (4096 tokens) │ 512 MB │ 6.4%          │
@@ -142,8 +183,10 @@ Mistral 7B, FP16, 8GB VRAM GPU:
 │ Activations (runtime)  │ ~200 MB│ 2.5%          │
 └─────────────────────────────────────────────────┘
 
-For long conversations, KV Cache becomes the DOMINANT
-dynamic memory consumer — exceeding quantized model weights!
+With Q4_K_M weights (4.4 GB), only ~3.6 GB remains for KV cache.
+A 32K-token conversation (3.9 GB) exceeds the remaining budget —
+KV cache becomes the DOMINANT dynamic memory consumer,
+exceeding quantized model weights!
 ```
 
 ### 1.4 Positional Encodings and KV Cache Immutability
@@ -170,7 +213,7 @@ Some research systems explore position-independent KV caching (re-rotating cache
 
 ## 2. How Attention Uses the KV Cache
 
-### 2.1 Self-Attention Without Cache (Naive, O(N²) Attention Matrix)
+### 2.1 Self-Attention Without Cache (Naive, $O(N^2)$ Attention Matrix)
 
 ```python
 import torch
@@ -181,31 +224,41 @@ def naive_self_attention(Q, K, V, mask=None):
     Q, K, V: [batch, seq_len, num_heads, head_dim]
 
     WITHOUT cache: recompute K, V for ALL tokens every time.
-    The attention scores matrix is O(N²) in size: [seq_len × seq_len].
-    Across autoregressive decoding steps, this becomes O(N² × steps).
+    The attention scores matrix is quadratic in size: [seq_len × seq_len].
+    Across S autoregressive decoding steps (context grows each step):
+      total complexity = O(N²S + NS² + S³/3).
+    If S ≈ N (generate as many tokens as the prompt): O(N³) total.
     """
     d_k = Q.size(-1)
-    
+
     # Compute attention scores: Q · K^T
     scores = torch.matmul(Q, K.transpose(-2, -1)) / (d_k ** 0.5)
     # scores shape: [batch, num_heads, seq_len, seq_len]
-    
+
     if mask is not None:
         scores = scores.masked_fill(mask == 0, float('-inf'))
-    
+
     # Softmax → weights
     attn_weights = F.softmax(scores, dim=-1)
-    
+
     # Weighted sum of Values
     output = torch.matmul(attn_weights, V)
     # output shape: [batch, num_heads, seq_len, head_dim]
-    
+
     return output
 ```
 
-**The problem:** To generate token #101, you recompute K and V for tokens 1-100. To generate token #102, you recompute K and V for tokens 1-101 **again**. This is wasteful — the K, V for tokens 1-100 are **identical** between the two steps. The attention score matrix is O(N²) in size, and without caching you must materialize the full matrix at each decode step. Across autoregressive steps this leads to O(N² × steps) total score computations. The KV Cache avoids recomputing K and V for the prefix, but the score matrix still requires reading all cached columns.
+**The problem:** To generate token #101, you recompute K and V for tokens 1-100. To generate token #102, you recompute K and V for tokens 1-101 **again**. This is wasteful — the K, V for tokens 1-100 are **identical** between the two steps. The attention score matrix is $O(N^2)$ in size, and without caching you must materialize the full matrix at each decode step. Across autoregressive steps this leads to $O(N^2 \times \text{steps})$ total score computations. The KV Cache avoids recomputing K and V for the prefix, but the score matrix still requires reading all cached columns.
 
-### 2.2 Self-Attention With KV Cache (O(N) per step)
+The total computation across $S$ decode steps with initial context $N$ is:
+
+:::{math}
+\sum_{i=0}^{S-1} (N + i)^2 = O(N^2 S + N S^2 + S^3/3)
+:::
+
+When $S \approx N$ (generating as many tokens as the prompt), this becomes $O(N^3)$ — cubic growth.
+
+### 2.2 Self-Attention With KV Cache ($O(N)$ per step)
 
 ```python
 def attention_with_kv_cache(Q_new, K_new, V_new, past_K, past_V, mask=None):
@@ -238,7 +291,7 @@ def attention_with_kv_cache(Q_new, K_new, V_new, past_K, past_V, mask=None):
     return output, K_full, V_full  # Return updated cache
 ```
 
-**Key difference:** The attention score matrix is now `[1 × (N+1)]` instead of `[(N+1) × (N+1)]`:
+**Key difference:** The attention score matrix is now $[1 \times (N+1)]$ instead of $[(N+1) \times (N+1)]$:
 
 ```
 Without cache:    With cache:
@@ -327,20 +380,24 @@ Operations that READ KV Cache from VRAM:
   At seq_len = 4096:  512 MB of VRAM reads per token!
 
 Operations that COMPUTE:
-  For each of 32 layers:
-    - Q @ K^T: 1 × 1024 matmul (tiny)
-    - Softmax: 1024 elements
-    - @ V: 1 × 1024 matmul (tiny)
-    - FFN: up-projection 1×4096→11008 + down-projection 1×11008→4096
-           = 2 × 2 × 4096 × 11008 ≈ 180M FLOPs
+  For each of 32 layers (single-token decode, FP16):
+    — Attention projections (q/k/v/o):  4 × 4096 × 4096 ≈ 67M FLOPs
+    — SwiGLU FFN (gate + up + down):    3 × 4096 × 11008 ≈ 135M FLOPs
+      (3 weight matrices: W_g, W_v, W_o — unlike standard 2-matrix FFN)
+    — QK/SV attention matmuls (1 token): 2 × 1 × 1024 ≈ 2K FLOPs (negligible)
+    — LayerNorm, residuals, activations: ~1M FLOPs
 
-  Total compute ≈ 32 × 180 MFLOPs ≈ 5.8 GFLOPs per token
+  Total compute ≈ 32 × (67M + 135M) ≈ 6.5 GFLOPs per token
+  (Full roofline accounting including all projections: ~14 GFLOPs/token
+   for a 7B model — confirms the ~2×P rule; see [Chen et al., 2024](https://arxiv.org/abs/2402.16363))
 
 At 4096 tokens, VRAM bandwidth dominates:
   - 512 MB at 1 TB/s → 0.512 ms just for memory
-  - 5.8 GFLOPs at 83 TFLOPS → 0.070 ms for compute
+  - 6.5 GFLOPs at 83 TFLOPS → 0.078 ms for compute
 
-  Ratio: ~7:1 memory vs. compute — still decisively memory-bound!
+  Ratio: ~6.5:1 memory vs. compute — still decisively memory-bound!
+  (With full roofline at ~14 GFLOPs: ratio ~3:1, still memory-bound —
+   GPU arithmetic intensity ~2 FLOP/byte for FP16 vs. H100's ~295 FLOP/byte threshold)
 ```
 
 -----
@@ -503,19 +560,18 @@ Providers use a **multi-level cache** similar to CPU memory hierarchies:
 
 ```
                Latency          Bandwidth
-GPU HBM:     ~250 ns           1-3 TB/s    ← 1x latency baseline
-CPU RAM:     ~10-50 µs         50-100 GB/s ← 40-200× higher latency, 20-30× lower bandwidth
+GPU HBM:     ~250 ns           1-3 TB/s    ← 1× latency baseline
+CPU RAM:     ~10-50 µs         50-100 GB/s ← 40-200× higher latency, 10-60× lower bandwidth
 SSD:         ~100-200 µs       3-7 GB/s    ← 400-800× latency, 300-1000× lower bandwidth
 
 Key insight: For tensor transfers, bandwidth is the decisive factor.
-HBM delivers 20-30× more data per second than CPU RAM, which matters
+HBM delivers 20-60× more data per second than CPU RAM, which matters
 because KV cache access is bandwidth-bound.
 ```
 
 :::{note}
 The multi-level hierarchy above shows the *theoretical* eviction chain. In practice, most production inference engines (vLLM, TGI, TensorRT-LLM) keep KV cache entirely in HBM (Level 1) and drop requests on eviction rather than spilling to CPU RAM or SSD. CPU offloading exists in research systems (e.g., FlexGen) and for low-budget local serving, but is not standard in commercial API infrastructure.
 :::
-```
 
 ### 4.2 Radix Tree Prefix Caching: SGLang's RadixAttention
 
@@ -563,7 +619,8 @@ Radix tree: Shared prefixes share storage.
   "You are a helpful" → node_1 → KV[0:7]
   "You are a helpful assistant" → node_2 → KV[0:10] = KV[0:7] + KV[7:10]
   → KV[0:7] stored ONCE, referenced by both nodes
-  → 30-50% less memory for overlapping prefixes
+  → Significant memory savings for overlapping prefixes
+    (exact savings depend on prefix overlap patterns in the workload)
 ```
 
 ### 4.3 Code Example: Simplified Radix Tree for KV Cache
@@ -730,18 +787,28 @@ RTX 4090 specs:
 
 Decode step (1 token, 4096 context, 7B model):
 
-Compute needed:
-  32 layers × 50 MFLOPs = 1.6 GFLOPs
-  At 83 TFLOPS: 1.6G / 83T = 0.019 ms  ← virtually free
+Compute needed (per layer, single-token):
+  Attention projections (q/k/v/o):  4 × 4096²         ≈ 67M FLOPs
+  SwiGLU FFN (gate + up + down):    3 × 4096 × 11008  ≈ 135M FLOPs
+  Attention matmuls (1 × seq_len):  2 × 1 × 1024      ≈ 2K  FLOPs (negligible)
+  Per layer: ≈ 202M FLOPs
+  32 layers: ≈ 6.5 GFLOPs
+
+  At 83 TFLOPS: 6.5G / 83T = 0.078 ms  ← compute is cheap
 
 Memory needed:
   Read KV cache: 32 × 2 × 4096 × 1024 × 2 bytes = 512 MB
   At 1 TB/s: 512 MB / 1000 GB/s = 0.512 ms
 
-Memory is 27× slower than compute for this operation!
+Memory is ~6.5× the compute time — and this is conservative.
+Full roofline accounting (~14 GFLOPs/token including all overheads;
+[Chen et al., 2024](https://arxiv.org/abs/2402.16363)) gives ~3:1,
+still decisively memory-bound.
 
-Result: The model spends 96% of its time WAITING FOR DATA,
+Result: The model spends 80-96% of its time WAITING FOR DATA,
 not computing. This is called "memory-bound."
+The arithmetic intensity is ~2 FLOP/byte (FP16) — far below the
+H100's threshold of ~295 FLOP/byte, so GPU compute sits at ~1% utilization.
 ```
 
 ### 5.3 The Scaling Wall
@@ -771,7 +838,7 @@ With INT4 quantization, all values above drop 4×:
 | **VRAM capacity** | Fixed per GPU (8-80 GB) | Quantization (FP16→INT4: 4× smaller), offloading |
 | **Memory bandwidth** | Fixed bus width + speed (1-3 TB/s) | FlashAttention (fewer HBM reads), PagedAttention |
 | **KV cache growth** | Linear with sequence length | Prefix caching (reuse across requests), sliding window |
-| **Attention cost** | O(N²) without optimization | FlashAttention: O(N) with tiling |
+| **Attention memory IO** | $O(N^2)$ HBM traffic for attention matrix | FlashAttention: $O(N)$ HBM via tiling — **same FLOP count, fewer memory reads/writes** ([Dao et al., 2022](https://proceedings.neurips.cc/paper_files/paper/2022/hash/67d57c32e20fd0a7a302cb81d36e40d5-Abstract-Conference.html)) |
 
 :::{tip}
 All algorithmic optimizations **reduce the hardware pressure**, but they cannot eliminate the fundamental constraint: **KV cache size ∝ sequence length**. The only way to get more context is more memory (hardware) or aggressive compression (algorithmic trade-off).
@@ -810,19 +877,23 @@ Physical HBM:   0x1200  0xA000  0xB800  0xF300
 
 This is the key innovation that lets vLLM achieve 2-4× higher throughput than naive batching on the same GPU.
 
+:::{note}
+PagedAttention **eliminates external fragmentation** (scattered free blocks that can't be used) by using non-contiguous fixed-size pages. It still retains **bounded internal fragmentation** — at most one partially filled block per request (the unused tail in the last page). This is analogous to OS virtual memory: pages eliminate external fragmentation, but the last page of any allocation may have unused slots.
+:::
+
 ### 5.6 KV Cache Compression: Active Research Area
 
-Beyond quantization ({ref}`quantized-kv-cache`), several production techniques reduce KV cache pressure by **selectively discarding or compressing** less important tokens:
+Beyond quantization ({ref}`quantized-kv-cache`), several techniques reduce KV cache pressure by **selectively discarding or compressing** less important tokens:
 
-| Technique | Strategy | Typical Reduction |
-|:---|:---|:---|
-| **StreamingLLM** | Keep only "attention sink" tokens (first 4) + recent sliding window | 80-90% |
-| **H2O** (Heavy-Hitter Oracle) | Retain tokens with highest cumulative attention scores | 50-70% |
-| **SnapKV** | Select key channels per token, compress the rest | 40-60% |
-| **PyramidKV** | Layer-adaptive compression (more compression in upper layers) | 50-75% |
+| Technique | Strategy | Reported Reduction | Source |
+|:---|:---|:---|:---|
+| **StreamingLLM** | Keep only "attention sink" tokens (first 4) + recent sliding window | 80-90% | [Xiao et al., 2023](https://arxiv.org/abs/2309.17453) |
+| **H2O** (Heavy-Hitter Oracle) | Retain tokens with highest cumulative attention scores | 50-70% | [Zhang et al., 2023](https://arxiv.org/abs/2306.14048) |
+| **SnapKV** | Select key channels per token, compress the rest | 40-60% | [Li et al., 2024](https://arxiv.org/abs/2404.14469) |
+| **PyramidKV** | Layer-adaptive compression (more compression in upper layers) | 50-75% | [Cai et al., 2024](https://arxiv.org/abs/2406.02069) |
 
 :::{note}
-These are active research areas — not all are available in every inference engine. For most practitioners, quantization (INT8/FP8) and PagedAttention are the most impactful production-ready techniques.
+These are active research areas — not all are available in every inference engine. Reduction percentages are as reported in the original papers and vary by model, dataset, and acceptable accuracy loss threshold. For most practitioners, quantization (INT8/FP8) and PagedAttention are the most impactful production-ready techniques.
 :::
 
 -----
