@@ -55,6 +55,8 @@ The repository is organized around a six-layer AI system architecture:
 
 When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_<descriptive_slug>.md, ONLY then start implementation. After the plan is fully implemented, move it to misc/plan/implemented/. This is needed to save the history of the decisions made between context switches.
 
+Track intentional tech debt in `misc/plan/techdebt.md` with date, location, and migration path.
+
 **MyST Notebooks:**
 - `myst.yml` abbreviations must be in alphabetical order
 - Never convert `{code-cell}` blocks to standard markdown code blocks
@@ -107,8 +109,6 @@ options:
 - Config format: JSON + JSON Schema (ADR-26054). Document frontmatter stays YAML (embedded in markdown)
 - Operational rules (excludes, patterns) go in `.vadocs/validation/`
 - Shared utilities: `tools/scripts/git.py` (repo root, staged files), `tools/scripts/paths.py` (config discovery, exclusion constants)
-- Path constants in `paths.py` will migrate to `.vadocs/validation/excludes.conf.json`
-- Track intentional tech debt in `misc/plan/techdebt.md` with date, location, and migration path
 
 **ADRs and Evidence Artifacts:**
 - To validate artifacts, run the script (e.g., `check_evidence.py`). Only run the script's test suite (`pytest test_check_evidence.py`) when the script itself was modified
@@ -124,7 +124,6 @@ options:
 - Backtick references are for ephemeral files (sources in `evidence/sources/`, files in `misc/`) AND config files (`.vadocs/` configs change paths on restructuring — use backtick filenames like `adr.conf.json`, never markdown links)
 - When linking to a Jupytext-paired file, always use the `.ipynb` extension — `check-link-format` hook rejects `.md` links when a paired `.ipynb` exists
 - Before committing, run `uv run tools/scripts/check_broken_links.py` and `uv run tools/scripts/check_link_format.py` to find stale links — fix them proactively instead of waiting for hook failures
-- ADR frontmatter `date` is currently the birth date (ADR-26042 will unify `date` = last meaningful update, `options.birth` = creation date — migration pending)
 - Never link from persistent artifacts (ADRs, analyses) to ephemeral files (`misc/plan/`, `misc/todo.md`, `evidence/sources/`) — use backtick references instead
 - Never reference "planned ADR-NNNNN" in documents — either link to an existing ADR or reference the problem/tracking location (e.g., `techdebt.md`)
 - **ADR Decision sections must be concise statements, NOT implementation details.** No bash commands, no code blocks showing how to run things, no specific tool invocations. Evidence details and measurements belong in Consequences. Risk mitigations should not name specific implementations (e.g., "Traefik handles routing") — use generic descriptions
@@ -236,10 +235,9 @@ Package manager: `uv` (never use pip directly)
 - Avoid duplicating information across docs — use cross-references to the authoritative source
 - Doc 02 (`02_pre_commit_hooks_and_staging_instruction_for_devel.md`) is the authoritative source for hook installation instructions
 
-**Script Suite (ADR-26011):**
-- Use architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md convention when developing Python scripts.
-- Pre-commit hook enforces the triad: when modifying a script or its tests, the corresponding doc in `tools/docs/scripts_instructions/` must also be staged
-- Bump `options.version` and `date` in frontmatter when editing any doc file — patch for fixes, minor for new features
+**Script Suite (ADR-26045, supersedes ADR-26011):**
+- Scripts require a matching test file (dyad: script + test). No separate doc file required — contract docstrings in the script are the documentation
+- Pre-commit hook enforces the dyad: when modifying a script, the corresponding test in `tools/tests/` must also be staged (and vice versa)
 
 ## Telegram Channel Posts
 

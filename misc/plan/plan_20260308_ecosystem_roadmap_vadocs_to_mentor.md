@@ -23,6 +23,25 @@ agent runtime (skill dispatcher + shared RAG)
 pgvector in Postgres (shared semantic memory, Podman pod via Kube YAML)
 ```
 
+## Current Position (2026-04-03)
+
+**Phase 1.1** nearly complete. Items 1-6, 11, and ADR-26054 done. Items 7-10 are unwritten
+ADRs (numbers assigned at creation time). DB Layer ADRs (1.12) not started. Validation
+scripts (1.2) partially done — check_frontmatter.py complete, ADR conditional validation done.
+
+**Recently completed (not in original roadmap):**
+- ADR-26054 (JSON Config Format) + `.vadocs/` JSON migration (step 7 of config architecture plan)
+- ADR-26045 (AI-Native Development) + A-26020 analysis — superseded ADR-26011 (triad→dyad)
+- check_frontmatter.py — 70 tests, 97% coverage, pre-commit hooks, sub-type spoke resolution
+- ADR conditional validation + index duplicate detection in check_adr.py
+- Standing items cleanup: TD-004, TD-005 resolved
+**Active plan:**
+- `misc/plan/plan_20260330_heuer_brainstorm_and_adrs.md` — phases 3-6 (brainstorm, Heuer ADR, WRC ADR, prepare_prompt.py `_includes`)
+
+**Open tech debt:** TD-002 (techdebt governance), TD-003 (deprecation workflow), TD-006 (WRC ADR), TD-007 (format-as-contract research) — see `misc/plan/techdebt.md`
+
+---
+
 ## Phase 1: Foundation (Governance Automation)
 
 Order: Decide (ADRs) -> Implement (scripts in hub) -> Extract (ecosystem packages)
@@ -85,21 +104,21 @@ In dependency order:
    - CLI mirrors concern structure: `vadocs docs check-broken-links`, `vadocs git generate-changelog`
    - Hub-and-spoke config from ADR-26042, org-agnostic design (no hardcoded values)
 
-7. ADR-26044: Skills as Progressive Disclosure Units
+7. Skills as Progressive Disclosure Units (ADR number TBD)
    - Revise ADR-26034 with compass findings on SKILL.md convergence
    - MCP integration for tool connectivity
    - Single-agent emphasis
 
-8. ADR-26045: Ephemeral File Lifecycle
+8. Ephemeral File Lifecycle (ADR number TBD)
    - Cleanup policy for sources, implemented plans, insights
    - check_ephemeral_files.py script
    - Maps to A-26005 RUNTIME doc types (/proc/, /var/spool/)
 
-9. ADR-26046: Tech Debt Governance
+9. Tech Debt Governance (ADR number TBD)
    - Formalize tracking format, ownership, review cadence
    - Resolves TD-002
 
-10. ADR-26047: Git Three-Tier Validation Mechanics
+10. Git Three-Tier Validation Mechanics (ADR number TBD)
     - Document adopted three-tier git validation (branch naming, commit format, ArchTag)
     - Branch naming (Tier 1) is the unimplemented gap
     - Target: vadocs-git plugin
@@ -133,6 +152,12 @@ In dependency order:
        - Related: how does this interact with ADR-26042 (frontmatter as machine-readable metadata)?
 
     d. Research: Do agents benefit from structured error codes in test output? Should test suites export machine-readable contract schemas?
+
+12. ADR-26054: JSON as Governance Config Format ✅
+    - JSON + JSON Schema for `.vadocs/` configs (stdlib `json` module, zero dependencies)
+    - Hub: `conf.json` + `conf.schema.json`; spokes in `types/` subdirectory
+    - Document frontmatter stays YAML (embedded in markdown)
+    - Grounded in A-26013 (YAML→JSON config format migration analysis)
 
 ### 1.12 DB Layer and Ecosystem Context ADRs
 
@@ -258,15 +283,40 @@ Two-phase automated migration implementing ADR-26042:
 - Hub config already exists: `.vadocs/conf.yaml` (created in step 6)
 - Migrate `common_required_fields` from evidence spoke to hub (resolves TD-001)
 
+### 1.17 Heuer Methodology + WRC Formalization
+
+Active plan: `misc/plan/plan_20260330_heuer_brainstorm_and_adrs.md` (phases 3-6).
+Phases 1-2 complete (A-26019 analysis, Qwen parser tool).
+
+**Phase 3: Brainstorm** — stress-test A-26019 conclusions via `/sv-ai-brainstorm-colleague`.
+Challenge questions: cargo-cult risk, token cost justification, lighter alternatives (ACH only),
+archetype-specific benefit, "transformer satisficing" analogy validity.
+
+**Phase 4: ADRs** (parallel, after brainstorm):
+- Heuer Integration ADR — embed tradecraft as procedural instructions in consultant prompts
+  via shared common block (`consultants/blocks/heuer_tradecraft.json`)
+- WRC Formalization ADR — `WRC = 0.35*E + 0.25*A + 0.40*P`, thresholds, SVA relationship.
+  Resolves TD-006
+
+**Phase 5:** prepare_prompt.py `_includes` block composition — prerequisite: Heuer ADR accepted
+
+**Phase 6: Cleanup** — resolve TD-006, update TD-007, run validation suite
+
 ### 1.2 Implement Validation Scripts in Hub
 
 Based on the ADRs:
-- Common frontmatter validation (ADR-26042) in hub scripts
+
+**Done:**
+- ✅ check_frontmatter.py — hub-level frontmatter validation (ADR-26042), 70 tests, 97% coverage, sub-type spoke resolution (TD-005)
+- ✅ check_adr.py conditional validation — status-dependent required sections (`adr.conf.json` `conditional_required_sections`)
+- ✅ check_adr.py index duplicate detection — prevents duplicate entries in `adr_index.md`
+- ✅ check_script_suite.py dyad convention — triad→dyad relaxation (ADR-26045 supersedes ADR-26011, TD-004)
+
+**Remaining:**
 - Evidence type validators for new types from A-26005 taxonomy
 - Git policy validators (commit msg, branch naming) — separate from doc validators
-- Fix check_adr.py interactive input bug
-- Fix generate_changelog.py excluded commits bug
-- check_adr.py: enforce status transitions per adr.config.yaml status_transitions (proposed -> accepted/rejected only, no supersession of proposals)
+- check_adr.py: enforce status transitions per `adr.conf.json` status_transitions (proposed -> accepted/rejected only, no supersession of proposals)
+- check_adr.py: deprecation workflow validation — conditional `Deprecation Rationale` section, template guidance (resolves TD-003)
 - ADR Security Implications section: add as a required field for proposed and accepted ADRs.
   Atomic change: `adr.conf.json` (add to conditional required sections) + `adr_template.md`
   (add section placeholder) + `check_adr.py` (validate presence for proposed/accepted status)
