@@ -239,6 +239,15 @@ Two-phase automated migration implementing ADR-26042:
 - Set `description` to `TODO` placeholder for human review
 - Priority: `date` semantics are wrong until this runs
 
+**Prerequisite brainstorm — directory structure vs type-based discovery:**
+- Every document already carries `options.type`, so the `architecture/evidence/analyses/`
+  directory tree becomes potentially redundant — analyses could live next to related content
+  in `ai_system/` dirs, giving agents and human engineers all relevant material in one place
+- Consequences to investigate: impact on `check_evidence.py` discovery logic, `check_broken_links.py`
+  path patterns, evidence pipeline three-commit lifecycle, `.vadocs/` config `governed_dirs`,
+  existing cross-references and markdown links across the codebase
+- Decision must precede Phase B — the auto-fix script needs to know the target directory structure
+
 **Phase B — All other governed files (auto-fix script):**
 - Analogous to `check_adr.py --fix` maintaining `adr_index.md`
 - Scan governed directories, detect missing fields per `frontmatter.config.yaml` type registry
@@ -258,6 +267,16 @@ Based on the ADRs:
 - Fix check_adr.py interactive input bug
 - Fix generate_changelog.py excluded commits bug
 - check_adr.py: enforce status transitions per adr.config.yaml status_transitions (proposed -> accepted/rejected only, no supersession of proposals)
+- ADR Security Implications section: add as a required field for proposed and accepted ADRs.
+  Atomic change: `adr.conf.json` (add to conditional required sections) + `adr_template.md`
+  (add section placeholder) + `check_adr.py` (validate presence for proposed/accepted status)
+- extract_html_text.py: current script strips HTML to plain text but loses all block-level
+  structure — `<p>`, `<br>`, `<li>`, headings are flattened into a wall of text ("all new
+  lines are broken" bug). The script feeds the evidence pipeline (S-YYNNN source extraction
+  from saved web pages). Raw HTML is too token-expensive for agent context windows (80-90%
+  boilerplate), so extraction remains necessary. Decision: extend the stdlib parser to emit
+  markdown (preserving headings, lists, links) vs. adopt crawl4ai (https://github.com/unclecode/crawl4ai)
+  as an external dependency. Evaluate against ecosystem principle of minimal dependencies
 
 ### 1.3 Extract vadocs v0.2.0
 
@@ -284,11 +303,30 @@ Hub scripts become thin wrappers calling vadocs.
 - generate_changelog.py -> vadocs-git
 - check_script_suite.py -> vadocs-git
 - Pre-commit hooks orchestrate both vadocs and vadocs-git
+- Architectural docs in changelog: ADRs deserve their own section in changelog and release
+  notes. Introduce `arch:` commit prefix for architectural documents (ADRs, analyses,
+  evidence), add to `pyproject.toml [tool.commit-convention]` valid-types (ADR-26024 scope),
+  and teach `generate_changelog.py` to group `arch:` commits into a dedicated section
 
 ### 1.5 Install in Ecosystem
 
 - mentor_generator installs vadocs + vadocs-git
 - All three repos get pre-commit hooks using ecosystem packages
+- Ecosystem entry point documentation: the hub needs a comprehensive ecosystem description
+  as the human-readable entry point (the agent-readable entry point is AGENTS.md/CLAUDE.md
+  per ADR-26049). Brainstorm needed on scope and format — manifesto extension, standalone
+  doc, or README restructuring
+- Development environment configuration: when vadocs is installed, the developer's machine
+  must be configured for the tools vadocs uses. `tools/scripts/configure_repo.py` is the
+  starting point, needs to evolve into a vadocs-driven repo setup command (e.g. `vadocs init`).
+  Basis: personal JupyterLab configuration scripts to be generalized as ecosystem-standard
+  dev environment setup. Related workflow docs to review during design:
+  `4_orchestration/workflows/requirements_engineering`,
+  `4_orchestration/workflows/release_notes_generation`, `mlops/`.
+  Known gotcha: pre-commit generates hook scripts with a hardcoded INSTALL_PYTHON path at
+  `pre-commit install` time. When a repo directory is moved/renamed, these paths break
+  silently — hooks only fail at commit time. `vadocs init` should re-run `pre-commit install`
+  to regenerate paths, or document this in setup output
 
 ## Phase 2: Runtime (Agent + Infrastructure)
 
@@ -358,6 +396,12 @@ Current mentor_generator pipeline becomes skills:
 - collector.py -> Interview skill (questions as data, logic generic)
 - creative_engine.py -> Generation skill (template + context -> filled output)
 - validator.py + template_engine.py stay as pipeline infrastructure
+- Prompt structure constraint: sibling objects in a JSON sequence are weakly ordered — LLMs
+  can skip ahead. Phases within a single object are strongly ordered — the LLM must process
+  phase 1 to encounter phase 2. Skill prompts should embed dependent steps as phases within
+  one object, not as sibling objects in a list (learned from mentor_generator v0.30–v0.32
+  postmortems: embedding file_generation inside guidance_and_generation was more robust than
+  having a separate file_generation_protocol)
 
 ### 3.2 Research Skill
 
