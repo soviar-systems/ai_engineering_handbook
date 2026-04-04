@@ -88,8 +88,8 @@ VALIDATION_EXCLUDE_DIRS = {
     "__pycache__",
     "build",
     "_build",
-    "dist",
     "misc",
+    "ai_system/6_agents/agents_source_code",
 }
 
 # Strings that should be excluded from link validation
@@ -108,8 +108,15 @@ BROKEN_LINKS_EXCLUDE_FILES = [".aider.chat.history.md"]
 
 # API key scanning configuration - placeholder indicators for false positive detection
 API_KEYS_PLACEHOLDER_INDICATORS = {
-    "[", "<", "${", "{{",
-    "example", "placeholder", "your_", "test_", "fake_",
+    "[",
+    "<",
+    "${",
+    "{{",
+    "example",
+    "placeholder",
+    "your_",
+    "test_",
+    "fake_",
 }
 
 # Files to exclude from API key scanning (contain test keys by design)
