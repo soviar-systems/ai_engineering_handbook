@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.1
 kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
@@ -12,17 +12,6 @@ kernelspec:
 ---
 
 # VIM in AI Era: Hybrid Setup with Ollama and Aider
-
-+++
-
----
-
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.3.4  
-Birth: 2025-11-17  
-Modified: 2026-01-10
-
----
 
 +++
 
@@ -298,3 +287,51 @@ $ uv tool install aider-chat[browser]
 
 $ aider --browser
 ```
+
++++
+
+## **6. Troubleshooting: Python & Connection Errors**
+
++++
+
+Common issues often stem from how Fedora/Linux handles Python virtual environments or how `localhost` resolves in the terminal.
+
++++
+
+### **Issue: ModuleNotFoundError: No module named 'requests'**
+
++++
+
+If you see this error in the Vim status line or logs, your virtual environment is either missing or "hollow" (missing internal management tools).
+
+**The "Modern" Fix (using `uv`):**
+The most reliable way to ensure a functional, isolated environment is using `uv`.
+```bash
+# 1. Remove the broken environment
+rm -rf ~/.vim/venv/ollama
+
+# 2. Create a fresh venv using uv
+uv venv ~/.vim/venv/ollama
+
+# 3. Install dependencies specifically into that path
+uv pip install requests httpx jinja2 mistralai openai -p $HOME/.vim/venv/ollama
+```
+
++++
+
+### **Issue: Debugging and Logs**
+
++++
+
+If the plugin is behaving unexpectedly, enable logging to see the raw communication between Vim and the Python helper scripts.
+
+1. **Create the log directory:** `mkdir -p /tmp/logs`
+2. **Enable logging in `~/.vim/config/ollama.vim`:**
+   ```vim
+   let g:ollama_debug = 4
+   let g:ollama_logfile = '/tmp/logs/vim-ollama.log'
+   ```
+3. **Monitor the logs in a separate terminal:**
+   ```bash
+   tail -f /tmp/logs/vim-ollama.log
+   ```
