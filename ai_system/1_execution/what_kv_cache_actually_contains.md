@@ -22,7 +22,7 @@ tags: [hardware, model]
 options:
   type: guide
   birth: 2026-04-04
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 :::{seealso}
@@ -86,7 +86,70 @@ TTFT
 
 ## 1. What the KV Cache Actually Contains
 
-### 1.1 It Is NOT Cached Text
+### 1.1 Q, K, V — The Three Projections
+
+Every transformer layer projects its input into three separate vectors — **Query**, **Key**, and **Value** — each serving a distinct mathematical role in attention.
+
+```
+Input to layer ℓ:  X  [seq_len × d_model]
+
+Q = X @ W_Q   →  [seq_len × d_model]   "What am I looking for?"
+K = X @ W_K   →  [seq_len × d_model]   "What do I contain?"
+V = X @ W_V   →  [seq_len × d_model]   "What should I contribute?"
+
+W_Q, W_K, W_V are learned weight matrices (d_model × d_model).
+They are different — the network learns distinct roles for each.
+```
+
+**The database analogy:** Attention is a soft differentiable lookup table.
+
+| DB Concept | Attention Equivalent | Role |
+|:---|:---|:---|
+| **Query** | What the current token "asks" | A search vector — "which past tokens are relevant to me?" |
+| **Key** | Index on each stored token | An address vector — "what topics does this token cover?" |
+| **Value** | The actual data to retrieve | The content vector — "what information does this token contribute?" |
+
+**The critical distinction:** Q determines *where to attend*, K determines *where to be attended to*, and V determines *what to contribute when attended to*. This separation allows the model to distinguish between "I'm looking for information about Python" (Q) and "I contain information about Python" (K), and to deliver different content depending on who's asking (V).
+
+**Why K and V are cached, but Q is not:**
+
+```
+Prefill phase (process entire prompt):
+  For each token in prompt: compute Q, K, V
+  → Q is used IMMEDIATELY to compute attention scores with all other tokens
+  → K and V are STORED — they will be needed by every future generated token
+
+Decode phase (generate one new token):
+  For the NEW token: compute Q, K, V
+  → Q attends to ALL cached K vectors (every past token)
+  → K and V are APPENDED to the cache (available for future tokens)
+  → Q is DISCARDED after computing attention — never needed again
+
+Q is ephemeral: it exists only for the duration of one attention computation.
+K and V are persistent: they must survive until all future tokens have attended to them.
+```
+
+**What K and V actually encode:** Each dimension in the K and V vectors is not human-interpretable in isolation — they are dense distributed representations learned during training. However, conceptually:
+
+- **K vectors** encode "topic signatures" — patterns that help the model determine semantic relevance. Two tokens with similar K vectors will receive similar attention scores from any given Q.
+- **V vectors** encode "information payloads" — the actual features the model wants to propagate forward when a token is attended to. Two tokens can have similar K (similar topics) but different V (different information about those topics).
+
+**Multi-head decomposition:** In multi-head attention, each head has its own Q, K, V projections, allowing the model to attend to different relationship types simultaneously. While individual heads are not human-interpretable or semantically labeled, the multi-head structure gives the model capacity to track multiple attention patterns in parallel — syntactic dependencies, coreference, semantic roles, and long-range context — rather than collapsing everything into a single similarity score:
+
+```
+Head 0: attends to nearby tokens (short-range syntactic)
+Head 1: attends to subject-verb relationships
+Head 2: attends to coreferent noun phrases
+...
+Head 31: attends to distant context (long-range semantic)
+
+Each head: Q, K, V ∈ [seq_len × head_dim]
+All heads concatenated: [seq_len × (num_heads × head_dim)] = [seq_len × d_model]
+```
+
+Modern models use **Grouped-Query Attention (GQA)** — multiple Q heads share a single K/V head, reducing KV cache size while keeping most of the expressive power of Q. See {ref}`gqa-vs-mha` for the comparison.
+
+### 1.2 It Is NOT Cached Text
 
 The KV Cache does **not** store token IDs, embeddings, or raw text. It stores **intermediate attention states** — the Key and Value tensors computed inside every transformer layer during the forward pass.
 
@@ -116,7 +179,7 @@ The KV Cache stores ALL K and V tensors from ALL layers.
 Modern models (Mistral, Qwen, Llama 3) use GQA — 4× smaller K/V than MHA.
 See {ref}`gqa-vs-mha` for the comparison.
 
-### 1.2 KV Cache Size Formula
+### 1.3 KV Cache Size Formula
 
 ```
 KV Cache Size = seq_len × num_layers × 2 × (num_kv_heads × head_dim) × bytes_per_value
@@ -150,7 +213,7 @@ KV Cache = 32,000 × 32 × 2 × 1024 × 2
 The KV Cache grows **linearly** with sequence length, but the **constant factor is large** — each token adds ~128 KB of KV state for a 7B model with GQA at FP16. Full MHA (32 heads) would be ~512 KB/token — 4× larger. See {ref}`gqa-vs-mha` for the comparison.
 :::
 
-### 1.3 KV Cache vs. Other Memory Consumers
+### 1.4 KV Cache vs. Other Memory Consumers
 
 **Scenario A: Full precision (FP16 weights — will NOT fit 8 GB GPU):**
 
@@ -189,7 +252,7 @@ KV cache becomes the DOMINANT dynamic memory consumer,
 exceeding quantized model weights!
 ```
 
-### 1.4 Positional Encodings and KV Cache Immutability
+### 1.5 Positional Encodings and KV Cache Immutability
 
 Modern models (Mistral, Qwen, Llama) use **Rotary Position Embedding (RoPE)**, which rotates the Q and K vectors based on each token's absolute position. The V vectors are **not** rotated — they are cached as-is:
 
