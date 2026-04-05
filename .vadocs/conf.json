@@ -175,6 +175,9 @@
   },
 
   "tags": {
+    "agents": {
+      "description": "Source-level analysis of external AI coding agents"
+    },
     "architecture": {
       "description": "Technical design decisions — system structure, component boundaries, patterns"
     },
