@@ -58,6 +58,122 @@ class TestDetectRepoRoot:
         assert result == Path("/fake/repo").resolve()
 
 
+class TestCloneRepo:
+    """Contract: clone_repo(url, path) clones repository, returns success bool."""
+
+    @patch.object(_module.subprocess, "run")
+    def test_clone_success(self, mock_run):
+        """git clone succeeds → return True."""
+        mock_run.return_value = MagicMock(returncode=0)
+        result = _module.clone_repo(
+            "https://github.com/test/repo",
+            Path("/tmp/test/repo"),
+        )
+        assert result is True
+        mock_run.assert_called_once_with(
+            ["git", "clone", "https://github.com/test/repo", "/tmp/test/repo"],
+            capture_output=True,
+            text=True,
+        )
+
+    @patch.object(_module.subprocess, "run")
+    def test_clone_with_branch(self, mock_run):
+        """git clone with branch → includes --branch flag."""
+        mock_run.return_value = MagicMock(returncode=0)
+        result = _module.clone_repo(
+            "https://github.com/test/repo",
+            Path("/tmp/test/repo"),
+            branch="main",
+        )
+        assert result is True
+        mock_run.assert_called_once_with(
+            [
+                "git",
+                "clone",
+                "--branch",
+                "main",
+                "https://github.com/test/repo",
+                "/tmp/test/repo",
+            ],
+            capture_output=True,
+            text=True,
+        )
+
+    @patch.object(_module.subprocess, "run")
+    def test_clone_failure(self, mock_run):
+        """git clone fails → return False."""
+        mock_run.return_value = MagicMock(returncode=1, stderr="repository not found")
+        result = _module.clone_repo(
+            "https://github.com/test/invalid",
+            Path("/tmp/test/invalid"),
+        )
+        assert result is False
+
+
+class TestPullRepo:
+    """Contract: pull_repo(path) pulls latest changes, returns (success, message)."""
+
+    @patch.object(_module.subprocess, "run")
+    def test_pull_up_to_date(self, mock_run):
+        """Repo is up to date → return True with status message."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="Already up to date.")
+        success, message = _module.pull_repo(Path("/tmp/test/repo"))
+        assert success is True
+        assert "Already up to date" in message
+
+    @patch.object(_module.subprocess, "run")
+    def test_pull_updates(self, mock_run):
+        """Pull with updates → return True with changed files."""
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="Updating abc123..def456\n 3 files changed"
+        )
+        success, message = _module.pull_repo(Path("/tmp/test/repo"))
+        assert success is True
+        assert "files changed" in message
+
+    @patch.object(_module.subprocess, "run")
+    def test_pull_failure(self, mock_run):
+        """git pull fails → return False with error."""
+        mock_run.return_value = MagicMock(
+            returncode=1, stderr="error: Your local changes would be overwritten"
+        )
+        success, message = _module.pull_repo(Path("/tmp/test/repo"))
+        assert success is False
+        assert "error" in message.lower()
+
+
+class TestGetRepoStatus:
+    """Contract: get_repo_status(path) returns (branch, remote_url, last_commit_date)."""
+
+    @patch.object(_module.subprocess, "run")
+    def test_get_status_success(self, mock_run):
+        """All git commands succeed → return tuple of status info."""
+        responses = [
+            MagicMock(returncode=0, stdout="main\n"),
+            MagicMock(returncode=0, stdout="https://github.com/test/repo.git\n"),
+            MagicMock(returncode=0, stdout="2024-01-15\n"),
+        ]
+        mock_run.side_effect = responses
+
+        branch, remote, date = _module.get_repo_status(Path("/tmp/test/repo"))
+
+        assert branch == "main"
+        assert "github.com" in remote
+        assert "2024-01-15" in date
+        assert mock_run.call_count == 3
+
+    @patch.object(_module.subprocess, "run")
+    def test_get_status_not_git_repo(self, mock_run):
+        """Directory is not a git repo → return None values."""
+        mock_run.side_effect = subprocess.CalledProcessError(1, "git")
+
+        branch, remote, date = _module.get_repo_status(Path("/tmp/not-a-repo"))
+
+        assert branch is None
+        assert remote is None
+        assert date is None
+
+
 class TestGetStagedFiles:
     """Contract: get_staged_files() returns set[str] of staged file paths."""
 

@@ -33,6 +33,12 @@ uv run tools/scripts/generate_changelog.py <prev-tag>..HEAD --version <next-vers
 
 # Build documentation site
 npm install -g mystmd && myst build --html
+
+# Manage agent source code repositories (ai_system/6_agents/agents_source_code/)
+uv run tools/scripts/manage_agent_repos.py list                          # Show all repos
+uv run tools/scripts/manage_agent_repos.py update                        # Pull all repos
+uv run tools/scripts/manage_agent_repos.py update --parallel             # Parallel pull
+uv run tools/scripts/manage_agent_repos.py setup <url> [--branch <ref>]  # Clone new repo
 ```
 
 ## Architecture
@@ -46,7 +52,7 @@ The repository is organized around a six-layer AI system architecture:
   - `3_prompts/` - Prompts-as-Infrastructure, includes JSON prompt files in `consultants/`
   - `4_orchestration/` - RAG, agent workflows, structured output
   - `5_context/` - Vector stores, hybrid retrieval
-  - `6_agents/` - Real-world agent framework analysis. Source code of external agents is cloned into `agents_source_code/` as nested git repos — a consolidated research directory so all agent source code is in one place for study. This directory is excluded from parent `.gitignore` and from script checks (`check_broken_links`, `check_link_format`, etc.) via `tools/scripts/paths.py`. Analysis notebooks live in topic subdirectories (`session_history_management/`, `skills/`, `tooling/`, etc.)
+  - `6_agents/` - Real-world agent framework analysis. Source code of external agents is cloned into `agents_source_code/` as nested git repos — a consolidated research directory so all agent source code is in one place for study. This directory is excluded from parent `.gitignore` and from script checks (`check_broken_links`, `check_link_format`, etc.) via `tools/scripts/paths.py`. Use `manage_agent_repos.py` to clone and update repos. Analysis notebooks live in topic subdirectories (`session_history_management/`, `skills/`, `tooling/`, etc.)
 - `architecture/` - Architectural Decision Records (ADRs) and post-mortems
 - `security/` - Centralized security policy hub
 - `mlops/` - CI/CD and security tooling

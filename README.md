@@ -159,6 +159,7 @@ The repository uses automated validation to enforce documentation quality:
 - **Tool configuration** centralized in `pyproject.toml [tool.X]` sections ({term}`ADR-26029`)
 - **CI/CD pipelines**: `quality.yml` (broken links, jupytext sync, script tests) + `deploy.yml` (GitHub Pages deployment)
 - **Validation scripts**: `check_adr.py`, `check_evidence.py`, `check_frontmatter.py`, `check_broken_links.py`, `validate_commit_msg.py`, `check_link_format.py`
+- **Agent repo management**: `manage_agent_repos.py` — clone, update, and list agent source code repositories in `ai_system/6_agents/agents_source_code/`
 
 
 ## Authorship & Contact
