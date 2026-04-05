@@ -10,6 +10,20 @@ date: 2026-04-03
 options:
   version: 0.1.0
   birth: 2026-04-03
+jupyter:
+  jupytext:
+    cell_metadata_filter: -all
+    formats: md,ipynb
+    main_language: typescript
+    text_representation:
+      extension: .md
+      format_name: markdown
+      format_version: '1.3'
+      jupytext_version: 1.19.1
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
 ---
 
 # Session History in Qwen Code
@@ -323,6 +337,204 @@ This is a conscious trade-off: **data durability over disk space efficiency**. T
 - Compression checkpoints survive crashes (they're just appended records, not rewritten files)
 
 The cost is that disk space grows unboundedly — a problem users must manage manually, or that a future version of Qwen Code may address with an explicit retention policy.
+
+---
+
+## Extracting Data from JSONL Session Files
+
+### Finding the Active Session File
+
+Session files live under:
+
+```
+~/.qwen/projects/<sanitized-cwd>/chats/<sessionId>.jsonl
+```
+
+Find the most recent session for the current project:
+
+```bash
+ls -t ~/.qwen/projects/*/chats/*.jsonl | head -1
+```
+
+### Record Structure
+
+Each line is a JSON object with this core structure:
+
+```json
+{
+  "uuid": "unique-message-id",
+  "parentUuid": "parent-message-id|null",
+  "sessionId": "session-uuid",
+  "timestamp": "2026-04-05T19:20:29.344Z",
+  "type": "user|assistant|tool_result|system",
+  "subtype": "chat_compression|slash_command|ui_telemetry|at_command|null",
+  "cwd": "/path/to/project",
+  "version": "0.14.0",
+  "message": { "role": "user|assistant", "parts": [...] }
+}
+```
+
+### Extracting Text Messages
+
+Text content lives in `message.parts[].text`. A Python one-liner to dump all user messages:
+
+```typescript
+python3 -c "
+import json, sys
+with open(sys.argv[1]) as f:
+    for i, line in enumerate(f):
+        r = json.loads(line)
+        if r.get('type') == 'user' and r.get('message'):
+            parts = r['message'].get('parts', [])
+            texts = [p.get('text','') for p in parts if isinstance(p, dict) and p.get('text')]
+            text = ''.join(texts)
+            if text.strip():
+                print(f'--- Record {i} ({r.get(\"timestamp\",\"\")[:19]}) ---')
+                print(text[:500])
+                print()
+" session.jsonl
+```
+
+**Key caveat:** The `message` field may be a **list** (legacy format) or a **dict** (current format). Always check `isinstance`:
+
+```typescript
+msg = r.get('message')
+if isinstance(msg, dict):
+    parts = msg.get('parts', [])
+elif isinstance(msg, list):
+    # Legacy: list of {type, text} objects
+    texts = [p.get('text','') for p in msg if p.get('text')]
+    text = ''.join(texts)
+```
+
+### Extracting Assistant Responses with Tool Calls
+
+Assistant records may contain both text and tool calls. Tool calls have `toolCallId` and `toolName` in their part objects:
+
+```typescript
+for i, r in enumerate(records):
+    if r.get('type') == 'assistant' and r.get('message'):
+        parts = r['message'].get('parts', [])
+        texts = [p.get('text','') for p in parts if isinstance(p, dict) and p.get('text')]
+        tool_calls = [p for p in parts if isinstance(p, dict) and p.get('toolCallId')]
+
+        if texts:
+            print(f'=== Asst rec {i} (text: {len(texts[0][:100])} chars) ===')
+        elif tool_calls:
+            for tc in tool_calls:
+                print(f'=== Asst rec {i} (tool: {tc.get(\"toolName\",\"\")}) ===')
+```
+
+### Extracting Tool Results
+
+Tool result records contain the output of tool executions:
+
+```typescript
+for i, r in enumerate(records):
+    if r.get('type') == 'tool_result':
+        # Text content (may be empty for binary results)
+        msg = r.get('message')
+        if isinstance(msg, dict):
+            parts = msg.get('parts', [])
+            texts = [p.get('text','') for p in parts if isinstance(p, dict) and p.get('text')]
+            text = ''.join(texts)
+        # Tool metadata
+        tc = r.get('toolCallResult', {})
+        tool_name = tc.get('toolName', '')
+        status = tc.get('status', '')
+        print(f'=== Tool {tool_name} (rec {i}, status={status}) ===')
+        if text.strip():
+            print(text[:200])
+```
+
+### Extracting Compression Checkpoints
+
+Compression records store the `compressedHistory` snapshot in `systemPayload`:
+
+```typescript
+for i, r in enumerate(records):
+    if r.get('subtype') == 'chat_compression':
+        payload = r.get('systemPayload', {})
+        compressed = payload.get('compressedHistory', [])
+        new_tokens = payload.get('newTokenCount', 0)
+        print(f'=== Compression at rec {i} → {new_tokens} tokens, {len(compressed)} messages ===')
+```
+
+### Finding Relevant Records by Keyword
+
+To search for specific discussion topics in user messages:
+
+```typescript
+import json, re
+with open('session.jsonl') as f:
+    records = [json.loads(l) for l in f]
+
+keywords = ['ai_system', 'rename', 'agents.*tag', 'car.*analogy']
+for i, r in enumerate(records):
+    if r.get('type') == 'user' and r.get('message'):
+        msg = r['message']
+        # Handle both dict and list formats
+        if isinstance(msg, dict):
+            parts = msg.get('parts', [])
+            texts = [p.get('text','') for p in parts if isinstance(p, dict) and p.get('text')]
+        elif isinstance(msg, list):
+            texts = [p.get('text','') for p in msg if isinstance(p, dict) and p.get('text')]
+        text = ' '.join(texts).lower()
+
+        if any(re.search(k, text) for k in keywords):
+            print(f'=== Match rec {i} ({r.get(\"timestamp\",\"\")[:19]}) ===')
+            print(text[:300])
+```
+
+### Getting Session Statistics
+
+Quick overview of a session file:
+
+```typescript
+import json
+with open('session.jsonl') as f:
+    records = [json.loads(l) for l in f]
+
+from collections import Counter
+types = Counter(r.get('type') for r in records)
+subtypes = Counter(r.get('subtype') or '-' for r in records if r.get('type') == 'system')
+
+print(f'Total records: {len(records)}')
+print(f'Types: {dict(types)}')
+print(f'System subtypes: {dict(subtypes)}')
+
+# Timestamps
+timestamps = [r.get('timestamp','') for r in records if r.get('timestamp')]
+if timestamps:
+    print(f'Session: {timestamps[0][:19]} → {timestamps[-1][:19]}')
+```
+
+### Working with the Tree Structure
+
+The `uuid`/`parentUuid` links form a tree. To reconstruct the linear conversation from a leaf node:
+
+```typescript
+def reconstruct_chain(records, leaf_uuid):
+    """Walk backward from leaf to root following parentUuid links."""
+    by_uuid = {r['uuid']: r for r in records}
+    chain = []
+    current = leaf_uuid
+    visited = set()
+    while current and current in by_uuid:
+        if current in visited:
+            break  # Cycle detected
+        visited.add(current)
+        chain.append(by_uuid[current])
+        current = by_uuid[current].get('parentUuid')
+    chain.reverse()
+    return chain
+
+# Get the last record's UUID and walk backward
+last_uuid = records[-1]['uuid']
+linear = reconstruct_chain(records, last_uuid)
+for i, r in enumerate(linear):
+    print(f'{i}: {r[\"type\"]} ({r.get(\"timestamp\",\"\")[:19]})')
+```
 
 ---
 
