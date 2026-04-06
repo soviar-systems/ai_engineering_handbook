@@ -130,6 +130,11 @@ ADR-26028
 ADR-26041
 : [Client-Side Logic with Server-Side Retrieval](/architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md)
 
+ADR-26046
+: [External Product Repos as Research Directories](/architecture/adr/adr_26046_external_product_repos_as_research_directories.md)
+
+  Governance for directories containing nested git repos of external products used for comparative source-level research — centralized path registry with relocation safety.
+
 :::
 
 ### context_management

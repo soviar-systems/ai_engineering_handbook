@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soviar-systems.github.io/ai_engineering_handbook/.vadocs/validation/external-repos.conf.schema.json",
+  "title": "External Product Repos Registry",
+  "description": "Validates .vadocs/validation/external-repos.conf.json. Governed by ADR-26046.",
+  "type": "object",
+  "required": ["entries"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "$comment": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "description", "product_type", "managed_by"],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path from repo root. No leading or trailing slash."
+          },
+          "description": {
+            "type": "string",
+            "description": "What this directory contains and why it exists."
+          },
+          "product_type": {
+            "type": "string",
+            "description": "Classification of the external products (e.g., ai_coding_agents, benchmark_frameworks)."
+          },
+          "managed_by": {
+            "type": "string",
+            "description": "Relative path to the script that manages nested repos in this directory."
+          }
+        }
+      }
+    }
+  }
+}

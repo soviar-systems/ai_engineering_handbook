@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.19.0
+    jupytext_version: 1.19.1
 kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
@@ -74,7 +74,7 @@ bash ./tools/scripts/configure_repo.sh
 
 Every content article must include a **YAML frontmatter** block with MyST-native field names (`title`, `author`/`authors`, `date`) so that ownership and freshness are rendered directly on the static site. Custom fields (`version`, `birth`) go under `options.*` for RAG/tooling use.
 
-1. ["YAML Frontmatter for AI-Enabled Engineering"](/ai_system/5_context/yaml_frontmatter_for_ai_enabled_engineering.ipynb) — the frontmatter schema and why it matters for RAG
+1. ["YAML Frontmatter for AI-Enabled Engineering"](/ai_system_layers/5_context/yaml_frontmatter_for_ai_enabled_engineering.ipynb) — the frontmatter schema and why it matters for RAG
 1. {term}`ADR-26023` — the MyST-aligned frontmatter standard
 
 +++
@@ -83,8 +83,8 @@ Every content article must include a **YAML frontmatter** block with MyST-native
 
 +++
 
-1. ["Multi-Phase AI Pipeline"](/ai_system/4_orchestration/workflows/multi_phase_ai_pipeline.ipynb) - the Research-Apply pipeline for AI-assisted engineering.
-1. ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb) - what models to use for different types of tasks.
+1. ["Multi-Phase AI Pipeline"](/ai_system_layers/4_orchestration/workflows/multi_phase_ai_pipeline.ipynb) - the Research-Apply pipeline for AI-assisted engineering.
+1. ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system_layers/2_model/selection/general_purpose_vs_agentic_models.ipynb) - what models to use for different types of tasks.
 1. ["VIM in AI Era: Hybrid Setup with Ollama and Aider"](/tools/docs/ai_agents/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.ipynb)
 
 +++

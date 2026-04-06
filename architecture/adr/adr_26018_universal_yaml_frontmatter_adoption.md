@@ -72,7 +72,7 @@ We will mandate the adoption of YAML frontmatter as the **Universal Interface** 
 ## References
 - [ADR-26014: Semantic Notebook Pairing Strategy](/architecture/adr/adr_26014_semantic_notebook_pairing_strategy.md)
 - [ADR-26016: Metadata-Driven Architectural Records Lifecycle](/architecture/adr/adr_26016_metadata_driven_architectural_records_life.md)
-- [YAML Frontmatter for AI-Enabled Engineering](/ai_system/5_context/yaml_frontmatter_for_ai_enabled_engineering.ipynb)
+- [YAML Frontmatter for AI-Enabled Engineering](/ai_system_layers/5_context/yaml_frontmatter_for_ai_enabled_engineering.ipynb)
 - ISO/IEC/IEEE 29148:2018 Standards for Software Requirements
 
 ## Participants

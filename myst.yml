@@ -14,7 +14,7 @@ project:
     - "CLAUDE.md"
     - "architecture/adr/adr_template.md"
     - "misc/*"
-    - "ai_system/6_agents/agents_source_code/*"
+    - "ai_agents/agents_source_code/*"
     # jupytext pairs md to ipynb
     - "0_intro/**/*.md"
     - "ai_system/**/*.md"

@@ -204,7 +204,7 @@ In the Agentic OS:
 - **YAML frontmatter** is the header file — it declares the document's interface (type, capabilities, dependencies)
 - **Validation schemas** are the ABI — they enforce the contract between producers and consumers of documents
 
-This three-level layering has a precise precedent in HPC engineering. The [GEMM handbook](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb) documents the BLAS Interface / API / ABI hierarchy:
+This three-level layering has a precise precedent in HPC engineering. The [GEMM handbook](/ai_system_layers/1_execution/algebra_gemm_engineering_standard.ipynb) documents the BLAS Interface / API / ABI hierarchy:
 
 | Layer | BLAS (HPC) | Agentic OS (Documentation) |
 |---|---|---|
@@ -858,7 +858,7 @@ The structures described throughout this analysis — ADRs, evidence pipeline, 1
 
 This is not a weakness — it is an expected property of a system in the "kernel development" phase. UNIX itself went through multiple filesystem designs (S5FS → FFS → ext2 → ext4) before settling on mature abstractions. The Agentic OS is at the S5FS stage: the concepts are sound, but the specific implementations will evolve.
 
-The practical implication: **invest in interfaces, not implementations.** The Document Type Interface Contract (the YAML schema definitions) should be designed to survive implementation changes. A future validation engine might replace vadocs entirely — but if the interface contract is stable, the migration is painless. This mirrors the BLAS lesson from the [GEMM handbook](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb): the BLAS specification survived 50+ years of implementation changes because the interface was the asset, not the code behind it.
+The practical implication: **invest in interfaces, not implementations.** The Document Type Interface Contract (the YAML schema definitions) should be designed to survive implementation changes. A future validation engine might replace vadocs entirely — but if the interface contract is stable, the migration is painless. This mirrors the BLAS lesson from the [GEMM handbook](/ai_system_layers/1_execution/algebra_gemm_engineering_standard.ipynb): the BLAS specification survived 50+ years of implementation changes because the interface was the asset, not the code behind it.
 
 The Agentic OS concept may eventually subsume or replace the ADR framework. If the Control Plane formalization proves more powerful than the current ADR lifecycle, ADRs might become one document type among many in a unified governance system rather than the privileged decision-making artifact. This analysis should be read as the "current best model" — a working hypothesis, not a final specification.
 
@@ -938,7 +938,7 @@ A unified tag vocabulary means the tag `model` used in an ADR, a commit, a skill
 - [Manifesto: Documentation as Source Code](/architecture/manifesto.md)
 - [Technical Debt Register](/misc/plan/techdebt.md) — TD-001 (common_required_fields)
 - [SemVer: Artifact Versioning Policy](/tools/docs/git/semver_artifact_versioning_policy_avp.ipynb) — version field standard
-- [GEMM: The Engineering Standard](/ai_system/1_execution/algebra_gemm_engineering_standard.ipynb) — BLAS Interface/API/ABI hierarchy, "the interface is the asset" principle
+- [GEMM: The Engineering Standard](/ai_system_layers/1_execution/algebra_gemm_engineering_standard.ipynb) — BLAS Interface/API/ABI hierarchy, "the interface is the asset" principle
 - `S-26004: Gemini — Semantic Alignment Assessment` — WRC analysis, contract-first development
 - `S-26005: Qwen — Agentic OS Architecture Diagram` — UNIX ↔ Agentic OS mapping
 - `S-26006: Gemini — Agentic OS Design Review and Virtual Relational Layer` — VRL, integrated triple-layer architecture, Postgres namespace model

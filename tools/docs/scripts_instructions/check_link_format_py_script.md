@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.19.0
+    jupytext_version: 1.19.1
 kernelspec:
   name: bash
   display_name: Bash
@@ -299,7 +299,7 @@ Prompts for confirmation before fixing each file:
 
 ```
 File: ai_system/2_model/selection/choosing_model_size.md
-  Line 33: /ai_system/4_orchestration/patterns/llm_usage_patterns.md → .ipynb
+  Line 33: /ai_system_layers/4_orchestration/patterns/llm_usage_patterns.md → .ipynb
 
 Fix this file? [y/n/q] (q=quit):
 ```

@@ -50,7 +50,7 @@ We mandate the use of **Reasoning-Class (Abstract Synthesis)** models for the Ph
 
 1. **Primary Criteria**: Models must be selected based on their **Reasoning Ceiling** (GPQA/AIME scores) rather than instruction adherence alone.
 
-2. **Permitted Models**: Only SOTA reasoning models are approved for this phase. The actual list of models is available in ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb) and should be considered the Single Source of Truth when choosing the model.
+2. **Permitted Models**: Only SOTA reasoning models are approved for this phase. The actual list of models is available in ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system_layers/2_model/selection/general_purpose_vs_agentic_models.ipynb) and should be considered the Single Source of Truth when choosing the model.
 
 3. **Role Separation**: These models are strictly forbidden for the **Phase 2 (Architect)** role (unless configured in a high-adherence sub-mode) to prevent "Instruction Drift".
 
@@ -75,7 +75,7 @@ We mandate the use of **Reasoning-Class (Abstract Synthesis)** models for the Ph
 * {term}`ADR-26005`: Formalization of Aider as Primary Agentic Orchestrator
 * {term}`ADR-26006`: Requirement for Agentic-Class Models for the Architect Phase
 * {term}`ADR-26007`: Formalization of Phase 0: Intent Synthesis (Requirements Engineering)
-* ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb)
+* ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system_layers/2_model/selection/general_purpose_vs_agentic_models.ipynb)
 
 ## Participants
 

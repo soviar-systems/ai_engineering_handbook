@@ -25,11 +25,11 @@ options:
 
 +++
 
-The [Format as Architecture](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) handbook and its companion [Token Economics of Prompt Delivery](/ai_system/3_prompts/token_economics_of_prompt_delivery.ipynb) treat format as the sole variable in prompt token cost. Session measurements (`S-26018`) exposed that this is incomplete: two tools producing valid, semantically equivalent YAML from the same JSON source yield token counts differing by 100+ tokens, and the relative ranking of YAML Literal vs Pretty JSON **flips** depending on which tool is used. The token cost of a prompt format is a function of three variables:
+The [Format as Architecture](/ai_system_layers/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) handbook and its companion [Token Economics of Prompt Delivery](/ai_system_layers/3_prompts/token_economics_of_prompt_delivery.ipynb) treat format as the sole variable in prompt token cost. Session measurements (`S-26018`) exposed that this is incomplete: two tools producing valid, semantically equivalent YAML from the same JSON source yield token counts differing by 100+ tokens, and the relative ranking of YAML Literal vs Pretty JSON **flips** depending on which tool is used. The token cost of a prompt format is a function of three variables:
 
 $$\text{token\_cost} = f(\text{format},\ \text{serializer},\ \text{tokenizer})$$
 
-The three serializer behaviours driving the divergence — PyYAML `width=80` line-wrapping, yq boolean coercion in literal style, and single vs double quote style — are isolated, measured, and verified for semantic fidelity in the [Appendix: YAML Serializer Variance](/ai_system/3_prompts/appendix_yaml_serializer_variance.ipynb). All measurements use 5 production prompt files and report median deltas; the appendix cells are runnable against any version of the prompt corpus. The appendix also contains the stack recommendation and the assessment of which handbook claims require serializer qualification.
+The three serializer behaviours driving the divergence — PyYAML `width=80` line-wrapping, yq boolean coercion in literal style, and single vs double quote style — are isolated, measured, and verified for semantic fidelity in the [Appendix: YAML Serializer Variance](/ai_system_layers/3_prompts/appendix_yaml_serializer_variance.ipynb). All measurements use 5 production prompt files and report median deltas; the appendix cells are runnable against any version of the prompt corpus. The appendix also contains the stack recommendation and the assessment of which handbook claims require serializer qualification.
 
 +++
 
@@ -38,6 +38,6 @@ The three serializer behaviours driving the divergence — PyYAML `width=80` lin
 +++
 
 - `S-26018` — Session empirical measurements: PyYAML vs yq token comparison on `devops_consultant.json` v0.3.0, diff output, cross-tokenizer results
-- [Appendix: YAML Serializer Variance](/ai_system/3_prompts/appendix_yaml_serializer_variance.ipynb) — Full analysis: isolation experiments (B1–B4), fidelity tests (C1–C3), ranking stability (D1–D3), stack recommendation (F1–F2)
-- [Token Economics of Prompt Delivery](/ai_system/3_prompts/token_economics_of_prompt_delivery.ipynb) — Handbook; Section 2.5 and Summary require serializer qualification per this analysis
-- [Format as Architecture](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) — Handbook; comparison table §3.7 requires serializer footnote
+- [Appendix: YAML Serializer Variance](/ai_system_layers/3_prompts/appendix_yaml_serializer_variance.ipynb) — Full analysis: isolation experiments (B1–B4), fidelity tests (C1–C3), ranking stability (D1–D3), stack recommendation (F1–F2)
+- [Token Economics of Prompt Delivery](/ai_system_layers/3_prompts/token_economics_of_prompt_delivery.ipynb) — Handbook; Section 2.5 and Summary require serializer qualification per this analysis
+- [Format as Architecture](/ai_system_layers/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) — Handbook; comparison table §3.7 requires serializer footnote

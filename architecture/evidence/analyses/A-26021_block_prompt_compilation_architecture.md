@@ -122,7 +122,7 @@ Compiler evaluates trigger conditions (WRC < 0.90, question type) and adds block
 1. `S-26020` — Session transcript: block prompt architecture and Heuer brainstorm (2026-04-03)
 2. `ai_systems_consultant_hybrid.json` — Production hybrid consultant prompt
 3. `devops_consultant.json` — Production devops consultant prompt
-4. [Format as Architecture: Signal-to-Noise in Prompt Delivery](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb)
-5. [Token Economics of Prompt Delivery](/ai_system/3_prompts/token_economics_of_prompt_delivery.ipynb)
-6. [Appendix: YAML Serializer Variance](/ai_system/3_prompts/appendix_yaml_serializer_variance.ipynb)
+4. [Format as Architecture: Signal-to-Noise in Prompt Delivery](/ai_system_layers/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb)
+5. [Token Economics of Prompt Delivery](/ai_system_layers/3_prompts/token_economics_of_prompt_delivery.ipynb)
+6. [Appendix: YAML Serializer Variance](/ai_system_layers/3_prompts/appendix_yaml_serializer_variance.ipynb)
 7. `tools/scripts/prepare_prompt.py` — Prompt compiler (needs refinement for block compilation)

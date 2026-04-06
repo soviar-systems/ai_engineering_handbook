@@ -106,4 +106,4 @@ After JSON-to-YAML conversion, the list renders as a YAML block sequence with on
 +++
 
 - `S-26016` — Gemini Fast multi-turn dialogue: prompt tags as noise vs anchors, Markdown vs XML boundary semantics, hybrid YAML+XML workflow, JSON-list injection boundary pattern
-- [Format as Architecture](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) — Handbook applying these findings: §3.3 (XML), §3.4 (Markdown), §4 (training distribution), §6.4 (hybrid pattern)
+- [Format as Architecture](/ai_system_layers/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) — Handbook applying these findings: §3.3 (XML), §3.4 (Markdown), §4 (training distribution), §6.4 (hybrid pattern)

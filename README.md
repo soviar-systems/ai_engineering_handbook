@@ -20,8 +20,8 @@ Content is **generated through a hybrid LLM methodology**, **cross-validated by 
 ## What's new?
 
 v2.8.0 — "The Prompt Physics"
-* **Prompt Engineering Research**: A three-article series with real measurements and reproducible code — [Format as Architecture](ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb), [Token Economics of Prompt Delivery](ai_system/3_prompts/token_economics_of_prompt_delivery.ipynb), and an [Appendix on YAML Serializer Variance](ai_system/3_prompts/appendix_yaml_serializer_variance.ipynb). Central finding: token cost is `f(format, serializer, tokenizer)` — PyYAML vs. yq on the same JSON source can differ by 100+ tokens on a 150-line prompt and flip the YAML vs. JSON ranking. Backed by three analyses ([A-26016](architecture/evidence/analyses/A-26016_causal_masking_attention_mechanics_for_prompt_engineering.md), [A-26017](architecture/evidence/analyses/A-26017_yaml_serializer_variance_token_economics.md), [A-26018](architecture/evidence/analyses/A-26018_xml_tags_scope_isolation_prompt_architecture.md)).
-* **Two-Stage Consultant Workflow**: [ai_brainstorming_colleague.json](ai_system/3_prompts/consultants/ai_brainstorming_colleague.json) (v0.2.0) handles exploration; it hands off explicitly to the strict reviewers ([ai_systems_consultant_hybrid.json](ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json), [devops_consultant.json](ai_system/3_prompts/consultants/devops_consultant.json)) when formal validation is needed. The handoff is enforced by the prompt itself.
+* **Prompt Engineering Research**: A three-article series with real measurements and reproducible code — [Format as Architecture](ai_system_layers/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb), [Token Economics of Prompt Delivery](ai_system_layers/3_prompts/token_economics_of_prompt_delivery.ipynb), and an [Appendix on YAML Serializer Variance](ai_system_layers/3_prompts/appendix_yaml_serializer_variance.ipynb). Central finding: token cost is `f(format, serializer, tokenizer)` — PyYAML vs. yq on the same JSON source can differ by 100+ tokens on a 150-line prompt and flip the YAML vs. JSON ranking. Backed by three analyses ([A-26016](architecture/evidence/analyses/A-26016_causal_masking_attention_mechanics_for_prompt_engineering.md), [A-26017](architecture/evidence/analyses/A-26017_yaml_serializer_variance_token_economics.md), [A-26018](architecture/evidence/analyses/A-26018_xml_tags_scope_isolation_prompt_architecture.md)).
+* **Two-Stage Consultant Workflow**: [ai_brainstorming_colleague.json](ai_system_layers/3_prompts/consultants/ai_brainstorming_colleague.json) (v0.2.0) handles exploration; it hands off explicitly to the strict reviewers ([ai_systems_consultant_hybrid.json](ai_system_layers/3_prompts/consultants/ai_systems_consultant_hybrid.json), [devops_consultant.json](ai_system_layers/3_prompts/consultants/devops_consultant.json)) when formal validation is needed. The handoff is enforced by the prompt itself.
 * **Governance Enforcement**: All governance configs migrated from YAML to JSON (`.vadocs/`). [check_frontmatter.py](tools/scripts/check_frontmatter.py) (work in progress) enforces {term}`ADR-26042` at commit time. Two new proposed ADRs: {term}`ADR-26044` and {term}`ADR-26054`.
 
 v2.7.0 — "The Context Engineering Pivot"
@@ -86,7 +86,7 @@ Content generation follows a tool-agnostic, cognitive-model approach:
 
 - **Model taxonomy**: reasoning-class models (synthesis, requirements) vs. agentic-class models (execution, structure) — selected by capability, not by name ({term}`ADR-26027`)
 - **Phase 0: Intent Synthesis**: human-led discovery with a reasoning-class model before any automated execution ({term}`ADR-26028`)
-- **Consultant prompts** in `ai_system/3_prompts/consultants/` encode methodology as JIT-transformable JSON ({term}`ADR-26013`)
+- **Consultant prompts** in `ai_system_layers/3_prompts/consultants/` encode methodology as JIT-transformable JSON ({term}`ADR-26013`)
 
 ```mermaid
 graph LR
@@ -123,7 +123,13 @@ Read more in [A Multi-Layered AI System Architecture](/0_intro/a_multi_layered_a
 ```text
 .
 ├── 0_intro/                # Introductory material, high-level overviews
-├── ai_system/              # Core content organized by layer
+├── ai_agents/              # Real-world agent framework analysis (assembled product)
+│   ├── agents_source_code/ # Nested git repos (external agent source code)
+│   ├── context_management/ # Context window strategy analysis
+│   ├── session_history_management/ # Session history analysis
+│   ├── skills/             # Skill system analysis
+│   └── tooling/            # Tool architecture analysis
+├── ai_system_layers/       # Core content organized by layer (engine parts catalog)
 │   ├── 1_execution/        # CPU/GPU optimization, CUDA, VRAM management
 │   ├── 2_model/            # Model selection, tokenization, embeddings
 │   ├── 3_prompts/          # Prompt-as-Infrastructure: formatting, versioning, consultants
@@ -159,7 +165,7 @@ The repository uses automated validation to enforce documentation quality:
 - **Tool configuration** centralized in `pyproject.toml [tool.X]` sections ({term}`ADR-26029`)
 - **CI/CD pipelines**: `quality.yml` (broken links, jupytext sync, script tests) + `deploy.yml` (GitHub Pages deployment)
 - **Validation scripts**: `check_adr.py`, `check_evidence.py`, `check_frontmatter.py`, `check_broken_links.py`, `validate_commit_msg.py`, `check_link_format.py`
-- **Agent repo management**: `manage_agent_repos.py` — clone, update, and list agent source code repositories in `ai_system/6_agents/agents_source_code/`
+- **Agent repo management**: `manage_agent_repos.py` — clone, update, and list agent source code repositories in `ai_agents/agents_source_code/`
 
 
 ## Authorship & Contact

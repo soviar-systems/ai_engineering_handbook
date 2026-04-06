@@ -160,7 +160,7 @@ The validated stack: **litellm (models) + FastMCP (tools) + custom master loop (
 - [ADR-26030: Stateless JIT Context Injection for Agentic Git Workflows](/architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md)
 - [Ecosystem Roadmap](/misc/plan/plan_20260308_ecosystem_roadmap_vadocs_to_mentor.md) — Phase 2 decisions
 - [A-26005: Agentic OS Filesystem Architecture](/architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md) — Postgres namespace model
-- [Format as Architecture: Signal-to-Noise in Prompt Delivery](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb)
+- [Format as Architecture: Signal-to-Noise in Prompt Delivery](/ai_system_layers/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb)
 - `S-26008: Gemini — LangChain vs Production Agent Architecture`
 - `S-26009: Gemini — Local Git Repo RAG Setup with pgvector`
 - `S-26010: Gemini — Stateless JIT Context Injection for Agentic Git Workflows`

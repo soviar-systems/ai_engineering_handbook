@@ -150,8 +150,8 @@ Intentionally dropped as a universal constraint. "Runs on CPU or consumer VRAM" 
 - [ADR-26024: Structured Commit Bodies](/architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md) — references C1, C4 violations
 - [ADR-26025: RFC-ADR Workflow Formalization](/architecture/adr/adr_26025_rfc_adr_workflow_formalization.md) — references C3
 - [ADR-26026: Dedicated Research Monorepo](/architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md) — invented ad hoc "C2"
-- [Local AI Systems Consultant](/ai_system/3_prompts/consultants/local_ai_systems_consultant.json) — SVA constraints C1-C4 (pre-canonical)
-- [DevOps Consultant](/ai_system/3_prompts/consultants/devops_consultant.json) — SVA constraints C1-C4 (pre-canonical)
-- [Hybrid AI Systems Consultant](/ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json) — SVA constraints C1-C5 (pre-canonical)
-- [Requirements Engineering: Gated Velocity](/ai_system/4_orchestration/workflows/requirements_engineering/requirements_engineering_in_the_ai_era_the_gated_velocity.ipynb) — SVA glossary definition
+- [Local AI Systems Consultant](/ai_system_layers/3_prompts/consultants/local_ai_systems_consultant.json) — SVA constraints C1-C4 (pre-canonical)
+- [DevOps Consultant](/ai_system_layers/3_prompts/consultants/devops_consultant.json) — SVA constraints C1-C4 (pre-canonical)
+- [Hybrid AI Systems Consultant](/ai_system_layers/3_prompts/consultants/ai_systems_consultant_hybrid.json) — SVA constraints C1-C5 (pre-canonical)
+- [Requirements Engineering: Gated Velocity](/ai_system_layers/4_orchestration/workflows/requirements_engineering/requirements_engineering_in_the_ai_era_the_gated_velocity.ipynb) — SVA glossary definition
 - [Changelog Self-Filtering Warning Plan](/misc/plan/implemented/plan_20260228_changelog_self_filtering_warning.md) — Case study: SVA pivot

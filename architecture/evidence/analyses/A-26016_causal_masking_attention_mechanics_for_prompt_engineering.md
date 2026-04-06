@@ -25,7 +25,7 @@ options:
 
 +++
 
-The [Format as Architecture](/ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) article makes several claims about how prompt format interacts with the transformer's attention mechanism:
+The [Format as Architecture](/ai_system_layers/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb) article makes several claims about how prompt format interacts with the transformer's attention mechanism:
 
 1. Structural tokens "consume attention budget"
 2. Whitespace and newlines serve as "attention anchors"

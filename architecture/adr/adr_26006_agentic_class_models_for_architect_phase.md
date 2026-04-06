@@ -50,7 +50,7 @@ General-purpose models prioritize creativity and conversational nuance, which in
 
 ## Decision
 
-We mandate the use of **Agentic-Class models** (prioritizing **Instruction Adherence** over Abstract Synthesis) for the Architect role within the `aidx` framework. See ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb)
+We mandate the use of **Agentic-Class models** (prioritizing **Instruction Adherence** over Abstract Synthesis) for the Architect role within the `aidx` framework. See ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system_layers/2_model/selection/general_purpose_vs_agentic_models.ipynb)
 
 1. **Model Classification**: Only models verified for "High Instruction Adherence" (e.g., Gemini 3 Flash, Claude 3.7/4.0 Sonnet) are permitted for the Architect role.
 2. **Primary Choice**: **Gemini 3 Flash** (in **Thinking: High** mode) is established as the default Architect model due to its high "Intelligence Density" and 2026 benchmarks for agentic rigidity.
@@ -80,7 +80,7 @@ We mandate the use of **Agentic-Class models** (prioritizing **Instruction Adher
 
 * {term}`ADR-26004`: Implementation of Agentic RAG for Autonomous Research
 * {term}`ADR-26005`: Formalization of Aider as Primary Agentic Orchestrator
-* ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb)
+* ["General Purpose (Abstract Synthesis) vs Agentic (Instruction Adherence) Models"](/ai_system_layers/2_model/selection/general_purpose_vs_agentic_models.ipynb)
 * ISO 29148: Systems and Software Engineering — Requirements Engineering
 * SWEBOK Guide V4.0 - Software Engineering Body of Knowledge
 

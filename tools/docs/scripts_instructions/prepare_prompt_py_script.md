@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.19.0
+    jupytext_version: 1.19.1
 kernelspec:
   name: bash
   display_name: Bash
@@ -30,7 +30,7 @@ Last Modified: 2026-01-30
 
 +++
 
-This [script](/tools/scripts/prepare_prompt.py) prepares prompt files (["Layer 3: Prompts-as-Infrastructure"](/ai_system/3_prompts/)) for LLM consumption by removing metadata, stripping special characters, and converting to a YAML-like output format.
+This [script](/tools/scripts/prepare_prompt.py) prepares prompt files (["Layer 3: Prompts-as-Infrastructure"](/ai_system_layers/3_prompts/)) for LLM consumption by removing metadata, stripping special characters, and converting to a YAML-like output format.
 
 :::{seealso}
 > ADR 26013: Just-in-Time Prompt Transformation

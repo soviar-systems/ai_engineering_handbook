@@ -1,0 +1,24 @@
+{
+  "$schema": "./external-repos.conf.schema.json",
+  "$comment": [
+    "Registry of directories containing nested git repos of external products",
+    "cloned into this repo for source-level comparative research.",
+    "",
+    "Consumers: paths.py (exclusion lists), .gitignore, myst.yml (project.exclude),",
+    "and the management script named in 'managed_by'.",
+    "",
+    "Governed by: ADR-26046"
+  ],
+  "entries": [
+    {
+      "path": "ai_agents/agents_source_code",
+      "description": "Source code of external AI coding agents for comparative study",
+      "product_type": "ai_coding_agents",
+      "managed_by": "tools/scripts/manage_agent_repos.py",
+      "consumers": [
+        ".gitignore",
+        "myst.yml"
+      ]
+    }
+  ]
+}

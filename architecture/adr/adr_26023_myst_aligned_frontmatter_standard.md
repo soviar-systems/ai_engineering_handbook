@@ -132,7 +132,7 @@ Lazy migration — files are updated to the new schema as they are touched. No b
 - {term}`ADR-26016`: Metadata-Driven Architectural Records Lifecycle
 - {term}`ADR-26017`: ADR Format Validation Workflow
 - [MyST Frontmatter API](https://mystmd.org/guide/frontmatter)
-- [YAML Frontmatter for AI-Enabled Engineering](/ai_system/5_context/yaml_frontmatter_for_ai_enabled_engineering.ipynb)
+- [YAML Frontmatter for AI-Enabled Engineering](/ai_system_layers/5_context/yaml_frontmatter_for_ai_enabled_engineering.ipynb)
 
 ## Participants
 

@@ -1,0 +1,549 @@
+### USER
+Why does OpenClawn get so high support in China? 
+
+###
+
+Ничего необычного, просто в Китае прямо на улицах устанавливают всем желающим OpenClaw 
+
+Конкретно эти фотографии сделаны у офиса Tencent в Шэньчжэне. Там разработчики провели бесплатный ивент по установке OpenClaw. Говорят, пришло около тысячи человек. 
+
+Подобные мероприятия прошли также в Шанхае, Пекине и нескольких других городах. 
+
+Кстати, в Китае в целом сейчас планируют развернуть огромную программу поддержки OpenClaw. Они хотят создавать так называемые Lobster service zones: физические или облачные места, где OpenClaw уже развернут и настроен. Операторам будут выделять бюджет на хостинг, а люди и компании смогут пользоваться (почти) бесплатно. 
+
+Плюс разработчикам или компаниям, которые контрибьютят приложения/скиллы на OpenClaw для приоритетных отраслей, обещают до 2 млн юаней субсидий на проект. А проекты, которые признают «демонстрационными» (успешные применения OpenClaw), получают разовую выплату до 1 млн юаней. Это примерно 140к доллларов.
+
+### ASSISTANT
+First, a small correction: the project is called **OpenClaw** (not "OpenClawn"). It's a real open-source AI agent framework that has indeed gained remarkable traction in China. Here's why:
+
+### 🔹 What is OpenClaw?
+OpenClaw is an open-source autonomous AI agent created by Austrian developer Peter Steinberger. Unlike typical chatbots, it can execute tasks directly on users' computers and integrate with messaging platforms like WhatsApp, Telegram, WeChat, and enterprise tools . Its icon resembles a red lobster 🦞, which is why Chinese users affectionately call it "raising lobsters" (养龙虾).
+
+### 🔹 Why the surge in China?
+1. **Grassroots enthusiasm**: Events like Tencent Cloud's free OpenClaw installation session in Shenzhen drew nearly 1,000 attendees—including students, retirees, and developers—queuing for hands-on setup help .
+2. **Low barrier to experimentation**: As an open-source, self-hosted tool, it appeals to China's large community of developers and tech hobbyists seeking customizable AI solutions .
+3. **Corporate adoption**: Companies like ByteDance, Alibaba Cloud, and Xiaomi have announced integrations or cloud-based deployment options, accelerating mainstream visibility .
+
+### 🔹 Government support programs (the "Lobster" policies)
+Local governments in Shenzhen's Longgang District and Wuxi have proposed draft measures to foster an OpenClaw ecosystem :
+
+| Initiative | Details |
+|------------|---------|
+| **Lobster Service Zones** | Physical or cloud-based hubs where OpenClaw is pre-deployed; operators receive hosting subsidies so end users can access it nearly free  |
+| **Developer subsidies** | Up to **2 million yuan** (~$280K) for projects contributing skills/apps in priority sectors like smart manufacturing, healthcare, or government services  |
+| **Demonstration project rewards** | One-time payments up to **1 million yuan** (~$140K) for successful, replicable OpenClaw applications deemed "model cases"  |
+| **Support for "one-person companies"** | Free computing resources, discounted office space, and accommodation subsidies for solo entrepreneurs building on OpenClaw  |
+
+### 🔹 Important caveats
+- **Security concerns**: China's Ministry of Industry and Information Technology has warned that improper OpenClaw deployment could expose systems to cyberattacks or data leaks. Over 17,500 misconfigured instances have reportedly been found with exposed API tokens .
+- **Early-stage technology**: As Zhou Hongyi (founder of 360) noted, OpenClaw remains difficult for non-technical users to install—hence the value of community events and "one-click" installation efforts .
+- **Policy drafts, not final law**: The subsidy measures are currently public consultation drafts; final implementation details may change.
+
+### In short
+OpenClaw's popularity in China stems from a confluence of factors: strong developer community interest, corporate backing, and proactive local government policies aiming to capture leadership in the emerging "AI agent" economy. The "lobster" branding has become a cultural meme that amplifies visibility—but the underlying driver is genuine technical utility combined with strategic policy support.
+
+*Note: If you meant a different project by "OpenClawn," please clarify—I searched extensively and found no evidence of a distinct project by that exact name.*
+
+### USER
+My question is why? Not what happens?
+
+### ASSISTANT
+You're right—let's cut to the **causal core**. OpenClaw isn't just "popular" in China; it's being strategically amplified because it solves several high-priority problems for China's AI trajectory. Here's the *why*, layered by motivation:
+
+### 🎯 1. Strategic Autonomy (The Geopolitical Why)
+- Western AI models (GPT, Claude, etc.) are restricted by export controls and require foreign APIs.  
+- OpenClaw is **open-source and self-hostable**—China can deploy, modify, and scale it without external permission.  
+→ *Supporting it reduces dependency on adversarial tech stacks.*
+
+### 🏭 2. Alignment with National AI Industrial Policy (The Policy Why)
+- China's "AI+" action plan (2024) explicitly prioritizes **AI agents that integrate with real-world workflows**—manufacturing, logistics, public services.  
+- OpenClaw's architecture (task-executing agents, not just chat) fits this mandate perfectly.  
+→ *Subsidizing it accelerates policy goals with existing tools.*
+
+### 🔐 3. Data Sovereignty & Regulatory Compliance (The Legal Why)
+- China's cybersecurity laws (PIPL, DSL) require sensitive data to stay onshore and under local control.  
+- Self-hosted OpenClaw instances keep data within China's jurisdiction; foreign cloud APIs often cannot comply.  
+→ *Adoption isn't just convenient—it's legally safer.*
+
+### 👨‍💻 4. Leveraging China's Developer Scale (The Ecosystem Why)
+- China has ~7 million software developers—the world's largest pool.  
+- OpenClaw's low barrier to fork/customize + high utility = rapid organic adoption.  
+→ *Government subsidies multiply an already-viral grassroots trend.*
+
+### 🏙️ 5. Local Government Competition (The Incentive Why)
+- Cities (Shenzhen, Hangzhou, etc.) compete to attract AI talent and startups.  
+- Funding "Lobster Service Zones" or developer grants is a **low-cost, high-visibility signal** of innovation support.  
+→ *It's political capital with measurable tech output.*
+
+### 💡 In one sentence:
+> China supports OpenClaw heavily because it is a **sovereign, customizable, policy-aligned AI agent framework** that turns China's developer scale into strategic advantage—while sidestepping Western tech restrictions.
+
+The events (install parties, subsidies) are just the *symptoms*. The *cause* is structural: OpenClaw helps China win the next phase of the AI race on its own terms. 🦞
+
+### USER
+But this tool is raw and not secure. Can't Chinese build their own agent instead of taking this not production ready OpenClaw?
+
+### ASSISTANT
+You're asking the right question. If OpenClaw is "raw and insecure," why not just build a domestic alternative from scratch? The short answer: **China is doing both**, and adopting OpenClaw *accelerates* the path to a sovereign solution. Here's the strategic logic:
+
+### ⚡ 1. Speed beats perfection in platform races
+- Building a production-grade agent framework with multi-channel support, memory management, tool orchestration, and security hardening takes **years** of engineering effort.
+- Forking OpenClaw and hardening it for local use takes **weeks**. The `openclaw-china` repo, for example, added support for WeChat, DingTalk, and QQ in under 2 months with 328 commits [[GitHub]].
+- China's "AI+" industrial policy has **2026-2027 delivery targets**. Waiting for a perfect domestic tool risks missing the window to shape the agent ecosystem.
+
+### 🧱 2. "Raw" is a feature for rapid iteration
+- OpenClaw's simplicity (compared to enterprise frameworks) makes it **easier to audit, fork, and modify**. Its 52-module architecture is complex but transparent—unlike closed-source alternatives.
+- Chinese developers aren't deploying vanilla OpenClaw. They're deploying **hardened forks** like:
+  - `openclaw-china`: Adds China IM channels + container isolation [[GitHub]]
+  - `NanoClaw`: Replaces OpenClaw's agent engine with Claude Code for better security [[Zhihu]]
+  - `OpenCray`: Localized UI + domestic model support [[GitHub]]
+- The "raw" upstream becomes a **reference architecture**, not the production artifact.
+
+### 🔐 3. Security concerns are being addressed *locally*, not ignored
+You're right that MIIT issued a security advisory about exposed OpenClaw instances [[CIW News]]. But the response wasn't abandonment—it was **controlled hardening**:
+- The `openclaw-china` project enforces container isolation by default: Agent code runs in Apple Container/Docker, unable to access host files [[GitHub]].
+- Credentials are scoped per-channel; IPC channels are group-isolated to prevent cross-tenant leaks.
+- Domestic cloud providers (Tencent, Alibaba) offer **managed, pre-hardened deployments** that abstract away misconfiguration risks.
+
+### 🔄 4. Adoption fuels domestic capability building
+Every Chinese developer who forks OpenClaw:
+1. Learns agent architecture patterns
+2. Identifies weaknesses (security, performance, China-compliance gaps)
+3. Contributes fixes back to domestic forks
+4. Eventually replaces upstream dependencies with local modules
+
+This is how China built its cloud, mobile, and semiconductor ecosystems: **adopt → adapt → replace**.
+
+### 📊 5. The data flywheel matters more than the code
+Even a "raw" agent deployed at scale generates something invaluable: **real-world usage data**.
+- OpenClaw sessions in China consumed ~61% of global OpenRouter tokens in late February, mostly routed through domestic models like Kimi K2.5 and GLM-5 [[CIW News]].
+- This usage data trains better Chinese models, which in turn make domestic agent frameworks more capable.
+- The tool is a **means to an end**: the end is sovereign AI capability, not loyalty to any single codebase.
+
+### 🎯 In one sentence:
+> China adopts OpenClaw not because it's perfect, but because it's the fastest way to **learn, harden, and eventually replace** foreign agent technology—while capturing near-term economic and strategic value.
+
+The "lobster frenzy" isn't the destination. It's the on-ramp. 🦞→🇨🇳
+
+### USER
+There is a new agent appeared: https://github.com/QwenLM/qwen-code  
+
+Tell me more about it comparing to other existing terminal agents, like Claude Code, aider, etc. and to OpenClaw we have just discussed
+
+### ASSISTANT
+Based on the repository analysis and recent comparisons, here's a technical breakdown of **Qwen Code** and how it stacks up against other terminal AI agents:
+
+---
+
+## 🔍 What is Qwen Code?
+
+**Qwen Code** is an open-source terminal AI agent from Alibaba's Qwen team, optimized for the Qwen3-Coder model family. It's designed to help developers understand codebases, automate tasks, and ship features directly from the command line .
+
+### Key Technical Features
+| Feature | Details |
+|---------|---------|
+| **Architecture** | Modular: `packages/cli` (frontend) + `packages/core` (backend) + extensible tools  |
+| **Model Support** | Qwen3-Coder (primary), plus OpenAI/Anthropic/Gemini-compatible APIs via config  |
+| **Authentication** | Qwen OAuth (1,000 free requests/day) OR API-key for any compatible provider |
+| **Tool System** | File ops, shell execution (with approval), web search, MCP server integration |
+| **Security** | Approval gates for destructive ops; sandboxing options; config-layer precedence |
+| **Deployment** | Node.js 20+; install via npm, brew, or curl script; works in CI/headless mode |
+
+---
+
+## ⚖️ Comparison Matrix: Terminal AI Agents (2026)
+
+| Criteria | **Qwen Code** | **Claude Code** | **aider** | **OpenClaw** |
+|----------|--------------|-----------------|-----------|--------------|
+| **License** | Apache 2.0 (open) | Proprietary (Anthropic) | MIT (open) | Apache 2.0 (open) |
+| **Primary Model** | Qwen3-Coder (open-weight) | Claude 4 Opus (closed) | Any OpenAI/Anthropic API | Any (user-configured) |
+| **China Access** | ✅ Native support, Dashscope integration | ❌ Restricted | ⚠️ Depends on API provider | ✅ Self-hostable, domestic forks |
+| **Free Tier** | ✅ 1,000 OAuth requests/day | ❌ Paid only | ❌ Bring-your-own-key | ✅ Fully self-hosted |
+| **Multi-protocol** | ✅ OpenAI/Anthropic/Gemini APIs | ❌ Claude-only | ✅ OpenAI/Anthropic | ✅ Any HTTP API + local models |
+| **MCP Support** | ✅ Yes | ✅ Yes | ⚠️ Limited | ✅ Yes (via Gateway) |
+| **IDE Integration** | ✅ VS Code/Zed/JetBrains plugins | ⚠️ Terminal-only | ⚠️ Via editor LSP | ❌ Terminal/IM bots only |
+| **Security Model** | Approval gates + sandbox config | Anthropic-managed | User-responsible | Community-hardened forks |
+| **Offline/Local** | ⚠️ Requires API (unless self-hosted Qwen) | ❌ Cloud-only | ❌ Cloud-only | ✅ Fully local with llama.cpp |
+| **Chinese Ecosystem** | ✅ WeChat/DingTalk/QQ via forks | ❌ No | ❌ No | ✅ Native IM channel support |
+
+*Sources: GitHub repos, Zhihu comparisons , DEV Community analysis *
+
+---
+
+## 🎯 Where Qwen Code Wins
+
+1. **Sovereign by Design**  
+   Built for China's regulatory environment: supports domestic APIs (Dashscope, ModelScope), Chinese IM channels via forks, and complies with data residency requirements .
+
+2. **Co-evolving Model + Agent**  
+   Unlike aider (generic wrapper) or OpenClaw (model-agnostic), Qwen Code is *jointly optimized* with Qwen3-Coder—prompt templates, tool schemas, and token handling are tuned end-to-end .
+
+3. **Enterprise-Ready Config**  
+   Layered configuration (CLI > env > project > user > system) and approval workflows make it deployable in regulated environments—something raw OpenClaw lacks out-of-the-box .
+
+4. **Free Tier with Scale Path**  
+   The 1,000-request/day OAuth tier lowers experimentation barriers, while Coding Plan subscriptions offer predictable pricing for teams—addressing OpenClaw's "token burn" concerns .
+
+---
+
+## ⚠️ Where It Falls Short
+
+| Limitation | Impact |
+|------------|--------|
+| **Node.js dependency** | Adds runtime overhead vs. Go/Rust agents like aider; less ideal for minimal containers |
+| **Qwen model bias** | Best performance requires Qwen3-Coder; using other models may reduce agentic reliability |
+| **Young ecosystem** | ~20k GitHub stars vs. aider's maturity; fewer community tools/plugins |
+| **Security still evolving** | Approval gates exist, but misconfiguration risks remain (like OpenClaw)  |
+
+---
+
+## 🔄 How It Relates to OpenClaw
+
+They solve **different problems**:
+
+| | **OpenClaw** | **Qwen Code** |
+|---|--------------|---------------|
+| **Primary Use Case** | Multi-channel AI assistant (WeChat/Telegram/enterprise bots) | Terminal-first coding agent |
+| **Architecture** | Gateway-centric hub-and-spoke  | CLI/Core modular split  |
+| **Deployment Target** | Cloud/IM platforms, multi-user | Local developer machine, CI/CD |
+| **China Strategy** | Community hardening + government subsidies | Native Alibaba Cloud integration |
+
+💡 **Practical synergy**: Some Chinese teams run *both*—Qwen Code for local development, OpenClaw for deploying agent-powered customer services .
+
+---
+
+## 🧭 Recommendation by Use Case
+
+```
+✅ Choose Qwen Code if:
+   • You work in/with China's tech ecosystem
+   • You want a terminal agent with free tier + enterprise path
+   • You prefer open-weight models with local deployment options
+
+✅ Choose Claude Code if:
+   • You prioritize raw coding performance over sovereignty
+   • You're already in Anthropic's ecosystem
+   • Budget isn't a constraint
+
+✅ Choose aider if:
+   • You want minimal dependencies and maximum model flexibility
+   • You're comfortable managing your own security/approval logic
+
+✅ Choose OpenClaw if:
+   • You need multi-channel deployment (IM bots, enterprise integrations)
+   • You want full local/offline control with community hardening
+```
+
+---
+
+### Bottom Line
+Qwen Code isn't just "another terminal agent"—it's a **strategically positioned tool** that bridges China's open-model ecosystem with developer workflow needs. Its value isn't in beating Claude Code on benchmarks , but in enabling sovereign, compliant, and cost-predictable AI coding at scale. For teams operating under China's regulatory framework, that trade-off is often worth it. 🦞→🐉
+
+### USER
+1. What is IM?
+2. I heard that QwenCode is a fork of Gemini CLI, tell me more about Gemini CLI in comparison to other terminal agents.
+
+I work with Claude Code (Opus 4.6) and aider (local models and Gemini familiy), but I build my own agent and I need examples and good design choices from other agents. So I need detailed comparisons in functionality and technical implementation.
+
+### ASSISTANT
+## 1️⃣ What is "IM"?
+
+**IM = Instant Messaging** — the category of real-time chat platforms like:
+- **Global**: WhatsApp, Telegram, Slack, Discord
+- **China**: WeChat (微信), DingTalk (钉钉), QQ, Feishu (飞书)
+
+In our earlier discussion, "multi-protocol IM support" meant an agent that can operate *inside* these chat apps as a bot or assistant—not just in a terminal. OpenClaw's differentiator was native support for Chinese IM channels, which is critical for enterprise deployment in China .
+
+---
+
+## 2️⃣ Is Qwen Code a fork of Gemini CLI? Technical comparison
+
+**Yes, with nuance**: Qwen Code is a **strategic fork** of Google's Gemini CLI, adapted for Alibaba's Qwen3-Coder models and China's ecosystem . It's not a 1:1 copy—key modifications include:
+
+| Aspect | Gemini CLI (Upstream) | Qwen Code (Fork) |
+|--------|----------------------|------------------|
+| **Primary model** | Gemini 2.5/3 series (Google) | Qwen3-Coder series (Alibaba)  |
+| **Auth defaults** | Google OAuth / Vertex AI | Dashscope API key + OAuth (China-compliant) |
+| **IM/channel support** | MCP extensions only | Pre-integrated forks for WeChat/DingTalk/QQ |
+| **Config layering** | `~/.gemini/` + project | `.qwen/` + project + env + CLI args (6-tier precedence)  |
+| **Free tier** | 1,000 req/day via Google account | 1,000 req/day via Dashscope OAuth |
+| **Localization** | English-first UI | Chinese UI + bilingual error messages |
+
+### 🔧 Gemini CLI vs. Other Terminal Agents: Implementation Deep Dive
+
+Since you're building your own agent, here's what matters architecturally:
+
+#### 🏗️ Core Architecture Patterns
+
+| Agent | Language/Runtime | UI Framework | Architecture Style | Key Design Choice |
+|-------|-----------------|--------------|-------------------|------------------|
+| **Gemini CLI** | TypeScript/Node.js | Ink + Yoga (React for TUI) | Modular monorepo (`packages/cli` + `packages/core`) | Separation of concerns: CLI handles I/O, core handles model/tool orchestration  |
+| **Qwen Code** | TypeScript/Node.js | Ink + Yoga (forked) | Same as Gemini CLI + China-specific adapters | Fork-and-localize strategy: minimal upstream divergence, maximal ecosystem adaptation  |
+| **Claude Code** | TypeScript/Bun | Ink + Yoga | "Minimal shell" around model | Delete code with every model upgrade; trust model over scaffolding  |
+| **aider** | Python | Rich (TUI) or plain | Single-process, Git-integrated | Git as source of truth: all edits go through diff/patch workflow |
+
+#### 🔐 Security & Permissions Models
+
+| Agent | Permission Strategy | Sandbox Option | Config Scope |
+|-------|-------------------|----------------|--------------|
+| **Gemini CLI** | Explicit approval gates for destructive ops; static analysis of shell commands  | Optional Docker isolation via MCP | Project > User > System |
+| **Qwen Code** | Same as Gemini + China-specific compliance hooks (data residency checks) | Container isolation in `openclaw-china` style forks  | 6-tier precedence (CLI > env > project > user > system > defaults) |
+| **Claude Code** | Multi-tier permissions: one-time / session / persistent allowlists  | Runs locally by design (simplicity > sandboxing) | Project / User / Org (with team sharing) |
+| **aider** | User confirms each edit; Git provides rollback | None (trusts user + Git) | CLI args + `.aider.conf.yml` |
+
+> 💡 **Design insight**: Claude Code's team explicitly *deletes* prompting logic when models improve . This "minimal scaffolding" philosophy reduces maintenance debt but requires high model reliability.
+
+#### 🔌 Extensibility: MCP & Tool Systems
+
+All four agents support the **Model Context Protocol (MCP)** , but implementations differ:
+
+```typescript
+// Gemini CLI / Qwen Code: Tool registration pattern (simplified)
+class ToolRegistry {
+  register(tool: Tool): void { /* ... */ }
+  async execute(toolName: string, args: any): Promise<ToolResult> {
+    // 1. Check permissions
+    // 2. Run in sandbox if configured
+    // 3. Return structured result to model
+  }
+}
+```
+
+| Feature | Gemini/Qwen | Claude Code | aider |
+|---------|-------------|-------------|-------|
+| **MCP client** | Built-in, bidirectional | Built-in, with SDK for custom agents | Via plugin system |
+| **Custom tools** | Register via `~/.gemini/tools/` or MCP server | Hooks + MCP + SDK | Python functions + Git hooks |
+| **Tool discovery** | Auto-load from config dirs | Explicit registration + SDK | Convention-based (`aider_*.py`) |
+| **Token efficiency** | Tool schemas compressed via JSON Schema | Dynamic tool pruning per model version | Minimal schema overhead |
+
+> 💡 **Design insight**: MCP's bidirectional client-server model lets tools *push* context to the model, not just respond to calls . This enables proactive assistance (e.g., "I noticed a failing test—want me to fix it?").
+
+#### 🧠 Model Integration Patterns
+
+| Agent | Model Binding Strategy | Prompt Management | Context Handling |
+|-------|----------------------|-------------------|-----------------|
+| **Gemini CLI** | Configurable API endpoint + model name | Template files + runtime injection | Sliding window + explicit checkpointing |
+| **Qwen Code** | Dashscope-first, fallback to OpenAI-compatible | Forked templates optimized for Qwen3-Coder | Same as Gemini + China data residency filters |
+| **Claude Code** | Anthropic API only (for now) | Minimal system prompt; deletes code as models improve | 200K context native; auto-summarization |
+| **aider** | Any OpenAI/Anthropic-compatible API | Dynamic prompt assembly from Git history | Git-aware context: only changed files + relevant deps |
+
+> 💡 **Design insight**: aider's Git-aware context selection is a masterclass in *relevance filtering*—it avoids token waste by only including files touched in recent commits or referenced in the conversation .
+
+---
+
+## 3️⃣ Actionable Design Recommendations for Your Agent
+
+Since you're building your own agent and already use Claude Code + aider, here are high-leverage patterns to adopt:
+
+### ✅ Proven Patterns to Steal
+1. **Layered configuration precedence** (Qwen Code's 6-tier system)  
+   → Lets users override at the right scope without config hell 
+
+2. **Tool execution pipeline with explicit gates** (Gemini CLI)  
+   ```python
+   def execute_tool(tool_call):
+       if not permissions.check(tool_call): 
+           return request_approval()
+       if config.sandbox and tool_call.is_destructive:
+           return run_in_container(tool_call)
+       return tool_call.run()
+   ```
+
+3. **"Delete code with model upgrades" mindset** (Claude Code)  
+   → Audit your prompting logic quarterly; if the model now handles it natively, remove your scaffolding 
+
+4. **Git as context oracle** (aider)  
+   → Build a `ContextSelector` that scores file relevance using:  
+   - Recency of edits  
+   - Import/dependency graph  
+   - Conversation keyword matches  
+
+5. **MCP-first extensibility**  
+   → Design your tool interface around MCP's resource/tool/prompt triad . This future-proofs integrations.
+
+### ⚠️ Pitfalls to Avoid
+- **Over-scaffolding**: Don't build complex UI logic the model could handle. Start minimal, add only when UX suffers.
+- **Hardcoding model assumptions**: Abstract model capabilities behind a `ModelAdapter` interface so you can swap providers.
+- **Ignoring approval fatigue**: Claude Code's tiered permissions (once/session/persistent) reduce friction while maintaining safety .
+- **Token-blind tool design**: Every tool call costs tokens. Cache results, batch operations, and prune tool schemas aggressively.
+
+### 🧪 Quick Validation Checklist for Your Agent
+```markdown
+- [ ] Can a user run `my-agent --help` and understand capabilities in <10 seconds?
+- [ ] Does every destructive action require explicit, scoped approval?
+- [ ] Can I add a new tool by dropping a file in `~/.my-agent/tools/`?
+- [ ] Does context selection scale to 10k-file repos without OOM?
+- [ ] Can I swap the underlying model with one config change?
+```
+
+---
+
+### 🔚 Bottom Line for Builders
+
+> **Don't fork an agent to change the model. Fork to change the *ecosystem*.**  
+> Qwen Code succeeded not because it improved Gemini CLI's core logic, but because it adapted the *integration surface* for China's regulatory and tooling landscape . Your differentiator should be the same: solve a specific deployment, compliance, or workflow problem that generic agents ignore.
+
+If you share more about your target use case (enterprise? open-source? specific industry?), I can refine these recommendations further. 🛠️
+
+### USER
+I build my own ecosystem.
+
+### ASSISTANT
+Excellent. You're not just building an agent—you're building a **self-governing documentation ecosystem** where AI agents consume, validate, and evolve architectural knowledge. This changes the design constraints fundamentally.
+
+Let me map your existing architecture to concrete agent implementation patterns, referencing your ADRs directly.
+
+---
+
+## 🔗 Your ADRs → Agent Design Patterns
+
+### 🧠 Cognitive Architecture (ADR-26032/33/34)
+Your **three-tier memory model** is the core differentiator. Here's how to implement it in your agent:
+
+```python
+# Pseudocode: Tiered Cognitive Memory Router
+class CognitiveRouter:
+    def __init__(self, skills_registry, rag_index, session_store):
+        self.procedural = SkillsCache(skills_registry)  # Fast, always-loaded
+        self.declarative = RAGRetriever(rag_index)       # Slow, on-demand
+        self.episodic = SessionContext(session_store)    # Ephemeral, JIT
+        
+    def route_query(self, query: AgentQuery) -> ExecutionPlan:
+        # 1. Check procedural skills first (tag-filtered, <50ms)
+        if skill := self.procedural.match(query.intent, query.tags):
+            return skill.execute(query.context)
+        
+        # 2. Fall back to declarative RAG (with relevance scoring)
+        if docs := self.declarative.retrieve(query, min_score=0.7):
+            return self.synthesize_from_docs(query, docs)
+        
+        # 3. Escalate to human or log as knowledge gap
+        return self.escalate_or_learn(query)
+```
+
+**Key insight from your ADR-26034**: Skills are *composable applications*, not functions. Design your skill interface around MCP's resource/tool/prompt triad , but add your taxonomy enforcement:
+
+```yaml
+# skills/registry/example_skill.yaml (per ADR-26035 taxonomy)
+id: skill-26034-001
+type: procedural
+tags: [adr-validation, metadata-check]
+inputs:
+  - name: file_path
+    schema: {type: string, format: path}
+outputs:
+  - name: validation_report
+    schema: {type: object, properties: {errors: array, warnings: array}}
+lifecycle:
+  load_strategy: eager  # vs lazy for declarative
+  ttl_seconds: null     # procedural skills don't expire
+```
+
+### 🔐 Stateless JIT Context (ADR-26030)
+You've already solved the token-bleed problem. Implement this pattern in your agent's invocation loop:
+
+```python
+def build_agent_context(repo_path: Path, task: TaskSpec) -> ContextBundle:
+    """Assemble minimal, task-relevant context — no session accumulation."""
+    # 1. Extract task-specific ADRs (status=accepted, tags intersect)
+    relevant_adrs = query_adr_index(
+        status="accepted", 
+        tags=task.required_tags,
+        max_age_days=180  # per ADR-26021 lifecycle policy
+    )
+    
+    # 2. Inject only changed files since last successful run (Git-aware)
+    context_files = git_diff_context(
+        repo_path, 
+        since=task.last_successful_commit,
+        include_deps=True  # import graph traversal
+    )
+    
+    # 3. Add skill registry snapshot (versioned, per ADR-26033 virtual monorepo)
+    skills_snapshot = skills_registry.export_snapshot(task.required_capabilities)
+    
+    return ContextBundle(adrs=relevant_adrs, files=context_files, skills=skills_snapshot)
+```
+
+**Why this matters**: Your agent becomes *idempotent*—same input → same output, regardless of invocation order. Critical for CI/CD integration.
+
+### 🏗️ Virtual Monorepo (ADR-26033)
+Your package-driven dependency model avoids monorepo complexity while enabling cross-repo skill discovery. Implement skill registration via `pyproject.toml` (per ADR-26029):
+
+```toml
+# In a spoke repo's pyproject.toml
+[tool.ai-skills]
+namespace = "vadocs"  # per ADR-26031 prefixed namespaces
+skills = [
+  { name = "check_adr", entrypoint = "vadocs.validators:check_adr", tags = ["adr", "validation"] },
+  { name = "generate_changelog", entrypoint = "vadocs.changelog:generate", tags = ["release", "automation"] }
+]
+dependencies = [
+  { skill = "check_evidence", min_version = "2.6.0", source = "hub" }  # hub-spoke contract
+]
+```
+
+Your agent's skill loader can then resolve cross-repo dependencies without physical coupling:
+
+```python
+class VirtualMonorepoLoader:
+    def discover_skills(self, hub_path: Path, spoke_paths: list[Path]) -> SkillRegistry:
+        registry = SkillRegistry()
+        # Load hub skills first (authoritative)
+        registry.load_from_pyproject(hub_path / "pyproject.toml", source="hub")
+        # Extend with spoke skills (override by namespace + version)
+        for spoke in spoke_paths:
+            registry.merge_from_pyproject(
+                spoke / "pyproject.toml", 
+                source=spoke.name,
+                conflict_strategy="warn_and_skip"  # per ADR-26020 hub authority
+            )
+        return registry
+```
+
+---
+
+## 🛠️ Concrete Next Steps for Your Agent
+
+### Phase 1: Bootstrap the Cognitive Router (2-3 weeks)
+1. **Implement `CognitiveRouter` skeleton** using your existing `check_adr.py` as the first procedural skill
+2. **Wrap your ADR index** (`architecture/adr_index.md`) as a declarative RAG source with YAML frontmatter filtering
+3. **Add session context middleware** that injects `task_id`, `user_intent`, and `git_commit` — nothing more (ADR-26030)
+
+### Phase 2: Skill Registry + Virtual Monorepo (3-4 weeks)
+1. **Define skill schema** in `architecture/configs/skill_schema.yaml` (machine-readable contract)
+2. **Extend `check_evidence.py`** to validate skill registration files (75 tests → 100+)
+3. **Build skill discovery CLI**: `ai-skill list --tags=validation --source=hub`
+
+### Phase 3: Agentic OS Runtime (4-6 weeks)
+1. **Implement runtime skill composition**: allow skills to declare `requires`/`provides` capabilities
+2. **Add tag-filtered skill registry API**: `GET /skills?tags=adr,validation&min_confidence=0.8`
+3. **Create "skill sandbox"**: containerized execution for untrusted skills (security boundary)
+
+---
+
+## ⚠️ Pitfalls to Avoid (Based on Your ADRs)
+
+| Risk | Your ADR Mitigation | Implementation Tip |
+|------|---------------------|-------------------|
+| **Skill bloat** | ADR-26021 (lifecycle policy) | Auto-archive skills with zero invocations in 90 days |
+| **Context drift** | ADR-26030 (stateless JIT) | Never cache context across invocations; rebuild from repo state |
+| **Hub-spoke divergence** | ADR-26020 (hub authority) | Enforce schema versioning; reject spoke skills that don't declare hub dependency |
+| **Metadata decay** | ADR-26016/26023 (frontmatter as API) | Add `check_metadata_freshness.py` to CI — flag docs/ADR/skills with stale `last_validated` |
+
+---
+
+## 🔍 One Question to Refine Further
+
+Your manifesto states: *"documentation IS the source that AI systems compile into outputs."* 
+
+**How do you envision the feedback loop?** When your agent *modifies* documentation (e.g., auto-generates an ADR draft), does it:
+- A) Submit a PR for human review (conservative, audit-ready)
+- B) Auto-merge if validation passes (aggressive, requires perfect `check_adr.py`)
+- C) Use a hybrid: auto-merge low-risk changes (typos, metadata), PR for structural changes
+
+This decision shapes your agent's permission model, approval gates, and CI/CD integration.
+
+---
+
+Your architecture is exceptionally well-grounded. The next leap isn't adding more features—it's **operationalizing the cognitive model** you've designed. If you share which phase you're targeting first, I can provide code templates, test strategies, or integration patterns specific to that layer. 🦞→🐉→🧠

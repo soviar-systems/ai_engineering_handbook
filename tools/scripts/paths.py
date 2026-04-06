@@ -5,7 +5,8 @@ Scope: shared constants (exclusion lists) and config discovery functions
 used by validation scripts. Does NOT contain validation logic.
 
 Public interface:
-    vadocs_config_dir(repo_root) — resolve .vadocs/ path from pyproject.toml
+    get_config_path(repo_root, doc_type) — resolve .vadocs/ config path
+    get_external_repo_paths(repo_root) — load external repo directory paths from registry
     VALIDATION_EXCLUDE_DIRS — directories excluded from all validation
     BROKEN_LINKS_EXCLUDE_LINK_STRINGS — strings excluded from link validation
     BROKEN_LINKS_EXCLUDE_FILES — files excluded from link validation
@@ -14,14 +15,17 @@ Public interface:
     is_excluded(path) — check if path should be excluded from jupytext processing
 
 Dependencies:
+    - json (stdlib) for registry parsing
     - tomllib (stdlib) for pyproject.toml parsing
 
 Key design decisions:
-    - Exclusion constants will migrate to .vadocs/validation/ (tracked in techdebt.md)
-    - vadocs_config_dir() reads [tool.vadocs] config_dir from pyproject.toml —
+    - External repo exclusion paths live in .vadocs/validation/external-repos.conf.json
+      (ADR-26046) and are loaded at import time into VALIDATION_EXCLUDE_DIRS
+    - get_config_path() reads [tool.vadocs] config_dir from pyproject.toml —
       single entry point for all .vadocs/ config discovery
 """
 
+import json
 import tomllib
 from pathlib import Path
 
@@ -35,6 +39,8 @@ _CONFIG_DIR_KEY = "config_dir"
 _HUB_CONFIG_NAME = "conf.json"
 _TYPES_DIR = "types"
 _SPOKE_SUFFIX = ".conf.json"
+_EXTERNAL_REPOS_CONFIG = "external-repos.conf.json"
+_VALIDATION_DIR = "validation"
 
 
 def get_config_path(repo_root: Path, doc_type: str | None = None) -> Path:
@@ -77,8 +83,32 @@ SUBTYPE_PARENT_MAP = {
 }
 
 
+def get_external_repo_paths(repo_root: Path) -> set[str]:
+    """Load external repo directory paths from the registry.
+
+    Reads .vadocs/validation/external-repos.conf.json (ADR-26046) and returns
+    the set of relative paths that must be excluded from validation,
+    git tracking, and documentation builds.
+
+    Args:
+        repo_root: Repository root directory.
+
+    Returns:
+        Set of relative paths (e.g., {"ai_agents/agents_source_code"}).
+        Empty set if the registry does not exist yet.
+    """
+    config = repo_root / ".vadocs" / _VALIDATION_DIR / _EXTERNAL_REPOS_CONFIG
+    if not config.exists():
+        return set()
+    with open(config) as f:
+        data = json.load(f)
+    return {entry["path"] for entry in data.get("entries", [])}
+
+
 # Directories excluded from all validation scripts (links, jupytext, ADR, etc.)
-VALIDATION_EXCLUDE_DIRS = {
+# Static entries defined here. External repo paths are loaded from
+# .vadocs/validation/external-repos.conf.json (ADR-26046) at import time.
+_STATIC_EXCLUDE_DIRS = {
     ".git",
     ".ipynb_checkpoints",
     ".pytest_cache",
@@ -89,8 +119,14 @@ VALIDATION_EXCLUDE_DIRS = {
     "build",
     "_build",
     "misc",
-    "ai_system/6_agents/agents_source_code",
 }
+
+# Runtime: merge of static excludes + registry entries.
+# This is the set that is_excluded() and all validation scripts check.
+_VALIDATION_EXCLUDE_DIRS = _STATIC_EXCLUDE_DIRS | get_external_repo_paths(Path(__file__).resolve().parents[2])
+
+# Public alias — scripts import this.
+VALIDATION_EXCLUDE_DIRS = _VALIDATION_EXCLUDE_DIRS
 
 # Strings that should be excluded from link validation
 BROKEN_LINKS_EXCLUDE_LINK_STRINGS = {

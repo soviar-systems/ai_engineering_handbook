@@ -60,7 +60,7 @@ We adopt the Reasoning-Class vs Agentic-Class taxonomy as a **tool-agnostic sele
 
 ### Negative
 
-* **Less prescriptive**: Practitioners must evaluate models against both axes rather than following a simple "use model X for phase Y" rule. **Mitigation**: The [Model Classification notebook](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb) provides concrete examples and a decision matrix.
+* **Less prescriptive**: Practitioners must evaluate models against both axes rather than following a simple "use model X for phase Y" rule. **Mitigation**: The [Model Classification notebook](/ai_system_layers/2_model/selection/general_purpose_vs_agentic_models.ipynb) provides concrete examples and a decision matrix.
 
 ## Alternatives
 
@@ -71,7 +71,7 @@ We adopt the Reasoning-Class vs Agentic-Class taxonomy as a **tool-agnostic sele
 
 * {term}`ADR-26006`: Requirement for Agentic-Class Models for the Architect Phase (superseded)
 * {term}`ADR-26008`: Selection of Reasoning-Class Models for Abstract Synthesis (superseded)
-* [General Purpose vs Agentic Models](/ai_system/2_model/selection/general_purpose_vs_agentic_models.ipynb) — detailed classification and decision matrix
+* [General Purpose vs Agentic Models](/ai_system_layers/2_model/selection/general_purpose_vs_agentic_models.ipynb) — detailed classification and decision matrix
 
 ## Participants
 
