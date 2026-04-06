@@ -22,7 +22,7 @@ LINK FORMAT ERROR: File 'docs/guide.md:15' links to 'intro.md' but paired .ipynb
 ✅ **Интерактивный режим** (`--fix`): Показывает найденные ошибки и спрашивает подтверждение для каждого файла:
 ```
 File: ai_system/2_model/selection/choosing_model_size.md
-  Line 33: /ai_system/.../llm_usage_patterns.md → .ipynb
+  Line 33: /ai_system_layers/.../llm_usage_patterns.md → .ipynb
 
 Fix this file? [y/n/q] (q=quit):
 ```
