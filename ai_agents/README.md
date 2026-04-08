@@ -54,11 +54,25 @@ Findings from studying these agents are saved as MyST notebooks (`.md` + `.ipynb
 
 ## Workflow
 
-1. **Clone** new agent repos into `agents_source_code/`: `git clone <url>`
-2. **Study** code in-place — use `git log`, `git diff`, and navigation within each nested repo
-3. **Save analysis** as MyST notebooks in a topic subdirectory (create one if needed)
-4. **Sync** notebooks: `uv run jupytext --sync`
-5. **Update** source repos periodically: `cd agents_source_code/<agent> && git pull`
+### Managing Source Code Repositories
+
+Use `tools/scripts/manage_agent_repos.py` for all `agents_source_code/` operations. Run with `--help` for current usage patterns:
+
+```bash
+uv run tools/scripts/manage_agent_repos.py --help
+```
+
+Common operations: `update` (pre-session refresh), `list` (see all repos and status), `setup` (clone new agent), `register` (add new research directory).
+
+:::{tip}
+Run `update` before starting any analysis session — agent architectures evolve fast, and a stale checkout can lead to wrong conclusions about how a feature works.
+:::
+
+### Research Process
+
+1. **Study** code in-place — use `git log`, `git diff`, and navigation within each nested repo
+2. **Save analysis** as MyST notebooks in a topic subdirectory (create one if needed)
+3. **Sync** notebooks: `uv run jupytext --sync`
 
 ## Key Learnings Across Agents
 
