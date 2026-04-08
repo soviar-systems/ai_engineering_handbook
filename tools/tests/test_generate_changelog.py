@@ -804,3 +804,29 @@ class TestExcludePatterns:
         commits = _filter_empty_bullet_commits([commit], verbose=True)
         captured = capsys.readouterr()
         assert len(captured.err) > 0
+
+    def test_word_boundary_prevents_false_positive(self):
+        """Contract: word-boundary matching prevents 'CLAUDE.md' from matching
+        inside 'openclaude.md' — patterns are whole-word, not substrings."""
+        raw = (
+            "abc123\ndocs: add openclaude analysis\n"
+            "- Created: ai_agents/context_management/openclaude.md — deep dive\n"
+            "- Updated: overview.md — added new agent\n"
+        )
+        commit = parse_single_commit(raw)
+        assert commit is not None
+        assert len(commit.bullets) == 2
+        assert "openclaude.md" in commit.bullets[0]
+
+    def test_word_boundary_with_special_char_prefix(self):
+        """Contract: patterns starting with non-word chars (e.g. '.aider')
+        still match without word boundary prefix."""
+        raw = (
+            "abc123\nchore: update config\n"
+            "- Updated: .aider.conf.yml — config change\n"
+            "- Created: real_file.py — real change\n"
+        )
+        commit = parse_single_commit(raw)
+        assert commit is not None
+        assert len(commit.bullets) == 1
+        assert "real_file.py" in commit.bullets[0]

@@ -260,9 +260,18 @@ def _extract_bullets(body_lines: list[str], *, verbose: bool = False) -> list[st
 
 
 def _matches_exclude_pattern(text: str) -> bool:
-    """Return True if text contains any configured exclusion pattern (case-insensitive)."""
-    text_lower = text.lower()
-    return any(p.lower() in text_lower for p in EXCLUDE_PATTERNS)
+    """Return True if text contains any configured exclusion pattern as a whole word (case-insensitive).
+
+    Uses regex word boundaries (\\b) so 'CLAUDE.md' does not match 'openclaude.md'.
+    Boundaries are only applied when the pattern starts/ends with a word character.
+    """
+    for p in EXCLUDE_PATTERNS:
+        escaped = re.escape(p)
+        prefix = r"\b" if p[0].isalnum() or p[0] == "_" else ""
+        suffix = r"\b" if p[-1].isalnum() or p[-1] == "_" else ""
+        if re.search(rf"{prefix}{escaped}{suffix}", text, re.IGNORECASE):
+            return True
+    return False
 
 
 def _filter_excluded_commits(
