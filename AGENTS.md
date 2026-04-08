@@ -139,6 +139,7 @@ options:
 - ADR `description` field (one-line elevator pitch) appears in the index under the title link when present
 - ADR filenames use truncated slugs — always glob (`architecture/adr/adr_26NNN*.md`) to verify the exact filename before creating links
 - Internal file references must use markdown links `[Title](/repo-root-relative/path)` — backtick paths bypass `check_broken_links.py` validation. Example paths in docs must use patterns from `BROKEN_LINKS_EXCLUDE_LINK_STRINGS` in `tools/scripts/paths.py` to avoid false positives
+- **Cross-references between articles must use absolute paths** (`/ai_agents/context_management/file.ipynb`), never relative paths (`../context_management/file.ipynb` or `./file.ipynb`). Relative paths break when articles are in different subdirectories. This applies to all `{seealso}`, `{tip}`, and inline links between persistent artifacts
 - Persistent artifacts (ADRs, analyses, retrospectives) must always be referenced via markdown links `[A-26009](/repo-root-relative/path)`, never plain backtick IDs — md links are navigable by both agents and humans
 - Backtick references are for ephemeral files (sources in `evidence/sources/`, files in `misc/`) AND config files (`.vadocs/` configs change paths on restructuring — use backtick filenames like `adr.conf.json`, never markdown links)
 - When linking to a Jupytext-paired file, always use the `.ipynb` extension — `check-link-format` hook rejects `.md` links when a paired `.ipynb` exists
