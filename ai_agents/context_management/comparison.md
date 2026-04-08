@@ -3,25 +3,26 @@ title: "Context Management — Agent Comparison"
 authors:
   - name: Vadim Rudakov
     email: rudakow.wadim@gmail.com
-date: "2026-04-05"
-description: "Side-by-side comparison of context management across 6 coding agents — history transmission, detection methods, compaction strategies, and unique innovations."
+date: "2026-04-08"
+description: "Side-by-side comparison of context management across 7 coding agents — history transmission, detection methods, compaction strategies, and unique innovations."
 tags: [architecture, agents]
-token_size: "~600"
+token_size: "~700"
 options:
-  version: "1.0.0"
+  version: "1.1.0"
   birth: "2026-04-05"
   type: guide
 ---
 
 # Context Management — Agent Comparison
 
-*All analyses based on source code inspection dated 2026-04-05.*
+*All analyses based on source code inspection dated 2026-04-08.*
 
 ## Decision Guide: Which Agent for Which Use Case
 
 | Need | Best Fit | Why |
 |------|----------|-----|
 | Long sessions, large repos | Claude Code | 5-tier system + 1M context option + server-side editing |
+| Multi-provider flexibility | OpenClaude | 200+ LLM providers with same 5-tier system |
 | Git-centric workflow | Aider | Git history as session record, commit-per-change |
 | Privacy (local-only) | OpenClaw | Configurable sliding window, no cloud dependency |
 | Multi-session work | KiloCode | Agent Manager with VS Code panel + git worktrees |
@@ -34,6 +35,7 @@ options:
 |-------|---------|--------|
 | [Aider](aider.md) | v0.86.3.dev | `bdb4d9ff` |
 | [Claude Code](claude_code.md) | (no tag) | `3da7e321` |
+| [OpenClaude](openclaude.md) | 0.1.8 | (fork) |
 | [OpenClaw](openclaw.md) | v2026.4.2 | `2781897d` |
 | [OpenCode](opencode.md) | v1.3.15 | `280eb16e` |
 | [KiloCode](kilocode.md) | v7.1.20 | `cb0c58c0` |
@@ -41,7 +43,7 @@ options:
 
 ## Universal Pattern: Full History Every Call
 
-All 6 agents send the **full conversation history** on every API call. There is no chunking, no delta updates, no server-side session persistence. The entire message array is serialized and sent with each `chat.completions.create()` request.
+All 7 agents send the **full conversation history** on every API call. There is no chunking, no delta updates, no server-side session persistence. The entire message array is serialized and sent with each `chat.completions.create()` request.
 
 | Agent | History Sent | Evidence |
 |-------|-------------|----------|
@@ -51,6 +53,7 @@ All 6 agents send the **full conversation history** on every API call. There is 
 | OpenCode | Full non-compacted history | `prompt.ts`: `filterCompactedEffect()` → `toModelMessages()` |
 | KiloCode | Full non-compacted history | `prompt.ts`: `filterCompacted()` → `toModelMessages()` |
 | Claude Code | Full normalized history | `messages.ts`: `normalizeMessagesForAPI()` → `queryModelWithStreaming()` |
+| OpenClaude | Full normalized history | `messages.ts`: `normalizeMessagesForAPI()` → multi-provider routing |
 
 ## Context Window Defaults
 
@@ -62,6 +65,7 @@ All 6 agents send the **full conversation history** on every API call. There is 
 | OpenCode | From model config | Varies by model | `model.limit.context` field |
 | KiloCode | From model config | Varies by model | `model.limit.context` field |
 | Claude Code | 200K | 1M (`[1m]` suffix) | `MODEL_CONTEXT_WINDOW_DEFAULT`, env var override |
+| OpenClaude | 200K | 1M (`[1m]` suffix + 200+ providers) | `MODEL_CONTEXT_WINDOW_DEFAULT`, OpenAI registry |
 
 ## Overflow Detection
 
@@ -73,6 +77,7 @@ All 6 agents send the **full conversation history** on every API call. There is 
 | OpenCode | Token count ≥ context − 20K | 15+ provider error pattern regexes |
 | KiloCode | Token count ≥ context − 20K | Provider error matching |
 | Claude Code | Hybrid: real API usage + estimate | 15+ patterns + `ContextOverflowError` type |
+| OpenClaude | Hybrid: real API usage + estimate | Multi-provider error matching + Haiku fallback |
 
 ## Compaction Strategy Comparison
 
@@ -84,6 +89,7 @@ All 6 agents send the **full conversation history** on every API call. There is 
 | OpenCode | Dedicated compaction agent (no tools) | Token ≥ context − 20K | Everything after compaction marker |
 | KiloCode | Dedicated compaction agent (no tools) | Token ≥ context − 20K | Everything after compaction marker |
 | Claude Code | 5-tier: microcompact → API editing → session memory → full → PTL retry | Token ≥ context − 13K | Recent messages (prefix-preserving) |
+| OpenClaude | 5-tier (Claude Code inherited) + JSONL persistence | Token ≥ context − 13K | Recent messages (prefix-preserving) |
 
 ## Tool Output Management
 
@@ -95,6 +101,7 @@ All 6 agents send the **full conversation history** on every API call. There is 
 | OpenCode | Per-output truncation + pruning | 2000 lines / 50KB; prune > 40K back |
 | KiloCode | Per-output truncation + pruning | 2000 lines / 50KB; prune > 40K back |
 | Claude Code | Server-side `cache_edits` + content clearing | Count-based thresholds from GrowthBook |
+| OpenClaude | Server-side `cache_edits` + content clearing | Count-based thresholds from GrowthBook |
 
 ## Content Filtering
 
@@ -106,6 +113,7 @@ All 6 agents send the **full conversation history** on every API call. There is 
 | OpenCode | Stripped during compaction → `[Attached mime: filename]` |
 | KiloCode | Stripped during compaction → `[Attached mime: filename]` |
 | Claude Code | Stripped during compaction → `[image]` / `[document]` |
+| OpenClaude | Stripped during compaction → `[image]` / `[document]` |
 
 ## Persistence
 
@@ -117,6 +125,7 @@ All 6 agents send the **full conversation history** on every API call. There is 
 | OpenCode | SQLite (MessageTable + PartTable) |
 | KiloCode | SQLite (MessageTable + PartTable) |
 | Claude Code | In-memory `Message[]` array |
+| OpenClaude | In-memory `Message[]` + global `history.jsonl` (cross-project) |
 
 ## Unique Innovations
 
@@ -128,3 +137,4 @@ All 6 agents send the **full conversation history** on every API call. There is 
 | **OpenCode** | Structured summary template (Goal/Instructions/Discoveries/Accomplished/Files) |
 | **KiloCode** | Nearly identical to OpenCode (shared codebase — KiloCode is a fork) |
 | **Claude Code** | Server-side cache editing via Anthropic API; background session memory agent that continuously maintains a summary file |
+| **OpenClaude** | 200+ LLM provider support with same 5-tier system; cross-project JSONL history persistence |

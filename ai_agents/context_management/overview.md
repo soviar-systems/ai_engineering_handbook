@@ -3,12 +3,12 @@ title: "Context Management in AI Coding Agents"
 authors:
   - name: Vadim Rudakov
     email: rudakow.wadim@gmail.com
-date: "2026-04-05"
-description: "Overview of the universal 'full history' pattern — why agents accumulate millions of tokens despite bounded context windows, and the compaction taxonomy used across 6 agents."
+date: "2026-04-08"
+description: "Overview of the universal 'full history' pattern — why agents accumulate millions of tokens despite bounded context windows, and the compaction taxonomy used across 7 agents."
 tags: [architecture, agents]
 token_size: "~400"
 options:
-  version: "1.0.0"
+  version: "1.1.0"
   birth: "2026-04-05"
   type: guide
 ---
@@ -26,7 +26,7 @@ These are **different things**. The context window (128K–1M tokens) is the **p
 
 ## Why Millions of Tokens? The Universal Pattern
 
-Every coding agent analyzed (Aider, Claude Code, OpenClaw, OpenCode, KiloCode, Qwen-Code) follows the same fundamental pattern:
+Every coding agent analyzed (Aider, Claude Code, OpenClaude, OpenClaw, OpenCode, KiloCode, Qwen-Code) follows the same fundamental pattern:
 
 > **Each API call sends the full conversation history to the LLM.**
 
@@ -84,11 +84,12 @@ The "context window" is the **per-call limit**. The "cumulative tokens" is the *
 
 ## Guide Structure
 
-This guide covers context management across 6 agents:
+This guide covers context management across 7 agents:
 
 - [comparison.md](comparison.md) — Side-by-side comparison of all agents
 - [aider.md](aider.md) — Aider's async background summarization
 - [claude_code.md](claude_code.md) — Claude Code's 5-tier system
+- [openclaude.md](openclaude.md) — OpenClaude's multi-provider 5-tier system
 - [openclaw.md](openclaw.md) — OpenClaw's sliding window + auto-compaction
 - [opencode.md](opencode.md) — OpenCode's reactive compaction agent
 - [kilocode.md](kilocode.md) — KiloCode's compaction agent
