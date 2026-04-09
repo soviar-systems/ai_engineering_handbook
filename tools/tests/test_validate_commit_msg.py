@@ -11,7 +11,23 @@ validates the subject line format and body bullet presence, then exits 0 (pass) 
 The validation has three layers:
 1. Subject: must match CC format — type[(scope)][!]: description
 2. Body: must contain at least one changelog bullet (line starting with '- ')
+   — Sub-bullets are supported: 4-space indent + em-dash ('    — detail')
+   — Sub-bullets MUST follow a main bullet (orphan sub-bullets are rejected)
 3. ArchTag: required for refactor/perf types and breaking changes (Tier 3)
+
+## Commit body format
+
+Main bullet:  - Verb: target — description
+Sub-bullet:       — detail line (4 spaces + em-dash + space)
+
+Example:
+    feat: verbose output for update command
+
+    - Updated: tools/scripts/manage_agent_repos.py
+        — added directory discovery and progress counter
+        — moved repo name to pre-pull line
+    - Added: tools/tests/test_manage_agent_repos.py
+        — 16 new tests for verbose output (94% coverage)
 
 ## Test contracts
 
@@ -28,12 +44,15 @@ Parametrized inputs derive from VALID_TYPES/ARCHTAG_REQUIRED_TYPES (loaded from 
 """
 
 import pytest
+from unittest.mock import patch
 
 from tools.scripts.validate_commit_msg import (
     validate_subject,
     validate_body,
     validate_archtag,
     ValidateCommitMsgCLI,
+    _parse_commit_message,
+    main,
     VALID_TYPES,
     ARCHTAG_REQUIRED_TYPES,
 )
@@ -187,6 +206,55 @@ class TestValidateBody:
         lines = ["ArchTag:TECHDEBT-PAYMENT"]
         errors = validate_body(lines)
         assert len(errors) > 0
+
+    def test_sub_bullet_without_main_bullet_fails(self):
+        """Sub-bullet without preceding main bullet → error."""
+        lines = [
+            "    — detail without main bullet",
+        ]
+        errors = validate_body(lines)
+        assert len(errors) > 0
+
+    def test_sub_bullet_after_main_bullet_passes(self):
+        """Sub-bullets after main bullet → valid."""
+        lines = [
+            "- Updated: file.py — changed thing",
+            "    — detail line 1",
+            "    — detail line 2",
+        ]
+        errors = validate_body(lines)
+        assert errors == []
+
+    def test_multiple_mains_with_sub_bullets_passes(self):
+        """Multiple main bullets each with sub-bullets → valid."""
+        lines = [
+            "- Updated: file_a.py — change A",
+            "    — detail A1",
+            "- Updated: file_b.py — change B",
+            "    — detail B1",
+            "    — detail B2",
+        ]
+        errors = validate_body(lines)
+        assert errors == []
+
+    def test_sub_bullet_before_first_main_bullet_fails(self):
+        """Sub-bullet appearing before any main bullet → error."""
+        lines = [
+            "    — orphan sub-bullet first",
+            "- Updated: file.py — main bullet",
+        ]
+        errors = validate_body(lines)
+        assert len(errors) > 0
+
+    def test_prose_between_main_and_sub_bullet_passes(self):
+        """Prose lines between main bullet and sub-bullet → still valid."""
+        lines = [
+            "- Updated: file.py — change",
+            "Some context here.",
+            "    — detail line",
+        ]
+        errors = validate_body(lines)
+        assert errors == []
 
 
 # ---------------------------------------------------------------------------
@@ -366,6 +434,32 @@ class TestValidateCommitMsgCLI:
         cli = ValidateCommitMsgCLI()
         cli.run(argv=[str(msg_file)])  # Should not raise SystemExit
 
+    def test_sub_bullet_format_passes(self, tmp_path):
+        """Commit with main bullet and sub-bullets → valid."""
+        msg_file = tmp_path / "COMMIT_EDITMSG"
+        msg_file.write_text(
+            "feat: verbose output for update command\n\n"
+            "- Updated: tools/scripts/manage_agent_repos.py\n"
+            "    — added directory discovery and progress counter\n"
+            "    — moved repo name to pre-pull line\n"
+            "- Added: tools/tests/test_manage_agent_repos.py\n"
+            "    — 16 new tests for verbose output (94% coverage)\n"
+        )
+        cli = ValidateCommitMsgCLI()
+        cli.run(argv=[str(msg_file)])  # Should not raise SystemExit
+
+    def test_orphan_sub_bullet_fails(self, tmp_path):
+        """Sub-bullet without preceding main bullet → exit 1."""
+        msg_file = tmp_path / "COMMIT_EDITMSG"
+        msg_file.write_text(
+            "feat: something\n\n"
+            "    — orphan sub-bullet without main\n"
+        )
+        cli = ValidateCommitMsgCLI()
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run(argv=[str(msg_file)])
+        assert exc_info.value.code == 1
+
 
 # ---------------------------------------------------------------------------
 # Formerly skipped commits now fail
@@ -413,4 +507,74 @@ class TestFormerlySkippedCommitsFail:
         cli = ValidateCommitMsgCLI()
         with pytest.raises(SystemExit) as exc_info:
             cli.run(argv=[str(msg_file)])
+        assert exc_info.value.code == 1
+
+
+# ---------------------------------------------------------------------------
+# _parse_commit_message helper
+#
+# Contract: splits commit message into (subject, body_lines).
+# Empty text → ("", []).
+# ---------------------------------------------------------------------------
+
+
+class TestParseCommitMessage:
+    """Contract: _parse_commit_message(text) → (subject, body_lines)."""
+
+    def test_empty_text_returns_empty_tuple(self):
+        """Empty string → ("", [])."""
+        subject, body = _parse_commit_message("")
+        assert subject == ""
+        assert body == []
+
+    def test_subject_only_returns_subject(self):
+        """Single line → subject, no body."""
+        subject, body = _parse_commit_message("feat: add login\n")
+        assert subject == "feat: add login"
+        assert body == []
+
+    def test_subject_and_body(self):
+        """Subject + blank line + body lines."""
+        text = "feat: add login\n\n- Created: file.py — new file\nSome prose.\n"
+        subject, body = _parse_commit_message(text)
+        assert subject == "feat: add login"
+        assert body == ["- Created: file.py — new file", "Some prose."]
+
+    def test_body_preserves_all_lines(self):
+        """Body lines are preserved including empty lines (filtered)."""
+        text = "fix: bug\n\n- Fixed: file.py — fix\n\nMore info.\n"
+        subject, body = _parse_commit_message(text)
+        assert subject == "fix: bug"
+        # Blank lines are filtered out
+        assert len(body) == 2
+
+
+class TestMainFunction:
+    """Contract: main() calls CLI.run() and exits 0 on valid input.
+
+    Note: main() only calls sys.exit() on error. On success, it returns
+    normally (no exit call). The CLI.run() method calls sys.exit(1) on
+    validation failure but returns normally on success.
+    """
+
+    def test_main_calls_cli_run_valid(self, tmp_path):
+        """main() returns normally for valid commit message (no SystemExit)."""
+        msg_file = tmp_path / "COMMIT_EDITMSG"
+        msg_file.write_text(
+            "feat: test main function\n\n"
+            "- Updated: script.py — added main\n"
+        )
+
+        # On success, main() returns normally — no SystemExit raised
+        with patch("sys.argv", ["validate_commit_msg.py", str(msg_file)]):
+            main()  # Should not raise
+
+    def test_main_calls_cli_run_invalid(self, tmp_path):
+        """main() exits 1 for invalid commit message."""
+        msg_file = tmp_path / "COMMIT_EDITMSG"
+        msg_file.write_text("bad message\n")
+
+        with pytest.raises(SystemExit) as exc_info:
+            with patch("sys.argv", ["validate_commit_msg.py", str(msg_file)]):
+                main()
         assert exc_info.value.code == 1

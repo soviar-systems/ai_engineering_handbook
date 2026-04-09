@@ -57,8 +57,11 @@ _SUBJECT_RE = re.compile(
     r"(?P<desc>.+)$"              # non-empty description
 )
 
-# Bullet line: optional whitespace + '- ' + content
+# Bullet line: optional whitespace + '- ' + content (main bullet)
 _BULLET_RE = re.compile(r"^\s*- .+")
+
+# Sub-bullet line: 4+ spaces + '—' (em-dash) + content
+_SUB_BULLET_RE = re.compile(r"^    — .+")
 
 # ArchTag line: ArchTag:TAG-NAME (no space after colon)
 _ARCHTAG_RE = re.compile(r"^ArchTag:\S+")
@@ -108,6 +111,12 @@ def validate_body(body_lines: list[str]) -> list[str]:
     """Validate that body contains at least one changelog bullet.
 
     A bullet is a line matching ^\\s*- .+ that is NOT an ArchTag.
+    Sub-bullets (indented with '—') are allowed as continuations.
+
+    Format:
+        - Updated: file-path
+            — detail line 1
+            — detail line 2
     """
     bullets = [
         line for line in body_lines
@@ -118,7 +127,21 @@ def validate_body(body_lines: list[str]) -> list[str]:
     if not bullets:
         return ["Body must contain at least one changelog bullet (- Verb: target — description)"]
 
-    return []
+    # Validate sub-bullets: must follow a main bullet, not precede one
+    sub_errors = []
+    for i, line in enumerate(body_lines):
+        if _SUB_BULLET_RE.match(line):
+            # Check if there's a main bullet before this sub-bullet
+            has_prior_bullet = any(
+                _BULLET_RE.match(body_lines[j])
+                for j in range(i)
+            )
+            if not has_prior_bullet:
+                sub_errors.append(
+                    f"Sub-bullet without main bullet (line {i + 1}): {line.strip()!r}"
+                )
+
+    return sub_errors
 
 
 def validate_archtag(
