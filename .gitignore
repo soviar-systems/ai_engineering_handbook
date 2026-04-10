@@ -288,5 +288,6 @@ draft*
 diff
 Untitled.*
 
-# source code of the external agents
-ai_agents/agents_source_code/
+# source code of the external research projects (managed by register/unregister)
+research/ai_coding_agents/
+research/ai_infrastructure/

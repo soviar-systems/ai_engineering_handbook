@@ -94,7 +94,7 @@ def get_external_repo_paths(repo_root: Path) -> set[str]:
         repo_root: Repository root directory.
 
     Returns:
-        Set of relative paths (e.g., {"ai_agents/agents_source_code"}).
+        Set of relative paths from the registry.
         Empty set if the registry does not exist yet.
     """
     config = repo_root / ".vadocs" / _VALIDATION_DIR / _EXTERNAL_REPOS_CONFIG
@@ -106,8 +106,17 @@ def get_external_repo_paths(repo_root: Path) -> set[str]:
 
 
 # Directories excluded from all validation scripts (links, jupytext, ADR, etc.)
-# Static entries defined here. External repo paths are loaded from
+# Static entries defined here — project infrastructure (.git, caches, build outputs).
+#
+# External cloned repo paths (e.g., research/ai_coding_agents, research/ai_infrastructure)
+# are NOT added here — they are loaded from
 # .vadocs/validation/external-repos.conf.json (ADR-26046) at import time.
+# The registry is the SSoT for which external directories to exclude.
+# When a directory is registered/unregistered via manage_external_repos.py,
+# it automatically appears/disappears from this exclusion set.
+#
+# If you think you need to add a research/ path here, you're doing it wrong —
+# use `manage_external_repos.py register` instead.
 _STATIC_EXCLUDE_DIRS = {
     ".git",
     ".ipynb_checkpoints",
@@ -121,8 +130,9 @@ _STATIC_EXCLUDE_DIRS = {
     "misc",
 }
 
-# Runtime: merge of static excludes + registry entries.
-# This is the set that is_excluded() and all validation scripts check.
+# Runtime: merge of static excludes + registry entries (SSoT for external repos).
+# All registered directories from external-repos.conf.json are excluded from
+# git hooks, link checks, and jupytext processing.
 _VALIDATION_EXCLUDE_DIRS = _STATIC_EXCLUDE_DIRS | get_external_repo_paths(Path(__file__).resolve().parents[2])
 
 # Public alias — scripts import this.
