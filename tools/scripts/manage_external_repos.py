@@ -35,22 +35,22 @@ Key design decisions:
 
 Usage examples:
     # Before starting work — update all repos across all directories
-    uv run tools/scripts/manage_agent_repos.py update
+    uv run tools/scripts/manage_external_repos.py update
 
     # Update specific repos in parallel
-    uv run tools/scripts/manage_agent_repos.py update --parallel langgraph autogen
+    uv run tools/scripts/manage_external_repos.py update --parallel langgraph autogen
 
     # Add a new repository to the default directory
-    uv run tools/scripts/manage_agent_repos.py setup https://github.com/langchain-ai/langgraph
+    uv run tools/scripts/manage_external_repos.py setup https://github.com/langchain-ai/langgraph
 
     # Add a new repository to a specific directory
-    uv run tools/scripts/manage_agent_repos.py setup https://github.com/example/agent --dir research/my_repos
+    uv run tools/scripts/manage_external_repos.py setup https://github.com/example/agent --dir research/my_repos
 
     # Register a new directory
-    uv run tools/scripts/manage_agent_repos.py register research/new_agents "New agent research"
+    uv run tools/scripts/manage_external_repos.py register research/new_agents "New agent research"
 
     # List all repos and their status
-    uv run tools/scripts/manage_agent_repos.py list
+    uv run tools/scripts/manage_external_repos.py list
 """
 
 import argparse
@@ -68,7 +68,7 @@ from tools.scripts.paths import get_external_repo_paths
 # Falls back to a default path when the registry has no entries.
 _repo_root = detect_repo_root()
 _external_paths = get_external_repo_paths(_repo_root)
-_FALLBACK_DIRS: Set[Path] = {Path("ai_agents/agents_source_code")}
+_FALLBACK_DIRS: Set[Path] = {Path("research/ai_coding_agents")}
 
 if _external_paths:
     EXTERNAL_REPO_DIRS: Set[Path] = {Path(p) for p in _external_paths}
@@ -108,9 +108,11 @@ def main() -> int:
         repo_names = args.repos if args.repos else []
         return update_command(repo_names=repo_names, parallel=args.parallel)
     elif args.command == "list":
-        return list_command()
+        return list_command(dirs_only=getattr(args, 'dirs', False))
     elif args.command == "register":
         return register_command(args.path, args.description)
+    elif args.command == "unregister":
+        return unregister_command(args.path)
     elif args.command == "relocate":
         return relocate_command(args.old_path, args.new_path)
     else:
@@ -134,7 +136,7 @@ Configuration:
   Consumer files (.gitignore, myst.yml) are defined per-entry in the registry.
   The relocate command updates all consumers atomically.
 
-  To see registered directories: %(prog)s list
+  To see registered directories: %(prog)s list --dirs
 
 Examples:
   # Pre-session refresh: update all repos
@@ -152,11 +154,17 @@ Examples:
   # Register a new directory
   %(prog)s register research/new_agents "New agent research"
 
+  # Remove a directory from the registry
+  %(prog)s unregister research/old_agents
+
   # Rename a directory — updates registry AND all consumer files atomically
   %(prog)s relocate old/path/external_repos new/path/external_repos
 
   # List all repos with status
   %(prog)s list
+
+  # Show registered directories
+  %(prog)s list --dirs
 """
 
     parser = argparse.ArgumentParser(
@@ -207,11 +215,16 @@ Examples:
     )
 
     # list command
-    subparsers.add_parser(
+    list_parser = subparsers.add_parser(
         "list",
         help="List all external repositories with branch, date, and remote URL",
         description="Display a table of all cloned repositories with their "
         "current branch, last commit date, and remote URL.",
+    )
+    list_parser.add_argument(
+        "--dirs",
+        action="store_true",
+        help="Show registered directories instead of repositories",
     )
 
     # register command
@@ -228,6 +241,18 @@ Examples:
     register_parser.add_argument(
         "description",
         help="Description of what this directory contains",
+    )
+
+    # unregister command
+    unregister_parser = subparsers.add_parser(
+        "unregister",
+        help="Remove a directory from the external repos registry",
+        description="Remove a registered directory from the registry. "
+        "Does NOT delete the directory on disk — only updates the config.",
+    )
+    unregister_parser.add_argument(
+        "path",
+        help="Relative path of the directory to remove from registry",
     )
 
     # relocate command
@@ -278,7 +303,7 @@ def setup_command(url: str, target_dir_name: str | None = None) -> int:
 
     if repo_path.exists():
         print(f"❌ Error: Repository already exists at {repo_path}")
-        print(f"   To update, run: uv run tools/scripts/manage_agent_repos.py update {repo_name}")
+        print(f"   To update, run: uv run tools/scripts/manage_external_repos.py update {repo_name}")
         return 1
 
     # Clone the repository
@@ -311,12 +336,21 @@ def update_command(repo_names: List[str] = None, parallel: bool = False) -> int:
     """
     repo_root = detect_repo_root()
 
+    print(f"🔍 Discovering repositories in registered directories...")
+    for dir_path in sorted(EXTERNAL_REPO_DIRS, key=str):
+        full_path = repo_root / dir_path
+        status = "✓" if full_path.exists() else "✗"
+        print(f"   {status} {dir_path}")
+
     # Discover repositories across all directories
     all_repos = []
     for dir_path in EXTERNAL_REPO_DIRS:
         full_path = repo_root / dir_path
         if full_path.exists():
-            all_repos.extend(discover_repos(full_path, parent_dir=dir_path))
+            repos = discover_repos(full_path, parent_dir=dir_path)
+            all_repos.extend(repos)
+            if repos:
+                print(f"   Found {len(repos)} repo(s) in {dir_path}")
 
     if not all_repos:
         print("ℹ No git repositories found in registered directories")
@@ -326,6 +360,7 @@ def update_command(repo_names: List[str] = None, parallel: bool = False) -> int:
 
     # Filter to specified repos if provided
     if repo_names:
+        print(f"\n🎯 Filtering to specified repositories: {', '.join(repo_names)}")
         all_repos = [r for r in all_repos if r.name in repo_names]
         if not all_repos:
             available = ", ".join(r.name for r in _discover_all(repo_root))
@@ -333,13 +368,14 @@ def update_command(repo_names: List[str] = None, parallel: bool = False) -> int:
             print(f"   Available: {available}")
             return 1
 
-    # Update repositories
-    print(f"🔄 Updating {len(all_repos)} repository/ies...")
+    print(f"\n🔄 Updating {len(all_repos)} repository/ies...")
+    print(f"   Mode: {'Parallel' if parallel else 'Sequential'}")
     all_success = True
 
     if parallel:
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
+        print(f"   Using thread pool with max 5 workers\n")
         with ThreadPoolExecutor(max_workers=5) as executor:
             future_to_repo = {
                 executor.submit(pull_repo, repo.path): repo for repo in all_repos
@@ -362,32 +398,50 @@ def update_command(repo_names: List[str] = None, parallel: bool = False) -> int:
                     print(f"❌ Error in {repo.name}{branch_tag} ({repo.path}): Unexpected exception: {e}")
                     all_success = False
     else:
-        for repo in all_repos:
+        print()
+        for idx, repo in enumerate(all_repos, 1):
             branch, _, _ = get_repo_status(repo.path)
             branch_tag = f" ({branch})" if branch else ""
+            print(f"[{idx}/{len(all_repos)}] {repo.name}{branch_tag}...")
             success, message = pull_repo(repo.path)
             if success:
                 if "Already up to date" in message:
-                    print(f"✓ {repo.name}{branch_tag}: Already up to date")
+                    print(f"    ✓ Already up to date")
                 else:
-                    print(f"✅ {repo.name}{branch_tag}: Updated")
+                    print(f"    ✅ Updated")
             else:
-                print(f"❌ Error in {repo.name}{branch_tag} ({repo.path}): {message.strip()}")
+                print(f"    ❌ FAILED: {message.strip()}")
                 all_success = False
+
+    print(f"\n{'='*60}")
+    if all_success:
+        print(f"✅ All repositories updated successfully")
+    else:
+        print(f"❌ Some repositories failed to update (see errors above)")
+    print(f"{'='*60}")
 
     return 0 if all_success else 1
 
 
-def list_command() -> int:
+def list_command(dirs_only: bool = False) -> int:
     """List all repositories with status across all registered directories.
 
     Contract: Displays table of all repos with branch, date, remote.
+    With dirs_only=True, shows registered directories from the registry config.
     Always returns 0 (informational command, never fails).
+
+    Args:
+        dirs_only: If True, show registered directories with descriptions
+                   instead of individual git repositories.
 
     Returns:
         0 always.
     """
     repo_root = detect_repo_root()
+
+    if dirs_only:
+        return _list_dirs(repo_root)
+
     repos = _discover_all(repo_root)
 
     if not repos:
@@ -407,6 +461,41 @@ def list_command() -> int:
         remote_str = remote if remote else "N/A"
         dir_str = str(repo.parent_dir)
         print(f"{repo.name:<30} {dir_str:<30} {branch_str:<15} {date_str:<12} {remote_str}")
+
+    return 0
+
+
+def _list_dirs(repo_root: Path) -> int:
+    """Show registered directories from the registry config.
+
+    Args:
+        repo_root: Repository root.
+
+    Returns:
+        0 always.
+    """
+    config_path = repo_root / _EXTERNAL_REPOS_CONFIG
+    if not config_path.exists():
+        print("ℹ No registry config found")
+        return 0
+
+    with open(config_path) as f:
+        data = json.load(f)
+
+    entries = data.get("entries", [])
+    if not entries:
+        print("ℹ No directories registered")
+        return 0
+
+    print(f"📂 Registered Directories ({len(entries)} total):\n")
+    print(f"{'Path':<35} {'Type':<25} {'Description'}")
+    print("-" * 100)
+
+    for entry in entries:
+        path_str = entry.get("path", "N/A")
+        type_str = entry.get("product_type", "N/A")
+        desc_str = entry.get("description", "")
+        print(f"{path_str:<35} {type_str:<25} {desc_str}")
 
     return 0
 
@@ -442,18 +531,27 @@ def register_command(path: str, description: str, config_path: Path | None = Non
         print(f"❌ Error: Directory already registered: {path}")
         return 1
 
-    # Add new entry
-    data["entries"].append({
+    # Add new entry — consumers and managed_by copied from config top-level
+    # fields (ADR-26046). Not hardcoded — the config is the SSoT.
+    default_consumers = data.get("default_consumers", [])
+    default_managed_by = data.get("managed_by", "")
+    entry = {
         "path": path,
         "description": description,
         "product_type": "external_product",
-    })
+        "managed_by": default_managed_by,
+        "consumers": list(default_consumers),
+    }
+    data["entries"].append(entry)
 
     # Write back
     config_path.parent.mkdir(parents=True, exist_ok=True)
     with open(config_path, "w") as f:
         json.dump(data, f, indent=2)
         f.write("\n")
+
+    # Update consumer files — add exclusion for the new path
+    _add_path_to_consumers(repo_root, path, entry["consumers"])
 
     print(f"✅ Registered directory: {path}")
     print(f"   Description: {description}")
@@ -463,6 +561,210 @@ def register_command(path: str, description: str, config_path: Path | None = Non
     except ValueError:
         # Test or non-standard path
         print(f"   Config: {config_path}")
+    return 0
+
+
+def _add_path_to_consumers(repo_root: Path, path: str, consumers: List[str]) -> None:
+    """Append a new exclusion path to all consumer files if not already present.
+
+    When a directory is registered, it needs to be excluded from:
+    - .gitignore: prevent git from tracking the cloned repos
+    - myst.yml project.exclude: prevent docs build from processing nested repos
+
+    Args:
+        repo_root: Repository root.
+        path: Relative path to add (e.g., "research/new_agents").
+        consumers: List of relative consumer file paths from registry entry.
+    """
+    for consumer_rel in consumers:
+        consumer_path = repo_root / consumer_rel
+        if not consumer_path.exists():
+            continue
+        content = consumer_path.read_text()
+        # Use trailing slash for gitignore (directory match), bare path for YAML
+        exclusion = f"{path}/"
+        if exclusion in content:
+            # Already excluded — skip to avoid duplicates
+            continue
+        if consumer_rel.endswith(".gitignore"):
+            # .gitignore: append as a bare directory path with trailing slash
+            content = content.rstrip() + f"\n{exclusion}\n"
+        else:
+            # myst.yml: append as a quoted glob item under project.exclude
+            yaml_entry = f'    - "{path}/*"'
+            content = content.rstrip() + f"\n{yaml_entry}\n"
+        consumer_path.write_text(content)
+
+
+def _remove_path_from_consumers(repo_root: Path, path: str, consumers: List[str]) -> None:
+    """Remove all occurrences of a path from consumer files.
+
+    When a directory is unregistered, its exclusion entries should be cleaned up
+    so future moves/renames don't leave stale entries in .gitignore or myst.yml.
+
+    Args:
+        repo_root: Repository root.
+        path: Relative path to remove (e.g., "ai_agents/agents_source_code").
+        consumers: List of relative consumer file paths from registry entry.
+    """
+    for consumer_rel in consumers:
+        consumer_path = repo_root / consumer_rel
+        if not consumer_path.exists():
+            continue
+        content = consumer_path.read_text()
+        # Filter out any line containing the old path (handles both trailing-slash
+        # gitignore entries and quoted YAML glob items)
+        lines = content.split("\n")
+        filtered = [l for l in lines if path not in l]
+        updated = "\n".join(filtered)
+        if updated != content:
+            consumer_path.write_text(updated)
+
+
+def unregister_command(path: str, config_path: Path | None = None) -> int:
+    """Remove a directory from the external repos registry.
+
+    Contract: Removes an entry from external-repos.conf.json.
+    Returns 1 if path not found. Does NOT delete the directory on disk.
+
+    Args:
+        path: Relative path of the directory to remove from registry.
+        config_path: Optional explicit config path (for testing).
+
+    Returns:
+        0 on success, 1 on failure.
+    """
+    repo_root = detect_repo_root()
+    if config_path is None:
+        config_path = repo_root / _EXTERNAL_REPOS_CONFIG
+
+    # Load existing registry
+    if not config_path.exists():
+        print(f"❌ Error: Registry not found: {config_path}")
+        return 1
+    with open(config_path) as f:
+        data = json.load(f)
+
+    entries = data.get("entries", [])
+    before_count = len(entries)
+    # Capture consumers before removing the entry
+    consumers = None
+    for e in entries:
+        if e["path"] == path:
+            consumers = e.get("consumers", [])
+            break
+    entries = [e for e in entries if e["path"] != path]
+    after_count = len(entries)
+
+    if after_count == before_count:
+        print(f"❌ Error: Directory not in registry: {path}")
+        dirs = ", ".join(e["path"] for e in data.get("entries", []))
+        print(f"   Registered: {dirs}")
+        return 1
+
+    data["entries"] = entries
+
+    # Write back
+    with open(config_path, "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+
+    # Update consumer files — remove exclusion for the old path
+    if consumers:
+        _remove_path_from_consumers(repo_root, path, consumers)
+
+    print(f"✅ Unregistered directory: {path}")
+    try:
+        config_rel = config_path.relative_to(repo_root)
+        print(f"   Config: {config_rel}")
+    except ValueError:
+        print(f"   Config: {config_path}")
+    return 0
+
+
+def sync_consumers_command(dry_run: bool = False, config_path: Path | None = None) -> int:
+    """Rebuild consumer file exclusions to match the current registry.
+
+    Contract: Reads all registered paths, then rebuilds .gitignore and
+    myst.yml exclude sections. Removes stale entries, adds missing ones.
+    Returns 0 on success, 1 on failure.
+
+    Args:
+        dry_run: If True, show changes without applying them.
+        config_path: Optional explicit config path (for testing).
+
+    Returns:
+        0 on success, 1 on failure.
+    """
+    repo_root = detect_repo_root()
+    if config_path is None:
+        config_path = repo_root / _EXTERNAL_REPOS_CONFIG
+
+    if not config_path.exists():
+        print("❌ Error: Registry not found")
+        return 1
+
+    with open(config_path) as f:
+        data = json.load(f)
+
+    entries = data.get("entries", [])
+    if not entries:
+        print("ℹ No directories in registry")
+        return 0
+
+    # Collect all registered paths grouped by consumer
+    # consumer_rel -> set of registered paths
+    consumer_paths: dict[str, set[str]] = {}
+    for entry in entries:
+        for consumer_rel in entry.get("consumers", []):
+            consumer_paths.setdefault(consumer_rel, set()).add(entry["path"])
+
+    action = "Would update" if dry_run else "Updating"
+    for consumer_rel, registered_paths in sorted(consumer_paths.items()):
+        consumer_path = repo_root / consumer_rel
+        if not consumer_path.exists():
+            print(f"⚠ Consumer file not found: {consumer_rel}")
+            continue
+
+        content = consumer_path.read_text()
+        lines = content.split("\n")
+
+        # Determine which lines to keep:
+        # - Lines not containing any registered or unregistered path pattern
+        # - Then re-add all registered paths
+        registered_in_file = {p for p in registered_paths if p in content}
+        # Find paths in file that are NOT in registry (stale)
+        all_in_file = set()
+        for line in lines:
+            for p in registered_paths:
+                if p in line:
+                    all_in_file.add(p)
+        stale = all_in_file - registered_paths
+
+        if not stale and len(registered_in_file) == len(registered_paths):
+            print(f"✓ {consumer_rel}: already in sync")
+            continue
+
+        print(f"{action} {consumer_rel}:")
+        for p in sorted(stale):
+            print(f"  - {p}")
+        for p in sorted(registered_paths - registered_in_file):
+            print(f"  + {p}")
+
+        if dry_run:
+            continue
+
+        # Remove ALL lines containing any registered or stale path
+        filtered = [l for l in lines if not any(p in l for p in registered_paths | stale)]
+        # Re-add registered paths
+        for p in sorted(registered_paths):
+            if consumer_rel.endswith(".gitignore"):
+                filtered.append(f"{p}/")
+            else:
+                filtered.append(f'    - "{p}/*"')
+
+        consumer_path.write_text("\n".join(filtered))
+
     return 0
 
 
