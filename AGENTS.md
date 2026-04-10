@@ -34,11 +34,14 @@ uv run tools/scripts/generate_changelog.py <prev-tag>..HEAD --version <next-vers
 # Build documentation site
 npm install -g mystmd && myst build --html
 
-# Manage agent source code repositories (ai_agents/agents_source_code/)
-uv run tools/scripts/manage_agent_repos.py list                          # Show all repos
-uv run tools/scripts/manage_agent_repos.py update                        # Pull all repos
-uv run tools/scripts/manage_agent_repos.py update --parallel             # Parallel pull
-uv run tools/scripts/manage_agent_repos.py setup <url> [--branch <ref>]  # Clone new repo
+# Manage external research repos (research/)
+uv run tools/scripts/manage_external_repos.py list                          # Show all repos
+uv run tools/scripts/manage_external_repos.py update                        # Pull all repos
+uv run tools/scripts/manage_external_repos.py update --parallel             # Parallel pull
+uv run tools/scripts/manage_external_repos.py setup <url> [--dir <dir>]    # Clone new repo
+uv run tools/scripts/manage_external_repos.py list --dirs                   # Show registered directories
+uv run tools/scripts/manage_external_repos.py register <path> <desc>        # Register new directory
+uv run tools/scripts/manage_external_repos.py unregister <path>             # Remove directory from registry
 ```
 
 :::{note}
@@ -58,7 +61,7 @@ The repository is organized around a five-layer AI system architecture:
   - `3_prompts/` - Prompts-as-Infrastructure, includes JSON prompt files in `consultants/`
   - `4_orchestration/` - RAG, agent workflows, structured output
   - `5_context/` - Vector stores, hybrid retrieval
-- `ai_agents/` - Real-world agent framework analysis. Source code of external agents is cloned into `agents_source_code/` as nested git repos — a consolidated research directory so all agent source code is in one place for study. This directory is excluded from parent `.gitignore` and from script checks (`check_broken_links`, `check_link_format`, etc.) via `tools/scripts/paths.py`. Use `manage_agent_repos.py` to clone and update repos. Analysis notebooks live in topic subdirectories (`session_history_management/`, `skills/`, `tooling/`, etc.)
+- `ai_agents/` - Real-world agent framework analysis. External source code is cloned into `research/` as nested git repos — excluded from `.gitignore` and script checks via `tools/scripts/paths.py`. Use `manage_external_repos.py` to clone and update repos. Analysis notebooks live in topic subdirectories (`session_history_management/`, `skills/`, `tooling/`, etc.)
 - `architecture/` - Architectural Decision Records (ADRs) and post-mortems
 - `security/` - Centralized security policy hub
 - `mlops/` - CI/CD and security tooling
@@ -222,8 +225,20 @@ Package manager: `uv` (never use pip directly)
 - Keep commit subjects concise (50 chars max), focusing on the "what"
 - Commit bodies **MUST** contain structured bullets: `- <Verb>: <file-path> — <what and why>`
 - `<file-path>` is relative to repo root (e.g., `tools/scripts/check_adr.py`). No abstract targets — every change lives in a file
-- One bullet = one line, no line length limit
 - Verbs: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`
+- Sub-bullets are supported for grouping related changes under one target file:
+  - Format: 4-space indent + em-dash + space (`    — detail`)
+  - Sub-bullets MUST follow a main bullet (orphan sub-bullets are rejected by the pre-commit hook)
+  - Example:
+    ```
+    feat: verbose output for manage_external_repos.py update command
+
+    - Updated: tools/scripts/manage_external_repos.py
+        — added directory discovery, repo count per directory, mode indicator
+        — moved repo name to pre-pull line for SSH passphrase visibility
+    - Added: tools/tests/test_manage_external_repos.py
+        — 16 new tests for verbose output and edge cases (94% coverage)
+    ```
 - CHANGELOG is generated from commit history, not manually curated
 - Commit bullets mentioning changelog exclusion patterns (e.g., `CLAUDE.md`, `misc/`) will be self-filtered — describe intent instead of listing literal pattern values; verify with `uv run tools/scripts/generate_changelog.py --verbose HEAD~1..HEAD 1>/dev/null`
 - When some bullets are excluded, the commit subject becomes the changelog section header for only the surviving bullets. Write the subject to match changelog-visible bullets only — a subject summarising excluded work produces a misleading changelog entry where the header promises more than the bullets deliver
