@@ -40,6 +40,16 @@ Traceable record of intentional shortcuts. Each entry has a date, location, and 
 - **Roadmap:** Phase 2.0 (Research: Frontier CLI Agents — cross-model format behavior)
 - **Introduced by:** meetup talk brainstorming session (2026-03-29)
 
+### TD-008: ArchTag has no governed vocabulary or resolution path (2026-04-11)
+
+- **Location:** `pyproject.toml` (`archtag-required-types`), `tools/scripts/validate_commit_msg.py`
+- **Context:** ArchTag is required for `refactor:` and `perf:` commits as the first body line (`ArchTag:TAG-NAME`). It links commits to architectural decisions, tech debt payments, or perf justifications. However, the validator only checks format (`^ArchTag:\S+`) — it does NOT validate that the tag value is from a known set, nor does it require a resolution path to learn what the tag means.
+- **Current state:** `pyproject.toml` defines `archtag-required-types = ["refactor", "perf"]` (which commit types need a tag) but has no `valid-archtags` list. The validator regex accepts any string. No mechanism exists to resolve a tag to its governing ADR, evidence, or doc. Examples in docs: `TECHDEBT-PAYMENT`, `PERF-OPTIMIZATION`, `REFACTOR-MIGRATION`, `DEPRECATION-PLANNED`, `BREAKING-CHANGE` — none enforced, none resolvable.
+- **Current gap:** `generate_changelog.py` excludes ArchTag lines from output entirely. Even if the tag were valid, future readers of the CHANGELOG cannot trace it back to its justification.
+- **Migration path:** (1) Add `valid-archtags` dict to `pyproject.toml` — each tag maps to a description and optional doc link. (2) Update `validate_commit_msg.py` to validate tag value against the list. (3) Decide whether ArchTag should be preserved in changelog output as a traceable reference, or kept excluded but indexed elsewhere. (4) Update docs to list valid tags with descriptions and links.
+- **Roadmap:** Phase 1.x (commit convention hardening)
+- **Introduced by:** research/ external repos restructuring session (2026-04-11)
+
 ## Resolved
 
 ### TD-001: common_required_fields in evidence.config.yaml (2026-02-27)
