@@ -147,6 +147,7 @@ BROKEN_LINKS_EXCLUDE_LINK_STRINGS = {
     "./intro/",
     "valid.md",  # Added for test_validate_link_with_exclusions
     "repo-root-relative/path",  # Example in architecture_decision_workflow_guide.md
+    "/ai_agents/research/ai_coding_agents/",  # External repos not cloned in CI
 }
 
 BROKEN_LINKS_EXCLUDE_FILES = [".aider.chat.history.md"]
