@@ -291,3 +291,6 @@ Untitled.*
 # source code of the external research projects (managed by register/unregister)
 ai_agents/research/ai_coding_agents/
 ai_agents/research/ai_infrastructure/
+
+# Qwen Code session settings
+.qwen/
