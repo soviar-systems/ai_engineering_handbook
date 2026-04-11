@@ -223,22 +223,7 @@ Package manager: `uv` (never use pip directly)
 - `pr:` prefix is for promotional/announcement posts
 - There is no `revert:` type — use `docs:`, `chore:`, or `fix:` depending on what the revert corrects
 - Keep commit subjects concise (50 chars max), focusing on the "what"
-- Commit bodies **MUST** contain structured bullets: `- <Verb>: <file-path> — <what and why>`
-- `<file-path>` is relative to repo root (e.g., `tools/scripts/check_adr.py`). No abstract targets — every change lives in a file
-- Verbs: `Created`, `Updated`, `Deleted`, `Renamed`, `Fixed`, `Moved`, `Added`, `Removed`, `Refactored`, `Configured`
-- Sub-bullets are supported for grouping related changes under one target file:
-  - Format: 4-space indent + em-dash + space (`    — detail`)
-  - Sub-bullets MUST follow a main bullet (orphan sub-bullets are rejected by the pre-commit hook)
-  - Example:
-    ```
-    feat: verbose output for manage_external_repos.py update command
-
-    - Updated: tools/scripts/manage_external_repos.py
-        — added directory discovery, repo count per directory, mode indicator
-        — moved repo name to pre-pull line for SSH passphrase visibility
-    - Added: tools/tests/test_manage_external_repos.py
-        — 16 new tests for verbose output and edge cases (94% coverage)
-    ```
+- Commit body format: [Structured Commit Body Format](/tools/docs/git/01_production_git_workflow_standards.ipynb) — main bullets (`- <Verb>: <file-path> — <what_and_why>`) with optional sub-bullets (`    — <lowercase_verb> <detail>`)
 - CHANGELOG is generated from commit history, not manually curated
 - Commit bullets mentioning changelog exclusion patterns (e.g., `CLAUDE.md`, `misc/`) will be self-filtered — describe intent instead of listing literal pattern values; verify with `uv run tools/scripts/generate_changelog.py --verbose HEAD~1..HEAD 1>/dev/null`
 - When some bullets are excluded, the commit subject becomes the changelog section header for only the surviving bullets. Write the subject to match changelog-visible bullets only — a subject summarising excluded work produces a misleading changelog entry where the header promises more than the bullets deliver
@@ -260,6 +245,10 @@ Package manager: `uv` (never use pip directly)
 - Use `rm` (not `git rm`) for untracked files — `git rm` fails on files not in the index
 - Use `git switch <branch>` to change branches, never `git checkout <branch>`
 - Never use `git reset --hard`, `git push --force`, or `git clean -f` without explicit user request
+
+**Symlinks:**
+- Use `ln -sfr <absolute_target> <absolute_link_path>` — the `-r` flag creates relative symlinks, making them resilient to directory moves
+- Both arguments must be absolute paths — the target and link location are computed from the filesystem root, not CWD
 
 **Design Principles:**
 - Prefer reusing existing tools over writing new code — check if an existing script already does what you need before creating new functions/classes

@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.19.0
+    jupytext_version: 1.19.1
 kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
@@ -224,6 +224,28 @@ The `<what_and_why>` portion explains what changed in the file and why — this 
 5. Git trailers (after blank line, `Key: Value` format) are excluded from parsing.
 6. Non-bullet lines in the body (prose context) are ignored by the parser but allowed for human context.
 7. `ArchTag:TAG-NAME` line (Tier 3) is preserved for justification validation but excluded from changelog output.
+8. **Sub-bullets** provide detail under a file target: 4-space indent + em-dash + space + lowercase verb + description (`    — added feature X`). Sub-bullets MUST follow a main bullet — orphan sub-bullets are rejected. Sub-bullets are excluded from CHANGELOG output (only main bullets survive).
+
++++
+
+### Sub-bullet Format
+
++++
+
+Sub-bullets break down *what* changed within a single file target. They are validated by the pre-commit hook but do not appear in the generated CHANGELOG (only main bullets are extracted).
+
+```
+- <Verb>: <file-path> — <what_and_why>
+    — <lowercase_verb> <specific_detail>
+    — <lowercase_verb> <another_detail>
+- <Verb>: <file-path> — <what_and_why>
+```
+
+Sub-bullet rules:
+- Format: exactly 4 spaces + `— ` (em-dash + space) + lowercase verb + description
+- MUST follow a main bullet — no orphan sub-bullets
+- Multiple main bullets can each have their own sub-bullet group
+- Sub-bullets are validated but **not** included in CHANGELOG output
 
 +++
 
@@ -267,6 +289,23 @@ ArchTag:TECHDEBT-PAYMENT
 - Deleted: legacy_loader.py — its ONNX path was the only unique logic; moved into the main loader to eliminate a 200-line file with no test coverage
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+```
+:::
+
+:::{dropdown} Multi-file change with sub-bullets (feat) — real commit `00362f0`
+```
+feat: support sub-bullet format in commit body validation
+
+- Updated: tools/scripts/validate_commit_msg.py
+    — added _SUB_BULLET_RE for 4-space indented em-dash lines
+    — added validation that sub-bullets must follow a main bullet
+    — updated validate_body docstring with format examples
+- Updated: tools/tests/test_validate_commit_msg.py
+    — added TestParseCommitMessage class (4 tests for message parsing)
+    — added 7 sub-bullet validation tests (orphan, valid, multiple mains)
+    — added CLI integration tests for sub-bullet format
+
+Co-Authored-By: Qwen-Coder <qwen-coder@alibabacloud.com>
 ```
 :::
 
