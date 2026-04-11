@@ -110,15 +110,15 @@ The superpowers repo uses a nested `skills/` subdirectory layout (`superpowers/s
 **Recommended layout:**
 
 ```
-research/ai_coding_agents/superpowers/          ← git repo (update with git pull)
+/ai_agents/research/ai_coding_agents/superpowers/          ← git repo (update with git pull)
   skills/
     brainstorming/SKILL.md
     using-superpowers/SKILL.md
     ...
 
 ~/.qwen/skills/                                  ← symlinks to each skill
-  brainstorming -> research/ai_coding_agents/superpowers/skills/brainstorming
-  using-superpowers -> research/ai_coding_agents/superpowers/skills/using-superpowers
+  brainstorming -> /ai_agents/research/ai_coding_agents/superpowers/skills/brainstorming
+  using-superpowers -> /ai_agents/research/ai_coding_agents/superpowers/skills/using-superpowers
   ...
 ```
 
@@ -126,7 +126,7 @@ research/ai_coding_agents/superpowers/          ← git repo (update with git pu
 
 ```bash
 # Clone the superpowers repo into research/
-git clone https://github.com/obra/superpowers.git research/ai_coding_agents/superpowers
+git clone https://github.com/obra/superpowers.git /ai_agents/research/ai_coding_agents/superpowers
 
 # Create symlinks for each skill (run from ~/.qwen/skills/)
 cd ~/.qwen/skills/
@@ -136,12 +136,12 @@ for skill in brainstorming dispatching-parallel-agents executing-plans \
   using-git-worktrees using-superpowers verification-before-completion \
   writing-plans writing-skills; do
   ln -sfn -r \
-    /home/commi/Yandex.Disk/it_working/projects/soviar-systems/ai_engineering_book/research/ai_coding_agents/superpowers/skills/$skill \
+    /home/commi/Yandex.Disk/it_working/projects/soviar-systems/ai_engineering_book//ai_agents/research/ai_coding_agents/superpowers/skills/$skill \
     /home/commi/.qwen/skills/$skill
 done
 ```
 
-Update skills anytime with `cd research/ai_coding_agents/superpowers && git pull` — the symlinks follow automatically.
+Update skills anytime with `cd /ai_agents/research/ai_coding_agents/superpowers && git pull` — the symlinks follow automatically.
 
 :::{seealso}
 For analysis of why skill-based orchestration is fundamentally brittle and how superpowers fights failure modes, see {ref}`prompt_brittleness_in_skills`.

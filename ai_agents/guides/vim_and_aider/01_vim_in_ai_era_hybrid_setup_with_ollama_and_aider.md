@@ -271,7 +271,7 @@ This hybrid approach gives you the **stability and speed of native Vim** and the
 
 :::{seealso}
 Read more on using aider in a hybrid - local plus API models - mode:
-> - [Aider Commands Handout](/tools/docs/ai_agents/02_aider_commands_handout.ipynb)
+> - [Aider Commands Handout](/ai_agents/guides/aider/02_aider_commands_handout.ipynb)
 :::
 
 +++

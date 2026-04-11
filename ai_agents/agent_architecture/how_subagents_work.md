@@ -50,7 +50,7 @@ Client code:
 ```
 
 :::{seealso}
-For the detailed breakdown of how the API contract works — why system prompts don't mix, what the response actually contains, and how the summary replaces history — see [The Compaction API Contract](/ai_agents/context_management/compaction_api_contract.ipynb).
+For the detailed breakdown of how the API contract works — why system prompts don't mix, what the response actually contains, and how the summary replaces history — see [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract.ipynb).
 :::
 
 **OpenCode compaction agent** — the most explicit example:
@@ -209,7 +209,7 @@ Each API call sends the full conversation history. The LLM has no memory between
 The response contains **only the new assistant message** — not the input history. This is how LLM APIs work: stateless request/response.
 
 :::{seealso}
-For the detailed API contract explanation — why system prompts don't mix, what the response contains, and how history replacement works — see [The Compaction API Contract](/ai_agents/context_management/compaction_api_contract.ipynb).
+For the detailed API contract explanation — why system prompts don't mix, what the response contains, and how history replacement works — see [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract.ipynb).
 :::
 
 ## Summary Table

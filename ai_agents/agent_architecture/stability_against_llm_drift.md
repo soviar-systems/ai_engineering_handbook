@@ -34,7 +34,7 @@ There is no `assert` that can fail hard on LLM behavior. No type system can guar
 The question is not "how do we eliminate failures?" — it is "how do we reduce failure rates to acceptable levels?"
 
 :::{seealso}
-For the mechanics of how subagents are spawned and how compaction works at the API level, see [How Subagents Actually Work](/ai_agents/agent_architecture/how_subagents_work.ipynb) and [The Compaction API Contract](/ai_agents/context_management/compaction_api_contract.ipynb).
+For the mechanics of how subagents are spawned and how compaction works at the API level, see [How Subagents Actually Work](/ai_agents/agent_architecture/how_subagents_work.ipynb) and [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract.ipynb).
 :::
 
 ## What's Actually Reliable vs. What Isn't

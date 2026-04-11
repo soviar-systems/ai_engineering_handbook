@@ -1,6 +1,6 @@
-# ai_agents — Real-World Agent Framework Analysis
+# ai_agents — Agent Framework Research & Tooling Guides
 
-This directory consolidates source code of external AI coding agents for comparative study, paired with analysis notebooks organized by topic.
+This directory consolidates all agent-related content: source-level analysis of external AI coding agents, architecture research, and practical tooling guides.
 
 :::{note}
 **Why this is at the repo root:** `ai_system_layers/` is the engine parts catalog (execution → context). Agents are not a layer — they're the assembled product. **ai_system/ is the engine parts catalog. ai_agents/ is the car.** Future agent-level research (multi-agent systems, agent identity, etc.) won't fit the six-layer framework. This directory lives at the root to resolve that category error permanently.
@@ -11,13 +11,20 @@ This directory consolidates source code of external AI coding agents for compara
 ```
 ai_agents/
 ├── README.md                  ← this file
-├── context_management/        ← source-level analysis of context window strategies
-├── session_history_management/ ← analysis notebooks on context/memory patterns
-├── skills/                     ← analysis notebooks on skill/prompt systems
-└── tooling/                    ← analysis notebooks on tool architectures
+├── research/                  ← external cloned repos (nested git)
+│   ├── ai_coding_agents/      ← 8 agent source repos for study
+│   └── ai_infrastructure/     ← mempalace, open-webui
+├── architecture/              ← source-level analysis of agent internals
+│   ├── context_management/    ← context window strategies
+│   ├── session_history_management/ ← memory and crash recovery
+│   ├── skills/                ← skill/prompt systems
+│   └── tooling/               ← tool architectures
+└── guides/                    ← practical setup and usage guides
+    ├── vim_and_aider/         ← Vim + Ollama + Aider hybrid setup
+    ├── aider/                 ← Aider commands handout, API key setup
+    ├── kilocode/              ← Kilo Code CLI installation
+    └── comparing_cli_agents/  ← draft comparison (WIP)
 ```
-
-External agent source code is cloned into `research/ai_coding_agents/` (nested git repos).
 
 ### Source Code (`research/ai_coding_agents/`)
 
@@ -71,7 +78,7 @@ Run `update` before starting any analysis session — agent architectures evolve
 
 ### Session History / Context Management
 
-- **All agents** send the full conversation history on every API call — no chunking, no delta updates. Context grows unboundedly until compaction kicks in. See [context_management/overview.md](context_management/overview.md) for the full analysis.
+- **All agents** send the full conversation history on every API call — no chunking, no delta updates. Context grows unboundedly until compaction kicks in. See [context_management/overview.md](/ai_agents/architecture/context_management/overview.md) for the full analysis.
 - **Qwen Code** uses append-only JSONL event logs (`{sessionId}.jsonl`) with tree-structured `uuid`/`parentUuid` links — crash-safe by design, supports `/compress` without mutating history.
 - **Claude Code** has the most sophisticated system: 5-tier compaction from microcompact (server-side cache editing) through session memory (background agent maintaining a markdown summary file) to full compaction with PTL retry.
 - **Aider** relies on git history as the session record — every change is a commit, making the codebase itself the memory. Async background summarization doesn't block the main loop.

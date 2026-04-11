@@ -4,11 +4,11 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.19.0
+    jupytext_version: 1.19.1
 kernelspec:
-  name: bash
   display_name: Bash
   language: bash
+  name: bash
 ---
 
 # Aider Commands Handout
@@ -29,7 +29,7 @@ Last Modified: 2026-01-13
 Aider is an AI pair programmer that uses your code as context.
 
 :::{seealso} How to set up aider
-> [VIM in AI Era: Hybrid Setup with Ollama and Aider](/tools/docs/ai_agents/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.ipynb)
+> [VIM in AI Era: Hybrid Setup with Ollama and Aider](/ai_agents/guides/vim_and_aider/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.ipynb)
 
 +++
 

@@ -4,11 +4,11 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.18.1
+    jupytext_version: 1.19.1
 kernelspec:
-  name: python3
   display_name: Python 3 (ipykernel)
   language: python
+  name: python3
 ---
 
 # vim-ollama: LLM Tab Completion Nuances
@@ -29,7 +29,7 @@ Last Modified: 2026-01-13
 This handbook explains the mechanics of LLM-based tab completion within Vim specifically for the `vim-ollama` plugin and why specific model-config alignment is required for it to function correctly.
 
 :::{seealso}
-> Setup vim-ollama: ["VIM in AI Era: Hybrid Setup with Ollama and Aider"](/tools/docs/ai_agents/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.ipynb)
+> Setup vim-ollama: ["VIM in AI Era: Hybrid Setup with Ollama and Aider"](/ai_agents/guides/vim_and_aider/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.ipynb)
 :::
 
 +++
