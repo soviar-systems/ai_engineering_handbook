@@ -15,8 +15,8 @@ project:
     - "architecture/adr/adr_template.md"
     - "misc/*"
     # source code of the external research projects (managed by register/unregister)
-    - "research/ai_coding_agents/*"
-    - "research/ai_infrastructure/*"
+    - "ai_agents/research/ai_coding_agents/*"
+    - "ai_agents/research/ai_infrastructure/*"
     # jupytext pairs md to ipynb
     - "0_intro/**/*.md"
     - "ai_system/**/*.md"

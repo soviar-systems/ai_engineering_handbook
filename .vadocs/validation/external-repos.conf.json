@@ -6,21 +6,23 @@
     "",
     "default_consumers: files that receive exclusion entries when a directory",
     "  is registered. Only .gitignore is safe for string-append editing.",
-    "  myst.yml is structured YAML — maintain its exclude section manually.",
+    "  myst.yml is structured YAML \u2014 maintain its exclude section manually.",
     "",
     "managed_by: script path that manages this registry (ADR-26046).",
     "  Copied to each entry when registered.",
     "",
-    "Sourced by tools/scripts/paths.py at import time — all registered dirs",
+    "Sourced by tools/scripts/paths.py at import time \u2014 all registered dirs",
     "become part of VALIDATION_EXCLUDE_DIRS (git hooks, link checks, jupytext).",
     "",
     "Governed by: ADR-26046"
   ],
-  "default_consumers": [".gitignore"],
+  "default_consumers": [
+    ".gitignore"
+  ],
   "managed_by": "tools/scripts/manage_external_repos.py",
   "entries": [
     {
-      "path": "research/ai_coding_agents",
+      "path": "ai_agents/research/ai_coding_agents",
       "description": "Source code of external AI coding agents for comparative study",
       "product_type": "external_product",
       "managed_by": "tools/scripts/manage_external_repos.py",
@@ -29,7 +31,7 @@
       ]
     },
     {
-      "path": "research/ai_infrastructure",
+      "path": "ai_agents/research/ai_infrastructure",
       "description": "External AI infrastructure projects cloned for source-level research",
       "product_type": "external_product",
       "managed_by": "tools/scripts/manage_external_repos.py",

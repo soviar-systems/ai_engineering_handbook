@@ -25,14 +25,14 @@ Each subdirectory is an independent git repository, excluded from the parent rep
 
 | Agent | Source | Type | Key Architecture |
 |-------|--------|------|------------------|
-| [aider](/research/ai_coding_agents/aider/) | [aider.chat](https://aider.chat/) | Python CLI | Repo map, git-autocommit, IDE watch mode |
-| [claude-code-main](/research/ai_coding_agents/claude-code-main/) | (leaked source) | TypeScript CLI | 5-tier context management, server-side cache editing, session memory agent |
-| [kilocode](/research/ai_coding_agents/kilocode/) | [Kilo-Org/kilo](https://github.com/Kilo-Org/kilo) | TypeScript CLI (Bun) | OpenCode fork, Agent Manager (VS Code multi-session panel with git worktrees), Turborepo monorepo |
-| [openclaw](/research/ai_coding_agents/openclaw/) | [openclaw/openclaw](https://github.com/openclaw/openclaw) | TypeScript CLI | Personal AI assistant — multi-channel (WhatsApp, Telegram, Slack, etc.), speaks/listens, Gateway as control plane |
-| [openclaude](/research/ai_coding_agents/openclaude/) | [GitLawB/OpenClaude](https://github.com/GitLawB/OpenClaude) | TypeScript CLI (Node.js) | Claude Code fork with OpenAI-compatible provider shim |
-| [opencode](/research/ai_coding_agents/opencode/) | [anomalyco/opencode](https://github.com/anomalyco/opencode) | TypeScript CLI (Bun) | Open source coding agent — Bun workspaces, parallel tool execution, Turborepo monorepo (upstream of KiloCode) |
-| [qwen-code](/research/ai_coding_agents/qwen-code/) | [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) | TypeScript CLI (Node.js) | Gemini CLI fork, JSONL session history, Skills + SubAgents |
-| [superpowers](/research/ai_coding_agents/superpowers/) | [obra/superpowers](https://github.com/obra/superpowers) | Plugin for coding agents (16 Markdown skills) | Behavioral operating system for agents — skills auto-trigger based on context; includes subagent-driven development with 3-role review (implementer → spec reviewer → code quality reviewer) |
+| [aider](/ai_agents/research/ai_coding_agents/aider/) | [aider.chat](https://aider.chat/) | Python CLI | Repo map, git-autocommit, IDE watch mode |
+| [claude-code-main](/ai_agents/research/ai_coding_agents/claude-code-main/) | (leaked source) | TypeScript CLI | 5-tier context management, server-side cache editing, session memory agent |
+| [kilocode](/ai_agents/research/ai_coding_agents/kilocode/) | [Kilo-Org/kilo](https://github.com/Kilo-Org/kilo) | TypeScript CLI (Bun) | OpenCode fork, Agent Manager (VS Code multi-session panel with git worktrees), Turborepo monorepo |
+| [openclaw](/ai_agents/research/ai_coding_agents/openclaw/) | [openclaw/openclaw](https://github.com/openclaw/openclaw) | TypeScript CLI | Personal AI assistant — multi-channel (WhatsApp, Telegram, Slack, etc.), speaks/listens, Gateway as control plane |
+| [openclaude](/ai_agents/research/ai_coding_agents/openclaude/) | [GitLawB/OpenClaude](https://github.com/GitLawB/OpenClaude) | TypeScript CLI (Node.js) | Claude Code fork with OpenAI-compatible provider shim |
+| [opencode](/ai_agents/research/ai_coding_agents/opencode/) | [anomalyco/opencode](https://github.com/anomalyco/opencode) | TypeScript CLI (Bun) | Open source coding agent — Bun workspaces, parallel tool execution, Turborepo monorepo (upstream of KiloCode) |
+| [qwen-code](/ai_agents/research/ai_coding_agents/qwen-code/) | [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) | TypeScript CLI (Node.js) | Gemini CLI fork, JSONL session history, Skills + SubAgents |
+| [superpowers](/ai_agents/research/ai_coding_agents/superpowers/) | [obra/superpowers](https://github.com/obra/superpowers) | Plugin for coding agents (16 Markdown skills) | Behavioral operating system for agents — skills auto-trigger based on context; includes subagent-driven development with 3-role review (implementer → spec reviewer → code quality reviewer) |
 
 ### Analysis Notebooks
 

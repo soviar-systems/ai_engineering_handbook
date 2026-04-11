@@ -289,5 +289,5 @@ diff
 Untitled.*
 
 # source code of the external research projects (managed by register/unregister)
-research/ai_coding_agents/
-research/ai_infrastructure/
+ai_agents/research/ai_coding_agents/
+ai_agents/research/ai_infrastructure/
