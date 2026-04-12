@@ -62,8 +62,8 @@ Carry-over proposed ADRs (open for review and comment):
     - [Context Management Overview](/ai_agents/architecture/context_management/overview.md) — pattern taxonomy: full history, sliding window, reactive compaction, async summarization, tiered systems
     - [Context Management Comparison](/ai_agents/architecture/context_management/comparison.md) — side-by-side tables across 7 agents: trigger mechanisms, compaction strategies, state preservation, decision guide
     - [Individual agent deep dives](/ai_agents/architecture/context_management/overview.md): Qwen Code (autocompact buffer + /compress), Claude Code (5-tier system), OpenCode (reactive compaction), OpenClaude (5-tier system), Aider (async background summarization), KiloCode (OpenCode fork)
-    - [How Subagents Work](/ai_agents/agent_architecture/how_subagents_work.ipynb) — debunks OS fork/exec myth, documents three real patterns
-    - [Stability Against LLM Drift](/ai_agents/agent_architecture/stability_against_llm_drift.ipynb) — hard guarantees vs soft techniques
+    - [How Subagents Work](/ai_agents/architecture/context_management/how_subagents_work.ipynb) — debunks OS fork/exec myth, documents three real patterns
+    - [Stability Against LLM Drift](/ai_agents/architecture/skills/stability_against_llm_drift.ipynb) — hard guarantees vs soft techniques
     - [Skill Discovery Across Platforms](/ai_agents/architecture/skills/skill_discovery_across_platforms.ipynb) — Superpowers v5.0.7 analysis across 5 platforms
     - [Prompt Brittleness in Skills](/ai_agents/architecture/skills/prompt_brittleness_in_skills.ipynb) — three failure modes with empirically-derived countermeasures
 

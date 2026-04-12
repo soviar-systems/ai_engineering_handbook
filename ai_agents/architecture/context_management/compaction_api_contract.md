@@ -44,7 +44,7 @@ The API does **not** echo back the conversation history. The response contains *
 This means that when a "compaction agent" or "forked agent" makes an API call with a different system prompt, **the old system prompt is not present** — it was never part of the response, and it is not carried over from the previous call. Each API call is a fresh request with exactly one system prompt.
 
 :::{seealso}
-For the broader picture of how subagents work (beyond just compaction), see [How Subagents Actually Work](/ai_agents/agent_architecture/how_subagents_work.ipynb).
+For the broader picture of how subagents work (beyond just compaction), see [How Subagents Actually Work](/ai_agents/architecture/context_management/how_subagents_work.ipynb).
 :::
 
 ## Normal Turn vs. Compaction Turn
@@ -282,5 +282,5 @@ When the compaction API call uses `PROMPT_COMPACTION`, that is the **only** syst
 | Is this enforced by code or LLM compliance? | The message array construction is deterministic code; the summary quality depends on the LLM |
 
 :::{seealso}
-For how agents fight instability when the LLM fails to follow compaction instructions, see [Stability Against LLM Drift](/ai_agents/agent_architecture/stability_against_llm_drift.ipynb).
+For how agents fight instability when the LLM fails to follow compaction instructions, see [Stability Against LLM Drift](/ai_agents/architecture/skills/stability_against_llm_drift.ipynb).
 :::

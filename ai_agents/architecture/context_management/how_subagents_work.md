@@ -170,7 +170,7 @@ The honest assessment from the source analysis:
 > **"It's prompt engineering at scale.** The best available techniques (explicit counters, rationalization tables, commitment devices, hard gates, two-stage review) make it more robust than naive prompting — but it's still fundamentally probabilistic. The system reduces failure rates through empirical testing rather than eliminating them through guarantees."
 
 :::{seealso}
-For a deep dive into how agents fight LLM drift and instruction non-compliance, see [Stability Against LLM Drift](stability_against_llm_drift.ipynb).
+For a deep dive into how agents fight LLM drift and instruction non-compliance, see [Stability Against LLM Drift](/ai_agents/architecture/skills/stability_against_llm_drift.ipynb).
 :::
 
 ### Pattern 3: HTTP Process Management (Actual Processes)
