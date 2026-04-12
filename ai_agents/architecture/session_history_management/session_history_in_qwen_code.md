@@ -10,20 +10,6 @@ date: 2026-04-03
 options:
   version: 0.1.0
   birth: 2026-04-03
-jupyter:
-  jupytext:
-    cell_metadata_filter: -all
-    formats: md,ipynb
-    main_language: typescript
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.19.1
-  kernelspec:
-    display_name: Python 3 (ipykernel)
-    language: python
-    name: python3
 ---
 
 # Session History in Qwen Code

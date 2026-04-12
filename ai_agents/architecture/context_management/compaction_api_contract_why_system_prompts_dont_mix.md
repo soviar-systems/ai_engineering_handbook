@@ -11,16 +11,6 @@ options:
   version: "1.0.0"
   birth: "2026-04-08"
   type: guide
-jupyter:
-  jupytext:
-    cell_metadata_filter: -all
-    formats: md,ipynb
-    main_language: python
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.19.1
 ---
 
 # The Compaction API Contract: Why System Prompts Don't Mix
@@ -44,7 +34,7 @@ The API does **not** echo back the conversation history. The response contains *
 This means that when a "compaction agent" or "forked agent" makes an API call with a different system prompt, **the old system prompt is not present** — it was never part of the response, and it is not carried over from the previous call. Each API call is a fresh request with exactly one system prompt.
 
 :::{seealso}
-For the broader picture of how subagents work (beyond just compaction), see [How Subagents Actually Work](/ai_agents/architecture/context_management/how_subagents_work.ipynb).
+For the broader picture of how subagents work (beyond just compaction), see [How Subagents Actually Work](/ai_agents/architecture/context_management/how_subagents_actually_work_myth_of_process_spawning.md).
 :::
 
 ## Normal Turn vs. Compaction Turn
@@ -282,5 +272,5 @@ When the compaction API call uses `PROMPT_COMPACTION`, that is the **only** syst
 | Is this enforced by code or LLM compliance? | The message array construction is deterministic code; the summary quality depends on the LLM |
 
 :::{seealso}
-For how agents fight instability when the LLM fails to follow compaction instructions, see [Stability Against LLM Drift](/ai_agents/architecture/skills/stability_against_llm_drift.ipynb).
+For how agents fight instability when the LLM fails to follow compaction instructions, see [Stability Against LLM Drift](/ai_agents/architecture/skills/stability_in_a_probabilistic_substrate_how_agents_fight_llm_drift.md).
 :::

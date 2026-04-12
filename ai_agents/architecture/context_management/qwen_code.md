@@ -19,7 +19,7 @@ options:
 **Analysis date:** 2026-04-05
 
 :::{note}
-This document focuses on Qwen-Code's **context window management** — the `/compress` mechanism, autocompact buffer, token limits, and history reconstruction. For the JSONL session format, file storage, and session management mechanics, see [Session History in Qwen Code](../session_history_management/session_history_in_qwen_code.ipynb).
+This document focuses on Qwen-Code's **context window management** — the `/compress` mechanism, autocompact buffer, token limits, and history reconstruction. For the JSONL session format, file storage, and session management mechanics, see [Session History in Qwen Code](/ai_agents/architecture/session_history_management/session_history_in_qwen_code.md).
 :::
 
 ## Architecture Overview
@@ -175,7 +175,7 @@ On success, a `system` record with subtype `chat_compression` is appended to the
 
 **Original UI history records are NOT mutated** — the compression checkpoint allows session resumption to reconstruct the compressed model-facing history.
 
-See [Session History in Qwen Code](../session_history_management/session_history_in_qwen_code.ipynb) for the full JSONL format details.
+See [Session History in Qwen Code](/ai_agents/architecture/session_history_management/session_history_in_qwen_code.md) for the full JSONL format details.
 
 ## API History Reconstruction
 
@@ -204,7 +204,7 @@ function buildApiHistoryFromConversation(records: ChatRecord[]): Content[] {
 
 Optionally strip `thought: true` parts from the history (default: enabled).
 
-See [Session History in Qwen Code](../session_history_management/session_history_in_qwen_code.ipynb) for the full JSONL format details.
+See [Session History in Qwen Code](/ai_agents/architecture/session_history_management/session_history_in_qwen_code.md) for the full JSONL format details.
 
 ## Orphaned Entry Stripping
 

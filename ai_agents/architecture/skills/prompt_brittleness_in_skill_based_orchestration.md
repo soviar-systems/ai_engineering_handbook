@@ -11,16 +11,6 @@ options:
   type: guide
   birth: 2026-04-10
   version: 1.0.0
-jupyter:
-  jupytext:
-    cell_metadata_filter: -all
-    formats: md,ipynb
-    main_language: python
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.19.1
 ---
 
 # Prompt Brittleness in Skill-Based Orchestration

@@ -11,16 +11,6 @@ options:
   version: "1.0.0"
   birth: "2026-04-08"
   type: guide
-jupyter:
-  jupytext:
-    cell_metadata_filter: -all
-    formats: md,ipynb
-    main_language: python
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.19.1
 ---
 
 # Stability in a Probabilistic Substrate: How Agents Fight LLM Drift
@@ -34,7 +24,7 @@ There is no `assert` that can fail hard on LLM behavior. No type system can guar
 The question is not "how do we eliminate failures?" — it is "how do we reduce failure rates to acceptable levels?"
 
 :::{seealso}
-For the mechanics of how subagents are spawned and how compaction works at the API level, see [How Subagents Actually Work](/ai_agents/architecture/context_management/how_subagents_work.ipynb) and [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract.ipynb).
+For the mechanics of how subagents are spawned and how compaction works at the API level, see [How Subagents Actually Work](/ai_agents/architecture/context_management/how_subagents_actually_work_myth_of_process_spawning.md) and [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract_why_system_prompts_dont_mix.md).
 :::
 
 ## What's Actually Reliable vs. What Isn't

@@ -11,16 +11,6 @@ options:
   version: "1.0.0"
   birth: "2026-04-08"
   type: guide
-jupyter:
-  jupytext:
-    cell_metadata_filter: -all
-    formats: md,ipynb
-    main_language: python
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.19.1
 ---
 
 # How Subagents Actually Work: The Myth of Process Spawning
@@ -50,7 +40,7 @@ Client code:
 ```
 
 :::{seealso}
-For the detailed breakdown of how the API contract works — why system prompts don't mix, what the response actually contains, and how the summary replaces history — see [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract.ipynb).
+For the detailed breakdown of how the API contract works — why system prompts don't mix, what the response actually contains, and how the summary replaces history — see [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract_why_system_prompts_dont_mix.md).
 :::
 
 **OpenCode compaction agent** — the most explicit example:
@@ -170,7 +160,7 @@ The honest assessment from the source analysis:
 > **"It's prompt engineering at scale.** The best available techniques (explicit counters, rationalization tables, commitment devices, hard gates, two-stage review) make it more robust than naive prompting — but it's still fundamentally probabilistic. The system reduces failure rates through empirical testing rather than eliminating them through guarantees."
 
 :::{seealso}
-For a deep dive into how agents fight LLM drift and instruction non-compliance, see [Stability Against LLM Drift](/ai_agents/architecture/skills/stability_against_llm_drift.ipynb).
+For a deep dive into how agents fight LLM drift and instruction non-compliance, see [Stability Against LLM Drift](/ai_agents/architecture/skills/stability_in_a_probabilistic_substrate_how_agents_fight_llm_drift.md).
 :::
 
 ### Pattern 3: HTTP Process Management (Actual Processes)
@@ -209,7 +199,7 @@ Each API call sends the full conversation history. The LLM has no memory between
 The response contains **only the new assistant message** — not the input history. This is how LLM APIs work: stateless request/response.
 
 :::{seealso}
-For the detailed API contract explanation — why system prompts don't mix, what the response contains, and how history replacement works — see [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract.ipynb).
+For the detailed API contract explanation — why system prompts don't mix, what the response contains, and how history replacement works — see [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract_why_system_prompts_dont_mix.md).
 :::
 
 ## Summary Table
