@@ -1,3 +1,226 @@
+release 3.0.0
+* **New Features:**
+    - Consolidate all agent content under ai_agents/
+        - Moved: ai_agents/{context_management,session_history_management,skills,tooling}/ → ai_agents/architecture/
+        - Moved: tools/docs/ai_agents/*.md → ai_agents/guides/
+        - Removed: tools/docs/ai_agents/ (empty parent)
+        - Updated: 0_intro/00_onboarding.{md,ipynb}
+        - Updated: ai_agents/README.md
+        - Updated: ai_agents/agent_architecture/{how_subagents_work,stability_against_llm_drift}.{md,ipynb}
+        - Updated: ai_agents/architecture/skills/skill_discovery_across_platforms.{md,ipynb}
+        - Updated: RELEASE_NOTES.md
+        - Updated: ai_agents/guides/claude/creating_consultant_skills.md
+    - Register research/ directories for external source code repos
+        - Updated: .vadocs/validation/external-repos.conf.json
+        - Updated: tools/scripts/paths.py
+        - Updated: .gitignore
+        - Updated: myst.yml
+    - Support sub-bullet format in commit body validation
+        - Updated: tools/scripts/validate_commit_msg.py
+        - Updated: tools/tests/test_validate_commit_msg.py
+    - Agent repo management script — clone, update, list agents_source_code
+        - Created: tools/scripts/manage_agent_repos.py — CLI with setup/update/list commands so agents can refresh agent source code before research sessions without manual git operations; follows ADR-26045 contract docstrings; warns about SSH passphrase interleaving in --parallel mode; shows branch name per-repo so operator confirms correct branches are updated
+        - Created: tools/tests/test_manage_agent_repos.py — 19 tests, 85% coverage; covers discovery, CLI parsing, setup/update edge cases; non-brittle assertions test exit codes not message text, semantic contracts over exact string matching
+        - Updated: tools/scripts/git.py — extracted clone/pull/status into shared git.py so other scripts can reuse git operations instead of duplicating subprocess calls; added 8 tests; expanded docstring per ADR-26045
+        - Updated: tools/tests/test_git.py — added TestCloneRepo, TestPullRepo, TestGetRepoStatus (8 tests); brings git.py to 16 total tests, 79% coverage
+        - Updated: README.md — added manage_agent_repos.py to Toolchain & CI/CD so external readers see the complete toolchain
+    - Block prompt compilation architecture analysis
+        - Created: architecture/evidence/sources/S-26020_block_prompt_architecture_and_heuer_brainstorm.md — session transcript of Heuer brainstorm + block architecture design
+        - Created: architecture/evidence/analyses/A-26021_block_prompt_compilation_architecture.md — analysis extracting 7 insights from 85-90% prompt overlap, formalizing kernel+persona factoring
+    - ADR conditional validation and index duplicate detection
+        - Updated: .vadocs/types/adr.conf.json — added conditional_sections (rejected→Rejection Rationale, superseded→Supersession Rationale, deprecated→Deprecation Rationale), conditional_fields (superseded→superseded_by required), min_conditional_section_words: 3
+        - Updated: .vadocs/conf.json — added 'development' tag for AI-native development ADRs, changed 'spoke configs' to 'child configs' in comments to avoid cross-repo terminology collision
+        - Updated: .vadocs/README.md — changed 'Spoke configs' to 'Child configs' for intra-repo config hierarchy
+        - Updated: .vadocs/types/evidence.conf.json — added TD-005 sub-type resolution comment documenting artifact_types structure
+        - Updated: .pre-commit-config.yaml — relaxed check-script-suite files regex from triad (script+test+doc) to dyad (script+test), added stages: [pre-commit] to test hooks
+        - Updated: tools/scripts/check_adr.py — added validate_conditional_fields() for superseded_by ADR reference validation, added validate_conditional_section_content() for minimum word count (catches empty/TBD), extended validate_sections() with inverse check for missing conditional sections, added duplicate ADR detection in fix_index() with status/primary_tag location reporting
+        - Updated: tools/scripts/check_frontmatter.py — added _resolve_subtype_rules() to merge common + sub-type required_fields from artifact_types, updated load_config_chain() to call sub-type resolution for analysis/retrospective/source
+        - Updated: tools/scripts/check_script_suite.py — removed check_doc_staged(), check_doc_rename(), DOCS_DIR, CONFIG_FILES; updated module docstring for dyad convention
+        - Updated: tools/scripts/paths.py — added SUBTYPE_PARENT_MAP (analysis/retrospective/source → evidence), updated get_config_path() to resolve sub-types to parent config
+        - Updated: tools/tests/test_check_adr.py — added TestConditionalSectionsMissing (5 tests), TestValidateConditionalFields (5 tests), TestConditionalSectionContent (5 tests), TestFixIndexDuplicateDetection (2 non-brittle tests with high ADR numbers and semantic assertions, mocks INDEX_PATH to avoid corrupting real index)
+        - Updated: tools/tests/test_check_frontmatter.py — added 6 config-driven tests for sub-type resolution using module's get_config_path() instead of hardcoded paths
+        - Updated: tools/tests/test_check_script_suite.py — removed TestCheckDocStaged/TestCheckDocRename classes, updated TestCheckNamingConvention and TestMain for dyad convention
+        - Created: architecture/adr/adr_26045_ai_native_development_code_as_primary_documentation.md — contract docstrings mandatory ecosystem-wide, supersedes ADR-26011 triad
+        - Created: architecture/evidence/analyses/A-26020_ai_native_development_code_as_primary_documentation.md — evidence analysis justifying ADR-26045
+        - Updated: architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md — status: superseded, superseded_by: ADR-26045, added ## Supersession Rationale
+        - Updated: architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md — added ## Rejection Rationale, token_size: 2500
+        - Updated: architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md — added ## Supersession Rationale, token_size: 3200
+        - Updated: architecture/adr/adr_26007_formalization_of_phase_0_intent_synthesi.md — added ## Supersession Rationale, token_size: 2800
+        - Updated: architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md — added ## Supersession Rationale, token_size: 3000
+        - Updated: architecture/adr/adr_26018_universal_yaml_frontmatter_adoption.md — added ## Supersession Rationale, token_size: 2600
+        - Updated: architecture/adr/adr_26019_mirroring_yaml_metadata_to_document_body.md — added ## Supersession Rationale, token_size: 4500
+        - Updated: architecture/adr_index.md — added ADR-26045 entry under development section
+        - Updated: architecture/architecture_decision_workflow_guide.md — added Version Semantics section (0.x.y for proposed, ≥1.0.0 for accepted)
+    - Add Qwen JSON export converter, S-26019, and A-26019
+        - Created: tools/scripts/convert_qwen_json_export_to_md.py — Qwen chat export JSON to S-YYNNN evidence source converter with thread reconstruction, content_list phase filtering, auto-ID from git history
+        - Created: tools/tests/test_convert_qwen_json_export_to_md.py — 41 tests, 93% coverage, self-diagnosing assertions, format-documenting fixtures
+        - Updated: tools/scripts/git.py — added get_historical_paths() for scanning deleted files in git history
+        - Updated: tools/docs/scripts_instructions/git_py_script.md — added get_historical_paths to public interface and usage table
+        - Created: .claude/skills/convert-qwen-export/SKILL.md — utility skill with CLI reference and never-read-JSON workflow
+        - Created: tools/docs/scripts_instructions/convert_qwen_json_export_to_md_py_script.md — placeholder pending TD-004 triad relaxation
+        - Created: architecture/evidence/sources/S-26019_integrating_heuer_methodology_into_consultant_prom.md — Qwen 3.5 dialogue on Heuer methodology integration (14 messages)
+        - Created: architecture/evidence/analyses/A-26019_heuer_methodology_integration_for_consultant_prompts.md — 7 insights: instructions-not-RAG, transformer satisficing hypothesis, ACH mapping, Qwen refined prompt in Appendix
+        - Updated: .vadocs/types/evidence.conf.json — added Appendix to allowed analysis sections
+        - Fixed: tools/tests/test_check_evidence.py — orphan test used hardcoded date that aged past 30-day threshold, replaced with relative date
+        - Updated: tools/docs/scripts_instructions/check_evidence_py_script.md — version bump for test fix (triad)
+* **Bug Fixes:**
+    - CI broken links — remove local paths to external repos
+        - Updated: ai_agents/README.md
+        - Updated: tools/scripts/paths.py
+    - Use word boundaries in changelog exclusion patterns
+        - Refactored: tools/scripts/generate_changelog.py — _matches_exclude_pattern uses regex word boundaries so partial matches like openclaude.md no longer hit the 3-agent config patterns; dot-prefixed patterns handled without boundary prefix
+        - Added: tools/tests/test_generate_changelog.py — 2 tests to TestExcludePatterns (false positive prevention, special char prefix matching)
+    - Do not ignore RELEASE_NOTES.md in deploy workflow
+        - Updated: .github/workflows/deploy.yml — Removed `RELEASE_NOTES.md` from `paths-ignore` to ensure it's included in deployments.
+* **Documentation:**
+    - Fix broken consultant links and add consultants README
+        - Created: ai_system_layers/3_prompts/consultants/README.md — usage guide and consultant catalog for daily work and sharing
+        - Deleted: .claude/skills/ — all 6 Claude Code skills removed; JSON prompts used directly (tool-agnostic)
+        - Updated: RELEASE_NOTES.md — ai_systems_consultant_hybrid.json → ai_systems_consultant.json
+        - Updated: README.md — same link fix for v2.8.0 What's New section
+        - Updated: architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md — local_ai_systems_consultant.json → ai_systems_consultant.json (2 occurrences)
+        - Updated: architecture/post-mortems/ReadMe.md — same link fix
+        - Updated: architecture/post-mortems/nbdiff/post_mortem_architectural_flaws_in_nbdiff_centric.md — same link fix
+        - Updated: architecture/evidence/analyses/A-26003_sva_constraint_framework_design.md — consolidated 3 deleted consultant refs into 2 canonical refs
+    - Formalize sub-bullet format in commit body standard
+        - Updated: tools/docs/git/01_production_git_workflow_standards.{md,ipynb}
+    - Split skills guide into discovery and prompt brittleness analyses
+        - Renamed: ai_agents/skills/how_skills_are_indexed_and_brittleness_problem.* → prompt_brittleness_in_skills.*
+        - Added: ai_agents/skills/skill_discovery_across_platforms.*
+    - Update repo references from agents_source_code to research/
+        - Updated: README.md
+        - Updated: ai_agents/README.md
+    - Three cross-referenced articles on subagent internals
+        - Created: ai_agents/agent_architecture/how_subagents_work.md — debunks OS fork/exec myth, three real patterns (separate API calls, prompt role orchestration, HTTP process management)
+        - Created: ai_agents/context_management/compaction_api_contract.md — stateless API contract, why system prompts don't mix, code evidence from Qwen Code/OpenCode/Claude Code
+        - Created: ai_agents/agent_architecture/stability_against_llm_drift.md — hard guarantees (tool denial, circuit breakers) vs soft techniques (HARD-GATE tags, rationalization tables)
+    - Add OpenClaude context management analysis
+        - Created: ai_agents/context_management/openclaude.md — deep dive into OpenClaude's 5-tier context management system
+        - Updated: ai_agents/context_management/overview.md — added OpenClaude to agent count (6→7) and guide structure
+        - Updated: ai_agents/context_management/comparison.md — added OpenClaude rows to all comparison tables
+    - Manage_agent_repos.py reference in ai_agents/README
+        - Updated: ai_agents/README.md — Added workflow section pointing to manage_agent_repos.py --help for evergreen usage docs, separated repo management from research process
+    - MemPalace assessment, source artifact, and tooling handbook
+        - Created: architecture/evidence/sources/S-26022_mempalace_framework_assessment.md — full 10-exchange dialogue covering MemPalace overview, RAG comparison, frontmatter similarity, WRC assessments for mentor_generator and local-vs-cloud split, Qwen Code integration workflow
+        - Created: architecture/evidence/analyses/A-26023_mempalace_role_development_vs_application_memory.md — analysis extracting unified engine conclusion, MemPalace's actual ecosystem role, local-vs-cloud split rejection, and open questions for JSONL mining and retrieval benchmark
+        - Created: ai_agents/tooling/mempalace_ai_memory_system.md — handbook reference covering palace structure, retrieval performance, manual/agentic/API usage modes, 19 MCP tools table, known issues, frontmatter 3-tier comparison table, ecosystem placement, and Qwen Code MCP integration
+    - Restructure ai_system_layers + ai_agents, relocate command for consumer sync
+        - Renamed: ai_system/ -> ai_system_layers/ — agents are assembled products, not a component layer; resolves category error identified in A-26022
+        - Moved: ai_system_layers/6_agents/ -> ai_agents/ — removes 6_ prefix so agents sit at repo root as the car, not a layer in the engine catalog
+        - Updated: 0_intro/00_onboarding.md — broken links after ai_system/ rename, readers need working paths to layer content
+        - Updated: 0_intro/a_multi_layered_ai_system_architecture.md — broken links after ai_system/ rename
+        - Updated: 0_intro/ai_further_reading.md — broken links after ai_system/ rename
+        - Updated: 0_intro/ai_systems_grounding_in_computing_disciplines.md — broken links after ai_system/ rename
+        - Updated: ai_agents/README.md — removed 6_ prefix from structure diagram, added car vs engine parts rationale so readers understand why agents are not a layer
+        - Updated: README.md — structure diagram and consultant prompt paths stale after rename, migration notice in What's new for readers upgrading
+        - Updated: RELEASE_NOTES.md — broken links to prompt format, token economics, appendix notebooks and consultant JSON files after rename; readers need healthy links
+        - Updated: architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md — broken link to model taxonomy notebook after rename
+        - Updated: architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md — broken link to model taxonomy notebook after rename
+        - Updated: architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md — broken link to model taxonomy notebook after rename
+        - Updated: architecture/adr/adr_26038_context_engineering_as_core_design_principle.md — broken links to prompt format and algebra notebooks after rename
+        - Updated: architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md — consultant prompt JSON paths stale after rename
+        - Updated: architecture/adr/adr_26023_myst_aligned_frontmatter_standard.md — broken link to frontmatter article after rename
+        - Updated: architecture/adr/adr_26018_universal_yaml_frontmatter_adoption.md — broken link to frontmatter article after rename
+        - Updated: architecture/evidence/analyses/A-26003_sva_constraint_framework_design.md — consultant prompt JSON paths stale after rename
+        - Updated: architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md — broken link to algebra notebook after rename
+        - Updated: architecture/evidence/analyses/A-26006_agent_runtime_architecture_rag_infrastructure.md — broken link to prompt format notebook after rename
+        - Updated: architecture/evidence/analyses/A-26016_causal_masking_attention_mechanics_for_prompt_engineering.md — broken link to prompt format notebook after rename
+        - Updated: architecture/evidence/analyses/A-26017_yaml_serializer_variance_token_economics.md — broken links to prompt format, token economics, and appendix notebooks after rename
+        - Updated: architecture/evidence/analyses/A-26018_xml_tags_scope_isolation_prompt_architecture.md — broken link to prompt format notebook after rename
+        - Updated: architecture/evidence/analyses/A-26021_block_prompt_compilation_architecture.md — broken links to prompt format, token economics, and appendix notebooks after rename
+        - Updated: tools/scripts/manage_agent_repos.py — single hardcoded path could not handle future renames; multi-dir registry + relocate command updates registry and consumer files atomically so next rename does not silently break exclusions (ADR-26046)
+        - Updated: tools/tests/test_manage_agent_repos.py — new tests for relocate, multi-dir, and register commands; existing tests updated for EXTERNAL_REPO_DIRS rename so CI catches future path drift
+        - Updated: tools/scripts/paths.py — exclusion constants hardcoded and duplicated across scripts; get_external_repo_paths now reads from registry so paths.py is a consumer, not a source of truth
+        - Updated: .vadocs/validation/external-repos.conf.json — added consumers list per entry so relocate knows which files to update (ADR-26046)
+        - Updated: .gitignore — path stale after rename, external agent repos would leak into git tracking without this fix
+        - Updated: myst.yml — path stale after rename, external agent repos would be included in documentation build without this fix
+    - Agents restructuring analysis, session extraction guide, and implementation plan
+        - Created: architecture/evidence/analyses/A-26022_agents_break_the_layer_model.md — Heuer-style hypothesis testing justifying ai_system/ → ai_system_layers/ and 6_agents/ → ai_agents/; agents are products, not components, which makes the six-layer numbering a category error
+        - Created: architecture/evidence/sources/S-26021_agents_repo_restructuring_discussion.md — Full discussion transcript extracted from JSONL session log; preserves the decision-making context for future sessions that execute the plan
+        - Updated: ai_system/6_agents/session_history_management/session_history_in_qwen_code.md (and .ipynb) — Added 7 JSONL extraction recipes (text messages, assistant responses, tool calls, compression checkpoints, keyword search, session stats, tree reconstruction); the restructuring discussion was extracted from the JSONL and this section documents how so future sessions can do the same without guesswork
+    - Context management guide for 6 coding agents + agents tag
+        - Created: ai_system/6_agents/context_management/overview.md — core insight: full history pattern, compaction taxonomy
+        - Created: ai_system/6_agents/context_management/comparison.md — side-by-side tables, decision guide
+        - Created: ai_system/6_agents/context_management/aider.md — async background summarization deep dive
+        - Created: ai_system/6_agents/context_management/claude_code.md — 5-tier system deep dive
+        - Created: ai_system/6_agents/context_management/openclaw.md — sliding window + auto-compaction deep dive
+        - Created: ai_system/6_agents/context_management/opencode.md — reactive compaction deep dive
+        - Created: ai_system/6_agents/context_management/kilocode.md — OpenCode fork pointer page
+        - Created: ai_system/6_agents/context_management/qwen_code.md — autocompact buffer + /compress deep dive
+        - Updated: ai_system/6_agents/README.md — added context_management/ dir, claude-code-main entry, key learnings
+        - Updated: .vadocs/conf.json — added 'agents' tag for source-level analysis of external AI coding agents
+    - Document agent research methodology and repo inventory
+        - Created: ai_system/6_agents/README.md — hub documenting 7 repos (aider, kilocode, openclaw, openclaude, opencode, qwen-code, superpowers), structure, workflow, and cross-agent learnings
+        - Updated: myst.yml — exclude agents_source_code from MyST content glob
+    - Vim AI setup — add troubleshooting section and modernize frontmatter
+        - Added: tools/docs/ai_agents/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.md — new §6 "Troubleshooting: Python & Connection Errors" covering ModuleNotFoundError fix with uv venv/pip and debugging/logging configuration
+        - Updated: tools/docs/ai_agents/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.md — migrate frontmatter from legacy body block to modern MyST-native format (title, authors, date, description, tags at top level; type, birth, version under options), remove duplicate metadata block from body, bump version 0.3.4 → 0.3.5
+    - Add skills indexing and brittleness analysis for Superpowers
+        - Created: ai_system/6_agents/skills/how_skills_are_indexed_and_brittleness_problem.md — analyze obra/superpowers v5.0.7 skill discovery mechanisms across 5 platforms (Claude Code, OpenCode, Codex, Cursor, Gemini CLI) and document three failure modes (context limits, instruction drift, hallucination/skipping) with empirically-derived countermeasures (HARD-GATE tags, rationalization tables, two-stage review)
+    - What_kv_cache_actually_contains.md — add Q, K, V deep dive subsection
+        - Added: ai_system/1_execution/what_kv_cache_actually_contains.md — new §1.1 explaining Query/Key/Value projections with database analogy, lifecycle (why Q is ephemeral, K/V persist), multi-head decomposition, and what K/V vectors encode conceptually
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — renumbered existing subsections 1.1–1.4 → 1.2–1.5, bumped version 1.0.0 → 1.1.0
+    - Fix KV Cache Internals technical accuracy and add frontmatter
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — add YAML frontmatter (title, authors, date, description, tags, options per ADR-26042)
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — fix GQA weight matrix dimensions in Section 1.1 diagram ([6×1024] not [6×4096])
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — fix inconsistent FLOP counts (5.8/1.6 GFLOPs → 6.5 GFLOPs with ~14 GFLOPs full roofline); cite Chen et al. 2024
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — fix FlashAttention complexity claim (O(N²) FLOPs not O(N) — reduces HBM IO not compute); cite Dao et al. 2022
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — fix SwiGLU FFN FLOP count (2-matrix 180M → 3-matrix gate+up+down 135M per layer)
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — fix autoregressive complexity notation (O(N²×steps) → O(N³) with :::{math} summation formula)
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — split Section 1.3 table into FP16 (won't fit) vs Q4_K_M (fits) scenarios
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — fix bandwidth ratio (20-30× → 10-60×) to match stated HBM/CPU RAM ranges
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — remove orphaned code fence after Section 4.1 {note} admonition
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — qualify radix tree memory savings claim with workload dependency
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — add arXiv source citations to KV cache compression table (StreamingLLM, H2O, SnapKV, PyramidKV)
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — fix PagedAttention fragmentation claim (eliminates external only; bounded internal remains)
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — add arithmetic intensity context (~2 FLOP/byte FP16 vs H100's ~295 FLOP/byte threshold)
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — convert O(N²)/O(N³) to LaTeX math notation outside code fences; add :::{math} block
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — move {ref} cross-reference outside code fence in Section 1.1
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — fix arXiv link for StreamingLLM (2309.1745 → 2309.17453)
+        - Updated: ai_system/1_execution/what_kv_cache_actually_contains.md — fix arXiv link for SnapKV (2404.14661 → 2404.14469)
+        - Renamed: ai_system/1_execution/kv_cache_internals.md → ai_system/1_execution/what_kv_cache_actually_contains.md (full title, no truncation via format_string.py)
+    - Add Qwen Code TypeScript vs Python rationale article
+        - Created: ai_system/6_agents/tooling/why_qwen_code_uses_typescript_not_python.md — technical rationale for TypeScript implementation, Node.js built-in modules, and guidance for building custom agents
+    - Add KV Cache Internals deep-dive document
+        - Created: ai_system/1_execution/kv_cache_internals.md — peer-reviewed deep-dive on KV cache internals (what tensors are cached, attention math, prefix caching, hardware constraints, provider implementations)
+    - Add Qwen Code session history guide
+        - Created: ai_system/6_agents/session_history_management/session_history_in_qwen_code.md — technical reference on JSONL session format, data structures, write mechanisms, compression, and session management
+    - Flag format-as-semantic-contract as open research question
+        - Updated: ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.md — added open question blockquote in Section 4 flagging model-specific format semantics as unvalidated hypothesis
+    - Restore RELEASE_NOTES.md to markdown links
+        - Updated: RELEASE_NOTES.md — revert {term} ADR refs to markdown links (bae9d87 partial revert)
+* **Maintenance:**
+    - Remove extracted ephemeral source files
+        - Deleted: architecture/evidence/sources/S-26013 through S-26022 — all insights extracted into analyses (A-26011, A-26015-A-26019, A-26021-A-26023)
+        - Kept: S-26012 (database ADR reference), S-26015 (peer review with unextracted content)
+    - Consolidate consultant prompts — rename hybrid, delete unused
+        - Renamed: ai_system_layers/3_prompts/consultants/ai_systems_consultant_hybrid.json → ai_systems_consultant.json — dropped _hybrid suffix (content unchanged, v0.2.0)
+        - Deleted: ai_system_layers/3_prompts/consultants/local_ai_systems_consultant.json — superseded by unified ai_systems_consultant.json (v0.14.0)
+        - Deleted: ai_system_layers/3_prompts/consultants/python_test_architect.json — superseded by ai_system_layers/3_prompts/consultants/sv-python-test-architect Claude Code skill
+    - Consolidate CHANGELOG and remove redundant CHANGELOG.md
+        - Created: CHANGELOG — merged v1.0.0–v2.7.0 history from CHANGELOG.md into canonical CHANGELOG (no extension), preserving all 10 release entries
+        - Deleted: CHANGELOG.md — stale artifact from inconsistent release workflow (v2.6.0/v2.7.0 used .md, v2.5.0/v2.8.0 used bare filename)
+        - Updated: myst.yml — removed CHANGELOG.md from exclude list (file no longer exists)
+        - Updated: architecture/evidence/analyses/A-26008_frontmatter_standard_taxonomy_audit.md — corrected CHANGELOG.md → CHANGELOG reference
+    - Add .qwen/ to .gitignore
+        - Updated: .gitignore
+    - Move research/ under ai_agents/ and update registry
+        - Updated: .vadocs/validation/external-repos.conf.json
+        - Updated: .gitignore
+        - Updated: myst.yml
+        - Updated: ai_agents/README.md
+    - Exclude agents_source_code from validation and git tracking
+        - Updated: .gitignore — add ai_system/6_agents/agents_source_code/ (external agent source code)
+        - Updated: tools/scripts/paths.py — replace "dist" with "ai_system/6_agents/agents_source_code" in VALIDATION_EXCLUDE_DIRS, format API_KEYS_PLACEHOLDER_INDICATORS set multiline
+    - Extend changelog exclusion patterns
+        - Updated: pyproject.toml — extended changelog-exclude-patterns for AI agent context files
+* **Refactoring:**
+    - Rename manage_agent_repos to manage_external_repos and generalize for any external research project
+        - Renamed: tools/scripts/manage_agent_repos.py → tools/scripts/manage_external_repos.py
+        - Renamed: tools/tests/test_manage_agent_repos.py → tools/tests/test_manage_external_repos.py
+        - Updated: tools/scripts/manage_external_repos.py
+        - Added: tools/tests/test_manage_external_repos.py
+
 release 2.8.0
 * **New Features:**
     - Update ai_brainstorming_colleague to v0.2.0

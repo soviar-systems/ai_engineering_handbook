@@ -1,5 +1,103 @@
 # Release Notes
 
+## release v3.0.0 "The Agents Emerge"
+
+### Summary of Changes
+
+v2.8.0 established prompt format as empirical science and operationalized the governance infrastructure. v3.0.0 extends the research program to the tools that built it — **the AI coding agents themselves become the objects of study.**
+
+This release delivers a systematic comparative analysis of 7 open-source agent codebases (Qwen Code, Claude Code, OpenCode, OpenClaude, Aider, KiloCode, Superpowers) — their context management strategies, skill discovery mechanisms, and stability against LLM drift. The central finding challenges the repository's own structure: agents are not another layer in the stack, they are the *product* that assembles all layers. This drove a reorganization — `ai_system/` becomes `ai_system_layers/` (clarifying that layers are components), and a new `ai_agents/` directory appears at the repo root as the consumer of all layers.
+
+Four strategic themes define v3.0.0:
+
+1. **Context Engineering Across 7 Agents** — The first cross-agent empirical guide: [ai_agents/context_management/](/ai_agents/architecture/context_management/overview.md) covers how every major open-source coding agent handles conversation history, compaction, and state management. The central insight: every agent uses a fundamentally different strategy — sliding windows, reactive compaction, async background summarization, multi-tier systems — and understanding these differences is essential for choosing the right tool. The comparison tables and decision guide help practitioners navigate this fragmented landscape without trial-and-error.
+
+2. **Agent Architecture Demystified** — Three articles answer questions every practitioner has: How do subagents actually work? (Spoiler: not OS fork/exec — three real patterns: separate API calls, prompt role orchestration, HTTP process management.) What keeps agents stable when LLM outputs drift? (Hard guarantees like tool denial and circuit breakers, not soft techniques like tag conventions.) Why does Qwen Code use TypeScript, not Python? (Async I/O dominance and shell command architecture.) These are not opinions — they are extracted from source code evidence.
+
+3. **Code as Primary Documentation** — The ecosystem adopts a principle that follows directly from context engineering: **every source file must open with a contract docstring** in its language's native format. When agents are your primary code consumers, every token of documentation competes with code for their attention budget. Code with outdated docstrings fails at import time. Prose docs that contradict code pass CI silently. The contract docstring — "what does a future agent need to read first to work safely in this file?" — is the only documentation layer that stays correct by construction.
+
+4. **Skills Discovery and Prompt Brittleness** — Analysis of Superpowers v5.0.7's skill system across 5 agent platforms reveals three failure modes (context limits, instruction drift, hallucination/skipping) and empirically-derived countermeasures (HARD-GATE tags, rationalization tables, two-stage review). This is not theoretical — these are countermeasures that survived contact with real agent sessions.
+
+### Architecture Decisions
+
+*   **[ADR-26045: AI-Native Development — Code as Primary Documentation](architecture/adr/adr_26045_ai_native_development_code_as_primary_documentation.md) — Accepted**:
+    Every source file in the ecosystem must open with a contract docstring answering: "What does a future agent need to read first to work safely in this file?" This is not a coding style preference — it is a consequence of context engineering. Agents are stateless, context-constrained, and read code as fluently as prose. Redundant documentation that paraphrases code is a context window tax. Code structure + contract docstrings + test suites provide CI-verified, co-located, refactoring-safe documentation.
+
+*   **[ADR-26046: External Product Repos as Research Directories](architecture/adr/adr_26046_external_product_repos_as_research_directories.md) — Proposed**:
+    Governs how external product source code is cloned and tracked for comparative research. Defines a centralized path registry with relocation safety — when a research directory moves, the registry and all consumer files update atomically. This prevents the silent breakage that occurs when external repos change paths.
+
+### Accepted ADRs (Promoted in This Release)
+
+| ADR | Title | Theme |
+| :--- | :--- | :--- |
+| [ADR-26045](architecture/adr/adr_26045_ai_native_development_code_as_primary_documentation.md) | AI-Native Development — Code as Primary Documentation | Development |
+
+### Open RFCs (Proposed ADRs)
+
+New proposed ADRs introduced in this release:
+
+| ADR | Title | Theme |
+| :--- | :--- | :--- |
+| [ADR-26046](architecture/adr/adr_26046_external_product_repos_as_research_directories.md) | External Product Repos as Research Directories | Governance |
+
+Carry-over proposed ADRs (open for review and comment):
+
+| ADR | Title | Theme |
+| :--- | :--- | :--- |
+| [ADR-26042](architecture/adr/adr_26042_common_frontmatter_standard.md) | Common Frontmatter Standard | Governance |
+| [ADR-26036](architecture/adr/adr_26036_config_file_location_and_naming_conventions.md) | Config File Location and Naming Conventions | Governance |
+| [ADR-26043](architecture/adr/adr_26043_ecosystem_package_boundary.md) | Ecosystem Package Boundary | Governance |
+| [ADR-26039](architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md) | pgvector as Ecosystem Database Standard | Data Infrastructure |
+| [ADR-26041](architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md) | Client-Side Logic with Server-Side Retrieval | Data Infrastructure |
+| [ADR-26032](architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md) | Tiered Cognitive Memory: Procedural Skills vs. Declarative RAG | Skills Architecture |
+| [ADR-26033](architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md) | Virtual Monorepo via Package-Driven Dependency Management | Governance |
+| [ADR-26030](architecture/adr/adr_26030_stateless_jit_context_injection_for_agentic_git_workflow.md) | Stateless JIT Context Injection for Agentic Git Workflows | Context Management |
+
+### New Features and Articles Added
+
+*   **Agent Research Program** (7 codebases analyzed):
+
+    The core deliverable — a systematic study of how open-source AI coding agents manage context, discover skills, and maintain stability:
+
+    - [Context Management Overview](/ai_agents/architecture/context_management/overview.md) — pattern taxonomy: full history, sliding window, reactive compaction, async summarization, tiered systems
+    - [Context Management Comparison](/ai_agents/architecture/context_management/comparison.md) — side-by-side tables across 7 agents: trigger mechanisms, compaction strategies, state preservation, decision guide
+    - [Individual agent deep dives](/ai_agents/architecture/context_management/overview.md): Qwen Code (autocompact buffer + /compress), Claude Code (5-tier system), OpenCode (reactive compaction), OpenClaude (5-tier system), Aider (async background summarization), KiloCode (OpenCode fork)
+    - [How Subagents Work](/ai_agents/agent_architecture/how_subagents_work.ipynb) — debunks OS fork/exec myth, documents three real patterns
+    - [Stability Against LLM Drift](/ai_agents/agent_architecture/stability_against_llm_drift.ipynb) — hard guarantees vs soft techniques
+    - [Skill Discovery Across Platforms](/ai_agents/architecture/skills/skill_discovery_across_platforms.ipynb) — Superpowers v5.0.7 analysis across 5 platforms
+    - [Prompt Brittleness in Skills](/ai_agents/architecture/skills/prompt_brittleness_in_skills.ipynb) — three failure modes with empirically-derived countermeasures
+
+*   **[manage_external_repos.py](/tools/scripts/manage_external_repos.py) — External Research Repo Management** (19 tests, 85% coverage):
+
+    CLI tool for cloning, updating, and listing external research repositories. Supports `setup`, `update`, `list`, `register`, `unregister`, and `relocate` commands. The `relocate` command is the key safety feature: when a research directory moves, it updates the registry and consumer files atomically.
+
+*   **Commit Message Format Enhancement**:
+
+    Sub-bullet format now supported in commit body validation (`    — <lowercase_verb> <detail>`). Enables richer changelog entries while maintaining the structured format that `generate_changelog.py` parses.
+
+*   **ADR Conditional Validation and Index Duplicate Detection**:
+
+    ADR validator now enforces conditional sections: rejected ADRs must have Rejection Rationale, superseded ADRs must have Supersession Rationale, deprecated ADRs must have Deprecation Rationale (minimum 3 words — prevents empty/TBD sections). The index builder detects duplicate ADR entries and reports their location.
+
+*   **Qwen JSON Export Converter** (41 tests, 93% coverage):
+
+    Converts Qwen chat export JSON to evidence source artifacts with thread reconstruction and auto-ID from git history. Enables capturing research sessions directly from Qwen conversations — the JSONL session log format used by Qwen Code is a separate research track.
+
+### Updates in Existing Files
+
+*   **KV Cache Internals — Technical Accuracy Review**: The [what_kv_cache_actually_contains.ipynb](/ai_system_layers/1_execution/what_kv_cache_actually_contains.ipynb) document received a comprehensive technical accuracy pass: fixed GQA weight matrix dimensions, FLOP count consistency, FlashAttention complexity claims, SwiGLU FFN FLOP counts, autoregressive complexity notation, bandwidth ratios, and arXiv source citations.
+
+*   **Consultant Prompt Consolidation**: Hybrid consultant prompts consolidated under canonical names. Unused variants deleted. [Consultants README](/ai_system_layers/3_prompts/consultants/README.md) added as usage guide and catalog.
+
+### Repository Structure Changes
+
+| Original Path | New Path |
+| :--- | :--- |
+| `ai_system/` | `ai_system_layers/` |
+| `tools/docs/ai_agents/` | `ai_agents/guides/` |
+| — | `ai_agents/` (new — root-level agent research hub) |
+| — | `research/` (new — external product source code clones) |
+
 ## release v2.8.0 "The Prompt Physics"
 
 ### Summary of Changes
