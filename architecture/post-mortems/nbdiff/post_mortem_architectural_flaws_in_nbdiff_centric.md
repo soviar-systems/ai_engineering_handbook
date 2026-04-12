@@ -6,7 +6,7 @@
 
 Owner: Vadim Rudakov, lefthand67@gmail.com  
 Document: nbdiff: "git diff" for Jupyter Notebooks Version Control (v0.3.0, 2025-12-28)  
-Reviewer: [slm_system_consultant](/ai_system_layers/3_prompts/consultants/local_ai_systems_consultant.json) v0.12.0  
+Reviewer: [slm_system_consultant](/ai_system_layers/3_prompts/consultants/ai_systems_consultant.json) v0.12.0  
 2025-12-28  
 
 ---

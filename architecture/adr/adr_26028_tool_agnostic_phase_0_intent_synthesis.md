@@ -40,7 +40,7 @@ We formalize **Phase 0: Intent Synthesis** as a tool-agnostic requirements engin
 
 1. **Principle**: Before any automated code generation session, the Human Lead conducts a discovery conversation with a **reasoning-class model** (see {term}`ADR-26027`) to clarify business goals, identify constraints, and define the scope of work.
 
-2. **Primary implementation — Consultant Prompts**: This repository provides structured JSON prompts (e.g., [`local_ai_systems_consultant.json`](/ai_system_layers/3_prompts/consultants/local_ai_systems_consultant.json), [`handbook_consultant.json`](/ai_system_layers/3_prompts/consultants/handbook_consultant.json)) that encode the project's methodology (WRC scoring, Simplest Viable Architecture, peer review protocols). These prompts are the recommended Phase 0 interface and can be loaded into any capable reasoning-class model via a web chat interface or API.
+2. **Primary implementation — Consultant Prompts**: This repository provides structured JSON prompts (e.g., [`ai_systems_consultant.json`](/ai_system_layers/3_prompts/consultants/ai_systems_consultant.json), [`handbook_consultant.json`](/ai_system_layers/3_prompts/consultants/handbook_consultant.json)) that encode the project's methodology (WRC scoring, Simplest Viable Architecture, peer review protocols). These prompts are the recommended Phase 0 interface and can be loaded into any capable reasoning-class model via a web chat interface or API.
 
 3. **Artifact output**: The Phase 0 conversation must produce a written specification (format is flexible — plan file, ADR draft, issue description, or structured prompt) that serves as the "contract of intent" for subsequent automated execution.
 
@@ -70,7 +70,7 @@ We formalize **Phase 0: Intent Synthesis** as a tool-agnostic requirements engin
 
 * {term}`ADR-26007`: Formalization of Phase 0: Intent Synthesis (superseded)
 * {term}`ADR-26027`: Model Taxonomy: Reasoning-Class vs Agentic-Class Selection Heuristic
-* [`local_ai_systems_consultant.json`](/ai_system_layers/3_prompts/consultants/local_ai_systems_consultant.json) — primary Phase 0 consultant prompt
+* [`ai_systems_consultant.json`](/ai_system_layers/3_prompts/consultants/ai_systems_consultant.json) — primary Phase 0 consultant prompt
 * [`handbook_consultant.json`](/ai_system_layers/3_prompts/consultants/handbook_consultant.json) — methodology-aware handbook consultant
 * ISO 29148: Systems and Software Engineering — Requirements Engineering
 
