@@ -8,7 +8,6 @@ project:
   # authors: []
   github: https://github.com/lefthand67/ai_engineering_handbook
   exclude:
-    - "CHANGELOG.md"
     - "AGENTS.md"
     - "CONVENTIONS.md"
     - "CLAUDE.md"

@@ -122,3 +122,491 @@ release 2.8.0
         - Added: pyproject.toml — add myst>=1.0.4 dependency
         - Updated: uv.lock — lock myst 1.0.4 and ansible 13.4.0 with new hashes
 
+release 2.7.0
+* **New Features:**
+    - Add optional truncation, en-dash support, and extension stripping to format_string
+        - Updated: tools/scripts/format_string.py — replace sys.argv with argparse (--trunc, --trunc-len flags), add en-dash to symbol list, strip known file extensions (.pdf, .epub, .tar.gz, etc.) before formatting, make truncation opt-in
+        - Updated: tools/tests/test_format_string.py — contract-based test docstrings, parametrize punctuation tests, add extension stripping and truncation opt-in tests (42 tests)
+        - Updated: tools/docs/scripts_instructions/format_string_py_script.md — add Options table, document extension stripping step, group examples by use case, bump version to 0.3.0
+    - Formalize SVA constraint framework as ADR-26037
+        - Created: architecture/adr/adr_26037_smallest_viable_architecture_constraint_framework.md — canonical C1-C6 constraints derived from first principles (UNIX, YAGNI, Twelve-Factor, SRE, GitOps, ISO 29148)
+        - Created: architecture/evidence/analyses/A-26003_sva_constraint_framework_design.md — design analysis with migration mapping and case study validation
+        - Updated: ai_system/3_prompts/consultants/local_ai_systems_consultant.json — replaced ad-hoc C1-C4 with canonical C1-C6 (v0.14.0)
+        - Updated: ai_system/3_prompts/consultants/devops_consultant.json — replaced ad-hoc C1-C4 with canonical C1-C6 (v0.3.0)
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — replaced ad-hoc C1-C5 with canonical C1-C6 (v0.2.0)
+    - Add post-commit changelog preview hook
+        - Updated: .pre-commit-config.yaml — added changelog-preview post-commit hook that runs generate_changelog.py --verbose on the just-created commit with amend tip
+        - Updated: tools/scripts/configure_repo.py — added run_precommit_install_post_commit() method and wired into UvSyncRunner.run()
+        - Updated: tools/tests/test_configure_repo.py — added tests for post-commit install, removed brittle call_count assertions in favor of side_effect short-circuit verification
+        - Updated: tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.md — added post-commit install command, new Section 5 for changelog preview, bumped to v1.2.0
+        - Updated: tools/docs/git/03_precommit_ci_validation_system.md — added changelog-preview to validation matrix, replaced duplicate install block with cross-reference to doc 02, bumped to v1.2.0
+        - Updated: tools/docs/scripts_instructions/configure_repo_py_script.md — added post-commit hook to operations table and class description, bumped to v0.3.0
+    - Update AI systems consultant prompt for hybrid approach
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Modified consultant ID, version, and birth date to reflect the hybrid specialization.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Broadened consultant specialization to include cloud models.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Refined consultant description and role.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Adjusted personality guidelines for clarity and conciseness.
+        - Removed: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Removed audience specification.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Updated languages and tooling lists.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Clarified production readiness criteria.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Modified no-hallucination guidance.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Updated WRC penalty definitions.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Adjusted methodology discovery process.
+        - Removed: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Removed internal note.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Clarified P-Score audit summary.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Added default language to language setting.
+        - Updated: ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json — Adjusted task description for methodology comparison.
+    - Add exclusion patterns, bold headers, and verbose flag to changelog generator
+        - Updated: pyproject.toml — added changelog-exclude-patterns config key for filtering housekeeping commits
+        - Updated: tools/scripts/generate_changelog.py — added EXCLUDE_PATTERNS constant, _matches_exclude_pattern() and _filter_excluded_commits() helpers for case-insensitive substring filtering at both commit and bullet levels
+        - Updated: tools/scripts/generate_changelog.py — added --verbose/-v flag threaded through parse chain to print excluded items to stderr, so users can debug why commits/bullets are missing
+        - Updated: tools/scripts/generate_changelog.py — changed section headers from plain text to markdown bold (**Section Name:**) for visual emphasis
+        - Updated: tools/scripts/generate_changelog.py — added blank line separator between new and existing content in --prepend mode to prevent visual merging
+        - Updated: tools/tests/test_generate_changelog.py — added 20 new tests (76 total): TestExcludePatterns class with config-driven parametrized coverage, bold header test, blank line prepend test, verbose stderr tests
+        - Updated: tools/docs/scripts_instructions/generate_changelog_py_script.md — bumped to v1.1.0, documented exclusion patterns with self-referencing trap warning and post-commit recheck command, verbose flag, bold headers, updated function listing and test count
+* **Bug Fixes:**
+    - Drop commits with no surviving bullets from changelog output
+        - Fixed: tools/scripts/generate_changelog.py — added _filter_empty_bullet_commits to drop commits with all bullets excluded, verbose mode reports dropped commits, empty sections also skipped in format_changelog
+        - Updated: tools/tests/test_generate_changelog.py — added test_commit_dropped_when_all_bullets_excluded and test_verbose_reports_commit_dropped_for_empty_bullets, updated legacy commit test to match new contract (78 tests)
+        - Updated: tools/docs/scripts_instructions/generate_changelog_py_script.md — documented bulletless commit exclusion, updated exclusion pattern hierarchy, bump version to 1.2.0
+* **Documentation:**
+    - Fact-check A-26009 and align ADR-26038 with verified evidence
+        - Updated: architecture/evidence/analyses/A-26009 — added 28 MyST footnotes with permanent URLs for all verifiable claims, replaced unverifiable Galileo AI quote with arXiv:2601.04748 evidence, added subagent vs swarm distinction with Gartner data, added Context Rot study reference in Synthesis for model capability caveat, softened unverifiable "70% rebuild" and Forrester claims, fixed Simon Willison attribution to actual May 2025 blog post
+        - Updated: architecture/adr/adr_26038 — replaced Galileo AI quote (item 4) with arXiv:2601.04748 single-agent-with-skills study, added fork-and-join subagent pattern as approved scaling strategy in risk mitigation, replaced ephemeral techdebt.md reference with ADR-26042 term ref, removed ephemeral roadmap link from References
+    - Add ADR-26043 Ecosystem Package Boundary
+        - Created: architecture/adr/adr_26043_ecosystem_package_boundary.md — defines vadocs as installable package organized by concern (core, docs, git, init)
+    - Add status transition rules and strengthen ADR conventions
+        - Updated: architecture/adr/adr_config.yaml — added status_transitions SSoT (proposed→accepted/rejected, accepted→superseded/deprecated, terminal states locked)
+        - Updated: architecture/architecture_decision_workflow_guide.md — added Valid Status Transitions section referencing adr_config.yaml as SSoT
+    - Add ADR-26042 Common Frontmatter Standard
+        - Created: architecture/adr/adr_26042_common_frontmatter_standard.md — composable block schema (identity/discovery/lifecycle), 10 types (9 content + 1 service), hub-and-spoke config, strict additive inheritance, date semantic unification
+    - Promote S-26007 compass source to A-26009 analysis
+        - Created: architecture/evidence/analyses/A-26009_compass_realistic_state_of_agentic_ai_2026.md — promoted from ephemeral source to persistent analysis with proper frontmatter (id, status, tags, produces)
+        - Deleted: architecture/evidence/sources/S-26007_compass_realistic_state_of_agentic_ai_2026.md — content preserved in A-26009
+        - Updated: architecture/evidence/analyses/A-26006_agent_runtime_architecture_rag_infrastructure.md — S-26007 refs → A-26009 md links
+        - Updated: architecture/evidence/analyses/A-26008_frontmatter_standard_taxonomy_audit.md — S-26007 refs → A-26009 md links, fixed S-26007 example in ID format line
+        - Updated: architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md — S-26007 refs → A-26009 md links
+        - Updated: architecture/adr/adr_26038_context_engineering_as_core_design_principle.md — S-26007 refs → A-26009 md links (7 occurrences)
+    - Add A-26008 frontmatter taxonomy audit and composable block design
+        - Created: architecture/evidence/analyses/A-26008_frontmatter_standard_taxonomy_audit.md — taxonomy audit comparing A-26005 proposal against repo reality, defines composable block schema (identity/discovery/lifecycle), 11-type registry, service type, Jupytext two-block parsing problem, date semantic shift analysis
+    - Add ADR-26041 Client-Side Logic with Server-Side Retrieval
+        - Created: architecture/adr/adr_26041_client_side_logic_with_server_side_retrieval.md — Logic-in-View pattern: Python owns orchestration, SQL functions own retrieval
+        - Updated: architecture/adr_index.md — added ADR-26041 to Evolutionary Proposals
+    - Add ADR-26040 Podman Kube YAML as deployment standard
+        - Created: architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md — standardize Kube YAML + podman-kube@.service + named volumes
+        - Updated: architecture/adr_index.md — auto-updated by check-adr-index hook
+    - Add ADR-26039 pgvector as ecosystem database standard
+        - Created: architecture/adr/adr_26039_pgvector_as_ecosystem_database_standard.md — schema-per-project isolation, hybrid search, deployment-agnostic
+        - Created: architecture/evidence/sources/S-26011_gemini_pgvector_viability_and_logic_locality.md — Gemini peer review of pgvector decision and client vs server logic locality
+        - Created: architecture/evidence/analyses/A-26007_pgvector_viability_and_logic_locality.md — extracted referential drift analysis, Logic-in-View pattern, VACUUM trap, security constraints
+        - Updated: myst.yml — added HA and HNSW abbreviations
+    - Extract agent runtime and RAG infrastructure evidence
+        - Created: architecture/evidence/sources/S-26008_gemini_langchain_agents_tools_memory.md — Gemini dialogue on LangChain vs production agent architecture (master loop, litellm, MCP)
+        - Created: architecture/evidence/sources/S-26009_gemini_local_git_repo_rag_pgvector.md — Gemini dialogue on pgvector RAG setup (schema-per-repo, halfvec, scalability)
+        - Created: architecture/evidence/sources/S-26010_gemini_stateless_jit_agentic_git_workflow.md — renamed and formalized from agentic_git_commits source
+        - Created: architecture/evidence/analyses/A-26006_agent_runtime_architecture_rag_infrastructure.md — extracts actionable insights from S-26008/S-26009/S-26010 for Phase 2 runtime decisions
+    - Rethink Agentic OS approach
+        - Created: architecture/evidence/sources/S-26007_compass_realistic_state_of_agentic_ai_2026.md — formalized compass research (Claude Opus 4.6) on the realistic state of agentic AI architectures in early 2026 as evidence source
+        - Created: architecture/adr/adr_26038_context_engineering_as_core_design_principle.md — context engineering as core design principle, single-agent with skill dispatch, three-tier memory, context budget as first-class constraint
+        - Updated: architecture/adr_index.md — added ADR-26038 to index (auto-fix)
+    - Add S-26006 source, revise A-26005 with VRL and integrated architecture
+        - Created: architecture/evidence/sources/S-26006_gemini_agentic_os_design_review.md — Gemini 3.0 Flash dialogue on Agentic OS design review, Virtual Relational Layer, and Postgres namespace model
+        - Updated: architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md — retitled to "Agentic OS Filesystem Architecture: Document Types, VFS, and Virtual Relational Layer"
+        - Added: Key Insights subsection on Virtual Relational Layer (Codd's theory applied to Git/YAML, ACID via Git, FK validation, normalization, JOIN problem)
+        - Added: Key Insights subsection on Contract-Based Documentation (docs as ISA, BLAS Interface/API/ABI parallel from GEMM handbook)
+        - Added: Taxonomy Design subsection on Integrated Triple-Layer Architecture (Control Plane / Kernel / Execution with 4 mermaid diagrams)
+        - Added: Approach Evaluation subsections on S-26006 assessment and Interim Architecture Caveat
+        - Added: Portability Design Postgres namespace model (cluster/database/schema/table mapping, FDW for cross-repo queries, relationship to ADR-26031)
+        - Updated: Problem Statement with relational integrity gap, integration gap, and interim artifact caveat
+        - Updated: References with S-26006, GEMM handbook, Codd (1970), Gabriel (1991)
+    - Update evidence sources README, fix stale links
+        - Updated: architecture/evidence/sources/README.md — Added YAML frontmatter, clarified three-commit workflow, added combining commits note, included git archaeology commands.
+        - Added: architecture/evidence/sources/README.ipynb — Added .ipynb pair with real Bash command outputs.
+        - Updated: architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md — Converted deleted source links (S-26004, S-26005) to backtick references.
+        - Updated: architecture/evidence/analyses/A-26002_agentic_os_skills_tiered_memory_package_infra.md — Converted deleted source link (S-26001) to backtick reference.
+        - Updated: architecture/evidence/analyses/A-26004_hook_stage_assignment_rationale.md — Converted deleted source link (S-26003) to backtick reference.
+        - Updated: architecture/architecture_decision_workflow_guide.md — Changed README.md link to README.ipynb, bumped version to 1.0.1.
+        - Updated: architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md — Changed README.md links to README.ipynb.
+    - Delete extracted evidence sources (three-commit workflow, step 3)
+        - Deleted: architecture/evidence/sources/S-26001_gemini_dialogue_skills_architectures.md — extracted_into: A-26002
+        - Deleted: architecture/evidence/sources/S-26002_gemini_changelog_alternatives_analysis.md — extracted_into: ADR-26024
+        - Deleted: architecture/evidence/sources/S-26003_gemini_post_commit_hook_stage_advice.md — extracted_into: A-26004
+        - Deleted: architecture/evidence/sources/S-26004_gemini_semantic_alignment_assessment.md — extracted_into: A-26005
+        - Deleted: architecture/evidence/sources/S-26005_qwen_agentic_os_architecture_diagram.md — extracted_into: A-26005
+    - Add Document Type Interfaces analysis and formalize evidence sources
+        - Created: architecture/evidence/analyses/A-26005_doc_type_interfaces_unified_validation.md — comprehensive design analysis elaborating the Agentic OS document type system using UNIX as blueprint (inode metadata model, VFS/Document Type Registry, AI-first methodology, RUNTIME category for agent process state)
+        - Created: architecture/evidence/sources/S-26004_gemini_semantic_alignment_assessment.md — formalized orphaned source with S-YYNNN naming and frontmatter (WRC analysis, contract-first development, semantic linter design)
+        - Created: architecture/evidence/sources/S-26005_qwen_agentic_os_architecture_diagram.md — formalized orphaned source with S-YYNNN naming and frontmatter (UNIX ↔ Agentic OS mapping, Bach/Billimoria kernel concepts)
+        - Updated: architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md — promoted status from proposed to accepted (taxonomy proven with 5 analyses, 5 sources, working validation script)
+        - Updated: architecture/evidence/sources/S-26001_gemini_dialogue_skills_architectures.md — set extracted_into from null to A-26002
+    - Add hook stage assignment evidence artifacts
+        - Created: architecture/evidence/sources/S-26003_gemini_post_commit_hook_stage_advice.md — Gemini 3 Flash dialogue on post-commit vs commit-msg stage risks
+        - Created: architecture/evidence/analyses/A-26004_hook_stage_assignment_rationale.md — analysis confirming current hook stage assignments are sound
+        - Updated: tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.md — added stage rationale paragraph to Section 4, bumped to v1.3.0
+        - Deleted: architecture/evidence/sources/gemini-3-flash-post-commit-hook.md — content moved to S-26003
+    - Add Architecture Decision Workflow guide
+        - Created: architecture/architecture_decision_workflow_guide.md — merged guide covering ADR lifecycle, evidence pipeline, writing quality standards, status transitions (rejection/supersession/deprecation), anti-patterns checklist, and governing ADRs
+        - Deleted: architecture/what_is_an_adr.md — content absorbed into the merged guide
+        - Updated: architecture/adr/adr_template.md — added HTML comment pointing to the guide
+        - Updated: architecture/adr_index.md — added ADR-26037 to index
+        - Updated: tools/scripts/paths.py — added example link string to broken links exclusion list
+    - Formalize Gemini changelog alternatives transcript as S-26002
+        - Renamed: architecture/evidence/analyses/gemini_20260209_changelog_alternatives_analysis.md → architecture/evidence/sources/S-26002_gemini_changelog_alternatives_analysis.md — raw dialogue transcript belongs in sources/, not analyses/
+        - Updated: architecture/evidence/sources/S-26002_gemini_changelog_alternatives_analysis.md — added YAML frontmatter (id, title, date, model, extracted_into: ADR-26024) per sources/README.md schema
+* **Architectural Decisions:**
+    - Accept 4 ADRs, reject ADR-26003 for release alignment
+        - Updated: architecture/adr/adr_26011_formalization_of_mandatory_script_suite.md — status proposed → accepted (script suite triad enforced via pre-commit)
+        - Updated: architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md — status proposed → accepted (validate_commit_msg.py + generate_changelog.py active)
+        - Updated: architecture/adr/adr_26038_context_engineering_as_core_design_principle.md — status proposed → accepted (core principle driving ecosystem direction)
+        - Updated: architecture/adr/adr_26003_adoption_of_gitlint_for_tiered_workflow.md — status proposed → rejected (custom validate_commit_msg.py replaced gitlint; branch naming deferred to future ADR)
+        - Fixed: architecture/adr/adr_26043_ecosystem_package_boundary.md — removed invalid tag 'tooling'
+        - Updated: architecture/adr_index.md — regenerated by check_adr.py --fix
+    - Reject ADR-26031 and ADR-26034
+        - Updated: architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md — rejected: string prefix approach weaker than A-26005 Postgres namespace model; problem is real but solution is wrong
+        - Updated: architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md — rejected: grand OS framing replaced by context engineering (ADR-26038); valid concepts (skills, procedural/declarative split) acknowledged and tracked
+        - Updated: architecture/adr_index.md — auto-updated by check_adr.py (26031, 26034 moved to Historical Context)
+
+release v2.6.0
+* New Features:
+    - Add evidence artifact validation tooling
+        - Created: tools/scripts/check_evidence.py — validates evidence artifacts against evidence.config.yaml schema
+        - Created: tools/tests/test_check_evidence.py — 75 config-driven tests with SSoT chain resolution
+        - Created: tools/docs/scripts_instructions/check_evidence_py_script.md — ADR-26011 script instruction doc
+        - Updated: architecture/evidence/evidence.config.yaml — added common_required_fields and date_format as SSoT
+        - Updated: .pre-commit-config.yaml — added check-evidence and test-check-evidence hooks
+        - Updated: .github/workflows/quality.yml — added evidence-validation job with logic/docs triggers
+        - Fixed: architecture/adr/adr_26036_config_file_location_and_naming_conventions.md — link format (.md → .ipynb)
+    - Architecture — add ADR-26030 for stateless JIT context injection
+        - Created: architecture/adr/adr_26030_stateless_jit_context_injection.md — formalized the stateless observer pattern to eliminate context accumulation and reduce token costs.
+        - Updated: pyproject.toml — added initial placeholders for commit-convention tool configuration to support JIT prompt assembly.
+        - Updated: architecture/adr/adr_index.md — indexed ADR-26030 under Evolutionary Proposals to maintain the documentation registry.
+* Bug Fixes:
+    - Update format_string.py and docs
+        - Updated: tools/scripts/format_string.py — Add — symbol to special symbols to replace
+        - Updated: tools/docs/scripts_instructions/format_string_py_script.ipynb — Add —symbol to list of removed special symbols in documentation
+* Documentation:
+    - Add A-26002 analysis — Agentic OS, Tiered Memory, Package Infrastructure
+        - Created: architecture/evidence/analyses/A-26002_agentic_os_skills_tiered_memory_package_infra.md — comprehensive analysis extracting 11 architectural insights from Gemini dialogue S-26001: Agentic OS paradigm, three-tier cognitive memory, tag-filtered skill discovery, package-driven virtual monorepo, builder/runtime separation, researcher agent alternatives, DSPy evaluation, industry alternatives landscape, and evolution from prompt engineering to software engineering
+    - Add S-26001 Gemini dialogue on skills architecture
+        - Created: architecture/evidence/sources/S-26001_gemini_dialogue_skills_architectures.md — full extracted transcript of Gemini 3.0 Flash consultation covering Agentic OS paradigm, tiered cognitive memory, and package-driven infrastructure
+* Architectural Decisions:
+    - Add Architecture Knowledge Base taxonomy and config conventions
+        - Created: architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md — taxonomy for evidence artifacts (analyses, retrospective, sources)
+        - Created: architecture/adr/adr_26036_config_file_location_and_naming_conventions.md — <domain>.config.yaml naming,
+        - Created: architecture/evidence/analyses/A-26001_architecture_knowledge_base_taxonomy.md — inaugural analysis documenting
+        - Created: architecture/evidence/evidence.config.yaml — evidence artifact validation spec with naming patterns, required
+        - Created: architecture/architecture.config.yaml — shared architectural vocabulary (tags) as parent config
+        - Created: architecture/evidence/sources/README.md — source lifecycle and git archaeology guide
+        - Updated: architecture/adr_index.md — auto-generated entries for ADR-26035 and ADR-26036
+        - Updated: pyproject.toml — added [tool.check-adr] and [tool.check-evidence] config pointer registry
+    - Propose new ADR taxonomy
+        - Added: architecture/adr/adr_26031_prefixed_namespace_system_for_architectural_records.md - propose adding prefixes for ADR in different repos of the ecosystem so their ids do not overlap and confuse the consumer of these ADRs
+    - Add skills architecture ADRs
+        - Added: architecture/adr/adr_26032_tiered_cognitive_memory_procedural_skills.md - skills plus RAG architecture inspired by Claude talk
+        - Added: architecture/adr/adr_26033_virtual_monorepo_via_package_driven_dependency_management.md - how to interconnect projects in the ecosystem without real monorepo
+        - Added: architecture/adr/adr_26034_agentic_os_paradigm_skills_as_composable_applications.md -  the 3 Tier Architecture of LLM, Agent, Skills
+* Maintenance:
+    - Remove backtick requirement and make commit config SSoT
+        - Updated: architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md — removed backtick wrapping from bullet format spec and examples
+        - Updated: tools/docs/git/01_production_git_workflow_standards.md — removed backtick requirement from body convention rules and examples
+        - Updated: tools/docs/scripts_instructions/validate_commit_msg_py_script.md — removed backticks from examples, replaced hardcoded type list with pyproject.toml reference
+        - Updated: tools/docs/scripts_instructions/generate_changelog_py_script.md — removed backticks from CHANGELOG format examples
+        - Updated: pyproject.toml — added adr type, removed test type from commit-convention
+        - Updated: tools/scripts/validate_commit_msg.py — removed backticks from error message
+        - Refactored: tools/tests/test_validate_commit_msg.py — parametrize lists derive from VALID_TYPES/ARCHTAG_REQUIRED_TYPES instead of hardcoded values
+        - Refactored: tools/tests/test_generate_changelog.py — parametrize lists derive from TYPE_TO_SECTION instead of hardcoded values
+
+release 2.5.0
+* New Features:
+    - Add MHTML support to extract_html_text.py
+        - Updated: `tools/scripts/extract_html_text.py` — added is_mhtml() detection, extract_html_from_mhtml() with quoted-printable decoding, SVG skip tag, auto-detection in main()
+        - Updated: `tools/tests/test_extract_html_text.py` — added 22 new tests for MHTML parsing, SVG/base64 stripping, and integration (36 total, 85% coverage)
+        - Updated: `tools/docs/scripts_instructions/extract_html_text_py_script.md` — documented MHTML support, SVG stripping, new test classes
+        - Updated: `tools/docs/scripts_instructions/extract_html_text_py_script.ipynb` — synced via jupytext
+    - Enforce ADR section whitelist with conditional and code-fence support
+        - Updated: `architecture/adr/adr_config.yaml` — added `allowed_sections` (10 items) and `conditional_sections` (Rejection Rationale → rejected only)
+        - Updated: `tools/scripts/check_adr.py` — added `ALLOWED_SECTIONS`, `CONDITIONAL_SECTIONS` constants; `CODE_FENCE_PATTERN` to strip fenced code blocks before section extraction; extended `validate_sections()` with whitelist + conditional checks
+        - Refactored: `tools/tests/test_check_adr.py` — replaced hardcoded test config with `shutil.copy2` from real `adr_config.yaml` (SSoT); added 5 tests across `TestSectionWhitelist`, `TestConditionalSections`, `TestCodeFencedSectionsIgnored`
+        - Updated: `tools/docs/scripts_instructions/check_adr_py_script.md` — documented `unexpected_section` and `conditional_section_violation` error types, new test classes, version bump to 0.6.0
+    - Add validate_commit_msg.py and generate_changelog.py with full script suites
+        - Created: `tools/scripts/validate_commit_msg.py` — commit-msg hook enforcing CC format, structured body bullets, and ArchTag rules
+        - Created: `tools/scripts/generate_changelog.py` — release-time CHANGELOG generator from git history with hierarchical formatting
+        - Created: `tools/tests/test_validate_commit_msg.py` — 68 non-brittle tests covering subject, body, ArchTag, skip logic, and CLI
+        - Created: `tools/tests/test_generate_changelog.py` — 56 non-brittle tests covering parsing, grouping, formatting, and CLI
+        - Created: `tools/docs/scripts_instructions/validate_commit_msg_py_script.md` — script documentation with ADR-26023 frontmatter
+        - Created: `tools/docs/scripts_instructions/generate_changelog_py_script.md` — script documentation with ADR-26023 frontmatter
+        - Updated: `pyproject.toml` — added [tool.commit-convention] config as single source of truth for types and section mappings
+        - Updated: `.pre-commit-config.yaml` — registered validate-commit-msg hook and test hooks for both scripts
+        - Updated: `.github/workflows/quality.yml` — added CI jobs for validate-commit-msg and generate-changelog test suites
+        - Updated: `tools/docs/git/01_production_git_workflow_standards.md` — added pyproject.toml config tips and script doc cross-references
+        - Updated: `tools/docs/git/03_precommit_ci_validation_system.md` — unified validation matrix, expression injection prevention section
+    - Formalize RFC→ADR workflow (ADR-26025) with promotion gate
+        - architecture/adr/adr_26025_rfc_adr_workflow_formalization.md — Fat ADR
+        - tools/scripts/check_adr.py — validate_promotion_gate() added, detects
+        - tools/tests/test_check_adr.py — 14 new promotion gate tests
+        - architecture/adr_index.md — ADR-26025 added via --fix (dogfooded)
+        - architecture/what_is_an_adr.md — rewritten: no hardcoded rules,
+    - Add HTML text extraction script (extract_html_text.py)
+        - tools/scripts/extract_html_text.py — stdlib-only HTML text extractor (85% coverage)
+        - tools/tests/test_extract_html_text.py — 22 tests (unit + in-process CLI)
+        - tools/docs/scripts_instructions/extract_html_text_py_script.md + .ipynb
+    - Annotate superseded entries in generated index
+* Bug Fixes:
+    - Install commit-msg hook in configure_repo.py setup
+        - Updated: `tools/scripts/configure_repo.py` — added `run_precommit_install_commit_msg()` to install commit-msg stage hook via `--hook-type commit-msg`
+        - Updated: `tools/tests/test_configure_repo.py` — added tests for commit-msg hook install success/failure and mid-chain failure paths
+        - Updated: `tools/docs/git/02_pre_commit_hooks_and_staging_instruction_for_devel.md` — added commit-msg install command and warning about hook stage installation
+        - Updated: `tools/docs/git/03_precommit_ci_validation_system.md` — added commit-msg install command and cross-reference to article 02; migrated frontmatter to ADR-26023
+        - Updated: `tools/docs/scripts_instructions/configure_repo_py_script.md` — added commit-msg hook row to operations table; migrated frontmatter to ADR-26023
+    - Remove is_skip_commit() bypass from commit validator
+        - Updated: `tools/scripts/validate_commit_msg.py` — removed is_skip_commit() function and skip check in run(); all commits now go through all three validation layers (subject, body, ArchTag)
+        - Updated: `tools/tests/test_validate_commit_msg.py` — removed TestIsSkipCommit class (7 tests) and 2 CLI skip tests; added TestFormerlySkippedCommitsFail (4 tests) asserting WIP/Merge/fixup/squash → exit 1
+        - Updated: `tools/docs/scripts_instructions/validate_commit_msg_py_script.(md|ipynb)` — removed Skip Logic section and is_skip_commit() references; added Section 7 post-mortem documenting root cause (input/output policy coupling) and principles extracted
+        - Updated: `tools/docs/git/01_production_git_workflow_standards.(md|ipynb)` — removed WIP: from valid commit types table; renamed section to "Local Checkpoint Commits"; replaced WIP guidance with --no-verify as the only escape hatch; removed CI PR Status Check for WIP
+    - Close pre-commit/CI desync gap and gate deploy to main
+        - Updated: `tools/scripts/check_adr.py` — detect duplicate `##` sections in validate_sections() (set → counter), add fix_duplicate_sections() with interactive prompt, run promotion gate in --fix mode
+        - Updated: `tools/tests/test_check_adr.py` — add TestDuplicateSections, TestFixDuplicateSections, TestPromotionGateInFixMode (10 new tests, 154 total, 96% coverage)
+        - Fixed: `architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md` — merge duplicate ## Participants headers
+        - Updated: `.github/workflows/deploy.yml` — gate build-deploy job to main branch with if: github.ref == 'refs/heads/main'
+        - Updated: `tools/docs/website/01_github_pages_deployment.md` — add deployment rejection pitfall to Common Pitfalls table
+        - Updated: `tools/docs/scripts_instructions/check_adr_py_script.md` — add duplicate_section error type, fix step, desync admonition, bump to v0.5.0
+* Documentation:
+    - Adopt MyST-aligned frontmatter standard (ADR-26023)
+    - Prefer .md over .ipynb for reading notebooks
+        - Updated: `CLAUDE.md` — added instruction to always read `.md` Jupytext pairs instead of `.ipynb` JSON, which is expensive to parse
+    - Convert generate_changelog instruction examples to executable cells
+        - Updated: `tools/docs/scripts_instructions/generate_changelog_py_script.md` — replaced static bash examples with executable `{code-cell}` blocks using dry-run output; bumped version to 1.0.1
+    - Integrate AI Code Generation Engineer insights into Gherkin analysis
+        - Updated: `misc/gherkin_tmp/analysis_summary.md` — added Source 3, Section G (verification & execution infrastructure), peer reviews for G2-G6, devil's advocate section, ADR Candidate 4, renamed RFC→ADR candidates, expanded AST/CST relevance, added "Crafting Interpreters" to reading list
+        - Created: `misc/gherkin_tmp/new_profession_description.md` — AI Code Generation Engineer role definition based on real European bank vacancy, structured by Qwen3-Max
+    - Add Gherkin/BDD/DDD conversation analysis and plan
+        - Created: `misc/gherkin_tmp/analysis_summary.md` — analytical summary with 30 ideas inventoried, peer review of 8 key claims, 3 RFC candidates
+        - Created: `misc/gherkin_tmp/code_generation_from_specifications_v2.txt` — clean extraction from MHTML source
+        - Created: `misc/gherkin_tmp/ddd_bdd_and_tdd_explained_v2.txt` — clean extraction from HTML source
+    - Rewrite README.md to v2.5.0 with Documentation-as-Code framing
+        - Updated: `README.md` — full structural rewrite: new mission (documentation as AI input), Documentation-as-Code section, Architectural Governance, Hub-and-Spoke Ecosystem, tool-agnostic Methodology, corrected directory tree, Toolchain & CI/CD section; removed Research & Foundations, Motivation, and all tool/model name references
+        - Created: `architecture/manifesto.md` — declaration of the Documentation-as-Code principle with structural analogy (repo structure = code architecture)
+        - Created: `misc/pr/tg_channel_ai_learning/2026_02_16_documentation_as_source_code_manifesto.md` — Telegram post about the manifesto
+    - Promote 6 ADRs from proposed to accepted
+        - Updated: `architecture/adr/adr_26015_mandatory_sync_guard_and_diff_suppression.md` — status proposed → accepted
+        - Updated: `architecture/adr/adr_26017_adr_format_validation_workflow.md` — status proposed → accepted
+        - Updated: `architecture/adr/adr_26020_hub_spoke_ecosystem_documentation.md` — status proposed → accepted
+        - Updated: `architecture/adr/adr_26021_content_lifecycle_policy_for_rag_consumed.md` — status proposed → accepted
+        - Updated: `architecture/adr/adr_26022_standardization_of_public_documentation_hosting.md` — status proposed → accepted
+        - Updated: `architecture/adr/adr_26025_rfc_adr_workflow_formalization.md` — status proposed → accepted
+        - Updated: `architecture/adr_index.md` — regenerated index to reflect status changes (6 ADRs moved from Evolutionary Proposals to Active Architecture)
+        - Updated: `tools/docs/scripts_instructions/check_adr_py_script.(md|ipynb)` — version bump 0.6.0 → 0.6.1
+    - Update CLAUDE.md with ADR workflow, new scripts, and tool config conventions
+        - Updated: `CLAUDE.md` — added check_adr.py, validate_commit_msg.py, generate_changelog.py to Common Commands
+        - Updated: `CLAUDE.md` — added Tool Configuration (ADR-26029) and ADR index management conventions
+        - Updated: `CLAUDE.md` — de-emphasized Aider as primary editor, made workflow tool-agnostic
+    - Add ADR-26029 formalizing pyproject.toml as tool config hub
+        - Created: `architecture/adr/adr_26029_pyproject_toml_as_tool_config_hub.md` — formalizes `[tool.X]` sections as canonical location for machine-readable tool configuration
+        - Updated: `architecture/adr_index.md` — added ADR-26029 to Active Architecture section via `check_adr.py --fix`
+    - Expand Format-as-Architecture article to v0.2.0 with empirical token measurements
+        - Created: `ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.md` — added Minified JSON (2.4), YAML Literal Block Scalar (2.5), BPE Tokenizer Mechanics (2.7), Practical Measurement section (5) with runnable {code-cell} bash blocks, Security Considerations section (7), expanded Decision Framework and Summary
+        - Updated: `ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.ipynb` — jupytext sync of all new content including 7 executable code cells measuring token cost across 4 formats with cl100k_base and o200k_base tokenizers
+    - Add commit convention guidelines to CONVENTIONS.md
+    - Mandate file paths in structured commit body bullets
+        - Updated: architecture/adr/adr_26024_structured_commit_bodies_for_automated_changelog.md — defined <target> as
+        - Updated: tools/docs/git/01_production_git_workflow_standards.md — aligned Body Convention template and added Rule 4
+        - Updated: CLAUDE.md — aligned commit conventions bullet with new format; added <file-path> definition; added
+    - Expand ADR-26024 plan with foundational decisions and Gemini alternatives analysis
+        - Created: gemini_20260209_changelog_alternatives_analysis.md — full Gemini session transcript with WRC scoring, hypothesis evaluation, and validation gap analysis
+        - Updated: plan_20260209_structured_commit_bodies_automated_changelog.md — added foundational architectural decisions (bisect deprioritization, Rich-Body Squash, Ingredients-First pattern, dch rejection, LLM supersession), split into Phase A (analytical) and Phase B (implementation), expanded ADR-26024 spec with WRC scores and alternatives pointers
+    - Establish structured commit body convention and automated CHANGELOG foundation (ADR-26024 Phase A)
+        - Created:  — codifies the Rich-Body Squash
+        - Refactored:  — resolved 8 contradictions (ff-only vs
+        - Updated:  — added Section 4 (Commit Message
+        - Updated:  — commit conventions now mandate structured body bullets, Squash-and-Merge policy, and
+        - Added: usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+        - Updated: ADR-26001, ADR-26002, ADR-26003 — added usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+        - Updated:  — registered ADR-26024 under Evolutionary Proposals
+    - Update CLAUDE.md with frontmatter standard and deploy target
+        - Added: Content Frontmatter section under Critical Conventions — documents ADR-26023 rules: use `title/author/date/options.version/options.birth` fields, correct author email (`rudakow.wadim@gmail.com`), and `1.0.0`+ versioning for production docs
+        - Fixed: deploy.yml description — "deploys to server" → "deploys to GitHub Pages" (per ADR-26022)
+    - Update Plan 2 with real commit example
+        - Updated: complex commit example in structured commit bodies plan — replaced draft bullets with actual commit `3e652bc` (8 detailed bullets)
+        - Updated: CHANGELOG output example — aligned hierarchical sub-items with the real commit structure
+    - Restructure website deployment documentation
+        - Created: `tools/docs/website/01_github_pages_deployment.(md|ipynb)` — canonical GitHub Pages guide with MyST init, myst.yml config, local testing, Pages enablement, deploy workflow, and troubleshooting (309 lines)
+        - Renamed: `mystmd_website_deployment_instruction.(md|ipynb)` → `02_self_hosted_deployment.(md|ipynb)` — with `:::{warning}` deprecation notice linking to the new guide
+        - Refactored: `02_self_hosted_deployment.md` — replaced duplicated MyST init/config/local-testing sections (1.1, 1.2, 4) with cross-references to the GitHub Pages guide; added superseded notice inside deploy.yml dropdown
+        - Deleted: `tools/docs/git/github_pages_setup.md` — content fully absorbed into `01_github_pages_deployment`
+        - Updated: `architecture/adr/adr_26022...md` — fixed self-hosted link path, replaced single reference with two entries (GitHub Pages guide + deprecated self-hosted)
+        - Updated: `architecture/packages/README.md` — GitHub Pages setup link now points to `01_github_pages_deployment.ipynb`
+        - Updated: `architecture/packages/creating_spoke_packages.md` — same link fix in Next Steps section
+        - Fixed: `configs/mutli-site/` → `configs/multi-site/` directory typo (nginx.conf + play_nginx.yml)
+    - Add GitHub org transfer and Pages setup guides
+    - Add spoke package extraction guide and vadocs POC
+    - Add decision plan for superseded annotation feature
+* CI/CD & Quality:
+    - Migrate deploy.yml from SSH/rsync to GitHub Pages
+* Refactoring:
+    - Move research projects to dedicated monorepo
+        - Created: `architecture/adr/adr_26026_dedicated_research_monorepo_for_volatile.md` — Added ADR documenting the decision to move
+        - Deleted: `misc/research/slm_from_scratch/` — Removed the `slm_from_scratch` research project and its associated files (notebooks,
+        - Modified: `myst.yml` — Added "DVC: Data Version Control" to the acronyms list.
+    - Replace aidx article with tool-agnostic Multi-Phase AI Pipeline
+        - Created: ai_system/4_orchestration/workflows/multi_phase_ai_pipeline.md — Research-Apply pipeline and namespace partitioning for RAG
+        - Deleted: ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.md — tool-coupled original
+        - Deleted: ai_system/4_orchestration/workflows/aidx_industrial_ai_orchestration_framework.ipynb — paired notebook
+        - Updated: 0_intro/00_onboarding.md — link to new pipeline article
+        - Updated: ai_system/2_model/selection/choosing_model_size.md — replaced 5 aidx refs with tool-agnostic language and cross-links
+        - Updated: ai_system/2_model/selection/general_purpose_vs_agentic_models.md — replaced 3 aidx refs, fixed gemini-3-flash version string
+    - Rename BROKEN_LINKS_EXCLUDE_DIRS to VALIDATION_EXCLUDE_DIRS
+        - Refactored: `tools/scripts/paths.py` — rename to VALIDATION_EXCLUDE_DIRS, remove JUPYTEXT_EXCLUDE_DIRS alias
+        - Updated: `tools/scripts/check_broken_links.py` — use VALIDATION_EXCLUDE_DIRS
+        - Updated: `tools/scripts/check_link_format.py` — use VALIDATION_EXCLUDE_DIRS
+        - Updated: `tools/scripts/check_adr.py` — use VALIDATION_EXCLUDE_DIRS, remove historical comment
+        - Updated: `tools/tests/test_check_broken_links.py` — align with renamed variable
+        - Updated: `tools/tests/test_check_link_format.py` — align with renamed variable
+        - Updated: `tools/docs/git/03_precommit_ci_validation_system.md` — update code example
+        - Updated: `tools/docs/scripts_instructions/check_adr_py_script.md` — fix frontmatter format
+        - Updated: `tools/docs/scripts_instructions/check_broken_links_py_script.md` — update variable name in docs
+        - Updated: `tools/docs/scripts_instructions/check_link_format_py_script.md` — update variable name in docs
+        - Updated: `tools/docs/scripts_instructions/format_string_py_script.md` — migrate to YAML frontmatter
+        - Updated: `tools/docs/scripts_instructions/extract_html_text_py_script.md` — fix frontmatter whitespace
+        - Updated: `ai_system/3_prompts/format_as_architecture_signal_noise_in_prompt_delivery.md` — bump to v0.1.1
+    - Triage ADR-26004..26008 from tool-specific to tool-agnostic
+        - Updated: `architecture/adr/adr_26004_implementation_of_agentic_rag_for_autonom.md` — rejected with rejection rationale (tool-agnostic shift)
+        - Updated: `architecture/adr/adr_26005_formalization_of_aider_as_primary_agentic.md` — rejected with rejection rationale (tool-agnostic shift)
+        - Updated: `architecture/adr/adr_26006_agentic_class_models_for_architect_phase.md` — superseded by ADR-26027
+        - Updated: `architecture/adr/adr_26007_formalization_of_phase_0_intent_synthesi.md` — superseded by ADR-26028
+        - Updated: `architecture/adr/adr_26008_reasoning_class_models_for_abstract_synt.md` — superseded by ADR-26027
+        - Created: `architecture/adr/adr_26027_model_taxonomy_reasoning_vs_agentic_class.md` — tool-agnostic model selection heuristic (accepted)
+        - Created: `architecture/adr/adr_26028_tool_agnostic_phase_0_intent_synthesis.md` — tool-agnostic Phase 0 intent synthesis (accepted)
+        - Updated: `architecture/adr/adr_template.md` — added conditional Rejection Rationale section
+        - Updated: `architecture/adr_index.md` — regenerated via check_adr.py --fix
+        - Updated: `ai_system/2_model/selection/general_purpose_vs_agentic_models.md` — replaced ADR-26006/26008 refs with ADR-26027
+        - Updated: `ai_system/2_model/selection/choosing_model_size.md` — replaced ADR-26005/26006 refs with ADR-26027
+        - Fixed: `architecture/adr/adr_26015_mandatory_sync_guard_and_diff_suppression.md` — typo in gitattributes formatting
+        - Fixed: `architecture/adr/adr_26022_standardization_of_public_documentation_hosting.md` — missing EOF newline
+* Public Relations:
+    - Add 2026_02_15_architecture_of_context_building_a_central_brain.md
+    - Add Telegram post on Format-as-Architecture token analysis
+        - Created: `misc/pr/tg_channel_ai_learning/2026_02_15_format_as_architecture_token_cost.md` — educational post explaining how serialization format affects LLM attention budget, with BPE mechanics and measured token costs across 4 formats
+    - Update release post
+
+release 2.4.0
+* ADR Validation Toolchain:
+    - `check_adr_index.py` renamed to `check_adr.py` with expanded scope: config-driven
+      validation of required frontmatter fields, date format, tag allowlist, required sections,
+      hyphen-format standardization (ADR-NNNNN), legacy migration (`--migrate`), partitioned
+      index by status. 110 tests, 98% coverage.
+    - Term reference validation added (`--check-terms`, `--fix-terms`) — detects and fixes
+      broken `{term}` cross-references (e.g. `ADR 26001` → `ADR-26001`).
+    - New `adr_config.yaml` as single source of truth for required sections, term reference
+      patterns, and tag allowlists.
+* Architecture Decisions (ADRs) added:
+    - ADR-26016: Metadata-Driven Architectural Records Lifecycle.
+    - ADR-26017: ADR Format Validation Workflow.
+    - ADR-26018: Universal YAML Frontmatter Adoption for Machine-Readable Documentation.
+    - ADR-26019: Mirroring YAML Metadata to Document Body for Human Verification.
+    - ADR-26020: Hub-and-Spoke Ecosystem Documentation Architecture.
+    - ADR-26021: Content Lifecycle Policy for RAG-Consumed Repositories.
+    - ADR-26022: Standardization of Public Documentation Hosting on GitHub Pages.
+* ADR Migration:
+    - All 17 pre-existing ADRs (26001–26016) migrated to standardized format with YAML
+      frontmatter (`id`, `title`, `date`, `status`, `tags`), hyphen-style headers, and
+      Title/Date/Status body sections.
+    - ADR index reorganized into Active Architecture / Evolutionary Proposals partitions.
+* Hub-Spoke Ecosystem:
+    - `architecture/packages/` directory created for ecosystem-wide package specifications.
+    - vadocs package specification added (`architecture/packages/vadocs.md`).
+    - Ecosystem development workflow guide added
+      (`tools/docs/packages/ecosystem_package_development_workflow.md`).
+* vadocs Package Lifecycle (v0.1.0):
+    - Scaffolded as `vadoc` with core models, validators (ADR, Frontmatter, MystGlossary),
+      fixers (ADR, Sync), 26 tests passing.
+    - Renamed `vadoc` → `vadocs`, added config module, integration tests, PoC docs.
+    - Extracted to dedicated repository (github.com/lefthand67/vadocs) after successful PoC;
+      all package sources removed from monorepo.
+* New Articles:
+    - ai_system/5_context/reflected_metadata_pattern.md — reflected-metadata pattern
+      explaining why `myst build --html` ignores custom YAML fields.
+    - ai_system/5_context/yaml_frontmatter_for_ai_enabled_engineering.md — YAML frontmatter
+      guide with real `aidx` examples and corrected MyST-build framing.
+* Rewritten Articles:
+    - ai_system/2_model/selection/choosing_model_size.md rewritten as VRAM budgeting guide —
+      KV Cache, quantization, production patterns (Verifier Cascade, Hybrid Routing),
+      `aidx` pipeline roles, Jan 2026 model zoo.
+* Deleted Articles:
+    - ai_system/4_orchestration/patterns/llm_usage_patterns.md deleted per ADR-26021 —
+      superseded by `aidx` framework; 101-level taxonomy below repo quality bar.
+* Bug Fixes:
+    - MyST term references fixed across 11 ADR files and 3 content files
+      (`{term}\`ADR 26001\`` → `{term}\`ADR-26001\``).
+    - ADR-26019: dropped phantom HTML-anchor mechanism (never implemented), corrected
+      CLI-invisibility claim to the actual gap (myst build ignoring custom YAML fields).
+* CI/CD & Quality:
+    - `quality.yml` and `.pre-commit-config.yaml` updated for `check_adr.py`.
+    - `misc/` added to broken-links exclusion list in `paths.py`.
+    - ADR template updated with Date/Status sections and YAML frontmatter schema.
+* Development Workflow (CLAUDE.md):
+    - TDD approach clarified (Red → Green → Refactor, tests-first emphasis).
+    - Non-brittle test quality standards added (test contracts, semantic assertions).
+* Documentation:
+    - Onboarding (`00_onboarding.md`) updated with metadata conventions section.
+
+release 2.3.0
+* Architecture Decisions (ADRs) added:
+    - ADR 26011: Formalization of Mandatory Script Suite (Script + Test + Doc).
+    - ADR 26012: Extraction of Docs Validation Engine.
+    - ADR 26013: Just-in-Time Prompt Transformation.
+    - ADR 26014: Semantic Notebook Pairing Strategy (Jupytext).
+    - ADR 26015: Mandatory Sync Guard and Diff Suppression.
+* Tooling Ecosystem Overhaul:
+    - New `check_script_suite.py` enforces the 1:1:1 convention (Script, Test, Documentation).
+    - New `check_adr_index.py` validates ADR index synchronization.
+    - New `check_link_format.py` ensures links point to `.ipynb` in paired files.
+    - `prepare_prompt` refactored to Python (`prepare_prompt.py`) with multi-format support (JSON, YAML, TOML, Markdown) and JIT transformation.
+    - `configure_repo` refactored to Python (`configure_repo.py`) for better cross-platform support.
+    - `jupytext_sync` and `jupytext_verify_pair` updated for Semantic Notebook Pairing.
+* Documentation & Standards:
+    - `CONVENTIONS.md` and `CLAUDE.md` updated with MyST, Jupytext, and Script Suite guidelines.
+    - Onboarding instructions updated to use `configure_repo.py`.
+    - Documentation for all scripts centralized in `tools/docs/scripts_instructions/`.
+* Content Organization:
+    - Password management handbooks moved to `misc/in_progress`.
+    - Prompts directory (`ai_system/3_prompts`) restructured for Prompts-as-Infrastructure.
+* CI/CD & Quality:
+    - Pre-commit hooks updated for new tools and Python-based scripts.
+    - CI now checks all Markdown files for broken links.
+    - API Key scanning improved with file exclusion lists.
+* New articles added:
+    - 1_execution/hybrid_cpu_gpu_execution_and_kv_cache_offloading.md
+
+release 1.3.0
+* New articles added:
+  - mlops/workflows/git_three_major_workflows.md
+  - tools/vim/ai_tools_in_vim.md
+  - tools/vim/handout_aider.md
+* Articles moved
+  - 2_model/training/python314_parallelism_game_changer.md -> tools/python314_parallelism_game_changer.md
+  - 2_model/training/right_tool_for_right_layer.md -> tools/right_tool_for_right_layer.md
+  - 2_model/training/why_rust_for_tokenizers.md -> tools/why_rust_for_tokenizers.md
+  - 4_orchestration/patterns/llm_usage_patterns_p1.md -> 4_orchestration/patterns/llm_usage_patterns.md
+  - 4_orchestration/patterns/llm_usage_patterns_p2.md -> 2_model/selection/choosing_model_size.md
+* Release Notes created
+
+release 1.2.0
+* New articles added:
+  - 0_intro/ai_systems_multilayer_approach.md
+  - 4_orchestration/patterns/llm_usage_patterns_p1.md
+  - 4_orchestration/patterns/llm_usage_patterns_p2.md
+* New directory added - `0_intro` - with all general and introductory materials
+  - ./ai_further_reading.md moved there
+
+release 1.1.0
+* New articles added:
+  - 2_model/training/custom_tokenizer_and_embedding.md
+  - 2_model/training/why_rust_for_tokenizers.md
+  - 2_model/training/right_tool_for_right_layer.md added - Python, Rust, and C++ in AI stack
+  - 2_model/training/python314_parallelism_game_changer.md
+
+release 1.0.0
+* Tree structure prepared for new articles.
+* New articles added:
+  - 1_execution/nvidia_gpu_optimization.md,
+  - 2_model/embeddings_for_small_llms.md.
