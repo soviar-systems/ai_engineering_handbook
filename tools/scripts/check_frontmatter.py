@@ -74,6 +74,7 @@ class FrontmatterError:
         "invalid_format"     — field present but wrong format, e.g. bad date (blocking)
         "invalid_value"      — field value not in allowed set, e.g. unknown tag (blocking)
         "unknown_type"       — options.type not in conf.json types registry (blocking)
+        "missing_type"       — frontmatter present but options.type absent (blocking)
         "namespace_warning"  — non-myst_native field at top level instead of options.* (non-blocking)
 
     main() treats "namespace_warning" as stderr-only; all others cause exit 1.
@@ -183,15 +184,20 @@ def main(argv: list[str] | None = None) -> int:
         if frontmatter is None:
             continue
 
-        # Files with frontmatter but no options.type: warn and skip.
-        # These are ungoverned-by-type until Phase 1.15 adds type to all files.
-        # This warning is critical for migration visibility — it tells agents
-        # which files still need options.type added.
+        # Files with frontmatter but no options.type: this is now a blocking error.
+        # All governed files MUST declare their type to be subject to validation.
+        # Without a type, the correct spoke config cannot be loaded and type-specific
+        # rules cannot be enforced — this is a validation gap that must be closed.
         doc_type = resolve_type(frontmatter)
         if doc_type is None:
-            print(
-                f"WARNING: {file_path} — has frontmatter but no options.type, skipping type-specific validation",
-                file=sys.stderr,
+            all_errors.append(
+                FrontmatterError(
+                    file_path=file_path,
+                    error_type="missing_type",
+                    field="options.type",
+                    message="frontmatter present but missing required 'options.type' — type determines which validation rules apply and is required for governance",
+                    config_source=".vadocs/conf.json → field_registry.type",
+                )
             )
             continue
 
@@ -283,17 +289,30 @@ def validate_parsed_frontmatter(
     avoids double-parsing during the migration period where both the domain
     script and check_frontmatter.py run on the same files.
 
-    Returns [] for files with no options.type — caller is responsible for
-    deciding whether to warn (main() does, domain scripts may not).
+    Returns [FrontmatterError] for files with frontmatter but no options.type —
+    all governed files must declare their type to be validated. The type
+    determines which spoke config is loaded, which required fields apply, and
+    which status/severity values are allowed. Without a type, validation
+    cannot proceed meaningfully.
     """
     # Step 1: Determine document type from options.type field.
-    # Files without options.type are not governed — caller (main) issues a
-    # warning for files that have frontmatter but no type. This is expected
-    # during the pre-migration period before Phase 1.15 adds options.type
-    # to all governed files.
+    # Files without options.type are not governed — this is now a blocking error.
+    # Every file with frontmatter MUST declare its type so that:
+    #   1. The correct spoke config (.vadocs/types/<type>.conf.json) is loaded
+    #   2. Type-specific required fields, statuses, and rules are enforced
+    #   3. The file is subject to governance — no silent bypasses
+    # Without a type, schema validation cannot proceed meaningfully.
     doc_type = resolve_type(frontmatter)
     if doc_type is None:
-        return []
+        return [
+            FrontmatterError(
+                file_path=file_path,
+                error_type="missing_type",
+                field="options.type",
+                message="frontmatter present but missing required 'options.type' — type determines which validation rules apply and is required for governance",
+                config_source=".vadocs/conf.json → field_registry.type",
+            )
+        ]
 
     # Step 2: Reject unknown types early — all 10 valid types are in conf.json.
     if doc_type not in VALID_TYPES:

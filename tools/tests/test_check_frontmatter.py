@@ -864,17 +864,29 @@ class TestMainExitCodes:
         assert isinstance(exit_code, int)
 
 
-class TestWarningNoType:
-    """Contract: files with frontmatter but no options.type get a warning."""
+class TestMissingTypeError:
+    """Contract: files with frontmatter but no options.type cause exit 1."""
 
-    def test_warning_printed_for_missing_type(self, frontmatter_env, capsys):
-        """File with frontmatter but no options.type → warning on stderr."""
+    def test_main_exits_1_for_missing_type(self, frontmatter_env, capsys):
+        """File without options.type → exit code 1, error on stdout."""
         content = "---\ntitle: Untyped Document\ndate: 2026-01-01\n---\n\n# Body\n"
         md_file = frontmatter_env / "untyped.md"
         md_file.write_text(content, encoding="utf-8")
-        _module.main([str(md_file)])
+        exit_code = _module.main([str(md_file)])
+        assert exit_code == 1
         captured = capsys.readouterr()
-        assert "no options.type" in captured.err.lower() or "warning" in captured.err.lower()
+        assert "options.type" in captured.out
+        assert "missing" in captured.out.lower()
+
+    def test_error_printed_for_missing_type(self, frontmatter_env, capsys):
+        """File with frontmatter but no options.type → error on stdout, exit 1."""
+        content = "---\ntitle: Untyped Document\ndate: 2026-01-01\n---\n\n# Body\n"
+        md_file = frontmatter_env / "untyped.md"
+        md_file.write_text(content, encoding="utf-8")
+        exit_code = _module.main([str(md_file)])
+        assert exit_code == 1
+        captured = capsys.readouterr()
+        assert "options.type" in captured.out
 
 
 class TestErrorMessages:
@@ -931,13 +943,36 @@ class TestValidateFrontmatterConvenience:
         errors = _module.validate_frontmatter(md_file, frontmatter_env)
         assert errors == []
 
-    def test_returns_empty_when_no_type(self, frontmatter_env):
-        """File with frontmatter but no options.type → empty list."""
+    def test_returns_error_when_no_type(self, frontmatter_env):
+        """File with frontmatter but no options.type → returns [FrontmatterError]."""
         content = "---\ntitle: Untyped\ndate: 2026-01-01\n---\n\n# Body\n"
         md_file = frontmatter_env / "untyped.md"
         md_file.write_text(content, encoding="utf-8")
         errors = _module.validate_frontmatter(md_file, frontmatter_env)
-        assert errors == []
+        missing_type = [e for e in errors if e.error_type == "missing_type"]
+        assert len(missing_type) == 1
+
+
+class TestValidateMissingType:
+    """Contract: files with frontmatter but no options.type produce blocking error."""
+
+    def test_validate_parsed_frontmatter_returns_error_for_missing_type(self, frontmatter_env):
+        """Frontmatter without options.type → returns [FrontmatterError]."""
+        fm = {"title": "Test", "date": "2026-01-01"}  # no options.type
+        md_file = frontmatter_env / "test.md"
+        errors = _module.validate_parsed_frontmatter(fm, md_file, frontmatter_env)
+        missing_type = [e for e in errors if e.error_type == "missing_type"]
+        assert len(missing_type) == 1
+        assert missing_type[0].field == "options.type"
+        assert "options.type" in missing_type[0].message
+
+    def test_validate_parsed_frontmatter_no_error_when_type_present(self, frontmatter_env):
+        """Frontmatter with options.type → no missing_type error."""
+        fm = {"title": "Test", "options": {"type": "adr"}}
+        md_file = frontmatter_env / "test.md"
+        errors = _module.validate_parsed_frontmatter(fm, md_file, frontmatter_env)
+        missing_type = [e for e in errors if e.error_type == "missing_type"]
+        assert len(missing_type) == 0
 
 
 class TestUnknownType:

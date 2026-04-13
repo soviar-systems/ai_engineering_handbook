@@ -98,6 +98,11 @@ ADR-26029
 ADR-26035
 : [Architecture Knowledge Base Taxonomy](/architecture/adr/adr_26035_architecture_knowledge_base_taxonomy.md)
 
+ADR-26042
+: [Common Frontmatter Standard](/architecture/adr/adr_26042_common_frontmatter_standard.md)
+
+  Adopts a composable block frontmatter schema as the universal standard for all governed documents. Defines 3 block types (identity, discovery, lifecycle) that compose additively per document type. Requires every file with frontmatter to self-identify via options.type so validation scripts load the correct spoke config. Eliminates directory-based type inference, fixes inconsistent date semantics, and replaces flat required-fields lists with additive block inheritance. Hub config (.vadocs/conf.json) defines field registry, block composition, and 10-type taxonomy; spoke configs (.vadocs/types/<type>.conf.json) add type-specific required fields, allowed statuses, and severity values.
+
 :::
 
 ### model
@@ -173,9 +178,6 @@ ADR-26033
 
 ADR-26036
 : [Config File Location and Naming Conventions](/architecture/adr/adr_26036_config_file_location_and_naming_conventions.md)
-
-ADR-26042
-: [Common Frontmatter Standard](/architecture/adr/adr_26042_common_frontmatter_standard.md)
 
 ADR-26043
 : [Ecosystem Package Boundary](/architecture/adr/adr_26043_ecosystem_package_boundary.md)
