@@ -71,6 +71,18 @@ The repository is organized around a five-layer AI system architecture:
 
 When you implemented a plan in /plan mode, save it to misc/plan/plan_<YYYYMMDD>_<descriptive_slug>.md, ONLY then start implementation. After the plan is fully implemented, move it to misc/plan/implemented/. This is needed to save the history of the decisions made between context switches.
 
+**Implementation Plans for Handoff:**
+Plans in `misc/plan/` may be executed by another agent that has zero context from the brainstorm session. A plan is a standalone specification — the executing agent must NOT need to re-brainstorm or ask clarifying questions. Every plan must contain:
+
+1. **Full context section** — current state analysis with directory trees, file breakdowns (section-by-section with line numbers), and a content mapping table showing what moves where and why
+2. **Cross-reference map** — list ALL files that reference the changed files, with exact line numbers, current (broken) paths, and what they should become. Include a final-state cross-reference diagram showing all link relationships
+3. **Rationale for each task** — explain WHY each change is being made, not just WHAT to do. The executing agent needs to understand the intent to make correct decisions when edge cases arise
+4. **Complete file content** — for new files and rewritten files, provide the FULL content inline in the plan. Never say "create file with appropriate content" or "slim down the file" — show exactly what goes in
+5. **Exact edit operations** — for modifying existing files, provide the exact `old_string` (with 3+ lines of context BEFORE and AFTER) and the `new_string` for every `edit` tool call. The executing agent must be able to copy-paste without reading the target file first
+6. **Content removal list** — when splitting files, explicitly list which sections are removed, which are kept, and where the removed content went. Use checkmarks (✅ kept, ✗ moved) for clarity
+7. **Commands with expected output** — every `git mv`, `ls`, `grep`, verification command must include the expected output so the executing agent can detect failures
+8. **Self-review section** — a checklist the plan author ran before handoff: spec coverage, placeholder scan, cross-reference consistency, scope check
+
 Track intentional tech debt in `misc/plan/techdebt.md` with date, location, and migration path.
 
 **MyST Notebooks:**
@@ -169,6 +181,10 @@ options:
 **Ephemeral Files:**
 - `misc/todo.md` is plain text (no markdown formatting) — treat as an ephemeral scratch notebook
 - `misc/insights.md` is plain text — ephemeral scratch file for session insights, same conventions as `todo.md`
+
+**Living Documents:**
+- `RELEASE_NOTES.md` is a living document that users navigate — links in release entries must always be updated when referenced files are renamed or moved. Do NOT treat it as historical/archival.
+- `CHANGELOG` is auto-generated from commit history — do NOT edit manually (ADR-26024)
 
 **Evidence Source Hygiene:**
 - Raw source files (`.txt`, `.json`) in `evidence/sources/` must be deleted once content is captured in a `S-YYNNN` artifact — never leave both coexisting
