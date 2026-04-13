@@ -157,7 +157,11 @@ def validate_archtag(
     has_archtag = any(_ARCHTAG_RE.match(line) for line in body_lines)
     if not has_archtag:
         reason = "breaking change" if breaking else f"'{commit_type}' type"
-        return [f"ArchTag required for {reason} — add ArchTag:TAG-NAME as first body line"]
+        return [
+            f"ArchTag required for {reason} — "
+            f"add ArchTag:TAG-NAME as first body line "
+            f"(see pyproject.toml [tool.commit-convention].archtag-required-types)"
+        ]
 
     return []
 
