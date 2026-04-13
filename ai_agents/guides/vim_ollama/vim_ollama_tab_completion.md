@@ -29,7 +29,7 @@ Last Modified: 2026-01-13
 This handbook explains the mechanics of LLM-based tab completion within Vim specifically for the `vim-ollama` plugin and why specific model-config alignment is required for it to function correctly.
 
 :::{seealso}
-> Setup vim-ollama: ["VIM in AI Era: Hybrid Setup with Ollama and Aider"](/ai_agents/guides/vim_and_aider/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.ipynb)
+> Setup vim-ollama: [vim-ollama Plugin Setup](/ai_agents/guides/vim_ollama/vim_ollama_plugin_setup.md)
 :::
 
 +++

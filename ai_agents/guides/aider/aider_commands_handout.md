@@ -29,7 +29,7 @@ Last Modified: 2026-01-13
 Aider is an AI pair programmer that uses your code as context.
 
 :::{seealso} How to set up aider
-> [VIM in AI Era: Hybrid Setup with Ollama and Aider](/ai_agents/guides/vim_and_aider/01_vim_in_ai_era_hybrid_setup_with_ollama_and_aider.ipynb)
+> [Terminal AI Agents Workflow](/ai_agents/guides/terminal_ai_agents_workflow.md) (to be created — general hybrid strategy and Ollama setup)
 
 +++
 
