@@ -18,7 +18,7 @@ Open research question: "transformer satisficing under token pressure" — does 
 
 ## Phase 3: Brainstorm Session
 
-Invoke `/sv-ai-brainstorm-colleague` to stress-test A-26019 conclusions.
+Conduct a brainstorm session by directly utilizing the consultant system prompts in `ai_system_layers/3_prompts/consultants/` (selecting the most relevant archetype, e.g., the hybrid consultant) to stress-test A-26019 conclusions.
 
 ### Challenge Questions
 
