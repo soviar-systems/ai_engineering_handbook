@@ -73,6 +73,7 @@ Conduct a brainstorm session by directly utilizing the consultant system prompts
 | File | Role |
 |---|---|
 | `architecture/evidence/analyses/A-26019_heuer_methodology_integration_for_consultant_prompts.md` | Analysis to challenge in brainstorm |
+| `architecture/evidence/analyses/A-26023_heuer_brainstorm_stress_test.md` | Brainstorm results and agentic pipeline proposal |
 | `ai_system/3_prompts/consultants/ai_systems_consultant_hybrid.json` | Primary WRC prompt, Heuer target |
 | `ai_system/3_prompts/consultants/local_ai_systems_consultant.json` | WRC prompt #2 |
 | `ai_system/3_prompts/consultants/devops_consultant.json` | WRC prompt #3 |
