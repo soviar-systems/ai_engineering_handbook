@@ -140,6 +140,16 @@ ADR-26046
 
   Governance for directories containing nested git repos of external products used for comparative source-level research — centralized path registry with relocation safety.
 
+ADR-26047
+: [Integrate Heuer Intelligence Tradecraft into AI System Methodology](/architecture/adr/adr_26047_integrate_heuer_tradecraft_into_methodology.md)
+
+  Establishment of Richard Heuer's intelligence tradecraft (ACH, Disconfirmation, Linchpin Analysis) as a core methodology for the AI system to counter the autoregressive consistency trap.
+
+ADR-26048
+: [Formalize Weighted Response Confidence (WRC) as Ecosystem Evaluation Metric](/architecture/adr/adr_26048_formalize_wrc_metric.md)
+
+  Establishment of the WRC scoring system as the authoritative metric for assessing the production-readiness of AI consultant outputs, integrating SVA penalties.
+
 :::
 
 ### context_management

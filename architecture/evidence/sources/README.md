@@ -4,7 +4,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.19.0
+    jupytext_version: 1.19.1
 kernelspec:
   name: bash
   display_name: Bash
@@ -16,6 +16,7 @@ title: Evidence Sources
 author: Vadim Rudakov, rudakow.wadim@gmail.com
 date: 2026-03-07
 options:
+  type: guide
   version: 0.1.0
   birth: 2026-03-07
 ---
@@ -85,7 +86,7 @@ ls
 ```
 
 ```{code-cell}
-sources="architecture/evidence/sources/"; git log --oneline --name-only -- "${sources}" | grep  "${sources}" | grep -v "${sources}/README.md" | sort -u
+sources="architecture/evidence/sources/"; git log --oneline --name-only -- "${sources}" | grep  "${sources}" | grep -v "${sources}/README.md" | sort -u | tail -n3
 ```
 
 **Search for deleted transcripts:**

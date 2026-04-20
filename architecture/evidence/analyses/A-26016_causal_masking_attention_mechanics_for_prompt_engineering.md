@@ -112,7 +112,15 @@ A common misconception (present in the blog post reviewed in `S-26017`) is that 
 
 - KV cache stores precomputed Key and Value projection vectors as an **inference optimization** — it avoids redundant matrix multiplication for tokens already processed
 - It does not "freeze thoughts" or prevent reconsideration
-- The model can generate self-correction tokens via Chain-of-Thought ("Actually, let me reconsider...") — it cannot edit already-generated tokens, but it can append corrective tokens
+## Approach Evaluation
+
+### Corrective Tokens vs. Backtracking
+
+While models can generate corrective tokens (e.g., "Actually, let me reconsider..."), this does not constitute true backtracking.
+
+1. **Append vs. Edit**: When an LLM appends corrective tokens, it is not editing past tokens in the KV Cache or the token stream. It is appending new tokens that perform a "correction" function by logically overriding or re-interpreting the previously generated content within the new, larger context.
+2. **The Constraint**: This "self-correction" is itself a new generation pass. The model is still bound by the causal mask for these corrective tokens—it can see the previous (incorrect) output, but it cannot go back and change the original output's probability distribution or hidden states. It must "live with" the past tokens it generated.
+3. **The Trap**: Because the original (biased) output is already in the KV Cache, the model's attention heads will continue to attend to that incorrect information. Research into "performative refutation" shows that even when explicitly instructed to "correct itself," models often struggle to fully break the momentum of the initial path because the context remains heavily biased toward the first hypothesis.
 
 **Relevance to prompt format:** KV cache is orthogonal to format choice. The format affects what is computed during prefill; the cache merely stores those computations efficiently. The claim in the original blog post that "causal order was designed for KV cache" reverses the causality — causal masking was introduced for training (preventing the model from attending to future tokens), and KV cache is a separate inference optimization that benefits from the causal property.
 
