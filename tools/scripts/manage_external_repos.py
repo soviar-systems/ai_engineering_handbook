@@ -1,18 +1,56 @@
 """
 Manage external product source code repositories.
 
-Scope: clone new external repos, pull updates for existing ones.
-Designed for two use cases:
+Scope: clone new external repos, pull updates for existing ones, and synchronize
+state with a central manifest.
+
+Designed for three use cases:
 1) One-time setup: cloning a new external product for research
 2) Pre-session refresh: ensuring all researched products have latest code
+3) State-based synchronization: reconciling actual state (disk + registry)
+   with a desired state defined in a manifest.
 
 Supports multiple directories from the external repo registry (ADR-26046).
 
 Public interface (CLI commands):
     setup <url> [--dir <dir_name>]         — Clone repo to specified directory
-    update [--parallel] [repo ...]         — Pull updates for all/specified repos
+    update [--parallel] [repo ...]         — Refresh existing repos (pull latest code)
     list                                    — Display all repos with branch/date/remote
     register <path> <description>           — Add new directory to registry
+    unregister <path>                       — Remove directory from registry
+    relocate <old> <new>                    — Rename directory and update consumers
+    sync [--update] [--dry-run]             — Reconcile state with manifest
+    sync-consumers                          — Align .gitignore and myst.yml with manifest
+
+State-Based Sync Contract:
+    SSoT: .vadocs/inventory/manage_external_repos.json
+
+    Sync vs Update:
+    - 'update' is a "refresh" command: it only pulls latest code for repos already on disk.
+    - 'sync' is a "reconciliation" command: it ensures the filesystem and registry
+      exactly match the manifest (clones missing, prompts to prune orphans).
+    - 'sync --dry-run' allows verifying the reconciliation plan without modifying the disk.
+    - 'sync --update' is a "complete alignment": it reconciles the structure AND
+      updates all repositories to the latest version.
+    - 'sync-consumers' ensures that the project's consumer files (.gitignore, myst.yml)
+      are synchronized with the current registered directories in the manifest.
+
+    Ignore Mechanisms:
+    - Persistent Ignores (Git/MyST): These external tools cannot read our JSON manifest.
+      Run 'sync-consumers' to write the manifest's registered directories into
+      .gitignore and myst.yml.
+    - Runtime Ignores (Validation Scripts): Our internal tools (e.g., check_broken_links.py)
+      import 'tools.scripts.paths.py', which reads the manifest at import time and
+      adds registered directories to the exclusion set (VALIDATION_EXCLUDE_DIRS) automatically.
+
+    The 'sync' reconciliation loop:
+    1. Discovery: Maps Desired (manifest), Registered (config), and Actual (disk) states.
+    2. Delta Calculation: Identifies Orphans (disk not in manifest), Ghost Dirs
+       (registered not in manifest), and Missing repos (manifest not on disk).
+    3. Resolution: Interactively asks the user to Resolve Orphans (Remove/Move/Ignore)
+       and Ghost Dirs (Unregister/Keep).
+    4. Execution: Performs relocation, deletion, registration, and cloning.
+    5. Update: If --update is passed, runs 'git pull --rebase' on all manifest repos.
 
 Configuration:
     EXTERNAL_REPO_DIRS (set[Path]) — All directories from the registry.
@@ -49,23 +87,34 @@ Usage examples:
     # Register a new directory
     uv run tools/scripts/manage_external_repos.py register research/new_agents "New agent research"
 
+    # Synchronize state with manifest
+    uv run tools/scripts/manage_external_repos.py sync --update
+
     # List all repos and their status
     uv run tools/scripts/manage_external_repos.py list
 """
 
 import argparse
 import json
+import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Set
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s: %(message)s"
+)
+logger = logging.getLogger("manage_external_repos")
+
 from tools.scripts.git import clone_repo, detect_repo_root, get_repo_status, pull_repo
 from tools.scripts.paths import get_external_repo_paths
 
 # Configuration constants
-# EXTERNAL_REPO_DIRS is resolved from the external repos registry at import time.
-# Falls back to a default path when the registry has no entries.
+# EXTERNAL_REPO_DIRS is resolved from the unified manifest at import time.
+# Falls back to a default path when the manifest has no entries.
 _repo_root = detect_repo_root()
 _external_paths = get_external_repo_paths(_repo_root)
 _FALLBACK_DIRS: Set[Path] = {Path("research/ai_coding_agents")}
@@ -75,8 +124,8 @@ if _external_paths:
 else:
     EXTERNAL_REPO_DIRS: Set[Path] = _FALLBACK_DIRS
 
-# Registry config path
-_EXTERNAL_REPOS_CONFIG = ".vadocs/validation/external-repos.conf.json"
+# Unified SSoT manifest path
+_MANIFEST_CONFIG = ".vadocs/inventory/manage_external_repos.json"
 
 
 @dataclass
@@ -89,6 +138,170 @@ class AgentRepo:
     parent_dir: Path  # Which registered directory contains this repo
     branch: Optional[str] = None
 
+
+class SyncManager:
+    """Reconciles actual external repo state with a desired manifest.
+
+    Contract:
+    1. Discovery: Maps Manifest, Registry, and Disk.
+    2. Delta: Calculates Missing, Orphans, and Ghost Dirs.
+    3. Resolution: Interactively resolves deltas.
+    4. Execution: Applies changes (Clone, Register, Delete, Relocate).
+    """
+
+    def __init__(self, repo_root: Path, manifest_path: Path):
+        self.repo_root = repo_root
+        self.manifest_path = manifest_path
+
+    def load_manifest(self) -> dict:
+        """Load the SSoT manifest file."""
+        if not self.manifest_path.exists():
+            print(f"❌ Error: Manifest not found: {self.manifest_path}")
+            return {}
+        with open(self.manifest_path) as f:
+            return json.load(f)
+
+    def calculate_delta(self, manifest: dict):
+        """Calculate differences between manifest, registry, and disk."""
+        # Desired state from manifest
+        desired_dirs = manifest.get("directories", {})
+        desired_repos = {}
+        for dir_path, data in desired_dirs.items():
+            for repo_name, repo_data in data.get("repos", {}).items():
+                desired_repos[repo_name] = {
+                    "url": repo_data["url"],
+                    "path": Path(dir_path) / repo_name
+                }
+
+        # Registered state from manifest
+        registered_dirs = set(desired_dirs.keys())
+
+        # Actual state from disk
+        actual_repos = {}
+        actual_dirs = set()
+
+        # Scan all registered directories for repos
+        for dir_path in EXTERNAL_REPO_DIRS:
+            full_dir = self.repo_root / dir_path
+            if full_dir.exists():
+                actual_dirs.add(str(dir_path))
+                repos = discover_repos(full_dir, parent_dir=dir_path)
+                for r in repos:
+                    actual_repos[r.name] = r
+
+        # Discovery of Orphans: Scan for any .git directories not in manifest
+        for path in self.repo_root.rglob(".git"):
+            if path.is_dir():
+                # Skip the project's own .git folder
+                if path == self.repo_root / ".git":
+                    continue
+                repo_dir = path.parent
+                try:
+                    rel_parent = repo_dir.parent.relative_to(self.repo_root)
+                    if str(rel_parent) not in desired_dirs:
+                        actual_dirs.add(str(rel_parent))
+                except ValueError:
+                    continue
+
+        # Deltas
+        missing_repos = []
+        for name, data in desired_repos.items():
+            if name not in actual_repos:
+                missing_repos.append((name, data["url"], data["path"]))
+
+        orphans = []
+        for dir_path in actual_dirs:
+            if dir_path not in desired_dirs:
+                orphans.append(dir_path)
+
+        ghost_dirs = []
+        for reg_dir in registered_dirs:
+            if reg_dir not in desired_dirs:
+                ghost_dirs.append(reg_dir)
+
+        return {
+            "missing": missing_repos,
+            "orphans": orphans,
+            "ghosts": ghost_dirs,
+            "desired_dirs": desired_dirs
+        }
+
+    def interactive_resolve(self, delta: dict):
+        """Handle user prompts for Orphans and Ghost Dirs."""
+        resolutions = {"orphans": [], "ghosts": []}
+
+        print("\n🔍 State Reconciliation")
+        print("-" * 30)
+
+        # Resolve Orphans
+        for orphan in delta["orphans"]:
+            print(f"\n📂 Orphan directory found: {orphan}")
+            choice = input("Action: [R]emove, [I]gnore, [C]ancel? ").strip().lower()
+            if choice in ("r", "remove"):
+                resolutions["orphans"].append(("remove", orphan))
+            elif choice in ("c", "cancel"):
+                return None
+            else:
+                resolutions["orphans"].append(("ignore", orphan))
+
+        # Resolve Ghosts
+        for ghost in delta["ghosts"]:
+            print(f"\n👻 Ghost registry entry found: {ghost}")
+            choice = input("Action: [U]nregister, [K]eep, [C]ancel? ").strip().lower()
+            if choice in ("u", "unregister"):
+                resolutions["ghosts"].append(("unregister", ghost))
+            elif choice in ("c", "cancel"):
+                return None
+            else:
+                resolutions["ghosts"].append(("keep", ghost))
+
+        return resolutions
+
+    def apply_reconciliation(self, delta: dict, resolutions: dict, dry_run: bool = False):
+        """Execute the decided changes."""
+        if dry_run:
+            logger.info("🧪 Dry-run mode: No changes will be applied to disk or registry")
+            logger.info("-" * 60)
+
+        # 1. Handle Orphans
+        for action, path in resolutions["orphans"]:
+            if action == "remove":
+                full_path = self.repo_root / path
+                logger.info(f"🗑 {'[Dry-run] Would remove' if dry_run else 'Removing'} orphan: {path}")
+                if not dry_run:
+                    import shutil
+                    shutil.rmtree(full_path, ignore_errors=True)
+
+        # 2. Handle Ghosts
+        for action, path in resolutions["ghosts"]:
+            if action == "unregister":
+                logger.info(f"📝 {'[Dry-run] Would unregister' if dry_run else 'Unregistering'} ghost: {path}")
+                if not dry_run:
+                    unregister_command(path)
+
+        # 3. Register Missing Directories
+        for dir_path in delta["desired_dirs"]:
+            desc = delta["desired_dirs"][dir_path]["description"]
+            logger.info(f"📁 {'[Dry-run] Would register' if dry_run else 'Registering'} directory: {dir_path}")
+            if not dry_run:
+                register_command(dir_path, desc)
+
+        # 4. Clone Missing Repos
+        for name, url, rel_path in delta["missing"]:
+            parent_dir = str(rel_path.parent)
+            logger.info(f"📦 {'[Dry-run] Would clone' if dry_run else 'Cloning'} missing repo: {name}")
+            if not dry_run:
+                setup_command(url, target_dir_name=parent_dir)
+
+    def perform_updates(self, manifest: dict):
+        """Pull latest changes for all manifest repos."""
+        print("\n🔄 Updating all manifest repositories...")
+        for dir_path, data in manifest.get("directories", {}).items():
+            for repo_name, repo_data in data.get("repos", {}).items():
+                full_path = self.repo_root / dir_path / repo_name
+                if full_path.exists():
+                    print(f"   Updating {repo_name}...")
+                    pull_repo(full_path)
 
 def main() -> int:
     """Entry point for the CLI.
@@ -115,6 +328,10 @@ def main() -> int:
         return unregister_command(args.path)
     elif args.command == "relocate":
         return relocate_command(args.old_path, args.new_path)
+    elif args.command == "sync":
+        return sync_command(update=args.update, dry_run=args.dry_run)
+    elif args.command == "sync-consumers":
+        return sync_consumers_command(dry_run=args.dry_run)
     else:
         parser.print_help()
         return 1
@@ -159,6 +376,15 @@ Examples:
 
   # Rename a directory — updates registry AND all consumer files atomically
   %(prog)s relocate old/path/external_repos new/path/external_repos
+
+  # Synchronize state with manifest
+  %(prog)s sync --update
+
+  # Synchronize state with manifest (dry-run)
+  %(prog)s sync --dry-run
+
+  # Synchronize consumer files (.gitignore, myst.yml)
+  %(prog)s sync-consumers
 
   # List all repos with status
   %(prog)s list
@@ -272,6 +498,36 @@ Examples:
         help="New path to relocate to (e.g., new_dir/external_repos)",
     )
 
+    # sync command
+    sync_parser = subparsers.add_parser(
+        "sync",
+        help="Synchronize repositories with the manifest",
+        description="Reconcile actual state (disk + registry) with desired state "
+        "defined in .vadocs/inventory/manage_external_repos.json.",
+    )
+    sync_parser.add_argument(
+        "--update",
+        action="store_true",
+        help="Pull latest changes for all manifest repositories",
+    )
+    sync_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be changed without applying modifications",
+    )
+
+    # sync-consumers command
+    consumers_parser = subparsers.add_parser(
+        "sync-consumers",
+        help="Sync consumer files (.gitignore, myst.yml)",
+        description="Rebuild consumer file exclusions to match the current registry.",
+    )
+    consumers_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show changes to consumer files without applying them",
+    )
+
     return parser
 
 
@@ -280,14 +536,14 @@ def setup_command(url: str, target_dir_name: str | None = None) -> int:
 
     Contract: Clones repo to specified directory.
     When multiple directories registered, --dir is required.
-    Returns 1 if repo already exists or clone fails.
+    Returns 0 if repo already exists or clones successfully, 1 if clone fails.
 
     Args:
         url: Repository URL to clone.
         target_dir_name: Optional registered directory path (required if multiple dirs).
 
     Returns:
-        0 on success, 1 on failure.
+        0 on success or already present, 1 on failure.
     """
     repo_root = detect_repo_root()
     target_dir = _resolve_target_dir(repo_root, target_dir_name)
@@ -302,9 +558,8 @@ def setup_command(url: str, target_dir_name: str | None = None) -> int:
     repo_path = target_dir / repo_name
 
     if repo_path.exists():
-        print(f"❌ Error: Repository already exists at {repo_path}")
-        print(f"   To update, run: uv run tools/scripts/manage_external_repos.py update {repo_name}")
-        return 1
+        print(f"ℹ Repository already exists at {repo_path}")
+        return 0
 
     # Clone the repository
     print(f"📦 Cloning {url}")
@@ -466,7 +721,7 @@ def list_command(dirs_only: bool = False) -> int:
 
 
 def _list_dirs(repo_root: Path) -> int:
-    """Show registered directories from the registry config.
+    """Show registered directories from the unified manifest.
 
     Args:
         repo_root: Repository root.
@@ -474,37 +729,36 @@ def _list_dirs(repo_root: Path) -> int:
     Returns:
         0 always.
     """
-    config_path = repo_root / _EXTERNAL_REPOS_CONFIG
-    if not config_path.exists():
-        print("ℹ No registry config found")
+    manifest_path = repo_root / _MANIFEST_CONFIG
+    if not manifest_path.exists():
+        print("ℹ No manifest config found")
         return 0
 
-    with open(config_path) as f:
+    with open(manifest_path) as f:
         data = json.load(f)
 
-    entries = data.get("entries", [])
-    if not entries:
+    dirs = data.get("directories", {})
+    if not dirs:
         print("ℹ No directories registered")
         return 0
 
-    print(f"📂 Registered Directories ({len(entries)} total):\n")
+    print(f"📂 Registered Directories ({len(dirs)} total):\n")
     print(f"{'Path':<35} {'Type':<25} {'Description'}")
     print("-" * 100)
 
-    for entry in entries:
-        path_str = entry.get("path", "N/A")
-        type_str = entry.get("product_type", "N/A")
-        desc_str = entry.get("description", "")
-        print(f"{path_str:<35} {type_str:<25} {desc_str}")
+    for path, info in dirs.items():
+        type_str = info.get("product_type", "N/A")
+        desc_str = info.get("description", "")
+        print(f"{path:<35} {type_str:<25} {desc_str}")
 
     return 0
 
 
 def register_command(path: str, description: str, config_path: Path | None = None) -> int:
-    """Add a new directory to the external repos registry.
+    """Add a new directory to the external repos manifest.
 
-    Contract: Updates external-repos.conf.json with new entry.
-    Returns 1 if path already registered.
+    Contract: Updates manage_external_repos.json with new entry.
+    Returns 0 if success or already registered, 1 on failure.
 
     Args:
         path: Relative path for the new directory.
@@ -512,37 +766,37 @@ def register_command(path: str, description: str, config_path: Path | None = Non
         config_path: Optional explicit config path (for testing).
 
     Returns:
-        0 on success, 1 on failure.
+        0 on success or already present, 1 on failure.
     """
     repo_root = detect_repo_root()
     if config_path is None:
-        config_path = repo_root / _EXTERNAL_REPOS_CONFIG
+        config_path = repo_root / _MANIFEST_CONFIG
 
-    # Load existing registry
+    # Load existing manifest
     if config_path.exists():
         with open(config_path) as f:
             data = json.load(f)
     else:
-        data = {"entries": []}
+        data = {"settings": {}, "directories": {}}
 
     # Check for duplicate
-    existing_paths = {entry["path"] for entry in data.get("entries", [])}
-    if path in existing_paths:
-        print(f"❌ Error: Directory already registered: {path}")
-        return 1
+    if path in data.get("directories", {}):
+        print(f"ℹ Directory already registered: {path}")
+        return 0
 
-    # Add new entry — consumers and managed_by copied from config top-level
-    # fields (ADR-26046). Not hardcoded — the config is the SSoT.
-    default_consumers = data.get("default_consumers", [])
-    default_managed_by = data.get("managed_by", "")
-    entry = {
-        "path": path,
+    # Determine consumers and managed_by from settings
+    settings = data.get("settings", {})
+    default_consumers = settings.get("default_consumers", [".gitignore"])
+    default_managed_by = settings.get("managed_by", "tools/scripts/manage_external_repos.py")
+    
+    # Create directory entry
+    data.setdefault("directories", {})[path] = {
         "description": description,
         "product_type": "external_product",
         "managed_by": default_managed_by,
         "consumers": list(default_consumers),
+        "repos": {}
     }
-    data["entries"].append(entry)
 
     # Write back
     config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -550,8 +804,11 @@ def register_command(path: str, description: str, config_path: Path | None = Non
         json.dump(data, f, indent=2)
         f.write("\n")
 
+    reload_registry()
+
     # Update consumer files — add exclusion for the new path
-    _add_path_to_consumers(repo_root, path, entry["consumers"])
+    consumers = data["directories"][path]["consumers"]
+    _add_path_to_consumers(repo_root, path, consumers)
 
     print(f"✅ Registered directory: {path}")
     print(f"   Description: {description}")
@@ -559,7 +816,6 @@ def register_command(path: str, description: str, config_path: Path | None = Non
         config_rel = config_path.relative_to(repo_root)
         print(f"   Config: {config_rel}")
     except ValueError:
-        # Test or non-standard path
         print(f"   Config: {config_path}")
     return 0
 
@@ -622,9 +878,9 @@ def _remove_path_from_consumers(repo_root: Path, path: str, consumers: List[str]
 
 
 def unregister_command(path: str, config_path: Path | None = None) -> int:
-    """Remove a directory from the external repos registry.
+    """Remove a directory from the external repos manifest.
 
-    Contract: Removes an entry from external-repos.conf.json.
+    Contract: Removes an entry from manage_external_repos.json.
     Returns 1 if path not found. Does NOT delete the directory on disk.
 
     Args:
@@ -636,38 +892,32 @@ def unregister_command(path: str, config_path: Path | None = None) -> int:
     """
     repo_root = detect_repo_root()
     if config_path is None:
-        config_path = repo_root / _EXTERNAL_REPOS_CONFIG
+        config_path = repo_root / _MANIFEST_CONFIG
 
-    # Load existing registry
+    # Load existing manifest
     if not config_path.exists():
-        print(f"❌ Error: Registry not found: {config_path}")
+        print(f"❌ Error: Manifest not found: {config_path}")
         return 1
     with open(config_path) as f:
         data = json.load(f)
 
-    entries = data.get("entries", [])
-    before_count = len(entries)
-    # Capture consumers before removing the entry
-    consumers = None
-    for e in entries:
-        if e["path"] == path:
-            consumers = e.get("consumers", [])
-            break
-    entries = [e for e in entries if e["path"] != path]
-    after_count = len(entries)
-
-    if after_count == before_count:
+    dirs = data.get("directories", {})
+    if path not in dirs:
         print(f"❌ Error: Directory not in registry: {path}")
-        dirs = ", ".join(e["path"] for e in data.get("entries", []))
-        print(f"   Registered: {dirs}")
+        reg_dirs = ", ".join(dirs.keys())
+        print(f"   Registered: {reg_dirs}")
         return 1
 
-    data["entries"] = entries
+    # Capture consumers before removing the entry
+    consumers = dirs[path].get("consumers", [])
+    del dirs[path]
 
     # Write back
     with open(config_path, "w") as f:
         json.dump(data, f, indent=2)
         f.write("\n")
+
+    reload_registry()
 
     # Update consumer files — remove exclusion for the old path
     if consumers:
@@ -698,26 +948,26 @@ def sync_consumers_command(dry_run: bool = False, config_path: Path | None = Non
     """
     repo_root = detect_repo_root()
     if config_path is None:
-        config_path = repo_root / _EXTERNAL_REPOS_CONFIG
+        config_path = repo_root / _MANIFEST_CONFIG
 
     if not config_path.exists():
-        print("❌ Error: Registry not found")
+        print("❌ Error: Manifest not found")
         return 1
 
     with open(config_path) as f:
         data = json.load(f)
 
-    entries = data.get("entries", [])
-    if not entries:
-        print("ℹ No directories in registry")
+    dirs = data.get("directories", {})
+    if not dirs:
+        print("ℹ No directories in manifest")
         return 0
 
     # Collect all registered paths grouped by consumer
     # consumer_rel -> set of registered paths
     consumer_paths: dict[str, set[str]] = {}
-    for entry in entries:
-        for consumer_rel in entry.get("consumers", []):
-            consumer_paths.setdefault(consumer_rel, set()).add(entry["path"])
+    for path, info in dirs.items():
+        for consumer_rel in info.get("consumers", []):
+            consumer_paths.setdefault(consumer_rel, set()).add(path)
 
     action = "Would update" if dry_run else "Updating"
     for consumer_rel, registered_paths in sorted(consumer_paths.items()):
@@ -781,31 +1031,26 @@ def _resolve_target_dir(repo_root: Path, target_dir_name: str | None) -> Path | 
     Returns:
         Resolved Path or None (with error message printed).
     """
-    if len(EXTERNAL_REPO_DIRS) == 1:
-        # Single directory - use it
-        return repo_root / next(iter(EXTERNAL_REPO_DIRS))
+    # If target is provided, it MUST be in the registry
+    if target_dir_name is not None:
+        target = Path(target_dir_name)
+        if target not in EXTERNAL_REPO_DIRS and str(target) not in EXTERNAL_REPO_DIRS:
+            dirs_str = ", ".join(str(d) for d in sorted(EXTERNAL_REPO_DIRS, key=str))
+            print(f"❌ Error: Directory not in registry: {target_dir_name}")
+            print(f"   Registered: {dirs_str}")
+            return None
+        resolved_dir = repo_root / target
+    else:
+        # No target provided - use single registered dir if available
+        if len(EXTERNAL_REPO_DIRS) == 1:
+            resolved_dir = repo_root / next(iter(EXTERNAL_REPO_DIRS))
+        else:
+            dirs_str = "\n".join(f"  - {d}" for d in sorted(EXTERNAL_REPO_DIRS, key=str))
+            print(f"❌ Error: Multiple directories registered. Specify --dir:")
+            print(dirs_str)
+            return None
 
-    # Multiple directories - require explicit target
-    if target_dir_name is None:
-        dirs_str = "\n".join(f"  - {d}" for d in sorted(EXTERNAL_REPO_DIRS))
-        print(f"❌ Error: Multiple directories registered. Specify --dir:")
-        print(dirs_str)
-        return None
-
-    target = Path(target_dir_name)
-    if target not in EXTERNAL_REPO_DIRS:
-        dirs_str = ", ".join(str(d) for d in sorted(EXTERNAL_REPO_DIRS))
-        print(f"❌ Error: Directory not in registry: {target_dir_name}")
-        print(f"   Registered: {dirs_str}")
-        return None
-
-    full_path = repo_root / target
-    if not full_path.exists():
-        print(f"❌ Error: Directory does not exist: {full_path}")
-        print(f"   Create it with: mkdir -p {full_path}")
-        return None
-
-    return full_path
+    return resolved_dir
 
 
 def relocate_command(old_path: str, new_path: str,
@@ -828,30 +1073,26 @@ def relocate_command(old_path: str, new_path: str,
     if repo_root is None:
         repo_root = detect_repo_root()
     if config_path is None:
-        config_path = repo_root / _EXTERNAL_REPOS_CONFIG
+        config_path = repo_root / _MANIFEST_CONFIG
 
-    # Load registry
+    # Load manifest
     if not config_path.exists():
-        print(f"❌ Error: Registry not found: {config_path}")
+        print(f"❌ Error: Manifest not found: {config_path}")
         return 1
     with open(config_path) as f:
         data = json.load(f)
 
-    entries = data.get("entries", [])
+    dirs = data.get("directories", {})
 
-    # Validate old_path exists in registry
-    old_entry = None
-    for e in entries:
-        if e["path"] == old_path:
-            old_entry = e
-            break
-    if old_entry is None:
-        print(f"❌ Error: Path not in registry: {old_path}")
+    # Validate old_path exists in manifest
+    if old_path not in dirs:
+        print(f"❌ Error: Path not in manifest: {old_path}")
         return 1
 
+    old_entry = dirs[old_path]
+
     # Validate new_path not already registered
-    existing_paths = {e["path"] for e in entries}
-    if new_path in existing_paths:
+    if new_path in dirs:
         print(f"❌ Error: New path already registered: {new_path}")
         return 1
 
@@ -865,16 +1106,17 @@ def relocate_command(old_path: str, new_path: str,
     else:
         print(f"ℹ Directory not on disk (already moved manually): {old_path}")
 
-    # Update registry entry
-    old_entry["path"] = new_path
+    # Update manifest entry
+    # Pop old path and insert under new path
+    dirs[new_path] = dirs.pop(old_path)
 
     with open(config_path, "w") as f:
         json.dump(data, f, indent=2)
         f.write("\n")
 
-    print(f"✅ Registry updated: {old_path} → {new_path}")
+    print(f"✅ Manifest updated: {old_path} → {new_path}")
 
-    # Update all consumer files listed in the registry entry
+    # Update all consumer files listed in the manifest entry
     consumers = old_entry.get("consumers", [])
     for consumer_rel in consumers:
         consumer_path = repo_root / consumer_rel
@@ -919,6 +1161,19 @@ def _discover_all(repo_root: Path) -> List[AgentRepo]:
     return all_repos
 
 
+def reload_registry():
+    """Refresh the EXTERNAL_REPO_DIRS global set from the unified manifest."""
+    global EXTERNAL_REPO_DIRS
+    repo_root = detect_repo_root()
+    manifest_path = repo_root / _MANIFEST_CONFIG
+    if manifest_path.exists():
+        with open(manifest_path) as f:
+            data = json.load(f)
+            EXTERNAL_REPO_DIRS = {Path(d) for d in data.get("directories", {}).keys()}
+    else:
+        EXTERNAL_REPO_DIRS = set()
+
+
 def discover_repos(scan_dir: Path, parent_dir: Path = None) -> List[AgentRepo]:
     """Discover all git repositories in a directory.
 
@@ -947,6 +1202,61 @@ def discover_repos(scan_dir: Path, parent_dir: Path = None) -> List[AgentRepo]:
                 )
             )
     return repos
+
+
+def sync_command(update: bool = False, dry_run: bool = False) -> int:
+    """Synchronize actual state with the manifest.
+
+    Contract:
+    1. Load manifest as SSoT.
+    2. Calculate delta between manifest, registry, and disk.
+    3. Interactively resolve orphans and ghosts.
+    4. Apply reconciliation (Clone, Register, Delete, Unregister).
+    5. Optionally update all repos.
+    Returns 0 on success, 1 on failure or cancellation.
+
+    Args:
+        update: Whether to pull latest changes for all manifest repos.
+        dry_run: Whether to show changes without applying them.
+
+    Returns:
+        0 on success, 1 on failure.
+    """
+    repo_root = detect_repo_root()
+    manifest_path = repo_root / ".vadocs" / "inventory" / "manage_external_repos.json"
+
+    manager = SyncManager(repo_root, manifest_path)
+    manifest = manager.load_manifest()
+    if not manifest:
+        return 1
+
+    delta = manager.calculate_delta(manifest)
+
+    # If no deltas, we can skip interactive resolution
+    if not delta["missing"] and not delta["orphans"] and not delta["ghosts"]:
+        if dry_run:
+            logger.info("🔍 Verification: System is already synchronized with manifest")
+            logger.info(f"  - Checked {len(delta['desired_dirs'])} directories")
+            # Calculate total desired repos for better verbosity
+            total_repos = sum(len(d.get("repos", {})) for d in delta["desired_dirs"].values())
+            logger.info(f"  - All {total_repos} repositories are present and accounted for")
+        else:
+            logger.info("✅ System is already synchronized with manifest")
+    else:
+        resolutions = manager.interactive_resolve(delta)
+        if resolutions is None:
+            logger.warning("⚠️ Sync cancelled by user")
+            return 1
+
+        manager.apply_reconciliation(delta, resolutions, dry_run=dry_run)
+
+    if update:
+        manager.perform_updates(manifest)
+
+    logger.info(f"\n{'='*60}")
+    logger.info(f"✅ Synchronization complete")
+    logger.info(f"{'='*60}")
+    return 0
 
 
 if __name__ == "__main__":

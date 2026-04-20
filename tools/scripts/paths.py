@@ -39,7 +39,8 @@ _CONFIG_DIR_KEY = "config_dir"
 _HUB_CONFIG_NAME = "conf.json"
 _TYPES_DIR = "types"
 _SPOKE_SUFFIX = ".conf.json"
-_EXTERNAL_REPOS_CONFIG = "external-repos.conf.json"
+_EXTERNAL_REPOS_MANIFEST = "manage_external_repos.json"
+_INVENTORY_DIR = "inventory"
 _VALIDATION_DIR = "validation"
 
 
@@ -84,9 +85,9 @@ SUBTYPE_PARENT_MAP = {
 
 
 def get_external_repo_paths(repo_root: Path) -> set[str]:
-    """Load external repo directory paths from the registry.
+    """Load external repo directory paths from the unified manifest.
 
-    Reads .vadocs/validation/external-repos.conf.json (ADR-26046) and returns
+    Reads .vadocs/inventory/manage_external_repos.json and returns
     the set of relative paths that must be excluded from validation,
     git tracking, and documentation builds.
 
@@ -94,15 +95,15 @@ def get_external_repo_paths(repo_root: Path) -> set[str]:
         repo_root: Repository root directory.
 
     Returns:
-        Set of relative paths from the registry.
-        Empty set if the registry does not exist yet.
+        Set of relative paths from the manifest.
+        Empty set if the manifest does not exist yet.
     """
-    config = repo_root / ".vadocs" / _VALIDATION_DIR / _EXTERNAL_REPOS_CONFIG
+    config = repo_root / ".vadocs" / _INVENTORY_DIR / _EXTERNAL_REPOS_MANIFEST
     if not config.exists():
         return set()
     with open(config) as f:
         data = json.load(f)
-    return {entry["path"] for entry in data.get("entries", [])}
+    return set(data.get("directories", {}).keys())
 
 
 # Directories excluded from all validation scripts (links, jupytext, ADR, etc.)

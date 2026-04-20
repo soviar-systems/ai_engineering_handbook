@@ -53,6 +53,11 @@ ADR-26022
 ADR-26040
 : [Podman Kube YAML as Deployment Standard](/architecture/adr/adr_26040_podman_kube_yaml_as_deployment_standard.md)
 
+ADR-26049
+: [Unified Manifest for External Repository Management](/architecture/adr/adr_26049_unified_manifest_for_external_repos.md)
+
+  Transition from a registry-only system to a state-based synchronization system using a unified manifest as the Single Source of Truth (SSoT).
+
 :::
 
 ### documentation

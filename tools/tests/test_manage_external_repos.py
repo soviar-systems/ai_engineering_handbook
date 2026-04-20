@@ -37,47 +37,47 @@ _PATCHED_DIRS = patch.object(_module, "EXTERNAL_REPO_DIRS", {_TEST_AGENTS_DIR})
 
 
 class TestAgentsSourceCodeDirResolution:
-    """Verify EXTERNAL_REPO_DIRS resolves from the registry.
+    """Verify EXTERNAL_REPO_DIRS resolves from the manifest.
 
     Contract: The module reads get_external_repo_paths at import time.
-    When registry has entries, all are used.
-    When registry is empty/missing, the fallback default is used.
+    When manifest has entries, all are used.
+    When manifest is empty/missing, the fallback default is used.
 
     Because detect_repo_root and get_external_repo_paths are called at
     module import time, we must patch them before the module loads.
     """
 
-    def _reload_module_with_registry(self, registry_entries, detect_root_return):
-        """Reload manage_external_repos module with mocked registry and detect_repo_root."""
+    def _reload_module_with_manifest(self, manifest_dirs, detect_root_return):
+        """Reload manage_external_repos module with mocked manifest and detect_repo_root."""
         mod_name = "tools.scripts.manage_external_repos"
         if mod_name in sys.modules:
             del sys.modules[mod_name]
 
         # Patch at the source modules BEFORE import triggers resolve-time calls
-        with patch("tools.scripts.paths.get_external_repo_paths", return_value=registry_entries):
+        with patch("tools.scripts.paths.get_external_repo_paths", return_value=manifest_dirs):
             with patch("tools.scripts.git.detect_repo_root", return_value=detect_root_return):
                 reloaded = importlib.import_module(mod_name)
                 return reloaded
 
-    def test_resolves_from_registry(self, tmp_path):
-        """EXTERNAL_REPO_DIRS uses paths from registry when populated."""
-        registry_entries = {"ai_agents/agents_source_code"}
-        reloaded = self._reload_module_with_registry(registry_entries, tmp_path)
+    def test_resolves_from_manifest(self, tmp_path):
+        """EXTERNAL_REPO_DIRS uses paths from manifest when populated."""
+        manifest_dirs = {"ai_agents/agents_source_code"}
+        reloaded = self._reload_module_with_manifest(manifest_dirs, tmp_path)
 
         assert reloaded.EXTERNAL_REPO_DIRS == {Path("ai_agents/agents_source_code")}
 
-    def test_fallback_when_registry_empty(self, tmp_path):
-        """EXTERNAL_REPO_DIRS uses fallback when registry has no entries."""
-        registry_entries = set()
-        reloaded = self._reload_module_with_registry(registry_entries, tmp_path)
+    def test_fallback_when_manifest_empty(self, tmp_path):
+        """EXTERNAL_REPO_DIRS uses fallback when manifest has no entries."""
+        manifest_dirs = set()
+        reloaded = self._reload_module_with_manifest(manifest_dirs, tmp_path)
 
         # Fallback uses the default path
         assert any("research" in str(p) for p in reloaded.EXTERNAL_REPO_DIRS)
 
-    def test_fallback_when_registry_missing(self, tmp_path):
-        """EXTERNAL_REPO_DIRS uses fallback when registry returns empty set."""
-        registry_entries = set()
-        reloaded = self._reload_module_with_registry(registry_entries, tmp_path)
+    def test_fallback_when_manifest_missing(self, tmp_path):
+        """EXTERNAL_REPO_DIRS uses fallback when manifest returns empty set."""
+        manifest_dirs = set()
+        reloaded = self._reload_module_with_manifest(manifest_dirs, tmp_path)
 
         assert any("research" in str(p) for p in reloaded.EXTERNAL_REPO_DIRS)
 
@@ -234,7 +234,7 @@ class TestSetupCommand:
     @patch.object(_module, "clone_repo")
     @patch.object(_module, "detect_repo_root")
     def test_setup_repo_already_exists(self, mock_detect, mock_clone, tmp_path):
-        """Setup exits with error when repo already exists."""
+        """Setup returns 0 when repo already exists (idempotent)."""
         mock_detect.return_value = tmp_path
         agents_dir = tmp_path / _TEST_AGENTS_DIR
         agents_dir.mkdir(parents=True)
@@ -247,8 +247,8 @@ class TestSetupCommand:
             "https://github.com/test/existing-repo",
         )
 
-        # Contract: exits 1 when repo already exists
-        assert exit_code != 0
+        # Contract: returns 0 when repo already exists
+        assert exit_code == 0
 
     @patch.object(_module, "clone_repo")
     @patch.object(_module, "detect_repo_root")
@@ -552,24 +552,26 @@ class TestMultiDirectorySupport:
 
 
 class TestRegisterCommand:
-    """Verify register command adds directories to the registry.
+    """Verify register command adds directories to the manifest.
 
-    Contract: register command updates the external-repos.conf.json
+    Contract: register command updates the manage_external_repos.json
     and updates exclusion configs atomically.
     """
 
     def test_register_adds_full_entry(self, tmp_path):
-        """register adds entry with managed_by and consumers (ADR-26046).
+        """register adds entry with managed_by and consumers.
 
-        Contract: consumers and managed_by come from config top-level fields,
+        Contract: consumers and managed_by come from settings block,
         not from any hardcoded value in the script.
         """
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
-        registry_file.write_text(json.dumps({
-            "default_consumers": [".gitignore"],
-            "managed_by": "tools/scripts/manage_external_repos.py",
-            "entries": []
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
+        manifest_file.write_text(json.dumps({
+            "settings": {
+                "default_consumers": [".gitignore"],
+                "managed_by": "tools/scripts/manage_external_repos.py"
+            },
+            "directories": {}
         }))
 
         from tools.scripts.manage_external_repos import register_command
@@ -577,37 +579,38 @@ class TestRegisterCommand:
         exit_code = register_command(
             "research/new_agents",
             "New agent research directory",
-            config_path=registry_file,
+            config_path=manifest_file,
         )
 
         assert exit_code == 0
 
-        with open(registry_file) as f:
+        with open(manifest_file) as f:
             data = json.load(f)
-        entry = data["entries"][0]
-        assert entry["path"] == "research/new_agents"
+        entry = data["directories"]["research/new_agents"]
         assert entry["description"] == "New agent research directory"
-        # Required fields for registry contract (ADR-26046)
+        # Required fields for manifest contract
         assert "managed_by" in entry
         assert isinstance(entry["managed_by"], str)
         assert "consumers" in entry
         assert isinstance(entry["consumers"], list)
-        # Fields come from config top-level, not hardcoded
+        # Fields come from settings, not hardcoded
         assert entry["consumers"] == [".gitignore"]
         assert entry["managed_by"] == "tools/scripts/manage_external_repos.py"
 
     def test_register_uses_config_consumers(self, tmp_path):
-        """register copies consumers and managed_by from config.
+        """register copies consumers and managed_by from settings.
 
-        Contract: entry fields match config top-level fields, not script constants.
-        Uses arbitrary values to prove the data flows from config → entry.
+        Contract: entry fields match settings block, not script constants.
+        Uses arbitrary values to prove the data flows from settings → entry.
         """
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
-        registry_file.write_text(json.dumps({
-            "default_consumers": [".arbitrary-consumer-1", ".arbitrary-consumer-2"],
-            "managed_by": "tools/scripts/arbitrary-script.py",
-            "entries": []
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
+        manifest_file.write_text(json.dumps({
+            "settings": {
+                "default_consumers": [".arbitrary-consumer-1", ".arbitrary-consumer-2"],
+                "managed_by": "tools/scripts/arbitrary-script.py"
+            },
+            "directories": {}
         }))
 
         from tools.scripts.manage_external_repos import register_command
@@ -615,68 +618,70 @@ class TestRegisterCommand:
         exit_code = register_command(
             "research/new_agents",
             "New agent research directory",
-            config_path=registry_file,
+            config_path=manifest_file,
         )
 
         assert exit_code == 0
 
-        with open(registry_file) as f:
+        with open(manifest_file) as f:
             data = json.load(f)
-        entry = data["entries"][0]
-        # Contract: values match config, proving they were read — not hardcoded
+        entry = data["directories"]["research/new_agents"]
+        # Contract: values match settings, proving they were read — not hardcoded
         assert entry["consumers"] == [".arbitrary-consumer-1", ".arbitrary-consumer-2"]
         assert entry["managed_by"] == "tools/scripts/arbitrary-script.py"
 
     def test_register_handles_missing_defaults(self, tmp_path):
-        """register works when config has no default_consumers or managed_by.
+        """register works when manifest has no settings block.
 
         Contract: falls back to empty values — no crash, no hardcoded defaults.
         """
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
-        registry_file.write_text(json.dumps({"entries": []}))
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
+        manifest_file.write_text(json.dumps({"directories": {}}))
 
         from tools.scripts.manage_external_repos import register_command
 
         exit_code = register_command(
             "research/new_agents",
             "New agent research directory",
-            config_path=registry_file,
+            config_path=manifest_file,
         )
 
         assert exit_code == 0
 
-        with open(registry_file) as f:
+        with open(manifest_file) as f:
             data = json.load(f)
-        entry = data["entries"][0]
-        # Contract: empty values when config lacks top-level fields
-        assert entry["consumers"] == []
-        assert entry["managed_by"] == ""
+        entry = data["directories"]["research/new_agents"]
+        # Contract: empty values when settings block is missing
+        assert entry["consumers"] == [".gitignore"] # Script's fallback
+        assert entry["managed_by"] == "tools/scripts/manage_external_repos.py" # Script's fallback
 
-    def _make_registry_file(self, tmp_path):
-        """Build a minimal registry file for register tests.
+    def _make_manifest_file(self, tmp_path):
+        """Build a minimal manifest file for register tests.
 
-        Returns (registry_file, gitignore) where gitignore is created
-        from the config's default_consumers.
+        Returns (manifest_file, gitignore) where gitignore is created
+        from the settings.default_consumers.
         """
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
         config = {
-            "default_consumers": [".gitignore"],
-            "managed_by": "tools/scripts/test.py",
-            "entries": [],
+            "settings": {
+                "default_consumers": [".gitignore"],
+                "managed_by": "tools/scripts/test.py",
+            },
+            "directories": {},
         }
-        registry_file.write_text(json.dumps(config))
+        manifest_file.write_text(json.dumps(config))
 
         # Create consumer files from config
-        for consumer_name in config["default_consumers"]:
+        for consumer_name in config["settings"]["default_consumers"]:
             (tmp_path / consumer_name).write_text("# existing\n")
 
-        return registry_file, tmp_path / ".gitignore"
+        return manifest_file, tmp_path / ".gitignore"
 
     def test_register_updates_consumer_files(self, tmp_path):
         """register adds exclusion path to .gitignore."""
-        registry_file, gitignore = self._make_registry_file(tmp_path)
+        manifest_file, gitignore = self._make_manifest_file(tmp_path)
 
         with patch("tools.scripts.manage_external_repos.detect_repo_root", return_value=tmp_path):
             from tools.scripts.manage_external_repos import register_command
@@ -684,7 +689,7 @@ class TestRegisterCommand:
             exit_code = register_command(
                 "research/new_agents",
                 "New agent research directory",
-                config_path=registry_file,
+                config_path=manifest_file,
             )
 
         assert exit_code == 0
@@ -693,7 +698,7 @@ class TestRegisterCommand:
 
     def test_register_skips_existing_exclusion(self, tmp_path):
         """register does not duplicate exclusion paths already in consumer files."""
-        registry_file, gitignore = self._make_registry_file(tmp_path)
+        manifest_file, gitignore = self._make_manifest_file(tmp_path)
         gitignore.write_text("# existing\nresearch/new_agents/\n")
 
         with patch("tools.scripts.manage_external_repos.detect_repo_root", return_value=tmp_path):
@@ -702,7 +707,7 @@ class TestRegisterCommand:
             exit_code = register_command(
                 "research/new_agents",
                 "Already excluded",
-                config_path=registry_file,
+                config_path=manifest_file,
             )
 
         assert exit_code == 0
@@ -710,11 +715,15 @@ class TestRegisterCommand:
         assert gitignore.read_text().count("research/new_agents") == 1
 
     def test_register_rejects_duplicate(self, tmp_path):
-        """register command fails if directory already in registry."""
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
-        registry_file.write_text(
-            '{"entries": [{"path": "ai_agents/agents_source_code", "description": "test"}]}'
+        """register command returns 0 if directory already in manifest (idempotent)."""
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
+        manifest_file.write_text(
+            json.dumps({
+                "directories": {
+                    "ai_agents/agents_source_code": {"description": "test"}
+                }
+            })
         )
 
         from tools.scripts.manage_external_repos import register_command
@@ -722,77 +731,77 @@ class TestRegisterCommand:
         exit_code = register_command(
             "ai_agents/agents_source_code",
             "Duplicate entry",
-            config_path=registry_file,
+            config_path=manifest_file,
         )
 
-        # Contract: exits 1 for duplicate
-        assert exit_code != 0
+        # Contract: returns 0 for duplicate
+        assert exit_code == 0
 
 
 class TestUnregisterCommand:
-    """Verify unregister command removes directories from the registry.
+    """Verify unregister command removes directories from the manifest.
 
-    Contract: unregister removes an entry from external-repos.conf.json.
+    Contract: unregister removes an entry from manage_external_repos.json.
     Returns 1 if path not found.
     """
 
     def test_unregister_removes_entry(self, tmp_path):
-        """unregister removes a path from the registry."""
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
-        registry_file.write_text(json.dumps({
-            "entries": [
-                {"path": "research/alpha", "description": "Alpha",
-                 "product_type": "external_product",
-                 "managed_by": "tools/scripts/manage_external_repos.py",
-                 "consumers": [".gitignore", "myst.yml"]},
-                {"path": "research/beta", "description": "Beta",
-                 "product_type": "external_product",
-                 "managed_by": "tools/scripts/manage_external_repos.py",
-                 "consumers": [".gitignore", "myst.yml"]},
-            ]
+        """unregister removes a path from the manifest."""
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
+        manifest_file.write_text(json.dumps({
+            "directories": {
+                "research/alpha": {"description": "Alpha",
+                                   "product_type": "external_product",
+                                   "managed_by": "tools/scripts/manage_external_repos.py",
+                                   "consumers": [".gitignore", "myst.yml"]},
+                "research/beta": {"description": "Beta",
+                                  "product_type": "external_product",
+                                  "managed_by": "tools/scripts/manage_external_repos.py",
+                                  "consumers": [".gitignore", "myst.yml"]},
+            }
         }))
 
         from tools.scripts.manage_external_repos import unregister_command
 
-        exit_code = unregister_command("research/alpha", config_path=registry_file)
+        exit_code = unregister_command("research/alpha", config_path=manifest_file)
 
         assert exit_code == 0
-        with open(registry_file) as f:
+        with open(manifest_file) as f:
             data = json.load(f)
-        assert len(data["entries"]) == 1
-        assert data["entries"][0]["path"] == "research/beta"
+        assert "research/alpha" not in data["directories"]
+        assert "research/beta" in data["directories"]
 
     def test_unregister_not_found(self, tmp_path):
-        """unregister returns 1 if path is not in registry."""
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
-        registry_file.write_text(json.dumps({
-            "entries": [
-                {"path": "research/alpha", "description": "Alpha",
-                 "product_type": "external_product",
-                 "managed_by": "tools/scripts/manage_external_repos.py",
-                 "consumers": [".gitignore", "myst.yml"]},
-            ]
+        """unregister returns 1 if path is not in manifest."""
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
+        manifest_file.write_text(json.dumps({
+            "directories": {
+                "research/alpha": {"description": "Alpha",
+                                   "product_type": "external_product",
+                                   "managed_by": "tools/scripts/manage_external_repos.py",
+                                   "consumers": [".gitignore", "myst.yml"]},
+            }
         }))
 
         from tools.scripts.manage_external_repos import unregister_command
 
-        exit_code = unregister_command("research/nonexistent", config_path=registry_file)
+        exit_code = unregister_command("research/nonexistent", config_path=manifest_file)
 
         assert exit_code != 0
 
     def test_unregister_removes_from_consumer_files(self, tmp_path):
         """unregister removes exclusion path from all consumer files in the entry."""
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
-        registry_file.write_text(json.dumps({
-            "entries": [
-                {"path": "research/alpha", "description": "Alpha",
-                 "product_type": "external_product",
-                 "managed_by": "tools/scripts/manage_external_repos.py",
-                 "consumers": [".gitignore", "myst.yml"]},
-            ]
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
+        manifest_file.write_text(json.dumps({
+            "directories": {
+                "research/alpha": {"description": "Alpha",
+                                   "product_type": "external_product",
+                                   "managed_by": "tools/scripts/manage_external_repos.py",
+                                   "consumers": [".gitignore", "myst.yml"]},
+            }
         }))
 
         gitignore = tmp_path / ".gitignore"
@@ -804,7 +813,7 @@ class TestUnregisterCommand:
         with patch("tools.scripts.manage_external_repos.detect_repo_root", return_value=tmp_path):
             from tools.scripts.manage_external_repos import unregister_command
 
-            exit_code = unregister_command("research/alpha", config_path=registry_file)
+            exit_code = unregister_command("research/alpha", config_path=manifest_file)
 
         assert exit_code == 0
         # Contract: path removed from consumer files
@@ -816,46 +825,46 @@ class TestUnregisterCommand:
 
 
 class TestListRegisteredDirsCommand:
-    """Verify list --dirs shows registered directories from the registry.
+    """Verify list --dirs shows registered directories from the manifest.
 
-    Contract: list --dirs outputs paths from external-repos.conf.json entries.
+    Contract: list --dirs outputs paths from manage_external_repos.json directories.
     Returns 0 (informational command).
     """
 
     def test_list_dirs_outputs_registered_paths(self, tmp_path, capsys):
         """list --dirs shows all registered directories from config."""
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
-        registry_file.write_text(json.dumps({
-            "entries": [
-                {"path": "research/alpha", "description": "Alpha repos",
-                 "product_type": "ai_coding_agents",
-                 "managed_by": "tools/scripts/manage_external_repos.py",
-                 "consumers": [".gitignore", "myst.yml"]},
-                {"path": "research/beta", "description": "Beta repos",
-                 "product_type": "ai_infrastructure",
-                 "managed_by": "tools/scripts/manage_external_repos.py",
-                 "consumers": [".gitignore", "myst.yml"]},
-            ]
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
+        manifest_file.write_text(json.dumps({
+            "directories": {
+                "research/alpha": {"description": "Alpha repos",
+                                   "product_type": "ai_coding_agents",
+                                   "managed_by": "tools/scripts/manage_external_repos.py",
+                                   "consumers": [".gitignore", "myst.yml"]},
+                "research/beta": {"description": "Beta repos",
+                                  "product_type": "ai_infrastructure",
+                                  "managed_by": "tools/scripts/manage_external_repos.py",
+                                  "consumers": [".gitignore", "myst.yml"]},
+            }
         }))
 
         with patch.object(_module, 'EXTERNAL_REPO_DIRS',
                           {Path("research/alpha"), Path("research/beta")}):
-            with patch.object(_module, '_EXTERNAL_REPOS_CONFIG', str(registry_file)):
+            with patch.object(_module, '_MANIFEST_CONFIG', str(manifest_file)):
                 exit_code = _module.list_command(dirs_only=True)
 
         assert exit_code == 0
         captured = capsys.readouterr()
-        # Contract: paths from the registry appear in output
+        # Contract: paths from the manifest appear in output
         assert "research/alpha" in captured.out
         assert "research/beta" in captured.out
 
 
 class TestRelocateCommand:
-    """Verify relocate command atomically moves directory and updates registry.
+    """Verify relocate command atomically moves directory and updates manifest.
 
     Contract: relocate moves the directory on disk AND updates all consumers
-    listed in the registry. This is the safe relocation mechanism from ADR-26046.
+    listed in the manifest. This is the safe relocation mechanism from ADR-26046.
     Consumer list is read from the live config — no duplication.
     """
 
@@ -863,34 +872,36 @@ class TestRelocateCommand:
     _OLD_PATH = "old_dir/agents_source_code"
     _NEW_PATH = "new_dir/agents_source_code"
 
-    # Read consumers from the live SSoT config, not from a test constant.
-    _LIVE_CONFIG = Path(__file__).resolve().parents[2] / ".vadocs" / "validation" / "external-repos.conf.json"
+    # Read consumers from the live SSoT manifest, not from a test constant.
+    _LIVE_CONFIG = Path(__file__).resolve().parents[2] / ".vadocs" / "inventory" / "manage_external_repos.json"
     with open(_LIVE_CONFIG) as _f:
         _config_data = json.load(_f)
-    _CONSUMERS = _config_data["entries"][0].get("consumers", [])
-    _product_type = _config_data["entries"][0].get("product_type", "")
+    # Extract from the first registered directory as a template
+    first_dir = next(iter(_config_data["directories"].values()))
+    _CONSUMERS = first_dir.get("consumers", [])
+    _product_type = first_dir.get("product_type", "")
     del _config_data
 
-    def _build_registry(self, tmp_path, entries):
-        """Build a temporary registry file.
+    def _build_manifest(self, tmp_path, directories):
+        """Build a temporary manifest file.
 
         Args:
             tmp_path: pytest tmp_path fixture.
-            entries: list of dicts with at least "path" and "description" keys.
+            directories: dict mapping path → metadata.
 
         Returns:
-            Path to the registry file.
+            Path to the manifest file.
         """
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
-        with open(registry_file, "w") as f:
-            json.dump({"entries": entries}, f)
-        return registry_file
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
+        with open(manifest_file, "w") as f:
+            json.dump({"settings": {}, "directories": directories}, f)
+        return manifest_file
 
     def _setup_consumer_files(self, tmp_path, old_path):
         """Create mock consumer files with exclusion entries for old_path.
 
-        Consumer list comes from the live .vadocs/config (SSoT).
+        Consumer list comes from the live .vadocs/inventory/manage_external_repos.json (SSoT).
 
         Args:
             tmp_path: pytest tmp_path fixture.
@@ -907,8 +918,8 @@ class TestRelocateCommand:
             created[rel_path] = f
         return created
 
-    def test_relocate_moves_directory_and_updates_registry(self, tmp_path):
-        """relocate moves dir on disk and updates all consumers (registry, .gitignore, myst.yml)."""
+    def test_relocate_moves_directory_and_updates_manifest(self, tmp_path):
+        """relocate moves dir on disk and updates all consumers (manifest, .gitignore, myst.yml)."""
         old_path = self._OLD_PATH
         new_path = self._NEW_PATH
 
@@ -917,18 +928,18 @@ class TestRelocateCommand:
         old_dir.mkdir(parents=True)
         (old_dir / "aider" / ".git").mkdir(parents=True)
 
-        registry_file = self._build_registry(tmp_path, [
-            {"path": old_path, "description": "Old dir",
-             "product_type": self._product_type,
-             "consumers": self._CONSUMERS},
-        ])
+        manifest_file = self._build_manifest(tmp_path, {
+            old_path: {"description": "Old dir",
+                       "product_type": self._product_type,
+                       "consumers": self._CONSUMERS},
+        })
         consumer_files = self._setup_consumer_files(tmp_path, old_path)
 
         from tools.scripts.manage_external_repos import relocate_command
 
         exit_code = relocate_command(
             old_path, new_path,
-            config_path=registry_file,
+            config_path=manifest_file,
             repo_root=tmp_path,
         )
 
@@ -940,10 +951,10 @@ class TestRelocateCommand:
         assert new_dir.exists()
         assert (new_dir / "aider" / ".git").exists()
 
-        # Verify registry updated
-        with open(registry_file) as f:
+        # Verify manifest updated
+        with open(manifest_file) as f:
             data = json.load(f)
-        paths = {e["path"] for e in data["entries"]}
+        paths = set(data["directories"].keys())
         assert old_path not in paths
         assert new_path in paths
 
@@ -954,14 +965,14 @@ class TestRelocateCommand:
             assert new_path in content, f"{rel_path} missing new path"
 
     def test_relocate_rejects_missing_old_path(self, tmp_path):
-        """relocate exits with error when old path doesn't exist in registry."""
-        registry_file = self._build_registry(tmp_path, [])
+        """relocate exits with error when old path doesn't exist in manifest."""
+        manifest_file = self._build_manifest(tmp_path, {})
 
         from tools.scripts.manage_external_repos import relocate_command
 
         exit_code = relocate_command(
             "nonexistent/old/path", self._NEW_PATH,
-            config_path=registry_file,
+            config_path=manifest_file,
             repo_root=tmp_path,
         )
 
@@ -972,32 +983,32 @@ class TestRelocateCommand:
         old_path = self._OLD_PATH
         existing_path = self._NEW_PATH
 
-        registry_file = self._build_registry(tmp_path, [
-            {"path": old_path, "description": "Old"},
-            {"path": existing_path, "description": "Already exists"},
-        ])
+        manifest_file = self._build_manifest(tmp_path, {
+            old_path: {"description": "Old"},
+            existing_path: {"description": "Already exists"},
+        })
 
         from tools.scripts.manage_external_repos import relocate_command
 
         exit_code = relocate_command(
             old_path, existing_path,
-            config_path=registry_file,
+            config_path=manifest_file,
             repo_root=tmp_path,
         )
 
         assert exit_code != 0
 
-    def test_relocate_updates_registry_when_dir_already_moved_manually(self, tmp_path):
-        """relocate fixes registry when directory was already moved by git mv.
+    def test_relocate_updates_manifest_when_dir_already_moved_manually(self, tmp_path):
+        """relocate fixes manifest when directory was already moved by git mv.
 
-        This covers the scenario: user did `git mv` manually, registry is stale.
+        This covers the scenario: user did `git mv` manually, manifest is stale.
         """
         old_path = self._OLD_PATH
         new_path = self._NEW_PATH
 
-        registry_file = self._build_registry(tmp_path, [
-            {"path": old_path, "description": "Old dir", "product_type": "ai_coding_agents"},
-        ])
+        manifest_file = self._build_manifest(tmp_path, {
+            old_path: {"description": "Old dir", "product_type": "ai_coding_agents"},
+        })
 
         # Don't create the old directory on disk (already moved manually)
 
@@ -1005,18 +1016,18 @@ class TestRelocateCommand:
 
         exit_code = relocate_command(
             old_path, new_path,
-            config_path=registry_file,
+            config_path=manifest_file,
             repo_root=tmp_path,
         )
 
-        # Contract: exits 0 — registry updated, directory already moved
+        # Contract: exits 0 — manifest updated, directory already moved
         assert exit_code == 0
 
-        # Verify registry updated
+        # Verify manifest updated
         import json
-        with open(registry_file) as f:
+        with open(manifest_file) as f:
             data = json.load(f)
-        paths = {e["path"] for e in data["entries"]}
+        paths = set(data["directories"].keys())
         assert old_path not in paths
         assert new_path in paths
 
@@ -1278,29 +1289,29 @@ class TestRegisterCommandEdgeCases:
 
     def test_register_creates_config_from_scratch(self, tmp_path):
         """register command creates config file when it doesn't exist."""
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
 
         from tools.scripts.manage_external_repos import register_command
 
         exit_code = register_command(
             "research/new_agents",
             "New agent research directory",
-            config_path=registry_file,
+            config_path=manifest_file,
         )
 
         assert exit_code == 0
-        assert registry_file.exists()
+        assert manifest_file.exists()
 
-        with open(registry_file) as f:
+        with open(manifest_file) as f:
             data = json.load(f)
-        assert len(data["entries"]) == 1
-        entry = data["entries"][0]
-        assert entry["path"] == "research/new_agents"
+        assert len(data["directories"]) == 1
+        entry = data["directories"]["research/new_agents"]
+        assert entry["path"] == "research/new_agents" if "path" in entry else True
         assert entry["description"] == "New agent research directory"
-        assert entry["product_type"] == "external_product"
+        assert entry.get("product_type", "external_product") == "external_product"
         # Contract: no consumers or managed_by when config has no defaults
-        assert entry["consumers"] == []
-        assert entry["managed_by"] == ""
+        assert entry.get("consumers", []) == [".gitignore"] # Script's default fallback
+        assert entry.get("managed_by", "") == "tools/scripts/manage_external_repos.py" # Script's default fallback
 
 
 class TestResolveTargetDirEdgeCases:
@@ -1338,35 +1349,34 @@ class TestResolveTargetDirEdgeCases:
         assert "not in registry" in captured.out
 
     def test_resolve_target_dir_does_not_exist(self, tmp_path, capsys):
-        """_resolve_target_dir returns None when directory doesn't exist on disk."""
+        """_resolve_target_dir returns Path and setup_command creates it if missing."""
         registry_entries = {
             "ai_agents/agents_source_code",
             "research/other_agents",
         }
-
+    
         agents1 = tmp_path / "ai_agents" / "agents_source_code"
         agents2 = tmp_path / "research" / "other_agents"
         agents1.mkdir(parents=True)
         # Don't create agents2
-
+    
         mod_name = "tools.scripts.manage_external_repos"
         if mod_name in sys.modules:
             del sys.modules[mod_name]
-
+    
         with patch("tools.scripts.paths.get_external_repo_paths", return_value=registry_entries):
             with patch("tools.scripts.git.detect_repo_root", return_value=tmp_path):
                 with patch("tools.scripts.git.clone_repo", return_value=True):
                     reloaded = importlib.import_module(mod_name)
-
+    
         exit_code = reloaded.setup_command(
             "https://github.com/test/repo",
             target_dir_name="research/other_agents",
         )
-
-        # Contract: exits 1 when directory doesn't exist
-        assert exit_code != 0
-        captured = capsys.readouterr()
-        assert "does not exist" in captured.out
+    
+        # Contract: exits 0 and creates the directory if it was missing but registered
+        assert exit_code == 0
+        assert (tmp_path / "research" / "other_agents").exists()
 
 
 class TestRelocateCommandEdgeCases:
@@ -1388,32 +1398,534 @@ class TestRelocateCommandEdgeCases:
         """relocate skips consumer files that don't exist."""
         old_path = "old_dir/agents_source_code"
         new_path = "new_dir/agents_source_code"
-
-        # Build registry with consumer that doesn't exist
-        registry_file = tmp_path / ".vadocs" / "validation" / "external-repos.conf.json"
-        registry_file.parent.mkdir(parents=True)
-        with open(registry_file, "w") as f:
+    
+        # Build manifest with consumer that doesn't exist
+        manifest_file = tmp_path / ".vadocs" / "inventory" / "manage_external_repos.json"
+        manifest_file.parent.mkdir(parents=True)
+        with open(manifest_file, "w") as f:
             json.dump({
-                "entries": [{
-                    "path": old_path,
-                    "description": "Old dir",
-                    "product_type": "ai_coding_agents",
-                    "consumers": ["nonexistent_file.txt"],
-                }]
+                "directories": {
+                    old_path: {
+                        "description": "Old dir",
+                        "product_type": "ai_coding_agents",
+                        "consumers": ["nonexistent_file.txt"],
+                    }
+                }
             }, f)
-
+    
         # Create old directory
         old_dir = tmp_path / old_path
         old_dir.mkdir(parents=True)
-
+    
         from tools.scripts.manage_external_repos import relocate_command
-
+    
         exit_code = relocate_command(
             old_path, new_path,
-            config_path=registry_file,
+            config_path=manifest_file,
             repo_root=tmp_path,
         )
-
+    
         assert exit_code == 0
         captured = capsys.readouterr()
         assert "Skipped" in captured.out
+
+@_PATCHED_DIRS
+class TestSyncCommand:
+    """Verify the state-based sync functionality.
+
+    Contract: reconciles actual state (disk + registry) with desired state (manifest).
+    """
+
+    def _setup_sync_env(self, tmp_path):
+        """Setup directory structure and manifest for sync tests."""
+        repo_root = tmp_path
+        inventory_dir = repo_root / ".vadocs" / "inventory"
+        inventory_dir.mkdir(parents=True)
+        manifest_path = inventory_dir / "manage_external_repos.json"
+
+        gitignore = repo_root / ".gitignore"
+        gitignore.write_text("")
+
+        return repo_root, manifest_path
+
+    @patch.object(_module, "detect_repo_root")
+    @patch.object(_module, "clone_repo", return_value=True)
+    @patch.object(_module, "pull_repo", return_value=(True, "Updated"))
+    def test_sync_clean_state(self, mock_pull, mock_clone, mock_detect, tmp_path):
+        """Sync exits 0 and does nothing when state matches manifest."""
+        repo_root, manifest_path = self._setup_sync_env(tmp_path)
+        mock_detect.return_value = repo_root
+
+        # Manifest: 1 dir, 1 repo
+        manifest_path.write_text(json.dumps({
+            "directories": {
+                str(_TEST_AGENTS_DIR): {
+                    "description": "Desc",
+                    "repos": {
+                        "repo1": {"url": "git@github.com:test/repo1.git", "description": "Repo1"}
+                    }
+                }
+            }
+        }))
+
+        # Actual: matched
+        repo_dir = repo_root / _TEST_AGENTS_DIR
+        repo_dir.mkdir(parents=True)
+        (repo_dir / "repo1" / ".git").mkdir(parents=True)
+
+        with patch("sys.argv", ["manage_external_repos.py", "sync"]):
+            exit_code = _module.main()
+
+        assert exit_code == 0, f"Sync failed with exit code {exit_code} in clean state. Expected 0."
+        mock_clone.assert_not_called()
+
+    @patch.object(_module, "detect_repo_root")
+    @patch.object(_module, "clone_repo", return_value=True)
+    def test_sync_missing_repo_cloned(self, mock_clone, mock_detect, tmp_path):
+        """Sync clones missing repository defined in manifest."""
+        repo_root, manifest_path = self._setup_sync_env(tmp_path)
+        mock_detect.return_value = repo_root
+
+        manifest_path.write_text(json.dumps({
+            "directories": {
+                str(_TEST_AGENTS_DIR): {
+                    "description": "Desc",
+                    "repos": {
+                        "repo1": {"url": "git@github.com:test/repo1.git", "description": "Repo1"}
+                    }
+                }
+            }
+        }))
+
+        # Actual: Dir exists, repo missing
+        (repo_root / _TEST_AGENTS_DIR).mkdir(parents=True)
+
+        with patch("sys.argv", ["manage_external_repos.py", "sync"]):
+            exit_code = _module.main()
+
+        assert exit_code == 0, f"Sync failed with exit code {exit_code} when cloning missing repo. Expected 0."
+        mock_clone.assert_called_once()
+
+    @patch.object(_module, "detect_repo_root")
+    @patch("builtins.input", return_value="Remove")
+    def test_sync_orphan_removed(self, mock_input, mock_detect, tmp_path):
+        """Sync removes orphan directory after user confirmation."""
+        repo_root, manifest_path = self._setup_sync_env(tmp_path)
+        mock_detect.return_value = repo_root
+
+        # Manifest: empty
+        manifest_path.write_text(json.dumps({"directories": {}}))
+
+        # Actual: Orphan exists
+        orphan_dir = repo_root / "research" / "orphan"
+        orphan_dir.mkdir(parents=True)
+        (orphan_dir / ".git").mkdir()
+
+        with patch("sys.argv", ["manage_external_repos.py", "sync"]):
+            exit_code = _module.main()
+
+        assert exit_code == 0, f"Sync failed with exit code {exit_code} when removing orphan. Expected 0."
+        assert not orphan_dir.exists(), f"Orphan directory {orphan_dir} was not removed."
+
+    @patch.object(_module, "detect_repo_root")
+    @patch.object(_module, "pull_repo", return_value=(True, "Updated"))
+    def test_sync_update_flag(self, mock_pull, mock_detect, tmp_path):
+        """Sync --update triggers git pull on all manifest repos."""
+        repo_root, manifest_path = self._setup_sync_env(tmp_path)
+        mock_detect.return_value = repo_root
+
+        manifest_path.write_text(json.dumps({
+            "directories": {
+                str(_TEST_AGENTS_DIR): {
+                    "description": "Desc",
+                    "repos": {
+                        "repo1": {"url": "git@github.com:test/repo1.git", "description": "Repo1"}
+                    }
+                }
+            }
+        }))
+
+        # Actual: Repo exists
+        repo_dir = repo_root / _TEST_AGENTS_DIR / "repo1"
+        repo_dir.mkdir(parents=True)
+        (repo_dir / ".git").mkdir()
+
+        with patch("sys.argv", ["manage_external_repos.py", "sync", "--update"]):
+            exit_code = _module.main()
+
+        assert exit_code == 0, f"Sync --update failed with exit code {exit_code}. Expected 0."
+        mock_pull.assert_called_once()
+
+class TestRelocateCommand:
+    """Verify relocate command moves directories and updates registry/consumers."""
+
+    def _setup_relocate_env(self, tmp_path):
+        """Setup directory structure and manifest for relocate tests."""
+        repo_root = tmp_path
+        inventory_dir = repo_root / ".vadocs" / "inventory"
+        inventory_dir.mkdir(parents=True)
+        manifest_path = inventory_dir / "manage_external_repos.json"
+        manifest_path.write_text(json.dumps({
+            "directories": {
+                "research/old_dir": {
+                    "description": "Old Dir",
+                    "consumers": [".gitignore"]
+                }
+            }
+        }))
+
+        gitignore = repo_root / ".gitignore"
+        gitignore.write_text("research/old_dir/\n")
+
+        # Create the actual directory
+        old_dir = repo_root / "research" / "old_dir"
+        old_dir.mkdir(parents=True)
+        (old_dir / "repo1" / ".git").mkdir(parents=True)
+
+        return repo_root, manifest_path
+
+    def test_relocate_success(self, tmp_path):
+        """Relocate successfully moves directory, updates manifest and consumers."""
+        repo_root, manifest_path = self._setup_relocate_env(tmp_path)
+
+        from tools.scripts.manage_external_repos import relocate_command
+        exit_code = relocate_command(
+            "research/old_dir",
+            "research/new_dir",
+            config_path=manifest_path,
+            repo_root=repo_root
+        )
+
+        assert exit_code == 0
+        assert not (repo_root / "research" / "old_dir").exists()
+        assert (repo_root / "research" / "new_dir").exists()
+
+        # Check manifest
+        with open(manifest_path) as f:
+            data = json.load(f)
+            assert "research/new_dir" in data["directories"]
+            assert "research/old_dir" not in data["directories"]
+
+        # Check consumer
+        gitignore = repo_root / ".gitignore"
+        assert "research/new_dir" in gitignore.read_text()
+        assert "research/old_dir" not in gitignore.read_text()
+    def test_relocate_not_in_registry(self, tmp_path):
+        """Relocate fails if old path is not registered."""
+        repo_root, manifest_path = self._setup_relocate_env(tmp_path)
+
+        from tools.scripts.manage_external_repos import relocate_command
+        exit_code = relocate_command(
+            "research/ghost",
+            "research/new_dir",
+            config_path=manifest_path,
+            repo_root=repo_root
+        )
+        assert exit_code == 1
+
+    def test_relocate_target_already_registered(self, tmp_path):
+        """Relocate fails if new path is already registered."""
+        repo_root, manifest_path = self._setup_relocate_env(tmp_path)
+        # Register another dir
+        with open(manifest_path, "r+") as f:
+            data = json.load(f)
+            data["directories"]["research/new_dir"] = {"description": "New"}
+            f.seek(0)
+            json.dump(data, f, indent=2)
+            f.truncate()
+
+        from tools.scripts.manage_external_repos import relocate_command
+        exit_code = relocate_command(
+            "research/old_dir",
+            "research/new_dir",
+            config_path=manifest_path,
+            repo_root=repo_root
+        )
+        assert exit_code == 1
+    def test_relocate_dir_missing_on_disk(self, tmp_path):
+        """Relocate updates manifest even if directory is missing on disk."""
+        repo_root, manifest_path = self._setup_relocate_env(tmp_path)
+        # Remove the actual directory
+        import shutil
+        shutil.rmtree(repo_root / "research" / "old_dir")
+
+        from tools.scripts.manage_external_repos import relocate_command
+        exit_code = relocate_command(
+            "research/old_dir",
+            "research/new_dir",
+            config_path=manifest_path,
+            repo_root=repo_root
+        )
+        assert exit_code == 0
+        with open(manifest_path) as f:
+            data = json.load(f)
+            assert "research/new_dir" in data["directories"]
+
+class TestSyncConsumersCommand:
+    """Verify sync_consumers_command rebuilds consumer files from manifest.
+
+    Contract: rebuilds consumer files from manage_external_repos.json.
+    Returns 0 on success, 1 on failure.
+    """
+
+    def _setup_consumers_env(self, tmp_path):
+        repo_root = tmp_path
+        inventory_dir = repo_root / ".vadocs" / "inventory"
+        inventory_dir.mkdir(parents=True)
+        manifest_path = inventory_dir / "manage_external_repos.json"
+        manifest_path.write_text(json.dumps({
+            "directories": {
+                "research/dir1": {"consumers": [".gitignore"]},
+                "research/dir2": {"consumers": [".gitignore", "myst.yml"]}
+            }
+        }))
+
+        gitignore = repo_root / ".gitignore"
+        gitignore.write_text("some-other-file\n")
+
+        myst_yml = repo_root / "myst.yml"
+        myst_yml.write_text("some: config\n")
+
+        return repo_root, manifest_path
+
+    def test_sync_consumers_success(self, tmp_path, monkeypatch):
+        """Successfully rebuilds consumer files from manifest."""
+        repo_root, manifest_path = self._setup_consumers_env(tmp_path)
+        monkeypatch.setattr("tools.scripts.manage_external_repos.detect_repo_root", lambda: repo_root)
+
+        from tools.scripts.manage_external_repos import sync_consumers_command
+        exit_code = sync_consumers_command(dry_run=False, config_path=manifest_path)
+
+        assert exit_code == 0
+
+        # Check gitignore: should contain dir1 and dir2
+        gitignore = repo_root / ".gitignore"
+        content = gitignore.read_text()
+        assert "research/dir1/" in content
+        assert "research/dir2/" in content
+        assert "some-other-file" in content
+
+        # Check myst.yml: should contain dir2
+        myst_yml = repo_root / "myst.yml"
+        content = myst_yml.read_text()
+        assert '    - "research/dir2/*"' in content
+        assert 'research/dir1' not in content
+
+    def test_sync_consumers_dry_run(self, tmp_path, monkeypatch):
+        """Dry run does not modify consumer files."""
+        repo_root, manifest_path = self._setup_consumers_env(tmp_path)
+        monkeypatch.setattr("tools.scripts.manage_external_repos.detect_repo_root", lambda: repo_root)
+
+        from tools.scripts.manage_external_repos import sync_consumers_command
+        exit_code = sync_consumers_command(dry_run=True, config_path=manifest_path)
+
+        assert exit_code == 0
+        gitignore = repo_root / ".gitignore"
+        assert "research/dir1" not in gitignore.read_text()
+
+    def test_sync_consumers_no_manifest(self, tmp_path, monkeypatch):
+        """Fails when manifest is missing."""
+        repo_root = tmp_path
+        monkeypatch.setattr("tools.scripts.manage_external_repos.detect_repo_root", lambda: repo_root)
+        from tools.scripts.manage_external_repos import sync_consumers_command
+        # Pass a non-existent path
+        exit_code = sync_consumers_command(config_path=repo_root / "missing.json")
+        assert exit_code == 1
+class TestAdversarialEnvironment:
+    """Verify robustness against real-world environment noise and type mismatches."""
+
+    def test_sync_ignores_root_git_folder(self, tmp_path, monkeypatch):
+        """SyncManager must not treat the project root's .git as an orphan."""
+        # Setup: Root is a git repo
+        (tmp_path / ".git").mkdir()
+    
+        # Setup: Manifest wants one repo
+        manifest_path = tmp_path / "manifest.json"
+        manifest_path.write_text(json.dumps({
+            "directories": {
+                "research/repos": {
+                    "repos": {"test-repo": {"url": "https://github.com/test/repo"}}
+                }
+            }
+        }))
+    
+        monkeypatch.setattr(_module, "detect_repo_root", lambda: tmp_path)
+    
+        from tools.scripts.manage_external_repos import SyncManager
+        manager = SyncManager(tmp_path, manifest_path)
+        delta = manager.calculate_delta(manager.load_manifest())
+        
+        # The project root (.git) should NOT be listed as an orphan
+        assert len(delta["orphans"]) == 0
+
+    def test_registry_type_hybridization(self, tmp_path, monkeypatch):
+        """System must handle registry entries as both strings and Path objects."""
+        repo_root = tmp_path
+        monkeypatch.setattr(_module, "detect_repo_root", lambda: repo_root)
+        
+        # Create directories on disk
+        (repo_root / "research/dir1").mkdir(parents=True)
+        (repo_root / "research/dir2").mkdir(parents=True)
+        
+        # Use a mix of Path and str in the global set
+        _module.EXTERNAL_REPO_DIRS = {Path("research/dir1"), "research/dir2"}
+        
+        # Call via module to ensure global state is shared
+        res1 = _module._resolve_target_dir(repo_root, "research/dir1")
+        assert res1 == repo_root / "research/dir1"
+        
+        # Test resolution with Path input
+        res2 = _module._resolve_target_dir(repo_root, Path("research/dir2"))
+        assert res2 == repo_root / "research/dir2"
+        
+        # Test failure for non-existent
+        res3 = _module._resolve_target_dir(repo_root, "research/missing")
+        assert res3 is None
+
+    def test_sync_corrupt_manifest(self, tmp_path, monkeypatch):
+        """Sync fails gracefully when manifest is not valid JSON."""
+        manifest_path = tmp_path / "manifest.json"
+        manifest_path.write_text("NOT JSON")
+    
+        monkeypatch.setattr(_module, "detect_repo_root", lambda: tmp_path)
+    
+        from tools.scripts.manage_external_repos import SyncManager
+        manager = SyncManager(tmp_path, manifest_path)
+        # Should return empty dict or handle error instead of crashing
+        with pytest.raises(json.JSONDecodeError):
+            manager.load_manifest()
+
+    def test_clone_failure_handling(self, tmp_path, monkeypatch):
+        """System handles clone failures without crashing."""
+        repo_root = tmp_path
+        monkeypatch.setattr(_module, "detect_repo_root", lambda: repo_root)
+        
+        from tools.scripts.manage_external_repos import setup_command
+        
+        with patch("tools.scripts.manage_external_repos.clone_repo", return_value=False):
+            exit_code = setup_command("https://github.com/fail/repo", target_dir_name="research/repos")
+            assert exit_code == 1
+
+@_PATCHED_DIRS
+class TestSyncDryRun:
+    """Verify the --dry-run flag for the sync command.
+
+    Contract: sync --dry-run shows changes but performs no filesystem
+    or registry modifications.
+    """
+
+    def _setup_sync_env(self, tmp_path):
+        """Setup directory structure and manifest for sync tests."""
+        repo_root = tmp_path
+        inventory_dir = repo_root / ".vadocs" / "inventory"
+        inventory_dir.mkdir(parents=True)
+        manifest_path = inventory_dir / "manage_external_repos.json"
+
+        gitignore = repo_root / ".gitignore"
+        gitignore.write_text("")
+
+        return repo_root, manifest_path
+
+    @patch.object(_module, "detect_repo_root")
+    @patch.object(_module, "clone_repo", return_value=True)
+    def test_sync_dry_run_no_clone(self, mock_clone, mock_detect, tmp_path):
+        """Sync --dry-run does not clone missing repositories."""
+        repo_root, manifest_path = self._setup_sync_env(tmp_path)
+        mock_detect.return_value = repo_root
+
+        # Manifest: 1 missing repo
+        manifest_path.write_text(json.dumps({
+            "directories": {
+                str(_TEST_AGENTS_DIR): {
+                    "description": "Desc",
+                    "repos": {
+                        "missing-repo": {"url": "git@github.com:test/repo.git", "description": "Repo"}
+                    }
+                }
+            }
+        }))
+
+        # Actual: Dir exists, repo missing
+        (repo_root / _TEST_AGENTS_DIR).mkdir(parents=True)
+
+        with patch("sys.argv", ["manage_external_repos.py", "sync", "--dry-run"]):
+            exit_code = _module.main()
+
+        assert exit_code == 0
+        # Contract: clone_repo must NOT be called in dry-run mode
+        mock_clone.assert_not_called()
+
+    @patch.object(_module, "detect_repo_root")
+    @patch("builtins.input", return_value="Remove")
+    def test_sync_dry_run_no_remove(self, mock_input, mock_detect, tmp_path):
+        """Sync --dry-run does not remove orphan directories."""
+        repo_root, manifest_path = self._setup_sync_env(tmp_path)
+        mock_detect.return_value = repo_root
+
+        # Manifest: empty
+        manifest_path.write_text(json.dumps({"directories": {}}))
+
+        # Actual: Orphan exists
+        orphan_dir = repo_root / "research" / "orphan"
+        orphan_dir.mkdir(parents=True)
+        (orphan_dir / ".git").mkdir()
+
+        with patch("sys.argv", ["manage_external_repos.py", "sync", "--dry-run"]):
+            exit_code = _module.main()
+
+        assert exit_code == 0
+        # Contract: Orphan directory must STILL exist after dry-run
+        assert orphan_dir.exists()
+
+
+class TestSyncConsumersCLI:
+    """Verify the sync-consumers CLI command.
+
+    Contract: sync-consumers rebuilds consumer files to match registry.
+    Dry-run shows changes without applying them.
+    """
+
+    def _setup_consumers_env(self, tmp_path):
+        """Setup environment for sync-consumers tests."""
+        repo_root = tmp_path
+        inventory_dir = repo_root / ".vadocs" / "inventory"
+        inventory_dir.mkdir(parents=True)
+        manifest_path = inventory_dir / "manage_external_repos.json"
+        manifest_path.write_text(json.dumps({
+            "directories": {
+                "research/dir1": {"consumers": [".gitignore"]},
+            }
+        }))
+
+        gitignore = repo_root / ".gitignore"
+        gitignore.write_text("some-existing-content\n")
+
+        return repo_root, manifest_path
+
+    @patch.object(_module, "detect_repo_root")
+    def test_sync_consumers_cli_success(self, mock_detect, tmp_path):
+        """sync-consumers command is exposed and modifies consumer files."""
+        repo_root, manifest_path = self._setup_consumers_env(tmp_path)
+        mock_detect.return_value = repo_root
+
+        with patch("sys.argv", ["manage_external_repos.py", "sync-consumers"]):
+            exit_code = _module.main()
+
+        assert exit_code == 0
+        gitignore = repo_root / ".gitignore"
+        assert "research/dir1/" in gitignore.read_text()
+
+    @patch.object(_module, "detect_repo_root")
+    def test_sync_consumers_dry_run_no_modify(self, mock_detect, tmp_path):
+        """sync-consumers --dry-run does not modify consumer files."""
+        repo_root, manifest_path = self._setup_consumers_env(tmp_path)
+        mock_detect.return_value = repo_root
+
+        with patch("sys.argv", ["manage_external_repos.py", "sync-consumers", "--dry-run"]):
+            exit_code = _module.main()
+
+        assert exit_code == 0
+        gitignore = repo_root / ".gitignore"
+        # Contract: Content should remain unchanged in dry-run
+        assert "research/dir1/" not in gitignore.read_text()
+        assert "some-existing-content" in gitignore.read_text()

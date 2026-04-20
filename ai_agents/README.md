@@ -60,16 +60,24 @@ Findings from studying these agents are saved as MyST notebooks (`.md` + `.ipynb
 
 ### Managing Source Code Repositories
 
-Use [tools/scripts/manage_external_repos.py](/tools/scripts/manage_external_repos.py) for managing external research repos. Run with `--help` for current usage patterns:
+External repositories are managed via a **unified manifest** (`.vadocs/inventory/manage_external_repos.json`), which serves as the Single Source of Truth (SSoT) for both the registered directories and the specific repositories they should contain.
+
+Use [tools/scripts/manage_external_repos.py](/tools/scripts/manage_external_repos.py) to reconcile the local state with this manifest. Run with `--help` for current usage patterns:
 
 ```bash
 uv run tools/scripts/manage_external_repos.py --help
 ```
 
-Common operations: `update` (pre-session refresh), `list` (see all repos and status), `list --dirs` (show registered directories), `setup` (clone new project), `register` (add new research directory), `unregister` (remove from registry).
+**Common operations:**
+- `sync` — Reconcile filesystem and registry with the manifest (clones missing, prunes orphans).
+- `sync --update` — Complete alignment: reconcile structure AND pull latest changes.
+- `sync-consumers` — Align `.gitignore` and `myst.yml` with the current manifest.
+- `update` — Quick refresh (git pull) of existing repositories.
+- `list` — Show all repos and their current status.
+- `setup` / `register` — Add new repos/directories (updates the manifest).
 
 :::{tip}
-Run `update` before starting any analysis session — agent architectures evolve fast, and a stale checkout can lead to wrong conclusions about how a feature works.
+Run `sync --update` before starting any analysis session — agent architectures evolve fast, and a stale checkout or missing repository can lead to wrong conclusions.
 :::
 
 ### Research Process
