@@ -1,0 +1,85 @@
+{
+  "directories": {
+    "ai_agents/research/ai_infrastructure": {
+      "description": "External AI infrastructure projects cloned for source-level research",
+      "repos": {
+        "open-webui": {
+          "url": "git@github.com:open-webui/open-webui.git",
+          "description": "Open WebUI"
+        },
+        "mempalace": {
+          "url": "git@github.com:milla-jovovich/mempalace.git",
+          "description": "MemPalace"
+        }
+      },
+      "product_type": "external_product",
+      "consumers": [
+        ".gitignore"
+      ]
+    },
+    "ai_agents/research/ai_coding_agents": {
+      "description": "Source code of external AI coding agents for comparative study",
+      "repos": {
+        "aider": {
+          "url": "git@github.com:Aider-AI/aider.git",
+          "description": "Aider"
+        },
+        "gemini-cli": {
+          "url": "git@github.com:google-gemini/gemini-cli.git",
+          "description": "Gemini CLI"
+        },
+        "kilocode": {
+          "url": "git@github.com:Kilo-Org/kilocode.git",
+          "description": "KiloCode"
+        },
+        "qwen-code": {
+          "url": "git@github.com:QwenLM/qwen-code.git",
+          "description": "Qwen Code"
+        },
+        "openclaw": {
+          "url": "git@github.com:openclaw/openclaw.git",
+          "description": "OpenClaw"
+        },
+        "openclaude": {
+          "url": "git@github.com:Gitlawb/openclaude.git",
+          "description": "OpenClaude"
+        },
+        "opencode": {
+          "url": "git@github.com:anomalyco/opencode.git",
+          "description": "OpenCode"
+        }
+      },
+      "product_type": "external_product",
+      "consumers": [
+        ".gitignore"
+      ]
+    },
+    "ai_agents/research/ai_skills_plugins": {
+      "description": "Research repositories for AI skills and plugins",
+      "repos": {
+        "claude-code": {
+          "url": "git@github.com:anthropics/claude-code.git",
+          "description": "Claude Code"
+        },
+        "superpowers": {
+          "url": "git@github.com:obra/superpowers.git",
+          "description": "Superpowers"
+        },
+        "skills": {
+          "url": "git@github.com:anthropics/skills.git",
+          "description": "Skills"
+        }
+      },
+      "product_type": "external_product",
+      "consumers": [
+        ".gitignore"
+      ]
+    }
+  },
+  "settings": {
+    "default_consumers": [
+      ".gitignore"
+    ],
+    "managed_by": "tools/scripts/manage_external_repos.py"
+  }
+}
