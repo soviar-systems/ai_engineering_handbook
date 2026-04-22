@@ -1,98 +1,88 @@
 ---
 jupytext:
+  root_level_metadata_filter: -title,-authors,-date,-description,-tags,-options
   text_representation:
     extension: .md
     format_name: myst
     format_version: 0.13
     jupytext_version: 1.19.1
 kernelspec:
-  name: bash
   display_name: Bash
   language: bash
+  name: bash
+---
+
+---
+title: 'Layer 3: Prompts-as-Infrastructure'
+authors:
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
+date: 2026-04-22
+description: Documentation for the Block-Based Prompt Architecture used in the AI
+  Engineering Book ecosystem.
+tags: [prompts, architecture]
+options:
+  type: guide
+  token_size: 1200
+  version: 1.0.0
+  birth: 2026-04-22
 ---
 
 # Layer 3: Prompts-as-Infrastructure
 
 +++
 
----
+This directory implements a **Block-Based Prompt Architecture** designed for Single Source of Truth (SSoT) and scalable maintenance of complex consultant personas.
 
-Owner: Vadim Rudakov, rudakow.wadim@gmail.com  
-Version: 0.1.1  
-Birth: 2026-01-26  
-Last Modified: 2026-01-26
+## **1. Architecture Overview**
 
----
+Instead of monolithic prompt files, the system uses a **JIT-composed block architecture**. This ensures that shared methodology, technical stacks, and tradecraft are defined once and reused across all consultants.
+
+### **The SSoT Hub (`/blocks`)**
+Shared prompt fragments are stored in `ai_system_layers/3_prompts/blocks/`. These blocks contain authoritative definitions for:
+- **Common User Stack**: The project's technical environment.
+- **Core Principles**: Behavioral rules and quality standards.
+- **Consulting Context**: Production-ready definitions and industry standards (ISO 29148/SWEBOK).
+- **Frameworks**: Specialized methodologies (e.g., WRC/SVA, Heuer Tradecraft).
+- **Output Protocols**: Standard response structures and formatting.
+
+### **Consultant Manifests (`/consultants`)**
+Consultant files are now **Manifests**—thin skins that describe how to assemble a persona from the hub blocks. A manifest declares its dependencies via an `_includes` list and provides specific overrides to specialize the persona.
+
+### **JIT Compilation**
+The [`prepare_prompt.py`](/tools/scripts/prepare_prompt.py) script acts as the compiler. At runtime, it:
+1. Recursively resolves all `_includes`.
+2. Merges the blocks into a single structure.
+3. Applies overrides from the manifest (Manifest values > Block values).
+4. Converts the resulting JSON to a clean, YAML-like format for LLM delivery.
 
 +++
 
-This directory contains structured prompt files and tooling for the AI Engineering Book project.
-
-The directory is under initial development. Currently here are the monolithic prompts that must be refactored to the block prompts.
-
-The prompts are stored and transported via JSON format which is natively machine-readable and highly testable for errors. Before pass it to the LLM it is very advised to convert them into YAML format with minimum markup symbols which is noise for the transformer. Use the [`prepare_prompt.py`](#prepare-prompt-section) script for this cleaning.
-
-+++
-
-## **1. Directory Structure**
+## **2. Directory Structure**
 
 ```{code-cell}
 tree . --gitignore -I "*.md"
 ```
 
-## **2. Tools**
+## **3. Creating a New Consultant**
 
-+++
-
-(prepare-prompt-section)=
-### Prepare Prompt Suite
-
-+++
-
-The [`prepare_prompt.py`](/tools/scripts/prepare_prompt.py) script converts JSON prompt files to LLM-friendly formats.
-
-**Location:** `tools/scripts/prepare_prompt.py`, verify:
-
-```{code-cell}
-ls ../../tools/scripts/prepare_prompt.py
-```
-
-**Usage:**
-
-```bash
-# Basic usage (YAML-like output)
-uv run tools/scripts/prepare_prompt.py consultants/devops_consultant.json
-
-# Plain text output
-uv run tools/scripts/prepare_prompt.py consultants/devops_consultant.json --format plain
-
-# From stdin
-cat consultants/devops_consultant.json | uv run tools/scripts/prepare_prompt.py --stdin
-```
-
-**What it does:**
-- Removes the `metadata` field (version info, dates, etc.)
-- Strips special characters (`*`, `'`, `"`, `` ` ``, `#`)
-- Converts JSON to YAML-like readable format
-
-**Full documentation:** [prepare_prompt_py_script.ipynb](/tools/docs/scripts_instructions/prepare_prompt_py_script.ipynb)
-
-+++
-
-## **3. Consultant Prompt Files**
-
-+++
-
-Each consultant JSON file follows a standard structure:
+To create a new consultant, define a JSON manifest in `/consultants` following this pattern:
 
 ```json
 {
-  "metadata": { ... },           // Version info (stripped by prepare_prompt.py)
-  "input_protocol": { ... },     // How the consultant handles input
-  "consultant_persona": { ... }, // Role, tone, principles
-  "target": { ... },             // Audience and user profile
-  "consulting_protocol": { ... }, // Methodology and verification
-  "output_protocol": { ... },    // Response structure
-  "USER_INPUT": "..."            // Placeholder for user input
+  "metadata": {
+    "title": "Specialized Consultant",
+    "version": "1.0.0"
+  },
+  "_includes": [
+    "blocks/common_principles.json",
+    "blocks/common_user_stack.json",
+    "blocks/standard_output_protocol.json"
+  ],
+  "consultant_persona": {
+    "role": "Expert in X",
+    "tone": "Analytical"
+  },
+  "USER_INPUT": "..."
 }
 ```

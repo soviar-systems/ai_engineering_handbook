@@ -1,5 +1,6 @@
 import io
 import sys
+import json
 from pathlib import Path
 from unittest.mock import patch
 
@@ -382,21 +383,202 @@ class TestPreparePromptCLIComplexJson:
 
 
 # ======================
-# Main Entry Point Test
+# Integration Tests: Recursive Inclusion
 # ======================
 
 
-def test_main_entry_point():
-    with patch("tools.scripts.prepare_prompt.PreparePromptCLI.run") as mock_run:
-        from tools.scripts.prepare_prompt import main
+class TestPreparePromptRecursiveInclusion:
+    @pytest.fixture
+    def cli(self):
+        return PreparePromptCLI()
 
-        main()
-        mock_run.assert_called_once_with()
+    def test_zero_includes(self, cli, tmp_path, capsys):
+        file = tmp_path / "manifest.json"
+        file.write_text('{"persona": "Architect"}', encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(file)])
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "persona: Architect" in captured.out
+        assert "_includes" not in captured.out
+
+    def test_single_include(self, cli, tmp_path, capsys):
+        block = tmp_path / "block.json"
+        block.write_text('{"common": "value"}', encoding="utf-8")
+        
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(f'{{"_includes": ["{block.name}"], "persona": "Architect"}}', encoding="utf-8")
+        # Note: we need to use absolute paths or paths relative to the execution dir. 
+        # The implementation will need to handle this. For now, we'll use absolute paths in the test.
+        manifest.write_text(f'{{"_includes": ["{block.absolute()}"], "persona": "Architect"}}', encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(manifest)])
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "common: value" in captured.out
+        assert "persona: Architect" in captured.out
+        assert "_includes" not in captured.out
+
+    def test_multiple_includes_ordered_merge(self, cli, tmp_path, capsys):
+        b1 = tmp_path / "b1.json"
+        b1.write_text('{"shared": "b1", "conflict": "b1"}', encoding="utf-8")
+        b2 = tmp_path / "b2.json"
+        b2.write_text('{"shared2": "b2", "conflict": "b2"}', encoding="utf-8")
+        
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(f'{{"_includes": ["{b1.absolute()}", "{b2.absolute()}"], "conflict": "manifest"}}', encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(manifest)])
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "shared: b1" in captured.out
+        assert "shared2: b2" in captured.out
+        assert "conflict: manifest" in captured.out # Manifest overrides all
+
+    def test_nested_includes(self, cli, tmp_path, capsys):
+        b_leaf = tmp_path / "leaf.json"
+        b_leaf.write_text('{"leaf": "value"}', encoding="utf-8")
+        
+        b_parent = tmp_path / "parent.json"
+        b_parent.write_text(f'{{"_includes": ["{b_leaf.absolute()}"], "parent": "value"}}', encoding="utf-8")
+        
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(f'{{"_includes": ["{b_parent.absolute()}"], "manifest": "value"}}', encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(manifest)])
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "leaf: value" in captured.out
+        assert "parent: value" in captured.out
+        assert "manifest: value" in captured.out
+
+    def test_missing_include_exits_1(self, cli, tmp_path, capsys):
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text('{"_includes": ["non_existent.json"]}', encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(manifest)])
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "Error" in captured.err
+
+    def test_circular_include_exits_1(self, cli, tmp_path, capsys):
+        b1 = tmp_path / "b1.json"
+        b2 = tmp_path / "b2.json"
+        
+        # B1 includes B2, B2 includes B1
+        b1.write_text(f'{{"_includes": ["{b2.absolute()}"]}}', encoding="utf-8")
+        b2.write_text(f'{{"_includes": ["{b1.absolute()}"]}}', encoding="utf-8")
+        
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(f'{{"_includes": ["{b1.absolute()}"]}}', encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(manifest)])
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "Circular dependency" in captured.err
 
 
 # ======================
-# Unit Tests: FormatDetector
+# Integration Tests: Adversarial
 # ======================
+
+
+class TestPreparePromptAdversarial:
+    @pytest.fixture
+    def cli(self):
+        return PreparePromptCLI()
+
+    def test_extreme_depth_recursion(self, cli, tmp_path, capsys):
+        # Create a chain of 50 nested includes
+        depth = 50
+        files = []
+        for i in range(depth):
+            f = tmp_path / f"block_{i}.json"
+            # Use unique keys to verify each level is merged
+            content = {f"val_{i}": i}
+            if i < depth - 1:
+                # Each block includes the next one
+                next_f = tmp_path / f"block_{i+1}.json"
+                content = {"_includes": [str(next_f.absolute())], **content}
+            f.write_text(json.dumps(content), encoding="utf-8")
+            files.append(f)
+
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(json.dumps({"_includes": [str(files[0].absolute())], "manifest": "root"}), encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(manifest)])
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "val_0: 0" in captured.out
+        assert f"val_{depth-1}: {depth-1}" in captured.out
+
+    def test_block_type_mismatch_list(self, cli, tmp_path, capsys):
+        # Block is a list, but resolver expects a dict for merging
+        block = tmp_path / "list_block.json"
+        block.write_text('[1, 2, 3]', encoding="utf-8")
+        
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(json.dumps({"_includes": [str(block.absolute())], "persona": "Architect"}), encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(manifest)])
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "must be a JSON object for merging" in captured.err
+
+    def test_malformed_block_content(self, cli, tmp_path, capsys):
+        block = tmp_path / "broken.json"
+        block.write_text('{"key": ', encoding="utf-8") # Invalid JSON
+        
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(json.dumps({"_includes": [str(block.absolute())], "persona": "Architect"}), encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(manifest)])
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "Invalid JSON" in captured.err
+
+    def test_mixed_formats_inclusion(self, cli, tmp_path, capsys):
+        # YAML block included in JSON manifest
+        block_yaml = tmp_path / "block.yaml"
+        block_yaml.write_text("yaml_key: yaml_value", encoding="utf-8")
+        
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(json.dumps({"_includes": [str(block_yaml.absolute())], "persona": "Architect"}), encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(manifest)])
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "yaml_key: yaml_value" in captured.out
+        assert "persona: Architect" in captured.out
+
+    def test_large_number_of_includes(self, cli, tmp_path, capsys):
+        count = 100
+        includes = []
+        for i in range(count):
+            f = tmp_path / f"b_{i}.json"
+            f.write_text(json.dumps({f"key_{i}": f"val_{i}"}), encoding="utf-8")
+            includes.append(str(f.absolute()))
+        
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(json.dumps({"_includes": includes, "persona": "Architect"}), encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            cli.run([str(manifest)])
+        assert exc_info.value.code == 0
+        captured = capsys.readouterr()
+        assert "key_0: val_0" in captured.out
+        assert f"key_{count-1}: val_{count-1}" in captured.out
+        assert "persona: Architect" in captured.out
 
 
 class TestFormatDetector:

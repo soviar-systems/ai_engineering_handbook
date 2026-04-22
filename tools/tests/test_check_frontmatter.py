@@ -469,6 +469,29 @@ class TestParseFrontmatter:
         result = _module.parse_frontmatter(content, file_path=Path("test.ipynb"))
         assert result is None
 
+    def test_handles_multiple_frontmatter_blocks(self):
+        """Files with multiple YAML blocks (e.g. Jupytext + Governed) → returns the governed one."""
+        content = (
+            "---\n"
+            "jupytext:\n"
+            "  text_representation: {format_name: myst}\n"
+            "---\n"
+            "\n"
+            "---\n"
+            "title: Governed Doc\n"
+            "options:\n"
+            "  type: guide\n"
+            "---\n"
+            "\n"
+            "# Body\n"
+        )
+        result = _module.parse_frontmatter(content)
+        assert isinstance(result, dict)
+        assert result["title"] == "Governed Doc"
+        assert result["options"]["type"] == "guide"
+        assert "jupytext" not in result
+
+
 
 # ======================
 # Tests: Type Resolution

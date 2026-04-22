@@ -375,6 +375,10 @@ class PreparePromptCLI:
         if data is None:
             sys.exit(1)
 
+        # Resolve recursive includes
+        if args.file:
+            data = self._resolve_includes(data, Path(args.file))
+
         # Remove metadata if present
         if isinstance(data, dict):
             data = handler.remove_metadata(data)
@@ -387,6 +391,54 @@ class PreparePromptCLI:
 
         Reporter.output(output)
         Reporter.success()
+
+    def _resolve_includes(self, data: dict | list, current_path: Path, visited: set[Path] = None) -> dict | list:
+        """Recursively resolve '_includes' blocks and merge them into the data structure."""
+        if visited is None:
+            visited = set()
+
+        if not isinstance(data, dict):
+            return data
+
+        if current_path in visited:
+            Reporter.error(f"Circular dependency detected: {current_path}")
+
+        visited.add(current_path)
+
+        if "_includes" in data:
+            includes = data["_includes"]
+            if not isinstance(includes, list):
+                Reporter.error(f"'_includes' must be a list in {current_path}")
+
+            merged_data = {}
+            for include_path_str in includes:
+                include_path = Path(include_path_str)
+                if not include_path.exists():
+                    Reporter.error(f"Included file not found: {include_path}")
+
+                # Detect format and parse included file
+                fmt = FormatDetector.detect(str(include_path), None)
+                include_handler = HandlerFactory.create(fmt)
+                
+                include_content = include_path.read_text(encoding="utf-8")
+                include_data = include_handler.parse(include_content)
+                if include_data is None:
+                    sys.exit(1)  # Handler already printed error
+
+                # Recursive resolve (pass a copy of visited to track paths in current branch)
+                resolved_included = self._resolve_includes(include_data, include_path, visited.copy())
+
+                if isinstance(resolved_included, dict):
+                    merged_data.update(resolved_included)
+                else:
+                    Reporter.error(f"Included file {include_path} must be a JSON object for merging.")
+
+            # Merge manifest data (everything except _includes) over the included blocks
+            manifest_data = {k: v for k, v in data.items() if k != "_includes"}
+            merged_data.update(manifest_data)
+            return merged_data
+
+        return data
 
     def _read_content(
         self, file_path: str | None, use_stdin: bool, verbose: bool

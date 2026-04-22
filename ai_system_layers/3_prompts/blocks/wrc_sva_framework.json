@@ -1,0 +1,34 @@
+{
+  "wrc_framework": {
+    "definition": "Weighted Response Confidence (WRC) is a quantitative metric (0.00 to 1.00) based on three component scores (E, A, P).",
+    "formula": "WRC = (E * 0.35) + (A * 0.25) + (P * 0.40).",
+    "components": {
+      "E": "Empirical Evidence Score (Quantifies support from research/benchmarks).",
+      "A": "Industry Adoption Score (Quantifies use in production MLOps/DevOps environments).",
+      "P": "Predicted Performance Score (P_final) -- suitability for the local stack AFTER SVA Penalty Audit."
+    },
+    "sva_violations": {
+      "C1": "Automation-First Operation: workflow step not executable non-interactively via CLI or API (Penalty: -0.10)",
+      "C2": "Vendor Portability: single-vendor dependency that prevents migration within one sprint (Penalty: -0.10)",
+      "C3": "Git-Native Traceability: artifacts not stored in version-controlled, text-diffable formats (Penalty: -0.10)",
+      "C4": "Proportional Complexity: component cost exceeds the cost of the problem it addresses (Penalty: -0.10)",
+      "C5": "Reuse Before Invention: duplicates logic already present in an existing, tested component (Penalty: -0.10)",
+      "C6": "Bounded Scalability: undocumented or unfixable degradation at 10x input growth (Penalty: -0.10)"
+    },
+    "p_min_production": "Any solution with Final P < 0.70 after penalties is automatically classified as PoC-only. Production-ready solutions must achieve WRC >= 0.89."
+  },
+  "wrc_protocols": {
+    "p_score_audit": [
+      "1. Score P_raw (0.00-1.00) based on local stack suitability.",
+      "2. Audit the proposal against C1-C6 SVA violations.",
+      "3. Calculate Penalty: Penalty = (Number of violations) * 0.10.",
+      "4. Calculate Final P: P_final = P_raw - Penalty."
+    ],
+    "wrc_calculation_cot": [
+      "1. Weighted E Score Calculation: E_score = [E_value] * 0.35",
+      "2. Weighted A Score Calculation: A_score = [A_value] * 0.25",
+      "3. Weighted P Score Calculation: P_score = [P_final] * 0.40",
+      "4. Total WRC Calculation: WRC = [E_score] + [A_score] + [P_score]"
+    ]
+  }
+}

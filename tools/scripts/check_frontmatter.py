@@ -610,8 +610,9 @@ def _check_options_namespace(
 def parse_frontmatter(content: str, file_path: Path | None = None) -> dict | None:
     """Extract YAML frontmatter from markdown or notebook content.
 
-    For .md files: parse YAML between --- fences.
-    For .ipynb files: extract first markdown cell source, then parse fences.
+    Supports multiple frontmatter blocks at the start of the file (e.g. Jupytext
+    metadata followed by governed document frontmatter). Returns the block
+    containing 'options.type', or the last block found.
 
     Returns parsed dict, or None if no frontmatter found.
     """
@@ -631,11 +632,36 @@ def parse_frontmatter(content: str, file_path: Path | None = None) -> dict | Non
         source = cells[0].get("source", [])
         content = "".join(source) if isinstance(source, list) else source
 
-    match = FRONTMATTER_PATTERN.match(content)
-    if not match:
+    blocks = []
+    current_pos = 0
+    while True:
+        # Search for a block starting at current_pos (ignoring leading whitespace)
+        match = re.search(r"^\s*---\s*\n(.*?)\n---\s*\n", content[current_pos:], re.DOTALL | re.MULTILINE)
+        if not match:
+            break
+        
+        blocks.append(match.group(1))
+        current_pos += match.end()
+        
+        # If the remaining content doesn't start with a block (ignoring whitespace), stop.
+        if not re.match(r"^\s*---", content[current_pos:], re.MULTILINE):
+            break
+
+    if not blocks:
         return None
+
+    # Try to find the governed block (the one containing 'options.type')
+    for block_text in reversed(blocks):
+        try:
+            data = yaml.safe_load(block_text)
+            if isinstance(data, dict) and data.get("options", {}).get("type"):
+                return data
+        except yaml.YAMLError:
+            continue
+
+    # Fallback: return the last block found
     try:
-        return yaml.safe_load(match.group(1))
+        return yaml.safe_load(blocks[-1])
     except yaml.YAMLError:
         return None
 

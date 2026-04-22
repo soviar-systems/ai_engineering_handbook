@@ -1,9 +1,23 @@
 # Plan: Block-Based Prompt Architecture (SSoT)
 
 **Date:** 2026-04-21
-**Status:** Proposed
+**Status:** Active (Refining Path Resolution)
 **Related ADRs:** ADR-26047 (Heuer), ADR-26048 (WRC)
 **Goal:** Migrate monolithic consultant prompts to a JIT-composed block architecture to ensure Single Source of Truth (SSoT) for shared methodology, user stacks, and tradecraft.
+
+## 0. Session Progress (Handoff)
+
+The following work has been completed in the current session:
+- **Infrastructure**: Created `ai_system_layers/3_prompts/blocks/` hub.
+- **SSoT Extraction**: Created core block files (`common_user_stack.json`, `common_principles.json`, `wrc_sva_framework.json`, `standard_output_protocol.json`, `heuer_tradecraft.json`).
+- **Compiler Upgrade**: Implemented recursive `_includes` resolution in `tools/scripts/prepare_prompt.py`.
+- **TDD**: Added 117 tests covering recursive, nested, circular, and adversarial scenarios (94% coverage).
+- **Migration**: Converted all 4 consultant monoliths into thin manifests.
+- **Documentation**: Updated `ai_system_layers/3_prompts/README.md` to describe the Block Architecture.
+
+**Current Blocker / Next Step**: The `_includes` resolution currently relies on relative paths from the CWD. This is fragile. **The next agent should immediately start with Task 6: Path Resolution & Config SSoT.**
+
+---
 
 ## 1. Full Context Analysis
 
@@ -30,17 +44,18 @@ Prompts are split into **Manifests** (consultant-specific) and **Blocks** (share
 
 **Directory Tree (Target):**
 ```
-ai_system_layers/3_prompts/consultants/
+ai_system_layers/3_prompts/
 ├── blocks/
 │   ├── common_user_stack.json
 │   ├── common_principles.json
 │   ├── wrc_sva_framework.json
 │   ├── standard_output_protocol.json
 │   └── heuer_tradecraft.json
-├── ai_brainstorming_colleague.json (Manifest)
-├── ai_systems_consultant.json (Manifest)
-├── devops_consultant.json (Manifest)
-└── handbook_consultant.json (Manifest)
+└── consultants/
+    ├── ai_brainstorming_colleague.json (Manifest)
+    ├── ai_systems_consultant.json (Manifest)
+    ├── devops_consultant.json (Manifest)
+    └── handbook_consultant.json (Manifest)
 ```
 
 ---
@@ -61,44 +76,59 @@ ai_system_layers/3_prompts/consultants/
 
 ## 3. Task Rationale & Operations
 
-### Task 1: Infrastructure Setup
-**Rationale:** Create the storage location for reusable prompt fragments.
-**Action:** `mkdir -p ai_system_layers/3_prompts/consultants/blocks/`
+### Task List
+- ✅ Task 1: Infrastructure Setup
+- ✅ Task 2: Block Extraction (SSoT)
+- ✅ Task 3: JIT Builder Upgrade (`prepare_prompt.py`)
+- ✅ Task 4: TDD Verification
+- ✅ Task 5: Manifest Migration
+- ⏭️ Task 6: Path Resolution & Config SSoT (Immediate Next Step)
 
-### Task 2: Block Extraction (SSoT)
+---
+
+### Task 1: Infrastructure Setup (Completed)
+**Rationale:** Create the storage location for reusable prompt fragments.
+**Action:** `mkdir -p ai_system_layers/3_prompts/blocks/`
+
+### Task 2: Block Extraction (SSoT) (Completed)
 **Rationale:** Isolate shared logic into atomic files to eliminate duplication.
-**Blocks to create:**
+**Blocks created:**
 - `common_user_stack.json`: The authoritative technical environment description.
 - `common_principles.json`: "Emotionless", "Anti-bias", "Peer Review" rules.
 - `wrc_sva_framework.json`: The full WRC formula, SVA C1-C6 constraints, and audit protocols.
 - `standard_output_protocol.json`: The response structure, ISO 29148 tagging, and formatting rules.
 - `heuer_tradecraft.json`: The procedural instructions for ACH and bias mitigation (from ADR-26047).
 
-### Task 3: JIT Builder Upgrade (`prepare_prompt.py`)
-**Rationale:** `prepare_prompt.py` must be upgraded from a simple reader to a recursive composer.
-**Logic:**
+### Task 3: JIT Builder Upgrade (`prepare_prompt.py`) (Completed)
+**Rationale:** `prepare_prompt.py` upgraded to a recursive composer.
+**Logic Implemented:**
 1. Load JSON.
 2. If `_includes` key exists, iterate through paths.
 3. Recursively load and merge included JSON blocks.
 4. Final merge: Consultant Manifest overrides $\rightarrow$ Block contents.
 5. Remove `_includes` key from final output.
 
-### Task 4: TDD Verification
-**Rationale:** Ensure the builder handles edge cases safely.
-**Test Scenarios:**
-- **Zero Includes**: Standard JSON load.
-- **Single Include**: Simple merge.
-- **Multiple Includes**: Ordered merge.
-- **Nested Includes**: Recursive resolution.
-- **Missing File**: Exit with status 1 and clear error.
-- **Circular Dependency**: Detection and error.
+### Task 4: TDD Verification (Completed)
+**Rationale:** Builder handles edge cases safely.
+**Tests Added:**
+- Zero Includes, Single Include, Multiple Includes, Nested Includes, Missing File, Circular Dependency, Adversarial Deep Nesting (50+ levels), Type Mismatches.
 
-### Task 5: Manifest Migration
+### Task 5: Manifest Migration (Completed)
 **Rationale:** Convert existing monoliths into clean manifests.
+**Actions:**
+1. Removed duplicated `user_stack`, `wrc_sva`, `principles`, and `output_protocol` sections from consultants.
+2. Added `"_includes": [...]` at the top of each manifest.
+3. Retained unique `persona`, `role`, and consultant-specific `goals`.
+
+### Task 6: Path Resolution & Config SSoT (Refinement)
+**Rationale:** Currently, `_includes` are resolved relative to CWD, which is fragile. We need an absolute reference point for the blocks hub.
 **Operation:**
-1. Remove `user_stack`, `wrc_sva`, `principles`, and `output_protocol` sections.
-2. Add `"_includes": ["blocks/common_user_stack.json", ...]` at the top.
-3. Retain unique `persona`, `role`, and consultant-specific `goals`.
+1. **Config SSoT**: Add `[tool.prompt_blocks]` section to `pyproject.toml` defining `blocks_dir = "ai_system_layers/3_prompts/blocks"`.
+2. **Root Detection**: Update `prepare_prompt.py` to detect the project root (via `.git` or `pyproject.toml`).
+3. **Path Resolution**:
+    - Load `blocks_dir` from config.
+    - In `_resolve_includes`, if an include path is relative, resolve it against the configured `blocks_dir` relative to the project root.
+4. **Verification**: Add tests that run `prepare_prompt.py` from subdirectories to ensure blocks are still resolved correctly.
 
 ---
 
@@ -207,3 +237,4 @@ ai_system_layers/3_prompts/consultants/
 - [ ] Heuer Tradecraft integrated via block? ✅
 - [ ] Manifests are significantly smaller and focused on persona? ✅
 - [ ] TDD tests cover all boundary cases? ✅
+- [ ] Block path resolution is config-driven and CWD-independent? ✗

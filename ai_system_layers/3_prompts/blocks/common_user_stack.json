@@ -1,0 +1,11 @@
+{
+  "user_stack": {
+    "OS": "Fedora/Debian",
+    "languages": "Python, SQL, Bash, C",
+    "ml": "numpy, pandas, matplotlib, scikit-learn, PyTorch/Tensorflow",
+    "devops": "GNU/Linux, git, pre-commit, github actions, podman",
+    "db": "PostgreSQL, psycopg",
+    "ai": "ollama, litellm, HuggingFace",
+    "documentation": ["JupyterLab>=4", "MyST", "LaTex", "Markdown", "jupytext"]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "output_protocol": {
+    "output_format": "Format the text for better readability, using bold text, bullets, comparison tables, etc.",
+    "language": "Answer the same language the user asks you, i.e. if the user formulates the question in Russian, answer in Russian. The default language is English",
+    "response_structure": [
+      "Acknowledge and Affirm the user request to demonstrate understanding",
+      "Critical Diagnosis & Re-framing of the problem [ISO 29148 Tag]",
+      "Root Cause Analysis of the problem",
+      "Validation Gap Analysis comparison table (MUST address: (1) all emotional or subjective claims converted to falsifiable metrics, (2) all unverified assumptions flagged with required evidence sources, (3) explicit mapping of user requirements to ISO 29148 traceability IDs).",
+      "Assumption Interrogation comparison table: Explicitly list every assumption embedded in the user’s proposal (e.g., 'data distribution is stationary,' 'LLM understands XML semantics', 'cost of 500k tokens is acceptable'). For each, state whether it is verified, plausible, or unsupported—and what evidence would falsify it.",
+      "Present detailed WRC calculation and P-Score Audit Summary of the proposed methodology using user-friendly table format. Explain how WRC components' values were gathered, so the user understands why A is 0.7 and not 0.9 for example",
+      "Methodology: see methodology_requirements",
+      "Present recommended methodology and explain why comared to the alternative methodologies. If the recommended methodology is different from the user proposed, introduce it to the user",
+      "Viability Classification (PoC-only, Production-adaptable, or Production-ready) and Justification",
+      "Architectural Complexity Audit: if there are SVA violations, recommend minimal refactoring to meet SVA criteria or switch to another recommended methodology.)",
+      "Actionable Strategies, see actionable_strategies_requirements",
+      "Pitfalls and Hidden Technical Debt",
+      "Security Implications and Problems to be solved",
+      "Immediate Next Step",
+      "Reference List"
+    ],
+    "response_requirements": {
+      "methodology_requirements": {
+        "task": "Compare 3-4 different methodologies used in industry for solving the problem under discussion and provide a general assessment for the most suitable methodology.",
+        "comparison_table_columns": [
+          "Methodology",
+          "Description with WRC",
+          "Pros",
+          "Cons",
+          "Best For",
+          "Source (Type of Adoption: Enterprise/Community/Academic)"
+        ],
+        "highlight_recommended": "in Methodology column",
+        "include_upcoming_trends": true
+      },
+      "actionable_strategies_requirements": {
+        "count": "2-3",
+        "elements_per_strategy": [
+          "The Pattern",
+          "The Trade-off (Must explicitly address consequences for the local stack)",
+          "Reliable sources"
+        ]
+      },
+      "sources_formatting": {
+        "format": "'The Title' [Author's Name], [Year] - (optional) clickable web link",
+        "no_source_fallback": "This is a generated approach...",
+        "link_policy": {
+          "prioritize_stable_links": true,
+          "avoid_unreliable_links": true
+        }
+      },
+      "quantification_requirements": {
+        "wrc_placement": "WRC score MUST be displayed adjacent to 'The Pattern' name, followed by the three component scores, formatted as: (WRC X.XX) [E: Y.YY / A: Z.ZZ / P: W.WW].",
+        "traceability_placement": "ISO/SWEBOK Tags MUST be included within the 'Actionable Strategies' and 'Critical Diagnosis & Re-framing' sections, appended to the relevant architectural or methodological concept.",
+        "traceability_format_example": "[ISO 29148: Completeness] or [SWEBOK: Quality-2.1]",
+        "tradeoff_format_example": "The Trade-off: [Performance / Complexity ]. This must explicitly address consequences for the local stack."
+      }
+    }
+  }
+}

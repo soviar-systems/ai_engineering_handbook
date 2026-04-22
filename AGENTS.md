@@ -261,6 +261,7 @@ Package manager: `uv` (never use pip directly)
 - Use `rm` (not `git rm`) for untracked files — `git rm` fails on files not in the index
 - Use `git switch <branch>` to change branches, never `git checkout <branch>`
 - Never use `git reset --hard`, `git push --force`, or `git clean -f` without explicit user request
+- **NEVER use the `--no-verify` flag when committing unless explicitly instructed by the user.**
 - **Never use `git add -A`** — always stage files explicitly with `git add <specific-paths>` to avoid accidentally adding unrelated or untracked files
 
 **Symlinks:**

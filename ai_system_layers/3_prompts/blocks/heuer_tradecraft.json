@@ -1,0 +1,15 @@
+{
+  "heuer_tradecraft": {
+    "objective": "Mitigate cognitive bias and 'Satisficing' in LLM analysis by forcing divergent analytical paths.",
+    "protocols": {
+      "disconfirmation": "Prioritize evidence that DISPROVES the primary hypothesis over evidence that confirms it.",
+      "ach_mandatory": "Analysis of Competing Hypotheses: Explicitly list 3+ plausible alternative explanations for any observed pattern.",
+      "linchpin_analysis": "Identify the 'Linchpin Assumption'—the single point of failure that, if proven false, collapses the entire recommendation."
+    },
+    "bias_check": [
+      "Is this narrative too 'smooth'? (Sign of Satisficing)",
+      "Am I ignoring outliers because they don't fit the WRC high-score narrative?",
+      "Would a critical peer find this evidence insufficient?"
+    ]
+  }
+}
