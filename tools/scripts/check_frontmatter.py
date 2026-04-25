@@ -70,6 +70,7 @@ class FrontmatterError:
     """Represents a frontmatter validation error or warning.
 
     error_type taxonomy (used by main() to separate blocking vs non-blocking):
+        "missing_frontmatter" — file has governed extension but no YAML frontmatter present (blocking)
         "missing_field"      — required field absent (blocking)
         "invalid_format"     — field present but wrong format, e.g. bad date (blocking)
         "invalid_value"      — field value not in allowed set, e.g. unknown tag (blocking)
@@ -167,6 +168,12 @@ def main(argv: list[str] | None = None) -> int:
     input_paths = [Path(p) for p in args.paths] if args.paths else [REPO_ROOT]
     files = scan_paths(input_paths, REPO_ROOT, fmt=args.fmt)
 
+    # Load governance scope and exclusions from hub config
+    governed_exts = HUB_CONFIG.get("governed_extensions", [])
+    excludes = HUB_CONFIG.get("governance_excludes", {})
+    exclude_dirs = excludes.get("dirs", [])
+    exclude_files = excludes.get("files", [])
+
     # -- Validate each file -----------------------------------------------
     # NOTE: This loop intentionally does NOT call validate_frontmatter() directly.
     # validate_frontmatter() silently returns [] for files with no type — but
@@ -176,12 +183,27 @@ def main(argv: list[str] | None = None) -> int:
     # preserving the warning behavior.
     all_errors: list[FrontmatterError] = []
     for file_path in files:
+        # Skip explicitly excluded files or directories
+        if any(part in exclude_dirs for part in file_path.parts) or file_path.name in exclude_files:
+            continue
+
         content = file_path.read_text(encoding="utf-8")
         frontmatter = parse_frontmatter(content, file_path=file_path)
 
-        # Files without frontmatter are silently skipped — they are not
-        # governed documents (e.g. README, plain scripts).
+        # Files without frontmatter are checked against governed extensions.
+        # If a file has a governed extension but no frontmatter, it's a blocking error.
+        # Non-governed files (e.g. plain scripts) are silently skipped.
         if frontmatter is None:
+            if file_path.suffix in governed_exts:
+                all_errors.append(
+                    FrontmatterError(
+                        file_path=file_path,
+                        error_type="missing_frontmatter",
+                        field=None,
+                        message="file has governed extension but no YAML frontmatter present — all governed files must have frontmatter to be subject to validation",
+                        config_source=".vadocs/conf.json → governed_extensions",
+                    )
+                )
             continue
 
         # Files with frontmatter but no options.type: this is now a blocking error.
@@ -659,9 +681,10 @@ def parse_frontmatter(content: str, file_path: Path | None = None) -> dict | Non
         except yaml.YAMLError:
             continue
 
-    # Fallback: return the last block found
+    # Fallback: return the last block found if it's a dictionary
     try:
-        return yaml.safe_load(blocks[-1])
+        data = yaml.safe_load(blocks[-1])
+        return data if isinstance(data, dict) else None
     except yaml.YAMLError:
         return None
 

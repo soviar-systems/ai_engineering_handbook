@@ -1073,3 +1073,134 @@ class TestFindFieldBlockFallback:
         source = _module._find_field_block(spoke_only_field, spoke_type, hub)
         # Contract: spoke-only fields point to spoke config, not hub
         assert f"{spoke_type}.conf.json" in source
+
+# ======================
+# Tests: Mandatory Governance
+# ======================
+
+class TestMandatoryGovernance:
+    """Contract: All .md and .ipynb files must have YAML frontmatter.
+
+    Files without frontmatter must no longer be silently skipped and should
+    produce a blocking error.
+    """
+
+    def test_file_without_frontmatter_produces_error(self, frontmatter_env, capsys):
+        """File with no frontmatter fences → blocking error (exit 1)."""
+        md_file = frontmatter_env / "no_fm.md"
+        md_file.write_text("# Just a heading\n\nNo frontmatter here.", encoding="utf-8")
+        
+        # Run main on the specific file
+        exit_code = _module.main([str(md_file)])
+        
+        captured = capsys.readouterr()
+        assert exit_code == 1
+        # Check for error message indicating missing frontmatter
+        assert "governed extension" in captured.out and "no YAML frontmatter present" in captured.out
+
+    def test_excluded_directory_is_skipped(self, frontmatter_env, capsys):
+        """File in an excluded directory → silently skipped (exit 0)."""
+        # 'misc' is in our governed_excludes.dirs config
+        misc_dir = frontmatter_env / "misc"
+        misc_dir.mkdir()
+        md_file = misc_dir / "test.md"
+        md_file.write_text("# No frontmatter, but in misc/", encoding="utf-8")
+        
+        exit_code = _module.main([str(md_file)])
+        
+        captured = capsys.readouterr()
+        assert exit_code == 0
+        assert "no YAML frontmatter present" not in captured.out
+
+    def test_excluded_filename_is_skipped(self, frontmatter_env, capsys):
+        """Explicitly excluded filename (e.g. README.md) → silently skipped (exit 0)."""
+        # 'README.md' is in our governed_excludes.files config
+        readme_file = frontmatter_env / "README.md"
+        readme_file.write_text("# Project README\nNo frontmatter here.", encoding="utf-8")
+        
+        exit_code = _module.main([str(readme_file)])
+        
+        captured = capsys.readouterr()
+        assert exit_code == 0
+        assert "no YAML frontmatter present" not in captured.out
+
+    def test_non_governed_extension_is_skipped(self, frontmatter_env, capsys):
+        """File with extension NOT in governed_extensions → silently skipped (exit 0)."""
+        txt_file = frontmatter_env / "notes.txt"
+        txt_file.write_text("Just some plain text notes.", encoding="utf-8")
+        
+        exit_code = _module.main([str(txt_file)])
+        
+        captured = capsys.readouterr()
+        assert exit_code == 0
+        assert "no YAML frontmatter present" not in captured.out
+
+    def test_adversary_empty_fences(self, frontmatter_env, capsys):
+        """File with empty YAML fences (--- \n ---) → treat as missing frontmatter (exit 1)."""
+        md_file = frontmatter_env / "empty_fences.md"
+        md_file.write_text("---\n---\n\n# Body", encoding="utf-8")
+        
+        exit_code = _module.main([str(md_file)])
+        
+        captured = capsys.readouterr()
+        # Since parse_frontmatter returns None for empty blocks or failed YAML
+        assert exit_code == 1
+        assert "no YAML frontmatter present" in captured.out
+
+    def test_adversary_misplaced_fences(self, frontmatter_env, capsys):
+        """Fences not at start of file → not recognized as frontmatter (exit 1)."""
+        md_file = frontmatter_env / "misplaced.md"
+        md_file.write_text("# Header\n\n---\ntitle: Test\n---\n\nBody", encoding="utf-8")
+        
+        exit_code = _module.main([str(md_file)])
+        
+        captured = capsys.readouterr()
+        assert exit_code == 1
+        # Either treated as missing frontmatter OR as frontmatter with missing type
+        assert "no YAML frontmatter present" in captured.out or "missing required 'options.type'" in captured.out
+
+    def test_adversary_invalid_yaml(self, frontmatter_env, capsys):
+        """Frontmatter with invalid YAML syntax → treated as missing/invalid (exit 1)."""
+        md_file = frontmatter_env / "invalid_yaml.md"
+        md_file.write_text("---\ntitle: [unclosed list\n---\n\n# Body", encoding="utf-8")
+        
+        exit_code = _module.main([str(md_file)])
+        
+        captured = capsys.readouterr()
+        assert exit_code == 1
+        assert "no YAML frontmatter present" in captured.out
+
+    def test_adversary_scalar_yaml(self, frontmatter_env, capsys):
+        """Frontmatter that is valid YAML but not a dict (e.g. just a string) → exit 1."""
+        for val in ["Just a string", "123", "true", "null", "[]"]:
+            md_file = frontmatter_env / f"scalar_{val}.md"
+            md_file.write_text(f"---\n{val}\n---\n\n# Body", encoding="utf-8")
+            
+            exit_code = _module.main([str(md_file)])
+            assert exit_code == 1
+            captured = capsys.readouterr()
+            assert "no YAML frontmatter present" in captured.out
+
+    def test_adversary_notebook_edge_cases(self, frontmatter_env, capsys):
+        """Notebook structural edge cases → exit 1 or skip based on governance."""
+        # 1. Notebook with no cells
+        nb_empty = frontmatter_env / "empty.ipynb"
+        nb_empty.write_text(json.dumps({"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}), encoding="utf-8")
+        assert _module.main([str(nb_empty)]) == 1 # governed ext, but no frontmatter
+        
+        # 2. Notebook with first cell not markdown
+        nb_code_first = frontmatter_env / "code_first.ipynb"
+        nb_code_first.write_text(json.dumps({
+            "cells": [{"cell_type": "code", "source": ["print(1)"], "outputs": [], "execution_count": None}],
+            "metadata": {}, "nbformat": 4, "nbformat_minor": 5
+        }), encoding="utf-8")
+        assert _module.main([str(nb_code_first)]) == 1 # governed ext, no frontmatter in first cell
+        
+        # 3. Notebook with markdown first cell but no frontmatter
+        nb_no_fm = frontmatter_env / "no_fm.ipynb"
+        nb_no_fm.write_text(json.dumps({
+            "cells": [{"cell_type": "markdown", "source": ["# Hello"], "outputs": [], "execution_count": None}],
+            "metadata": {}, "nbformat": 4, "nbformat_minor": 5
+        }), encoding="utf-8")
+        assert _module.main([str(nb_no_fm)]) == 1
+
