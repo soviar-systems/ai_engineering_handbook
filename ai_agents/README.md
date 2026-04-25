@@ -82,9 +82,12 @@ Run `sync --update` before starting any analysis session — agent architectures
 
 ### Research Process
 
-1. **Study** code in-place — use `git log`, `git diff`, and navigation within each nested repo
-2. **Save analysis** as MyST notebooks in a topic subdirectory (create one if needed)
-3. **Sync** notebooks: `uv run jupytext --sync`
+To prevent data loss during context switches and maximize context window efficiency, follow the **Analyze $\rightarrow$ Save $\rightarrow$ Move** loop:
+
+1.  **Analyze**: Study the code in-place using `git log`, `grep_search`, and source navigation.
+2.  **Save**: Write detailed findings to a dedicated analysis file or MyST notebook **immediately** after finishing a repository's analysis, before moving to the next.
+3.  **Move**: Summarize the session to clear context, then proceed to the next target.
+4.  **Sync**: Ensure notebooks are synchronized using `uv run jupytext --sync`.
 
 ## Key Learnings Across Agents
 

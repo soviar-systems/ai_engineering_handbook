@@ -6,9 +6,9 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.19.1
 kernelspec:
-  name: python3
   display_name: Python 3 (ipykernel)
   language: python
+  name: python3
 ---
 
 ---
@@ -16,9 +16,10 @@ title: What the KV Cache Actually Contains
 authors:
   - name: Vadim Rudakov
     email: rudakow.wadim@gmail.com
-date: 2026-04-04
+date: 2026-04-26
 description: Deep dive into KV cache internals — what tensors are stored, how attention uses them, prefix caching strategies, and why this is a hardware memory problem.
 tags: [hardware, model]
+token_size: "~1500"
 options:
   type: guide
   birth: 2026-04-04

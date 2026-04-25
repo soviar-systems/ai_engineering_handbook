@@ -61,7 +61,7 @@ The repository is organized around a five-layer AI system architecture:
   - `3_prompts/` - Prompts-as-Infrastructure, includes JSON prompt files in `consultants/`
   - `4_orchestration/` - RAG, agent workflows, structured output
   - `5_context/` - Vector stores, hybrid retrieval
-- `ai_agents/` - Real-world agent framework analysis. External source code is cloned into `research/` as nested git repos — excluded from `.gitignore` and script checks via `tools/scripts/paths.py`. Use `manage_external_repos.py` to clone and update repos. Analysis notebooks live in topic subdirectories (`session_history_management/`, `skills/`, `tooling/`, etc.)
+- `ai_agents/` - Real-world agent framework analysis. **Agents MUST read [ai_agents/README.md](/ai_agents/README.md) before starting any research or analysis in this directory to align with the "Analyze $\rightarrow$ Save $\rightarrow$ Move" workflow.** External source code is cloned into `research/` as nested git repos — excluded from `.gitignore` and script checks via `tools/scripts/paths.py`. Use `manage_external_repos.py` to clone and update repos. Analysis notebooks live in topic subdirectories (`session_history_management/`, `skills/`, `tooling/`, etc.)
 - `architecture/` - Architectural Decision Records (ADRs) and post-mortems
 - `security/` - Centralized security policy hub
 - `mlops/` - CI/CD and security tooling
@@ -233,6 +233,11 @@ Package manager: `uv` (never use pip directly)
 - **Import module once**: Use `import tools.scripts.X as _module` at top of test file; access all functions via `_module.func()` — single point to update on package rename
 - **Config-driven test helpers**: Build valid test data (frontmatter, filenames) dynamically from config structure, not hardcoded field→value mappings
 - **Document the contract**: Each test class should have a docstring explaining what contract it verifies
+
+**Quality & Testing Standards (Adversary Testing):**
+- **Adversary Testing**: For any scripts created to support this research (e.g., extraction tools), use comprehensive "adversary" testing.
+- **Semantic Validation**: Do not rely on code coverage as a sole proxy for correctness. Explicitly test boundary conditions, structural edge cases (e.g., empty files, malformed JSON), and valid syntax that produces unexpected types.
+- **Verification**: Ensure every architectural claim is grounded in a specific, verified code snippet.
 
 **Commit Conventions (ADR-26024):**
 - Use conventional commits with prefixes from `pyproject.toml [tool.commit-convention]` `valid-types`
