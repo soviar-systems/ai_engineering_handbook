@@ -10,6 +10,9 @@ Scope:
     - ALL frontmatter validation: field presence, format, allowed values
     - Hub-level rules (blocks, field registry, tags, date format)
     - Spoke-level rules (type-specific required fields, statuses, severity)
+    - Token size accuracy: Validates that 'options.token_size' reflects actual
+      file content. This acts as a quality gate, ensuring that developers run
+      the utility 'update_token_counts.py' before committing changes.
 
 Does NOT own:
     - Structural validation (sections, section order) — domain scripts
@@ -52,6 +55,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import tiktoken
 import yaml
 
 from tools.scripts.git import detect_repo_root
@@ -95,7 +99,9 @@ class FrontmatterError:
 # Matches YAML frontmatter between --- fences at the start of a file.
 # Same regex used in check_adr.py and check_evidence.py — will be consolidated
 # in Phase 2 when domain scripts delegate to this module.
-FRONTMATTER_PATTERN = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+# We use a non-greedy match for the content and ensure the closing delimiter
+# is followed by a newline to confirm it's on its own line.
+FRONTMATTER_PATTERN = re.compile(r"^---\s*\n([\s\S]*?)---\s*\n", re.DOTALL)
 
 # Config cache — keyed by doc_type string (or None for hub-only).
 # Populated on first load_config_chain() call per type, cleared in tests
@@ -223,7 +229,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             continue
 
-        errors = validate_parsed_frontmatter(frontmatter, file_path, REPO_ROOT)
+        errors = validate_parsed_frontmatter(frontmatter, file_path, REPO_ROOT, content=content)
         all_errors.extend(errors)
 
     # -- Separate errors from warnings ------------------------------------
@@ -298,11 +304,11 @@ def validate_frontmatter(
     frontmatter = parse_frontmatter(content, file_path=file_path)
     if frontmatter is None:
         return []
-    return validate_parsed_frontmatter(frontmatter, file_path, repo_root)
+    return validate_parsed_frontmatter(frontmatter, file_path, repo_root, content=content)
 
 
 def validate_parsed_frontmatter(
-    frontmatter: dict, file_path: Path, repo_root: Path
+    frontmatter: dict, file_path: Path, repo_root: Path, content: str | None = None
 ) -> list[FrontmatterError]:
     """Validate already-parsed frontmatter dict against hub + spoke rules.
 
@@ -378,7 +384,7 @@ def validate_parsed_frontmatter(
         value = _get_field_value(frontmatter, field)
         if value is None:
             continue
-        error = _validate_field_value(field, value, file_path, hub, spoke)
+        error = _validate_field_value(field, value, file_path, hub, spoke, content=content)
         if error is not None:
             errors.append(error)
 
@@ -391,6 +397,12 @@ def validate_parsed_frontmatter(
 # ======================
 # Validation — internal
 # ======================
+
+
+def _calculate_tokens(text: str) -> int:
+    """Calculate token count using cl100k_base encoding (OpenAI standard)."""
+    encoding = tiktoken.get_encoding("cl100k_base")
+    return len(encoding.encode(text))
 
 
 def _field_present(frontmatter: dict, field: str) -> bool:
@@ -477,6 +489,7 @@ def _validate_field_value(
     file_path: Path,
     hub_config: dict,
     spoke_config: dict | None,
+    content: str | None = None,
 ) -> FrontmatterError | None:
     """Check a single field's value against config rules.
 
@@ -488,6 +501,26 @@ def _validate_field_value(
     - Hub config: date_format regex, tag vocabulary, authors format, field_registry
     - Spoke config: allowed statuses, severity values (type-specific)
     """
+    # Token size accuracy check
+    if field == "token_size":
+        if content is None:
+            return None  # Cannot validate accuracy without content
+
+        actual_count = _calculate_tokens(content)
+
+        # Contract: We allow a small margin (10 tokens) to account for minor
+        # tokenizer version differences or insignificant whitespace changes
+        # that don't impact context budgeting, while still catching
+        # outdated values that need synchronization.
+        if abs(int(value) - actual_count) > 10:
+            return FrontmatterError(
+                file_path=file_path,
+                error_type="invalid_value",
+                field="token_size",
+                message=f"declared token_size '{value}' differs from actual count '{actual_count}' — run 'uv run tools/scripts/update_token_counts.py' to fix",
+                config_source=".vadocs/conf.json → field_registry.token_size",
+            )
+
     # Date format validation (date, birth) — regex from hub config
     if field in ("date", "birth"):
         date_pattern = hub_config.get("date_format", r"^\d{4}-\d{2}-\d{2}$")

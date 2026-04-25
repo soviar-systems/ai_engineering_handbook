@@ -1187,7 +1187,7 @@ class TestMandatoryGovernance:
         nb_empty = frontmatter_env / "empty.ipynb"
         nb_empty.write_text(json.dumps({"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}), encoding="utf-8")
         assert _module.main([str(nb_empty)]) == 1 # governed ext, but no frontmatter
-        
+
         # 2. Notebook with first cell not markdown
         nb_code_first = frontmatter_env / "code_first.ipynb"
         nb_code_first.write_text(json.dumps({
@@ -1195,7 +1195,7 @@ class TestMandatoryGovernance:
             "metadata": {}, "nbformat": 4, "nbformat_minor": 5
         }), encoding="utf-8")
         assert _module.main([str(nb_code_first)]) == 1 # governed ext, no frontmatter in first cell
-        
+
         # 3. Notebook with markdown first cell but no frontmatter
         nb_no_fm = frontmatter_env / "no_fm.ipynb"
         nb_no_fm.write_text(json.dumps({
@@ -1204,3 +1204,82 @@ class TestMandatoryGovernance:
         }), encoding="utf-8")
         assert _module.main([str(nb_no_fm)]) == 1
 
+# ======================
+# Tests: Token Size Accuracy
+# ======================
+
+
+class TestTokenSizeAccuracy:
+    """Contract: token_size must be accurate within a small margin (10 tokens).
+
+    Incorrect token_size produces a blocking error with a pointer to the
+    update script. Valid counts (within margin) pass.
+    """
+
+    def test_incorrect_token_size_triggers_error(self, frontmatter_env):
+        """Declared token_size differs significantly from actual content → error."""
+        # Build valid frontmatter for a type that requires token_size (usually governed)
+        fm = _build_valid_frontmatter("adr")
+        # Force an incorrect token size
+        fm.setdefault("options", {})["token_size"] = 1
+
+        # Create a file with a significant amount of content to ensure actual tokens > 11
+        body = "This is a long document that should have many more than 11 tokens. " * 10
+        content = f"---\n{yaml.dump(fm, default_flow_style=False)}---\n\n{body}"
+        file_path = frontmatter_env / "token_test.md"
+        file_path.write_text(content, encoding="utf-8")
+
+        errors = _module.validate_frontmatter(file_path, frontmatter_env)
+        token_errors = [e for e in errors if e.field == "token_size"]
+        assert len(token_errors) == 1
+        assert "differs from actual count" in token_errors[0].message
+        assert "uv run tools/scripts/update_token_counts.py" in token_errors[0].message
+
+    def test_correct_token_size_passes(self, frontmatter_env):
+        """Declared token_size is accurate (or within margin) → no error."""
+        import tiktoken
+        encoding = tiktoken.get_encoding("cl100k_base")
+
+        # Use a simple content
+        body = "Hello world!"
+        fm = _build_valid_frontmatter("adr")
+        
+        file_path = frontmatter_env / "token_pass.md"
+        # Write initial version to calculate actual tokens of the whole file
+        content_init = f"---\n{yaml.dump(fm, default_flow_style=False)}---\n\n{body}"
+        file_path.write_text(content_init, encoding="utf-8")
+
+        # Calculate actual tokens of the final file
+        actual_tokens = len(encoding.encode(file_path.read_text(encoding="utf-8")))
+
+        # Update frontmatter with correct value and rewrite
+        fm["options"]["token_size"] = actual_tokens
+        content_final = f"---\n{yaml.dump(fm, default_flow_style=False)}---\n\n{body}"
+        file_path.write_text(content_final, encoding="utf-8")
+
+        errors = _module.validate_frontmatter(file_path, frontmatter_env)
+        token_errors = [e for e in errors if e.field == "token_size"]
+        assert len(token_errors) == 0
+
+    def test_token_size_within_margin_passes(self, frontmatter_env):
+        """token_size within +/- 10 tokens of actual count → no error."""
+        import tiktoken
+        encoding = tiktoken.get_encoding("cl100k_base")
+
+        body = "Hello world!"
+        fm = _build_valid_frontmatter("adr")
+
+        file_path = frontmatter_env / "token_margin.md"
+        content_init = f"---\n{yaml.dump(fm, default_flow_style=False)}---\n\n{body}"
+        file_path.write_text(content_init, encoding="utf-8")
+
+        actual_tokens = len(encoding.encode(file_path.read_text(encoding="utf-8")))
+
+        # Set value to actual - 5 (within 10 margin)
+        fm["options"]["token_size"] = actual_tokens - 5
+        content_final = f"---\n{yaml.dump(fm, default_flow_style=False)}---\n\n{body}"
+        file_path.write_text(content_final, encoding="utf-8")
+
+        errors = _module.validate_frontmatter(file_path, frontmatter_env)
+        token_errors = [e for e in errors if e.field == "token_size"]
+        assert len(token_errors) == 0
