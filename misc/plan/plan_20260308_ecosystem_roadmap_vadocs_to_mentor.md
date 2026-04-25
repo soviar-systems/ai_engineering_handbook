@@ -32,7 +32,7 @@ scripts (1.2) partially done — check_frontmatter.py complete, ADR conditional 
 **Recently completed (not in original roadmap):**
 - ADR-26054 (JSON Config Format) + `.vadocs/` JSON migration (step 7 of config architecture plan)
 - ADR-26045 (AI-Native Development) + A-26020 analysis — superseded ADR-26011 (triad→dyad)
-- check_frontmatter.py — 70 tests, 97% coverage, pre-commit hooks, sub-type spoke resolution
+- Frontmatter Governance Suite (`check_frontmatter.py` + `update_token_counts.py`) — implemented Fixer/Gate pattern for token size automation, 70+ tests, pre-commit hooks, sub-type spoke resolution
 - ADR conditional validation + index duplicate detection in check_adr.py
 - Standing items cleanup: TD-004, TD-005 resolved
 **Active plan:**
@@ -323,7 +323,7 @@ archetype-specific benefit, "transformer satisficing" analogy validity.
 Based on the ADRs:
 
 **Done:**
-- ✅ check_frontmatter.py — hub-level frontmatter validation (ADR-26042), 70 tests, 97% coverage, sub-type spoke resolution (TD-005)
+- ✅ check_frontmatter.py + update_token_counts.py — hub-level frontmatter validation and token size automation (ADR-26042), implemented Fixer/Gate pattern, 70+ tests, sub-type spoke resolution (TD-005)
 - ✅ check_adr.py conditional validation — status-dependent required sections (`adr.conf.json` `conditional_required_sections`)
 - ✅ check_adr.py index duplicate detection — prevents duplicate entries in `adr_index.md`
 - ✅ check_script_suite.py dyad convention — triad→dyad relaxation (ADR-26045 supersedes ADR-26011, TD-004)

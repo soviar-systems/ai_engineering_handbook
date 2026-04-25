@@ -13,6 +13,8 @@ Scope:
     - Token size accuracy: Validates that 'options.token_size' reflects actual
       file content. This acts as a quality gate, ensuring that developers run
       the utility 'update_token_counts.py' before committing changes.
+      NOTE: This script is read-only and does NOT automatically modify files;
+      automatic updates are the responsibility of the fixer utility.
 
 Does NOT own:
     - Structural validation (sections, section order) — domain scripts
@@ -506,18 +508,29 @@ def _validate_field_value(
         if content is None:
             return None  # Cannot validate accuracy without content
 
+        try:
+            token_val = int(value)
+        except (ValueError, TypeError):
+            return FrontmatterError(
+                file_path=file_path,
+                error_type="invalid_format",
+                field="token_size",
+                message=f"token_size must be an integer, got '{value}'",
+                config_source=".vadocs/conf.json → field_registry.token_size",
+            )
+
         actual_count = _calculate_tokens(content)
 
         # Contract: We allow a small margin (10 tokens) to account for minor
         # tokenizer version differences or insignificant whitespace changes
         # that don't impact context budgeting, while still catching
         # outdated values that need synchronization.
-        if abs(int(value) - actual_count) > 10:
+        if abs(token_val - actual_count) > 10:
             return FrontmatterError(
                 file_path=file_path,
                 error_type="invalid_value",
                 field="token_size",
-                message=f"declared token_size '{value}' differs from actual count '{actual_count}' — run 'uv run tools/scripts/update_token_counts.py' to fix",
+                message=f"declared token_size '{value}' differs from actual count '{actual_count}' — To fix: 1. run 'uv run tools/scripts/update_token_counts.py', 2. 'git add <file>', 3. commit again",
                 config_source=".vadocs/conf.json → field_registry.token_size",
             )
 
