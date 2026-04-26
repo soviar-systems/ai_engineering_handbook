@@ -169,7 +169,18 @@ def main(argv: list[str] | None = None) -> int:
         default="md",
         help="File extension to scan for in directories (default: md).",
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable debug logging for validation process.",
+    )
     args = parser.parse_args(argv)
+
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.WARNING,
+        format='%(levelname)s: %(message)s'
+    )
 
     # -- Resolve input paths ---------------------------------------------
     # Empty paths → scan from repo root (monkeypatched in tests)
@@ -191,8 +202,10 @@ def main(argv: list[str] | None = None) -> int:
     # preserving the warning behavior.
     all_errors: list[FrontmatterError] = []
     for file_path in files:
+        logger.debug(f"Processing file: {file_path}")
         # Skip explicitly excluded files or directories
         if any(part in exclude_dirs for part in file_path.parts) or file_path.name in exclude_files:
+            logger.debug(f"Skipping excluded file: {file_path}")
             continue
 
         content = file_path.read_text(encoding="utf-8")
@@ -234,20 +247,8 @@ def main(argv: list[str] | None = None) -> int:
         errors = validate_parsed_frontmatter(frontmatter, file_path, REPO_ROOT, content=content)
         all_errors.extend(errors)
 
-    # -- Separate errors from warnings ------------------------------------
-    # namespace_warning is a warning, not a blocking error (Phase 1.15 TODO)
-    real_errors = [e for e in all_errors if e.error_type != "namespace_warning"]
-    warnings = [e for e in all_errors if e.error_type == "namespace_warning"]
-
-    # -- Report warnings to stderr ----------------------------------------
-    for w in warnings:
-        print(
-            f"WARNING: {w.file_path}:{w.field} — {w.message} [{w.config_source}]",
-            file=sys.stderr,
-        )
-
     # -- Report errors to stdout ------------------------------------------
-    for e in real_errors:
+    for e in all_errors:
         # Format: file_path:field — message [config_source]
         # Agent-friendly: file path for navigation, field for quick fix,
         # config_source for rule lookup.
@@ -255,7 +256,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{e.file_path}{field_part} — {e.message} [{e.config_source}]")
 
     # -- Exit code: 0 if no real errors, 1 otherwise ----------------------
-    return 1 if real_errors else 0
+    return 1 if all_errors else 0
 
 
 # ======================
@@ -637,37 +638,37 @@ def _validate_field_value(
 def _check_options_namespace(
     frontmatter: dict, file_path: Path, hub_config: dict
 ) -> list[FrontmatterError]:
-    """Warn when non-myst_native fields are not under options.*
+    """Enforce that non-myst_native fields reside under options.*
 
     ADR-26042 says: MyST-native fields (title, authors, date, description,
     tags) live at top level; all others belong under options.*. The hub config
     field_registry has a myst_native boolean per field.
 
-    Currently returns namespace_warning (non-blocking) because most existing
-    files predate this convention. main() routes these to stderr only.
-
-    # TODO: Promote to error after Phase 1.15 migration restructures
-    # frontmatter. Change error_type from "namespace_warning" to
-    # "invalid_namespace" and main() will treat it as blocking.
+    Returns invalid_namespace (blocking error) to ensure clean top-level
+    frontmatter.
     """
-    warnings: list[FrontmatterError] = []
+    errors: list[FrontmatterError] = []
     field_registry = hub_config.get("field_registry", {})
+    logger.debug(f"Checking namespace for {file_path}")
+    logger.debug(f"Frontmatter keys: {list(frontmatter.keys())}")
+    logger.debug(f"Field registry keys: {list(field_registry.keys())}")
 
     for key in frontmatter:
         if key == "options":
             continue
         if key in field_registry and not field_registry[key].get("myst_native", False):
-            warnings.append(
+            logger.debug(f"Found non-myst_native field at top level: {key}")
+            errors.append(
                 FrontmatterError(
                     file_path=file_path,
-                    error_type="namespace_warning",
+                    error_type="invalid_namespace",
                     field=key,
-                    message=f"field '{key}' is not MyST-native and should be under options.* (will be enforced after Phase 1.15 migration)",
+                    message=f"field '{key}' is not MyST-native and must be under options.*",
                     config_source=".vadocs/conf.json → field_registry",
                 )
             )
 
-    return warnings
+    return errors
 
 
 # ======================

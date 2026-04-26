@@ -112,19 +112,20 @@ def _build_valid_frontmatter(doc_type: str) -> dict:
             fm["description"] = "Test description"
         elif field == "tags":
             fm["tags"] = [_VALID_TAGS[0]] if _VALID_TAGS else []
-        elif field == "token_size":
-            fm.setdefault("options", {})["token_size"] = 100
         elif field == "date":
             fm["date"] = "2026-01-15"
+        elif field == "token_size":
+            fm["options"]["token_size"] = 100
         elif field == "birth":
-            fm.setdefault("options", {})["birth"] = "2026-01-01"
+            fm["options"]["birth"] = "2026-01-01"
         elif field == "version":
-            fm.setdefault("options", {})["version"] = "1.0.0"
+            fm["options"]["version"] = "1.0.0"
         elif field == "id":
             if doc_type == "adr":
-                fm["id"] = 26099
+                val = 26099
             else:
-                fm["id"] = "X-26099"
+                val = "X-26099"
+            fm["options"]["id"] = val
         elif field == "status":
             if spoke and "statuses" in spoke:
                 statuses = spoke["statuses"]
@@ -138,19 +139,19 @@ def _build_valid_frontmatter(doc_type: str) -> dict:
                     statuses = ["active"]
             else:
                 statuses = ["active"]
-            fm["status"] = statuses[0] if statuses else "active"
+            fm["options"]["status"] = statuses[0] if statuses else "active"
         elif field == "severity":
             if spoke and "artifact_types" in spoke:
                 for at in spoke["artifact_types"].values():
                     if "severity" in at:
-                        fm["severity"] = at["severity"][0]
+                        fm["options"]["severity"] = at["severity"][0]
                         break
             else:
-                fm["severity"] = "low"
+                fm["options"]["severity"] = "low"
         elif field == "model":
-            fm["model"] = "test-model"
+            fm["options"]["model"] = "test-model"
         else:
-            fm[field] = f"test-{field}"
+            fm["options"][field] = f"test-{field}"
 
     return fm
 
@@ -785,32 +786,33 @@ class TestValidateAuthors:
 
 
 class TestOptionsNamespace:
-    """Contract: non-myst_native fields at top level produce warnings.
+    """Contract: non-myst_native fields at top level produce blocking errors.
 
-    Until Phase 1.15 migration, this is a warning (not error).
+    Ensures all non-MyST-native fields reside under options.* to maintain
+    clean MyST-native top-level frontmatter.
     """
 
-    def test_myst_native_at_top_level_no_warning(self, frontmatter_env):
-        """title, date, tags at top level (myst_native=true) → no namespace warnings."""
+    def test_myst_native_at_top_level_no_error(self, frontmatter_env):
+        """title, date, tags at top level (myst_native=true) → no namespace errors."""
         fm = _build_valid_frontmatter("adr")
         md_file = frontmatter_env / "test.md"
         md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
         errors = _module.validate_frontmatter(md_file, frontmatter_env)
-        namespace_errors = [e for e in errors if e.error_type == "namespace_warning"]
-        # myst_native fields at top level should not produce warnings
-        myst_warnings = [e for e in namespace_errors if e.field in ("title", "date", "tags", "description", "authors")]
-        assert len(myst_warnings) == 0
+        namespace_errors = [e for e in errors if e.error_type == "invalid_namespace"]
+        # myst_native fields at top level should not produce errors
+        myst_errors = [e for e in namespace_errors if e.field in ("title", "date", "tags", "description", "authors")]
+        assert len(myst_errors) == 0
 
-    def test_non_myst_native_at_top_level_produces_warning(self, frontmatter_env):
-        """id at top level (myst_native=false) → namespace warning."""
+    def test_non_myst_native_at_top_level_produces_error(self, frontmatter_env):
+        """id at top level (myst_native=false) → invalid_namespace error."""
         fm = _build_valid_frontmatter("adr")
-        # id is non-myst_native but currently at top level in most files
-        assert "id" in fm  # should be at top level from _build_valid_frontmatter
+        # manually move id to top level to create a namespace violation
+        fm["id"] = fm["options"].pop("id")
         md_file = frontmatter_env / "test.md"
         md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
         errors = _module.validate_frontmatter(md_file, frontmatter_env)
-        namespace_warnings = [e for e in errors if e.error_type == "namespace_warning" and e.field == "id"]
-        assert len(namespace_warnings) > 0
+        namespace_errors = [e for e in errors if e.error_type == "invalid_namespace" and e.field == "id"]
+        assert len(namespace_errors) > 0
 
 
 # ======================
@@ -913,16 +915,6 @@ class TestMainExitCodes:
         md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
         exit_code = _module.main([str(md_file)])
         assert exit_code == 1
-
-    def test_warnings_dont_affect_exit_code(self, frontmatter_env):
-        """File with namespace warnings but no errors → exit 0."""
-        fm = _build_valid_frontmatter("adr")
-        # id at top level produces namespace_warning, not error
-        assert "id" in fm
-        md_file = frontmatter_env / "test.md"
-        md_file.write_text(_frontmatter_to_md(fm), encoding="utf-8")
-        exit_code = _module.main([str(md_file)])
-        assert exit_code == 0
 
     def test_no_args_scans_repo_root(self, frontmatter_env):
         """No args → scans from repo root."""
