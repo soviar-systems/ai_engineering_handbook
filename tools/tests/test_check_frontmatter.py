@@ -591,8 +591,35 @@ class TestGetRequiredFields:
 
 
 # ======================
-# Tests: Field Validation
+# Tests: Token Counting
 # ======================
+
+
+class TestTokenCounting:
+    """Contract: _calculate_tokens returns accurate token counts.
+
+    Must handle normal text, large blocks, and special tokens (e.g. <|fim_prefix|>)
+    without crashing.
+    """
+
+    def test_counts_normal_text(self):
+        """Simple string returns expected count."""
+        text = "Hello world"
+        count = _module._calculate_tokens(text)
+        assert isinstance(count, int)
+        assert count > 0
+
+    def test_handles_special_tokens_without_crashing(self):
+        """Text containing special tokens (e.g. <|fim_prefix|>) does not crash.
+
+        This prevents ValueError in tiktoken when documentation discusses
+        LLM internal control sequences.
+        """
+        text = "The FIM token <|fim_prefix|> is used for fill-in-the-middle."
+        # This should not raise ValueError
+        count = _module._calculate_tokens(text)
+        assert isinstance(count, int)
+        assert count > 0
 
 
 class TestValidateFieldPresence:

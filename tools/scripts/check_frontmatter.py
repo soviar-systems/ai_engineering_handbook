@@ -404,7 +404,7 @@ def validate_parsed_frontmatter(
 def _calculate_tokens(text: str) -> int:
     """Calculate token count using cl100k_base encoding (OpenAI standard)."""
     encoding = tiktoken.get_encoding("cl100k_base")
-    return len(encoding.encode(text))
+    return len(encoding.encode(text, disallowed_special=()))
 
 
 def _field_present(frontmatter: dict, field: str) -> bool:
