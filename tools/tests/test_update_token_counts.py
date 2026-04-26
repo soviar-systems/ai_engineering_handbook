@@ -216,25 +216,82 @@ Hello world!"""
         # First pass: calculate and write the correct size
         update_token_counts(root=tmp_path, paths=[file])
         first_pass_content = file.read_text()
-        
+
         # Get the modification time after first pass
         first_pass_mtime = file.stat().st_mtime
-        
+
         # Second pass: should be a no-op
         import time
         time.sleep(0.1) # Ensure mtime would change if written
         update_token_counts(root=tmp_path, paths=[file])
-        
+
         second_pass_content = file.read_text()
         second_pass_mtime = file.stat().st_mtime
-        
+
         assert first_pass_content == second_pass_content
         assert first_pass_mtime == second_pass_mtime
 
+    def test_removes_top_level_token_size(self, tmp_path):
+        """
+        Adversary: Verify that redundant top-level 'token_size' is removed.
+        The fixer should migrate legacy top-level fields to 'options.token_size'.
+        """
+        file = tmp_path / "redundant.md"
+        content = """---
+title: Test
+token_size: ~100
+options:
+  token_size: 50
+---
+
+Hello world!"""
+        file.write_text(content)
+
+        update_token_counts(root=tmp_path, paths=[file])
+
+        updated = file.read_text()
+        # Top level should be gone
+        assert "token_size: ~100" not in updated
+        # Root token_size should not be present in the root mapping
+        # (roughly check that it doesn't appear before the first 'options:')
+        parts = updated.split("options:")
+        assert "token_size:" not in parts[0]
+        # Governed field should still exist and be numeric
+        assert "options:" in updated
+        assert re.search(r"token_size: \d+", updated)
 class TestUpdateTokenCountsIntegration:
     """Verify discovery and orchestration across a directory tree."""
 
+    def test_respects_external_repo_exclusions(self, tmp_path, monkeypatch):
+        """
+        Adversary: Verify that files within registered external repos are ignored.
+        We mock VALIDATION_EXCLUDE_DIRS to simulate a registered external path.
+        """
+        # 1. Mock the exclusion list to include a specific relative path
+        external_path = "ai_agents/research/ai_coding_agents"
+        monkeypatch.setattr("tools.scripts.update_token_counts.VALIDATION_EXCLUDE_DIRS", {external_path})
+        monkeypatch.setattr("tools.scripts.update_token_counts.is_excluded", lambda p: external_path in p)
+
+        # 2. Setup: a file in the excluded path and a file in a normal path
+        excluded_dir = tmp_path / external_path
+        excluded_dir.mkdir(parents=True)
+        excluded_file = excluded_dir / "external.md"
+        excluded_file.write_text("---\ntitle: External\noptions:\n  token_size: 0\n---\n\nBody")
+
+        normal_dir = tmp_path / "docs"
+        normal_dir.mkdir()
+        normal_file = normal_dir / "internal.md"
+        normal_file.write_text("---\ntitle: Internal\noptions:\n  token_size: 0\n---\n\nBody")
+
+        # 3. Execute
+        update_token_counts(root=tmp_path, paths=[tmp_path])
+
+        # 4. Verify
+        assert "token_size: 0" in excluded_file.read_text(), "Excluded file should NOT have been updated"
+        assert "token_size: 0" not in normal_file.read_text(), "Internal file SHOULD have been updated"
+
     def test_update_token_counts_integration(self, tmp_path):
+
         """Verify that discovery finds governed files and skips excluded ones."""
         # Setup:
         # 1. Valid file in root

@@ -43,7 +43,7 @@ import tiktoken
 import yaml
 
 from tools.scripts.git import detect_repo_root
-from tools.scripts.paths import VALIDATION_EXCLUDE_DIRS
+from tools.scripts.paths import VALIDATION_EXCLUDE_DIRS, is_excluded
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -53,6 +53,10 @@ logger = logging.getLogger(__name__)
 # We use a non-greedy match for the content and ensure the closing delimiter
 # is followed by a newline to confirm it's on its own line.
 FRONTMATTER_PATTERN = re.compile(r"^---\s*\n([\s\S]*?)---\s*\n", re.DOTALL)
+
+# The field name used for token size in frontmatter.
+# Defined as a constant to facilitate renaming and maintain consistency.
+TOKEN_SIZE_FIELD = "token_size"
 
 # ======================
 # Main
@@ -161,14 +165,16 @@ def calculate_tokens(text: str) -> int:
     """
     # cl100k_base is the standard for current production-grade LLMs.
     encoding = tiktoken.get_encoding("cl100k_base")
-    return len(encoding.encode(text))
+    # We disable disallowed_special to allow encoding of tokens like '<|fim_prefix|>'
+    # which may appear as literal text in documentation.
+    return len(encoding.encode(text, disallowed_special=()))
 
 def update_file_tokens(file_path: Path, dry_run: bool = False) -> bool:
-    """Update the token_size field in a file's frontmatter.
+    """Update the token_size field in a file's frontmatter using surgical substitution.
 
     Args:
         file_path: Path to the file to update.
-        dry_run: If True, calculate and log changes but do not write to disk.
+        dry_run: If True, log changes but do not write to disk.
 
     Returns:
         True if the file was updated (or would be updated in dry run),
@@ -178,78 +184,62 @@ def update_file_tokens(file_path: Path, dry_run: bool = False) -> bool:
         content = file_path.read_text(encoding="utf-8")
         match = FRONTMATTER_PATTERN.match(content)
         if not match:
-            msg = f"[{file_path.name}] No frontmatter match found. Content start: {repr(content[:20])}..."
-            logger.debug(msg)
+            logger.debug(f"[{file_path.name}] No frontmatter match found.")
             return False
 
+        logger.debug(f"[{file_path.name}] Found frontmatter")
         fm_text = match.group(1)
         body = content[match.end():]
-        msg = f"[{file_path.name}] Found frontmatter. Length: {len(fm_text)} chars"
-        logger.debug(msg)
-
-        # Parse frontmatter.
-        # Contract: Malformed YAML must not crash the script.
-        try:
-            fm = yaml.safe_load(fm_text)
-        except yaml.YAMLError as e:
-            msg = f"[{file_path.name}] Malformed YAML frontmatter: {e}"
-            logger.warning(msg)
-            return False
-
-        # Ensure frontmatter is a dictionary (handle empty files or --- \n ---)
-        if fm is None:
-            msg = f"[{file_path.name}] Frontmatter is empty (None), initializing as dict"
-            logger.debug(msg)
-            fm = {}
-        elif not isinstance(fm, dict):
-            # Adversary: frontmatter is a scalar (e.g. "--- \n hello \n ---")
-            # Recover by wrapping it or starting fresh to allow governance.
-            msg = f"[{file_path.name}] Frontmatter is {type(fm).__name__} instead of dict, recovering..."
-            logger.debug(msg)
-            fm = {"original_content": fm}
-
-        # Ensure 'options' is a dictionary for token_size insertion.
-        # Contract: Recover if options is missing or is a scalar (e.g. options: null)
-        if "options" not in fm or not isinstance(fm["options"], dict):
-            msg = f"[{file_path.name}] 'options' field missing or not a dict, initializing..."
-            logger.debug(msg)
-            fm["options"] = {}
-
-        # Calculate tokens of the WHOLE file.
-        # This ensures the value represents the actual cost of loading the
-        # file into context, including the governance overhead.
         new_size = calculate_tokens(content)
+        changed = False
 
-        # Only write if the value has actually changed to avoid unnecessary IO/git churn
-        current_size = fm["options"].get("token_size")
-        if current_size == new_size:
-            msg = f"[{file_path.name}] Token size already correct ({new_size}). Skipping write."
-            logger.debug(msg)
+        # 1. Surgical Removal: Eliminate redundant top-level 'token_size' keys.
+        removal_pattern = rf'^{TOKEN_SIZE_FIELD}: .*\n'
+        new_fm_text, n = re.subn(removal_pattern, '', fm_text, flags=re.MULTILINE)
+        if n > 0:
+            logger.debug(f"[{file_path.name}] Removed redundant top-level '{TOKEN_SIZE_FIELD}'")
+            changed = True
+
+        # 2. Surgical Update: Update 'options.token_size' if it exists.
+        # We match ANY value (not just digits) to ensure wrong types are overwritten.
+        governed_pattern = rf'(^  {TOKEN_SIZE_FIELD}: ).*$'
+        gov_match = re.search(governed_pattern, new_fm_text, flags=re.MULTILINE)
+
+        if gov_match:
+            current_val_str = gov_match.group(0).split(': ')[1]
+            # We only update if the value actually changes.
+            if current_val_str != str(new_size):
+                def replace_val(m):
+                    return f"{m.group(1)}{new_size}"
+                new_fm_text = re.sub(governed_pattern, replace_val, new_fm_text, flags=re.MULTILINE)
+                logger.debug(f"[{file_path.name}] Updated options.{TOKEN_SIZE_FIELD}: {current_val_str} -> {new_size}")
+                changed = True
+        else:
+            # 3. Structural Addition: Add governed token_size if missing.
+            options_match = re.search(r'^options:.*$', new_fm_text, flags=re.MULTILINE)
+            if options_match:
+                line_end = options_match.end()
+                insertion = f"\n  {TOKEN_SIZE_FIELD}: {new_size}"
+                new_fm_text = new_fm_text[:line_end] + insertion + new_fm_text[line_end:]
+                logger.debug(f"[{file_path.name}] Added {TOKEN_SIZE_FIELD} to existing options block")
+            else:
+                prefix = "" if not new_fm_text or new_fm_text.endswith('\n') else "\n"
+                new_fm_text = new_fm_text.rstrip() + f"{prefix}\noptions:\n  {TOKEN_SIZE_FIELD}: {new_size}"
+                logger.debug(f"[{file_path.name}] Added new options block with {TOKEN_SIZE_FIELD}")
+            changed = True
+
+        if not changed:
             return False
-
-        msg = f"[{file_path.name}] Updating token_size: {current_size} -> {new_size}"
-        logger.debug(msg)
-        fm["options"]["token_size"] = new_size
 
         if dry_run:
-            msg = f"[{file_path.name}] Dry run: would have updated token_size to {new_size}"
-            logger.info(msg)
+            logger.info(f"[{file_path.name}] Dry run: would have updated frontmatter")
             return True
 
-        # Dump YAML.
-        # default_flow_style=False: keeps it readable (block style), preventing
-        # the serializer from converting dicts to [a, b] flow style.
-        # sort_keys=False: preserves the author's original field order.
-        new_fm_text = yaml.dump(fm, default_flow_style=False, sort_keys=False).strip()
-
         # Reconstruct the file.
-        # Use a single write to maintain atomicity.
-        # Explicitly ensure newlines around fences to satisfy FRONTMATTER_PATTERN.
-        file_path.write_text(f"---\n{new_fm_text}\n---\n\n{body}", encoding="utf-8")
+        file_path.write_text(f"---\n{new_fm_text.strip()}\n---\n\n{body}", encoding="utf-8")
         return True
     except Exception as e:
-        msg = f"Unexpected error updating {file_path}: {e}"
-        logger.error(msg, exc_info=True)
+        logger.error(f"Unexpected error updating {file_path}: {e}", exc_info=True)
         return False
 
 # ======================
@@ -274,8 +264,8 @@ def scan_paths(paths: list[Path], fmt: str = "md") -> list[Path]:
             files.append(path)
         elif path.is_dir():
             for child in sorted(path.rglob(f"*{extension}")):
-                # Respect global validation exclusions (e.g. .git, .venv)
-                if any(part in VALIDATION_EXCLUDE_DIRS for part in child.parts):
+                if is_excluded(str(child)):
+                    logger.debug(f"[{child.name}] Excluded by validation rules")
                     continue
                 files.append(child)
 

@@ -1283,3 +1283,18 @@ class TestTokenSizeAccuracy:
         errors = _module.validate_frontmatter(file_path, frontmatter_env)
         token_errors = [e for e in errors if e.field == "token_size"]
         assert len(token_errors) == 0
+
+    def test_non_integer_token_size_triggers_error(self, frontmatter_env):
+        """Non-integer token_size (e.g. '~800') → blocking error, not crash."""
+        fm = _build_valid_frontmatter("adr")
+        fm.setdefault("options", {})["token_size"] = "~800"
+
+        body = "Some content"
+        content = f"---\n{yaml.dump(fm, default_flow_style=False)}---\n\n{body}"
+        file_path = frontmatter_env / "token_non_int.md"
+        file_path.write_text(content, encoding="utf-8")
+
+        errors = _module.validate_frontmatter(file_path, frontmatter_env)
+        token_errors = [e for e in errors if e.field == "token_size"]
+        assert len(token_errors) == 1
+        assert "must be an integer" in token_errors[0].message
