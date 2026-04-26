@@ -9,6 +9,20 @@ kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
   language: python
+title: "Terminal AI Agents Workflow"
+authors:
+- name: "Vadim Rudakov"
+  email: "rudakow.wadim@gmail.com"
+date: "2026-04-27"
+description: "General philosophy and workflow patterns for using a hybrid of editor plugins and CLI agents."
+tags:
+- "agents"
+- "documentation"
+options:
+  type: "guide"
+  birth: "2026-01-15"
+  version: "1.0.0"
+  token_size: 1061
 ---
 
 # Terminal AI Agents Workflow

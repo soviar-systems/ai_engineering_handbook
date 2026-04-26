@@ -1,16 +1,18 @@
 ---
 title: "Creating Consultant Skills for Claude Code"
 authors:
-  - name: Vadim Rudakov
-    email: rudakow.wadim@gmail.com
+- name: "Vadim Rudakov"
+  email: "rudakow.wadim@gmail.com"
 description: "Recipe for wrapping JSON consultant prompts as Claude Code skills with symlink-to-source pattern and namespace conventions."
-tags: [agents, prompts]
-token_size: "~1K"
-date: 2026-04-11
+tags:
+- "agents"
+- "prompts"
+date: "2026-04-11"
 options:
-  type: guide
-  birth: 2026-03-25
-  version: 1.0.1
+  type: "guide"
+  birth: "2026-03-25"
+  version: "1.0.1"
+  token_size: 1151
 ---
 
 # Creating Consultant Skills for Claude Code

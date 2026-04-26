@@ -9,6 +9,20 @@ kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
   name: python3
+title: "vim-ollama: LLM Tab Completion Nuances"
+authors:
+- name: "Vadim Rudakov"
+  email: "rudakow.wadim@gmail.com"
+date: "2026-04-27"
+description: "Detailed explanation of FIM (Fill-In-the-Middle) mechanics and configuration for vim-ollama tab completion."
+tags:
+- "agents"
+- "documentation"
+options:
+  type: "guide"
+  birth: "2026-01-13"
+  version: "0.1.0"
+  token_size: 1149
 ---
 
 # vim-ollama: LLM Tab Completion Nuances

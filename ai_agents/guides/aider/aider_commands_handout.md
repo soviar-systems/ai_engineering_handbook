@@ -9,6 +9,20 @@ kernelspec:
   display_name: Bash
   language: bash
   name: bash
+title: "Aider Commands Handout"
+authors:
+- name: "Vadim Rudakov"
+  email: "rudakow.wadim@gmail.com"
+date: "2026-04-27"
+description: "Comprehensive reference for Aider CLI commands, proxy configuration, and basic usage patterns."
+tags:
+- "agents"
+- "documentation"
+options:
+  type: "guide"
+  birth: "2025-11-18"
+  version: "0.2.0"
+  token_size: 1601
 ---
 
 # Aider Commands Handout

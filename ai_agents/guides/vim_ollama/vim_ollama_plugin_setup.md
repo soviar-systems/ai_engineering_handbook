@@ -9,6 +9,20 @@ kernelspec:
   name: python3
   display_name: Python 3 (ipykernel)
   language: python
+title: "vim-ollama Plugin Setup"
+authors:
+- name: "Vadim Rudakov"
+  email: "rudakow.wadim@gmail.com"
+date: "2026-04-27"
+description: "Step-by-step installation and configuration guide for the vim-ollama plugin on Fedora/Linux."
+tags:
+- "agents"
+- "documentation"
+options:
+  type: "guide"
+  birth: "2026-01-15"
+  version: "1.0.0"
+  token_size: 1799
 ---
 
 # vim-ollama Plugin Setup
