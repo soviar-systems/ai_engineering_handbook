@@ -679,16 +679,12 @@ def parse_frontmatter(content: str, file_path: Path | None = None) -> dict | Non
     """Extract YAML frontmatter from markdown or notebook content.
 
     Supports multiple frontmatter blocks at the start of the file (e.g. Jupytext
-    metadata followed by governed document frontmatter). Returns the block
-    containing 'options.type', or the last block found.
+    metadata followed by governed document frontmatter). Merges all consecutive
+    YAML blocks found at the start of the file into a single dictionary.
 
     Returns parsed dict, or None if no frontmatter found.
     """
     # .ipynb files store frontmatter in the first markdown cell's source.
-    # Jupytext pairs .md ↔ .ipynb, so the YAML frontmatter appears as
-    # the source of the first markdown cell (list of strings or a single
-    # string). We join and then fall through to the same regex-based
-    # YAML fence parsing used for .md files.
     if file_path is not None and file_path.suffix == ".ipynb":
         try:
             notebook = json.loads(content)
@@ -700,40 +696,33 @@ def parse_frontmatter(content: str, file_path: Path | None = None) -> dict | Non
         source = cells[0].get("source", [])
         content = "".join(source) if isinstance(source, list) else source
 
-    blocks = []
+    merged_data: dict[str, Any] = {}
     current_pos = 0
+    found_any = False
+
     while True:
         # Search for a block starting at current_pos (ignoring leading whitespace)
         match = re.search(r"^\s*---\s*\n(.*?)\n---\s*\n", content[current_pos:], re.DOTALL | re.MULTILINE)
         if not match:
             break
-        
-        blocks.append(match.group(1))
+
+        # Update position to the end of the match
+        block_text = match.group(1)
         current_pos += match.end()
-        
+
+        try:
+            data = yaml.safe_load(block_text)
+            if isinstance(data, dict):
+                merged_data.update(data)
+                found_any = True
+        except yaml.YAMLError:
+            pass
+
         # If the remaining content doesn't start with a block (ignoring whitespace), stop.
         if not re.match(r"^\s*---", content[current_pos:], re.MULTILINE):
             break
 
-    if not blocks:
-        return None
-
-    # Try to find the governed block (the one containing 'options.type')
-    for block_text in reversed(blocks):
-        try:
-            data = yaml.safe_load(block_text)
-            if isinstance(data, dict) and data.get("options", {}).get("type"):
-                return data
-        except yaml.YAMLError:
-            continue
-
-    # Fallback: return the last block found if it's a dictionary
-    try:
-        data = yaml.safe_load(blocks[-1])
-        return data if isinstance(data, dict) else None
-    except yaml.YAMLError:
-        return None
-
+    return merged_data if found_any else None
 
 def resolve_type(frontmatter: dict) -> str | None:
     """Read options.type from parsed frontmatter.

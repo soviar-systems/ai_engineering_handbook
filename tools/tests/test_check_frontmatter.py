@@ -489,7 +489,28 @@ class TestParseFrontmatter:
         assert isinstance(result, dict)
         assert result["title"] == "Governed Doc"
         assert result["options"]["type"] == "guide"
-        assert "jupytext" not in result
+
+    def test_merges_multiple_frontmatter_blocks(self):
+        """Files with multiple YAML blocks → merge all metadata into one dict."""
+        content = (
+            "---\n"
+            "jupytext:\n"
+            "  text_representation: {format_name: myst}\n"
+            "---\n"
+            "\n"
+            "---\n"
+            "title: Governed Doc\n"
+            "options:\n"
+            "  type: guide\n"
+            "---\n"
+            "\n"
+            "# Body\n"
+        )
+        result = _module.parse_frontmatter(content)
+        assert isinstance(result, dict)
+        assert "jupytext" in result, "Should preserve Jupytext metadata"
+        assert "title" in result, "Should preserve Governance metadata"
+        assert result["options"]["type"] == "guide"
 
 
 

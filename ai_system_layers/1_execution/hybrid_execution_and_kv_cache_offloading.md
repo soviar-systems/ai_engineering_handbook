@@ -6,32 +6,27 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.19.1
 kernelspec:
-  name: python3
   display_name: Python 3 (ipykernel)
   language: python
+  name: python3
 ---
 
-# Local LLM Inference: A Practical Handbook for Hybrid Host/Device Execution and KV Cache Offloading
+---
+title: Hybrid Execution and KV Cache Offloading
+authors:
+  - name: Vadim Rudakov
+    email: rudakow.wadim@gmail.com
+date: 2026-04-27
+description: Deep dive into KV cache internals — what tensors are stored, how attention uses them, prefix caching strategies, and why this is a hardware memory problem.
+tags: [hardware, model, documentation]
+token_size: 6328
+options:
+  type: guide
+  birth: 2025-11-23
+  version: 1.1.0
+---
 
------
-
-Owner: Vadim Rudakov, lefthand67@gmail.com  
-Version: 0.7.1  
-Birth: 2025-11-23  
-Modified: 2025-12-31
-
------
-
-> INFO: *The handbook is optimized for environments supporting Mermaid.js diagrams. For static export, rasterized versions are available in Appendix B.*
-
-When a user hits "enter" after typing a prompt, the system triggers a complex collaboration between the **Host** (Central Processing Unit, **CPU**) and the **Device** (Graphics Processing Unit, **GPU**). This architecture is called **Hybrid Execution**.
-
-Your job as an AI Engineer is to manage the trade-offs between CPU's vast memory capacity and GPU's raw speed. Where should your precious data live and be processed?
-
-## 📘 Glossary of Acronyms
-
-| Acronym | Full Name | Context/Role |
-|:---|:---|:---|
+|:---|:---|
 | CPU | Central Processing Unit | Orchestrates processing, I/O, and pre/post tasks. |
 | GPU | Graphics Processing Unit | Executes parallel matrix compute operations. |
 | VRAM | Video RAM | High-speed memory on GPU; major capacity limit. |
@@ -194,9 +189,10 @@ The Key-Value (KV) Cache is a critical optimization for **Transformer-based mode
 #### How Caching Causes Growth
 
 - **With the KV Cache:** When the model generates a new token, it calculates its K and V vectors *only once* and then **stores (caches) them** in the Device's VRAM.
-- To generate the next token, the model simply **retrieves** all the previously cached K and V pairs and **concatenates** the new K and V pairs to the existing cache.
+- This is possible because of **Causal Masking**. In autoregressive models, a token at position $i$ can only attend to tokens at positions $\le i$. Mathematically, this creates a **triangular attention matrix**, where the "future" is masked out.
+- Because the attention values for past tokens are independent of future tokens, they remain constant. The model can simply **retrieve** all the previously cached K and V pairs and **concatenate** the new K and V pairs to the existing cache.
 - Crucially, the model needs to store the K and V pairs for **every single token** in the sequence (both the input prompt and the generated output) to accurately compute the attention for the next token.
-- Because a new set of K and V vectors is added for every new token, the total size of the cache grows **linearly** ($O(N)$) with the length of the conversation (sequence length, $N$).
+- Because a new set of K and V vectors is added for every new token, the total size of the cache grows **linearly** ($O(N)$) with the length of the conversation (sequence length, $N$), eliminating the need for $O(N^2)$ re-computation.
 
 #### The VRAM Bottleneck
 
@@ -235,7 +231,7 @@ When the Device needs an offloaded block (**cache miss**), the data must be retr
 > Logs show:
 >
 > 1. TTFT excellent ($0.5\text{s}$)
-> 2. After 3 mins, TPS drops from 20 to 3.  
+> 2. After 3 mins, TPS drops from 20 to 3.
 >    Can you identify the cause? (*Answer at the end.*)
 
 -----
