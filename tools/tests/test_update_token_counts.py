@@ -3,6 +3,7 @@ import re
 import sys
 from pathlib import Path
 from tools.scripts.update_token_counts import update_token_counts, main
+from unittest.mock import patch
 
 class TestUpdateTokenCounts:
     """

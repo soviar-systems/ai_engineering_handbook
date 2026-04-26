@@ -530,7 +530,7 @@ def _validate_field_value(
                 file_path=file_path,
                 error_type="invalid_value",
                 field="token_size",
-                message=f"declared token_size '{value}' differs from actual count '{actual_count}' — To fix: 1. run 'uv run tools/scripts/update_token_counts.py', 2. 'git add <file>', 3. commit again",
+                message=f"declared token_size '{value}' differs from actual count '{actual_count}' — To fix: run 'uv run tools/scripts/update_token_counts.py {file_path}' and commit again",
                 config_source=".vadocs/conf.json → field_registry.token_size",
             )
 
