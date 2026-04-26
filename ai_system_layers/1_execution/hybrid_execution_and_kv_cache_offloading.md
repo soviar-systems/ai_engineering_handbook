@@ -19,11 +19,11 @@ authors:
 date: 2026-04-27
 description: Deep dive into KV cache internals — what tensors are stored, how attention uses them, prefix caching strategies, and why this is a hardware memory problem.
 tags: [hardware, model, documentation]
-token_size: 6328
 options:
   type: guide
   birth: 2025-11-23
   version: 1.1.0
+  token_size: 6328
 ---
 
 |:---|:---|
