@@ -1,16 +1,20 @@
 ---
-title: "Context Management — Claude Code"
+title: "Context Management \u2014 Claude Code"
 authors:
-  - name: Vadim Rudakov
-    email: rudakow.wadim@gmail.com
-date: "2026-04-05"
-description: "Deep dive into Claude Code's 5-tier context management system — microcompact, API-level cache editing, session memory, full compaction, and PTL retry truncation."
-tags: [architecture, agents]
-token_size: "~900"
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
+date: '2026-04-05'
+description: "Deep dive into Claude Code's 5-tier context management system \u2014\
+  \ microcompact, API-level cache editing, session memory, full compaction, and PTL\
+  \ retry truncation."
+tags:
+- architecture
+- agents
 options:
-  version: "1.0.0"
-  birth: "2026-04-05"
+  version: 1.0.0
+  birth: '2026-04-05'
   type: guide
+  token_size: 2258
 ---
 
 # Context Management — Claude Code

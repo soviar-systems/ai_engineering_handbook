@@ -1,16 +1,20 @@
 ---
-title: "Context Management — Agent Comparison"
+title: "Context Management \u2014 Agent Comparison"
 authors:
-  - name: Vadim Rudakov
-    email: rudakow.wadim@gmail.com
-date: "2026-04-08"
-description: "Side-by-side comparison of context management across 7 coding agents — history transmission, detection methods, compaction strategies, and unique innovations."
-tags: [architecture, agents]
-token_size: "~700"
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
+date: '2026-04-08'
+description: "Side-by-side comparison of context management across 7 coding agents\
+  \ \u2014 history transmission, detection methods, compaction strategies, and unique\
+  \ innovations."
+tags:
+- architecture
+- agents
 options:
-  version: "1.1.0"
-  birth: "2026-04-05"
+  version: 1.1.0
+  birth: '2026-04-05'
   type: guide
+  token_size: 2036
 ---
 
 # Context Management — Agent Comparison

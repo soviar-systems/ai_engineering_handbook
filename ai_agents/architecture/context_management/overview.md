@@ -1,16 +1,20 @@
 ---
-title: "Context Management in AI Coding Agents"
+title: Context Management in AI Coding Agents
 authors:
-  - name: Vadim Rudakov
-    email: rudakow.wadim@gmail.com
-date: "2026-04-08"
-description: "Overview of the universal 'full history' pattern — why agents accumulate millions of tokens despite bounded context windows, and the compaction taxonomy used across 7 agents."
-tags: [architecture, agents]
-token_size: "~400"
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
+date: '2026-04-08'
+description: "Overview of the universal 'full history' pattern \u2014 why agents accumulate\
+  \ millions of tokens despite bounded context windows, and the compaction taxonomy\
+  \ used across 7 agents."
+tags:
+- architecture
+- agents
 options:
-  version: "1.1.0"
-  birth: "2026-04-05"
+  version: 1.1.0
+  birth: '2026-04-05'
   type: guide
+  token_size: 1181
 ---
 
 # Context Management in AI Coding Agents
