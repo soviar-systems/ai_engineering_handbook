@@ -1,16 +1,21 @@
 ---
-title: "Stability in a Probabilistic Substrate: How Agents Fight LLM Drift"
+title: 'Stability in a Probabilistic Substrate: How Agents Fight LLM Drift'
 authors:
-  - name: Vadim Rudakov
-    email: rudakow.wadim@gmail.com
-date: "2026-04-08"
-description: "How AI coding agents fight LLM hallucination and instruction non-compliance. Hard guarantees (tool denial, circuit breakers) vs soft techniques (HARD-GATE tags, rationalization tables) — with source code evidence."
-tags: [architecture, agents, prompts]
-token_size: "~1000"
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
+date: '2026-04-08'
+description: "How AI coding agents fight LLM hallucination and instruction non-compliance.\
+  \ Hard guarantees (tool denial, circuit breakers) vs soft techniques (HARD-GATE\
+  \ tags, rationalization tables) \u2014 with source code evidence."
+tags:
+- architecture
+- agents
+- prompts
 options:
-  version: "1.0.0"
-  birth: "2026-04-08"
+  version: 1.0.0
+  birth: '2026-04-08'
   type: guide
+  token_size: 2356
 ---
 
 # Stability in a Probabilistic Substrate: How Agents Fight LLM Drift
@@ -24,7 +29,7 @@ There is no `assert` that can fail hard on LLM behavior. No type system can guar
 The question is not "how do we eliminate failures?" — it is "how do we reduce failure rates to acceptable levels?"
 
 :::{seealso}
-For the mechanics of how subagents are spawned and how compaction works at the API level, see [How Subagents Actually Work](/ai_agents/architecture/context_management/how_subagents_actually_work_myth_of_process_spawning.md) and [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract_why_system_prompts_dont_mix.md).
+For the mechanics of how subagents are spawned and how compaction works at the API level, see [How Subagents Actually Work](/ai_agents/architecture/orchestration/how_subagents_actually_work_myth_of_process_spawning.md) and [The Compaction API Contract](/ai_agents/architecture/context_management/compaction_api_contract_why_system_prompts_dont_mix.md).
 :::
 
 ## What's Actually Reliable vs. What Isn't

@@ -12,8 +12,9 @@ This directory consolidates all agent-related content: source-level analysis of 
 ai_agents/
 ├── README.md                  ← this file
 ├── research/                  ← external cloned repos (nested git)
-│   ├── ai_coding_agents/      ← 8 agent source repos for study
-│   └── ai_infrastructure/     ← mempalace, open-webui
+│   ├── ai_coding_agents/      ← 9 agent source repos for study
+│   ├── ai_infrastructure/     ← mempalace, open-webui
+│   └── ai_skills_plugins/     ← agent plugins and extensions
 ├── architecture/              ← source-level analysis of agent internals
 │   ├── context_management/    ← context window strategies
 │   ├── session_history_management/ ← memory and crash recovery
@@ -32,16 +33,16 @@ Each subdirectory is an independent git repository, excluded from the parent rep
 
 **Registered agents** (clone/update via `manage_external_repos.py`):
 
-| Agent | External Source | Type |
-|-------|----------------|------|
-| aider | [aider.chat](https://aider.chat/) | Python CLI |
-| claude-code-main | (leaked source) | TypeScript CLI |
-| kilocode | [Kilo-Org/kilo](https://github.com/Kilo-Org/kilo) | TypeScript CLI (Bun) |
-| openclaw | [openclaw/openclaw](https://github.com/openclaw/openclaw) | TypeScript CLI |
-| openclaude | [GitLawB/OpenClaude](https://github.com/GitLawB/OpenClaude) | TypeScript CLI (Node.js) |
-| opencode | [anomalyco/opencode](https://github.com/anomalyco/opencode) | TypeScript CLI (Bun) |
-| qwen-code | [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) | TypeScript CLI (Node.js) |
-| superpowers | [obra/superpowers](https://github.com/obra/superpowers) | Plugin for coding agents |
+| Agent | External Source | Type | Relation |
+|-------|----------------|------|----------|
+| aider | [aider.chat](https://aider.chat/) | Python CLI | - |
+| claude-code-main | (leaked source) | TypeScript CLI | - |
+| kilocode | [Kilo-Org/kilo](https://github.com/Kilo-Org/kilo) | TypeScript CLI (Bun) | Fork of `opencode` |
+| openclaw | [openclaw/openclaw](https://github.com/openclaw/openclaw) | TypeScript CLI | - |
+| openclaude | [GitLawB/OpenClaude](https://github.com/GitLawB/OpenClaude) | TypeScript CLI (Node.js) | - |
+| opencode | [anomalyco/opencode](https://github.com/anomalyco/opencode) | TypeScript CLI (Bun) | Upstream for `kilocode` |
+| qwen-code | [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) | TypeScript CLI (Node.js) | Fork of `gemini-cli` |
+| superpowers | [obra/superpowers](https://github.com/obra/superpowers) | Plugin for coding agents | - |
 
 Run `uv run tools/scripts/manage_external_repos.py list` for the current registry with branch/remote/status.
 
@@ -88,6 +89,12 @@ To prevent data loss during context switches and maximize context window efficie
 2.  **Save**: Write detailed findings to a dedicated analysis file or MyST notebook **immediately** after finishing a repository's analysis, before moving to the next.
 3.  **Move**: Summarize the session to clear context, then proceed to the next target.
 4.  **Sync**: Ensure notebooks are synchronized using `uv run jupytext --sync`.
+
+#### Technical Analysis Standard
+To ensure technical accuracy and avoid speculative descriptions, all architectural analyses must follow a strict **Claim $\rightarrow$ Evidence (Code/Path) $\rightarrow$ Explanation** format. Descriptive "guide" styles are prohibited.
+
+- **Requirement**: Every architectural claim must be paired with a specific file path and a supporting code snippet from the source.
+- **Focus**: Avoid "how to" phrasing; focus exclusively on "how it is implemented."
 
 ## Key Learnings Across Agents
 

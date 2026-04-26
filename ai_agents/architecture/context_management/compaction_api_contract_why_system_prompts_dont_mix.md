@@ -1,16 +1,21 @@
 ---
-title: "The Compaction API Contract: Why System Prompts Don't Mix"
+title: 'The Compaction API Contract: Why System Prompts Don''t Mix'
 authors:
-  - name: Vadim Rudakov
-    email: rudakow.wadim@gmail.com
-date: "2026-04-08"
-description: "How LLM APIs actually work — stateless, full message array per call, response = only new assistant text. Step-by-step compaction flow with code evidence from Qwen Code, OpenCode, and Claude Code."
-tags: [architecture, agents, context_management]
-token_size: "~900"
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
+date: '2026-04-08'
+description: "How LLM APIs actually work \u2014 stateless, full message array per\
+  \ call, response = only new assistant text. Step-by-step compaction flow with code\
+  \ evidence from Qwen Code, OpenCode, and Claude Code."
+tags:
+- architecture
+- agents
+- context_management
 options:
-  version: "1.0.0"
-  birth: "2026-04-08"
+  version: 1.0.0
+  birth: '2026-04-08'
   type: guide
+  token_size: 2592
 ---
 
 # The Compaction API Contract: Why System Prompts Don't Mix
@@ -34,7 +39,7 @@ The API does **not** echo back the conversation history. The response contains *
 This means that when a "compaction agent" or "forked agent" makes an API call with a different system prompt, **the old system prompt is not present** — it was never part of the response, and it is not carried over from the previous call. Each API call is a fresh request with exactly one system prompt.
 
 :::{seealso}
-For the broader picture of how subagents work (beyond just compaction), see [How Subagents Actually Work](/ai_agents/architecture/context_management/how_subagents_actually_work_myth_of_process_spawning.md).
+For the broader picture of how subagents work (beyond just compaction), see [How Subagents Actually Work](/ai_agents/architecture/orchestration/how_subagents_actually_work_myth_of_process_spawning.md).
 :::
 
 ## Normal Turn vs. Compaction Turn
