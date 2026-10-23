@@ -55,7 +55,9 @@ The full reasoning is `architecture/post-mortems/post_mortem_sunset_of_the_ai_en
 | External corpus | `du -sh ai_agents/research` | **4.2 GB**, 15 registered clones |
 | Successor candidate (untracked) | `du -sh soviar_toolkit` / `find … \| wc -l` | 25 MB (688 KB source + 25 MB regenerable `.venv`), **61 source files** (+25 `.pyc` in `__pycache__`) |
 
-Attributable to the archive itself: **72 frontmatter errors** and **5 broken links**, all genuine core debt, all documented in `ARCHIVED.md`, none of it repaired. The remaining 58 frontmatter errors and 13 broken links belong to the untracked candidate, which Phase 1 removes from this working tree. `check_frontmatter` walks the filesystem rather than Git, so the 130/18 figures are the **pre-separation** measurement taken during planning; once Phase 1 has run, a local validator run reports the same 72/6/5 as a fresh clone. Measure after Phase 1 and record that number — do not carry 130 forward as the archive's own count.
+Attributable to the archive itself: **72 frontmatter errors** and **5 broken links** at separation, all genuine core debt, none of it repaired during the freeze. The remaining 58 frontmatter errors and 13 broken links belonged to the untracked candidate, which Phase 1 removes from this working tree.
+
+**Measured outcome (Phase 1 + Phase 0 executed 2026-10-24):** `check_frontmatter` reports **62**, not 72, because ten of the 72 belonged to R-26001/R-26002/R-26003, which Phase 0 repaired in order to commit them at all. `check_adr` reports **6** and `check_broken_links` reports **5**, both matching the prediction exactly. None of the 62 remaining errors is in a file this plan added or modified — verified by filtering the validator output for `R-2600`, `post_mortem_sunset`, and `ARCHIVED`. `check_frontmatter` walks the filesystem rather than Git, so the 130/18 figures in the table above are the **pre-separation** measurement and must not be quoted as the archive's own count.
 
 ### 1.3 Working tree at planning time (`git status --porcelain`)
 

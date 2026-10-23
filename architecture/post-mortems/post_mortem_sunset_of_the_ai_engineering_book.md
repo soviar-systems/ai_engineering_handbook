@@ -18,7 +18,7 @@ options:
   version: 1.0.0
   status: resolved
   severity: high
-  token_size: 4636
+  token_size: 4660
 ---
 # Post-Mortem: Sunset of the AI Engineering Book
 
@@ -193,7 +193,7 @@ The transferable content is the diagnosis in this document, not the tooling desc
 - Publish an archive notice, a README banner, and a closing release-notes entry that state what the archive is good for and what remains broken inside it.
 - Correct the two `myst.yml` defects so that a future build of the frozen site is faithful.
 - Archive the GitHub repository read-only; leave the last verified Pages deployment serving.
-- Do **not** repair the remaining 72 legacy violations. Documented known-issues are honest; a last-minute cleanup would be the disproportion that caused the archive, repeated one final time.
+- Do **not** repair the remaining 62 legacy violations (72 at separation; ten belonged to the three retrospectives, repaired only because they were being committed for the first time). Documented known-issues are honest; a last-minute cleanup would be the disproportion that caused the archive, repeated one final time.
 - Do **not** continue maintenance of any kind after the lock: no dependency updates, no link fixes, no schema migrations.
 
 ## Preventive Measures

@@ -13,7 +13,7 @@ options:
   type: guide
   birth: 2026-10-24
   version: 1.0.0
-  token_size: 998
+  token_size: 1000
 ---
 # Archive Notice
 
@@ -43,7 +43,7 @@ Do not import this repository's schema, ADR identifiers, or scripts into new wor
 
 Do not read a green pipeline as compliance. At the moment of archiving:
 
-- `check_frontmatter` reports 72 errors and **exits 0** (`[LEGACY]` mode).
+- `check_frontmatter` reports 62 errors and **exits 0** (`[LEGACY]` mode).
 - `check_adr` reports 6 errors and **exits 0**.
 - `check_broken_links` reports 5 errors and **exits 0**.
 - `tools/docs/jupyter_and_markdown/Untitled.md` contains malformed YAML frontmatter.
