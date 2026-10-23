@@ -63,13 +63,21 @@ let g:instant_markdown_python = 1
 let g:instant_markdown_theme = 'dark'
 ```
 
-### Использование
-- Откройте `.md` файл в Vim.  
-- Браузер автоматически откроется с рендером Markdown по адресу:
+### Ручной запуск вместо автооткрытия
+Если вы не хотите, чтобы предпросмотр запускался автоматически при открытии каждого файла, добавьте в ваш `~/.vimrc`:
+```vim
+let g:instant_markdown_autostart = 0
+```
+
+После этого вы можете открывать и закрывать превью вручную из командной строки Vim:
+- **Запустить превью:**
+  ```vim
+  :InstantMarkdownPreview
   ```
-  http://localhost:8090/
+- **Остановить превью:**
+  ```vim
+  :InstantMarkdownStop
   ```
-- Все изменения в Vim будут моментально отображаться в браузере.
 
 ### Источники
 1. [Репозиторий vim-instant-markdown на GitHub](https://github.com/instant-markdown/vim-instant-markdown)  
