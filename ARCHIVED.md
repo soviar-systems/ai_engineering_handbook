@@ -13,7 +13,7 @@ options:
   type: guide
   birth: 2026-10-24
   version: 1.0.0
-  token_size: 1000
+  token_size: 1061
 ---
 # Archive Notice
 
@@ -55,7 +55,7 @@ These are recorded rather than fixed. Fixing them would repeat the disproportion
 
 ## What is not here
 
-- `ai_agents/research/` — 4.2 GB of 15 external repositories, excluded from version control and removed locally. Re-clonable from the upstream URLs registered in `.vadocs/inventory/manage_external_repos.json`.
+- `ai_agents/research/` — 4.2 GB of 15 external repositories across three registered directories, excluded from version control. The freeze left the working copy in place instead of reclaiming the disk, so it is still present on the archiving machine but is not part of this archive and will not appear in a clone. A local build renders it, which is why a local build reports errors that CI does not. Re-clonable from the upstream URLs registered in `.vadocs/inventory/manage_external_repos.json`.
 - The candidate successor that was being built inside this directory (`soviar_toolkit/`, 61 source files). It was separated from the repository immediately before the freeze and continues outside it, in its own directory with its own history. It is not part of this archive and was not derived from it; this repository is not a dependency of it.
 - Skill directories under `.qwen/skills/` that were never tracked (`.qwen/` is gitignored; 9 of 32 directories are present in history).
 - Virtual environments, caches, and agent session logs.
