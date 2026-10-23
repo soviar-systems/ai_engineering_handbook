@@ -71,6 +71,7 @@ ADR_HEADER_PATTERN = re.compile(r"^#\s+ADR-(\d+):\s+(.+)$", re.MULTILINE)
 STATUS_SECTION_PATTERN = re.compile(r"^##\s+Status\s*\n+\s*(\w+)", re.MULTILINE)
 SECTION_HEADER_PATTERN = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 CODE_FENCE_PATTERN = re.compile(r"```.*?```", re.DOTALL)
+INDEX_HEADING_PATTERN = re.compile(r"^# ADR Index[ \t]*$", re.MULTILINE)
 
 # ======================
 # Core Logic
@@ -107,6 +108,22 @@ def _format_entry(adr: AdrFile) -> list[str]:
 
     entry_lines.append("\n")
     return entry_lines
+
+def _extract_index_preamble(content: str) -> str:
+    """Return everything above the '# ADR Index' heading.
+
+    The preamble holds the project frontmatter plus any content above the
+    heading. Regeneration is body-only, so it must be carried over verbatim.
+    Returns an empty string when the heading is absent: without a boundary the
+    file cannot be split safely and is regenerated from scratch.
+    """
+    match = INDEX_HEADING_PATTERN.search(content)
+    if match is None:
+        return ""
+    preamble = content[:match.start()]
+    if preamble and not preamble.endswith("\n"):
+        preamble += "\n"
+    return preamble
 
 def validate_index_sync(
     adr_files: list[AdrFile], index_entries: list[adr_utils.IndexEntry]
@@ -172,13 +189,19 @@ def fix_index() -> list[str]:
     except FileNotFoundError:
         pass
 
+    try:
+        existing_content = adr_utils.INDEX_PATH.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        existing_content = ""
+    preamble = _extract_index_preamble(existing_content)
+
     sections: dict[str, list[AdrFile]] = {section: [] for section in SECTION_ORDER}
     for adr in adr_files:
         effective_status = adr.status if adr.status else DEFAULT_STATUS
         section = STATUS_SECTIONS.get(effective_status, STATUS_SECTIONS[DEFAULT_STATUS])
         sections[section].append(adr)
 
-    lines = ["# ADR Index\n"]
+    lines = [preamble, "# ADR Index\n"]
     for section_name in SECTION_ORDER:
         section_adrs = sections.get(section_name, [])
         if not section_adrs:

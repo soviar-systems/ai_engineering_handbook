@@ -940,6 +940,87 @@ class TestIndexRegeneration:
         assert "### " not in content
 
 
+class TestFixIndexPreamble:
+    """Contract: fix_index() rewrites the index body but preserves its preamble.
+
+    The preamble carries the project metadata block above the '# ADR Index'
+    heading. Index regeneration is body-only: governance metadata must survive
+    a --fix run, and repeated runs must not duplicate it.
+    """
+
+    PREAMBLE = (
+        "---\n"
+        'title: "ADR Index"\n'
+        "options:\n"
+        "  type: guide\n"
+        "  version: 1.0.0\n"
+        "  token_size: 2179\n"
+        "---\n"
+    )
+
+    def test_preserves_frontmatter_preamble(self, adr_env):
+        """Regenerated index keeps the exact preamble bytes."""
+        import tools.scripts.check_adr as _module
+        from tools.scripts import adr_utils
+
+        create_adr_file_full(
+            directory=adr_env.adr_dir,
+            number=26001,
+            title="Preamble ADR",
+            slug="preamble_adr",
+            status="proposed",
+        )
+        adr_utils.INDEX_PATH.write_text(self.PREAMBLE + "# ADR Index\n", encoding="utf-8")
+
+        _module.fix_index()
+
+        content = adr_utils.INDEX_PATH.read_text(encoding="utf-8")
+        assert content.startswith(self.PREAMBLE)
+        assert content.count("options:") == 1
+        assert "ADR-26001" in content
+
+    def test_preamble_survives_repeated_fixes(self, adr_env):
+        """A second --fix run must not stack a second preamble."""
+        import tools.scripts.check_adr as _module
+        from tools.scripts import adr_utils
+
+        create_adr_file_full(
+            directory=adr_env.adr_dir,
+            number=26001,
+            title="Preamble ADR",
+            slug="preamble_adr",
+            status="proposed",
+        )
+        adr_utils.INDEX_PATH.write_text(self.PREAMBLE + "# ADR Index\n", encoding="utf-8")
+
+        _module.fix_index()
+        _module.fix_index()
+
+        content = adr_utils.INDEX_PATH.read_text(encoding="utf-8")
+        assert content.count('title: "ADR Index"') == 1
+        assert content.startswith(self.PREAMBLE)
+
+    def test_regenerates_from_scratch_when_heading_absent(self, adr_env):
+        """Without the index heading there is no preamble boundary to preserve."""
+        import tools.scripts.check_adr as _module
+        from tools.scripts import adr_utils
+
+        create_adr_file_full(
+            directory=adr_env.adr_dir,
+            number=26001,
+            title="Preamble ADR",
+            slug="preamble_adr",
+            status="proposed",
+        )
+        adr_utils.INDEX_PATH.write_text("stale body without heading\n", encoding="utf-8")
+
+        _module.fix_index()
+
+        content = adr_utils.INDEX_PATH.read_text(encoding="utf-8")
+        assert content.startswith("# ADR Index")
+        assert "stale body" not in content
+
+
 class TestTermReferences:
     """Tests for term reference validation and fixing."""
 
