@@ -1,5 +1,13 @@
 # Release Notes
 
+## archive v3.1.x "Sunset"
+
+**2026-10-24** — This repository is archived and read-only. No further releases will be published from it.
+
+The final state is tagged [`archive-2026-10-24`](https://github.com/soviar-systems/ai_engineering_handbook/tree/archive-2026-10-24). The post-mortem records what the project achieved, why its governance layer outgrew the knowledge it governed, and what a future reader should and should not take from it: [R-26004](/architecture/post-mortems/post_mortem_sunset_of_the_ai_engineering_book.md).
+
+**v3.2.0 was never published.** The `release/3.2.0` branch carried frontmatter normalization, ADR governance consolidation, and validation fixes. It was fast-forwarded into `main` as the archive baseline without a version bump, because the repository ended before the release criteria were met.
+
 ## release v3.1.0 "The Industrialization of Intelligence"
 
 Since v3.0.0, the repository has transitioned from content establishment to **governed engineering and verifiable rigor.** The focus of v3.1.0 is the elimination of "casual" engineering in favor of governed, verifiable standards.

@@ -14,9 +14,13 @@ options:
   type: guide
   version: 3.1.0
   birth: 2025-10-19
-  token_size: 3595
+  token_size: 3691
 ---
 # AI Engineering Handbook
+
+:::{warning} Archived — 2026-10-24
+This repository is **archived and read-only**. It ran from 2025-10-19 to 2026-10-24 as the AI Engineering Book and is preserved as a closed legacy record. Active work continues elsewhere. Known validation debt was deliberately left unrepaired — see [ARCHIVED.md](/ARCHIVED.md) for the full disposition and the post-mortem.
+:::
 
 
 This repository is a **Documentation-as-Code hub** for building production-grade AI systems. In the era of AI-backed development, AI systems — RAG pipelines, coding agents, AI assistants — consume documentation as their primary input. Poor documentation produces poor AI outputs. This repository treats documentation with the same rigor as production source code: versioned, tested, lifecycle-managed, and machine-readable.

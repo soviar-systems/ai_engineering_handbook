@@ -6,7 +6,7 @@ project:
   description: AI-engineered knowledge base
   # keywords: []
   # authors: []
-  github: https://github.com/lefthand67/ai_engineering_handbook
+  github: https://github.com/soviar-systems/ai_engineering_handbook
   exclude:
     - "AGENTS.md"
     - "CONVENTIONS.md"
@@ -18,7 +18,7 @@ project:
     - "ai_agents/research/ai_infrastructure/*"
     # jupytext pairs md to ipynb
     - "0_intro/**/*.md"
-    - "ai_system/**/*.md"
+    - "ai_system_layers/**/*.md"
     - "mlops/**/*.md"
     - "security/**/*.md"
     - "tools/**/*.md"
