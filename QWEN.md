@@ -1,1 +1,1 @@
-/home/commi/Yandex.Disk/it_working/projects/soviar-systems/ai_engineering_book/AGENTS.md
+AGENTS.md

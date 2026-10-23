@@ -11,19 +11,19 @@ project:
     - "AGENTS.md"
     - "CONVENTIONS.md"
     - "CLAUDE.md"
+    - "QWEN.md"
     - "architecture/adr/adr_template.md"
     - "misc/*"
     # source code of the external research projects (managed by register/unregister)
     - "ai_agents/research/ai_coding_agents/*"
     - "ai_agents/research/ai_infrastructure/*"
+    - "ai_agents/research/ai_skills_plugins/*"
     # jupytext pairs md to ipynb
     - "0_intro/**/*.md"
     - "ai_system_layers/**/*.md"
     - "mlops/**/*.md"
     - "security/**/*.md"
     - "tools/**/*.md"
-  links:
-    wiki: https://en.wikipedia.org/wiki/{{slug}}
   abbreviations:
     ABI: Application Binary Interface
     ADR: Architecture Decision Record

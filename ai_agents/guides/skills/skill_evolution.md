@@ -15,7 +15,7 @@ options:
   type: guide
   birth: '2026-06-28'
   version: 1.0.0
-  token_size: 1111
+  token_size: 1123
 ---
 (skill_evolution_pipeline)=
 # Skill Evolution Pipeline: From Intuition to Empirical Optimization
@@ -26,25 +26,23 @@ This document defines the operational framework for evolving agent skills using 
 
 The transition from a human-authored seed prompt to a production-grade optimized skill follows a five-stage cycle.
 
-```{list-number}
-**Seed Phase (Intuition)**
-The skill is authored by a human expert based on desired behavior and project conventions. This is the `SKILL.md` (Seed).
+1. **Seed Phase (Intuition)**
+   The skill is authored by a human expert based on desired behavior and project conventions. This is the `SKILL.md` (Seed).
 
-**Observation Phase (Failure Capture)**
-The skill is deployed in a staging environment. Failures are logged, and "blind spots" (cases where the agent deviates from the golden path) are identified.
+2. **Observation Phase (Failure Capture)**
+   The skill is deployed in a staging environment. Failures are logged, and "blind spots" (cases where the agent deviates from the golden path) are identified.
 
-**Synthesis Phase (Golden Set)**
-A curated dataset is created consisting of:
-- `train/`: Examples used by the optimizer to generate candidates.
-- `val/`: The "Validation Gate" used to accept or reject edits.
-- `test/`: The final benchmark for performance verification.
+3. **Synthesis Phase (Golden Set)**
+   A curated dataset is created consisting of:
+   - `train/`: Examples used by the optimizer to generate candidates.
+   - `val/`: The "Validation Gate" used to accept or reject edits.
+   - `test/`: The final benchmark for performance verification.
 
-**Optimization Phase (Empirical Loop)**
-Using the `SkillOpt` framework, a strong "Optimizer" model iterates on the seed prompt, applying textual edits that strictly improve the validation score.
+4. **Optimization Phase (Empirical Loop)**
+   Using the `SkillOpt` framework, a strong "Optimizer" model iterates on the seed prompt, applying textual edits that strictly improve the validation score.
 
-**Deployment Phase (Integration)**
-The resulting `best_skill.md` is reviewed, versioned, and promoted to the active skills directory.
-```
+5. **Deployment Phase (Integration)**
+   The resulting `best_skill.md` is reviewed, versioned, and promoted to the active skills directory.
 
 ## 2. Technical Implementation with SkillOpt
 
