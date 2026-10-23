@@ -1,26 +1,25 @@
-
 ---
+id: A-26002
 title: Agentic OS, Tiered Cognitive Memory, and Package-Driven Infrastructure
-date: 2026-03-07
-tags:
-- architecture
-- context_management
-- devops
-options:
-  token_size: 6595
-  id: A-26002
-  status: active
-  sources:
-  - S-26001
-  produces: []
-  type: analysis
-  version: 1.0.0
-  birth: '2026-03-07'
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
 description: These architectural patterns emerged from a concrete production challenge
   — building "Mentor Generator," a spoke repository in the ecosystem ({term}`ADR-26020`).
+tags:
+- architecture
+- context_management
+- devops
+date: 2026-03-07
+options:
+  type: analysis
+  birth: '2026-03-07'
+  version: 1.0.0
+  token_size: 6595
+  status: active
+  sources:
+  - S-26001
+  produces: []
 ---
 # A-26002: Agentic OS, Tiered Cognitive Memory, and Package-Driven Infrastructure
 

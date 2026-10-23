@@ -1,15 +1,15 @@
 ---
+id: A-26011
 title: "vadocs as Structural Type Checker: The Lean Analogy"
 authors:
-  - name: Vadim Rudakov
-    email: rudakow.wadim@gmail.com
-date: 2026-05-03
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
 description: Theoretical analysis of vadocs as a structural type checker for documentation, drawing parallels with the Lean theorem prover.
 tags:
 - governance
+date: 2026-05-03
 options:
   type: analysis
-  id: A-26011
   birth: '2026-03-15'
   version: 1.0.0
   status: active

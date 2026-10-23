@@ -1,16 +1,15 @@
-
 ---
 title: 'How Subagents Actually Work: The Myth of Process Spawning'
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: '2026-04-26'
 description: 'Debunks the misconception that subagent spawning = OS fork/exec. Explains
   the three actual paradigms: Physical, Logical, and Asynchronous isolation.'
 tags:
 - architecture
 - agents
 - prompts
+date: '2026-04-26'
 options:
   version: 1.1.0
   birth: '2026-04-08'

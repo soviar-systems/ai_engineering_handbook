@@ -1,5 +1,5 @@
-
 ---
+id: A-26018
 title: XML Tags as Scope Boundaries — Prompt Architecture and Injection Resistance
 authors:
 - name: Vadim Rudakov
@@ -13,11 +13,10 @@ tags:
 date: 2026-03-28
 options:
   type: analysis
-  birth: 2026-03-28
+  birth: '2026-03-28'
   version: 1.0.0
-  token_size: 1215
-  id: A-26018
   status: active
+  token_size: 1215
   sources:
   - S-26016
   produces: []

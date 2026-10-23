@@ -1,5 +1,5 @@
-
 ---
+id: S-26023
 title: Distributional Shift and Token Sequences
 authors:
 - name: Vadim Rudakov
@@ -13,7 +13,6 @@ tags:
 options:
   type: source
   token_size: 2019
-  id: S-26023
   model: Qwen3.5-Plus
   extracted_into: null
 ---

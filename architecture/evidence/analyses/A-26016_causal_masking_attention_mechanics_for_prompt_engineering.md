@@ -1,5 +1,5 @@
-
 ---
+id: A-26016
 title: Causal Masking and Attention Mechanics — Implications for Prompt Format
 authors:
 - name: Vadim Rudakov
@@ -13,11 +13,10 @@ tags:
 date: 2026-03-27
 options:
   type: analysis
-  birth: 2026-03-26
+  birth: '2026-03-26'
   version: 1.1.0
-  token_size: 2748
-  id: A-26016
   status: active
+  token_size: 2748
   sources:
   - S-26017
   produces: []

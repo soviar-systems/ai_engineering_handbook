@@ -1,15 +1,14 @@
-
 ---
 title: OpenCode/KiloCode Subagent Orchestration Analysis
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: 2026-04-26
 description: Technical analysis of the subagent delegation and session isolation mechanism
   in OpenCode (and its fork KiloCode)
 tags:
 - architecture
 - agents
+date: 2026-04-26
 options:
   type: guide
   birth: 2026-04-26

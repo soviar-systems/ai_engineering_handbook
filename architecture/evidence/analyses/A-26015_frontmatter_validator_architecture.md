@@ -1,5 +1,5 @@
-
 ---
+id: A-26015
 title: Frontmatter Validator Architecture — Config-Code Divergence and Resolution
 authors:
 - name: Vadim Rudakov
@@ -13,11 +13,10 @@ tags:
 date: 2026-03-25
 options:
   type: analysis
-  birth: 2026-03-25
+  birth: '2026-03-25'
   version: 1.0.0
-  token_size: 2467
-  id: A-26015
   status: active
+  token_size: 2467
   sources:
   - S-26014
   produces: []

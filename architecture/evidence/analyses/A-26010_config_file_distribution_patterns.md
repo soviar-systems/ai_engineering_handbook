@@ -1,15 +1,15 @@
 ---
+id: A-26010
 title: "Config File Distribution Patterns"
 authors:
-  - name: Vadim Rudakov
-    email: rudakow.wadim@gmail.com
-date: 2026-05-03
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
 description: Analysis of configuration file patterns across diverse software ecosystems.
 tags:
 - architecture
+date: 2026-05-03
 options:
   type: analysis
-  id: A-26010
   birth: '2026-03-10'
   version: 1.0.0
   status: active

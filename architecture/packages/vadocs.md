@@ -3,11 +3,9 @@ title: "vadocs - Documentation Validation Engine"
 authors:
   - name: Vadim Rudakov
     email: rudakow.wadim@gmail.com
-date: "2026-05-03"
 description: "Documentation of the vadocs validation engine, its purpose, and core capabilities."
 tags: [development, governance, architecture]
----
----
+date: "2026-05-03"
 options:
   type: guide
   version: 1.0.0

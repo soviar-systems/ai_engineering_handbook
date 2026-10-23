@@ -1,3 +1,18 @@
+---
+title: AI System Layers — Component Catalog
+authors:
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
+description: Component catalog for the five-layer AI system architecture.
+tags:
+- architecture
+date: '2026-05-01'
+options:
+  type: guide
+  version: 1.0.0
+  birth: '2026-05-01'
+  token_size: 314
+---
 # AI System Layers — Component Catalog
 
 This directory is an **engine parts catalog** — each layer represents a deliberate component boundary in the architecture of production-grade AI systems.

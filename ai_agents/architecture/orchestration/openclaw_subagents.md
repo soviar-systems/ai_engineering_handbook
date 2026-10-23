@@ -1,14 +1,13 @@
-
 ---
 title: OpenClaw Subagent Orchestration Analysis
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: 2026-04-26
 description: Technical analysis of the session-key routed subagent system in OpenClaw
 tags:
 - architecture
 - agents
+date: 2026-04-26
 options:
   type: guide
   birth: 2026-04-26

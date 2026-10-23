@@ -1,16 +1,14 @@
 ---
+id: R-26000
 title: "Post-Mortem Report: SLM Non-Determinism in Stage 1"
 authors:
   - name: Vadim Rudakov
     email: rudakow.wadim@gmail.com
-date: "2026-05-03"
 description: "Analysis of SLM non-determinism during commit message generation and the resulting architectural mandate for deterministic output."
 tags: [architecture, model, development, git]
----
----
+date: "2026-05-03"
 options:
   type: retrospective
-  id: R-26000
   status: closed
   severity: critical
   version: 0.1.5

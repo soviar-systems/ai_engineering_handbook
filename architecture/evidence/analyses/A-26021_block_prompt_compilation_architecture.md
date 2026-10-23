@@ -1,5 +1,5 @@
-
 ---
+id: A-26021
 title: Block Prompt Compilation Architecture
 authors:
 - name: Vadim Rudakov
@@ -14,11 +14,10 @@ tags:
 date: 2026-04-03
 options:
   type: analysis
-  birth: 2026-04-03
+  birth: '2026-04-03'
   version: 1.0.0
-  token_size: 1605
-  id: A-26021
   status: active
+  token_size: 1605
   sources:
   - S-26020
   produces: []

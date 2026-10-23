@@ -1,16 +1,15 @@
-
 ---
 title: Agent Governance Model (L0-L5)
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: 2026-04-27
 description: A conceptual framework for separating agent infrastructure from policy
   enforcement (L0-L5).
 tags:
 - architecture
 - agents
 - security
+date: 2026-04-27
 options:
   version: 1.0.0
   birth: 2026-04-27

@@ -1,5 +1,5 @@
-
 ---
+id: A-26023
 title: 'Heuer Brainstorm: Stress-Testing Integration Conclusions'
 authors:
 - name: Vadim Rudakov
@@ -17,7 +17,6 @@ options:
   birth: 2026-04-19
   version: 1.0.0
   token_size: 1206
-  id: A-26023
   status: active
   produces: []
 ---

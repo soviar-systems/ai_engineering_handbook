@@ -5,29 +5,25 @@ jupytext:
     format_name: myst
     format_version: 0.13
     jupytext_version: 1.19.1
----
-
-jupytext:
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
-    jupytext_version: 1.19.1
 kernelspec:
   name: bash
   display_name: Bash
   language: bash
-options:
-  type: source
 ---
-title: Evidence Sources
-author: Vadim Rudakov, rudakow.wadim@gmail.com
-date: 2026-03-07
+
+---
+title: "Evidence Sources"
+authors:
+  - name: Vadim Rudakov
+    email: rudakow.wadim@gmail.com
+description: "Documentation of the evidence source lifecycle, naming conventions, and retrieval process."
+tags: [development, governance, workflow]
+date: "2026-03-07"
 options:
   type: guide
   version: 0.1.0
-  birth: 2026-03-07
-  token_size: 761
+  birth: "2026-03-07"
+  token_size: 743
 ---
 
 +++

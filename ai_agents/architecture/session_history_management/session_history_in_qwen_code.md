@@ -1,4 +1,3 @@
-
 ---
 title: Session History in Qwen Code
 authors:

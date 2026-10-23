@@ -1,15 +1,14 @@
-
 ---
 title: Prompt Brittleness in Skill-Based Orchestration
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: '2026-05-02'
 description: Why skill-based orchestration fails — three failure modes, layered countermeasures,
   and honest assessment of prompt engineering at scale
 tags:
 - prompts
 - architecture
+date: '2026-05-02'
 options:
   type: guide
   birth: '2026-04-10'

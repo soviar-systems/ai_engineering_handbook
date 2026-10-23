@@ -1,15 +1,14 @@
-
 ---
 title: Gemini CLI Subagents Analysis
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: '2026-05-02'
 description: Technical analysis of the subagent orchestration and activity streaming
   in Gemini CLI
 tags:
 - architecture
 - agents
+date: '2026-05-02'
 options:
   type: guide
   birth: '2026-04-26'

@@ -1,25 +1,24 @@
-
 ---
+id: A-26003
 title: SVA Constraint Framework Design
-date: 2026-03-02
-tags:
-- architecture
-- governance
-options:
-  token_size: 2902
-  id: A-26003
-  status: active
-  sources: []
-  produces:
-  - ADR-26037
-  type: analysis
-  version: 1.0.0
-  birth: '2026-03-02'
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
 description: Smallest Viable Architecture (SVA) is the governing design principle
   across 14+ ADRs, three consultant prompts, and the requirements engineering glossary.
+tags:
+- architecture
+- governance
+date: 2026-03-02
+options:
+  type: analysis
+  birth: '2026-03-02'
+  version: 1.0.0
+  token_size: 2902
+  status: active
+  sources: []
+  produces:
+  - ADR-26037
 ---
 # A-26003: SVA Constraint Framework Design
 

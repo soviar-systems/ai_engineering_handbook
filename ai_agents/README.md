@@ -1,4 +1,23 @@
+---
+title: AI Agents Research & Tooling
+authors:
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
+description: Hub for agent framework analysis, source-level research, and practical
+  tooling guides.
+tags:
+- agents
+- architecture
+- development
+date: 2026-04-13
+options:
+  type: guide
+  version: 1.0.0
+  birth: 2025-10-19
+  token_size: 2137
+---
 # ai_agents — Agent Framework Research & Tooling Guides
+
 
 This directory consolidates all agent-related content: source-level analysis of external AI coding agents, architecture research, and practical tooling guides.
 

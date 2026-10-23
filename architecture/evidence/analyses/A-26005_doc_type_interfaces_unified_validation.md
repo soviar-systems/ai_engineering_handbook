@@ -1,19 +1,19 @@
 ---
+id: A-26005
 title: 'Agentic OS Filesystem Architecture: Document Types, VFS, and Virtual Relational
   Layer'
-description: Formalizes the Agentic OS filesystem architecture by defining document
-  type interfaces as an ISA and proposing a Virtual Relational Layer for referential
-  integrity over Git/YAML.
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: 2026-05-09
+description: Formalizes the Agentic OS filesystem architecture by defining document
+  type interfaces as an ISA and proposing a Virtual Relational Layer for referential
+  integrity over Git/YAML.
 tags:
 - architecture
 - governance
+date: 2026-05-09
 options:
   type: analysis
-  id: A-26005
   birth: '2026-03-07'
   version: 1.0.1
   status: active

@@ -1,17 +1,17 @@
 ---
+id: A-26025
 title: Document Type Hierarchical Taxonomy Transition
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: '2026-05-01'
 description: Transition from a flat doc-type namespace to a hierarchical category.subtype
   model to resolve semantic collision between research and evidence.
 tags:
 - documentation
 - governance
+date: '2026-05-01'
 options:
   type: analysis
-  id: A-26025
   status: active
   birth: '2026-05-01'
   version: 1.0.0

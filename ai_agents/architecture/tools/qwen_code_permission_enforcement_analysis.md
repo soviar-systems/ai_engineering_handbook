@@ -1,16 +1,15 @@
-
 ---
 title: Qwen Code Permission Enforcement Analysis
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: 2026-04-27
 description: Source-level analysis of the L3-L4-L5 permission flow and the 'Implicit
   Trust' risk in Qwen Code.
 tags:
 - architecture
 - agents
 - security
+date: 2026-04-27
 options:
   version: 1.2.0
   birth: 2026-04-27

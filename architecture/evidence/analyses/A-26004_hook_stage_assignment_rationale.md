@@ -1,25 +1,24 @@
-
 ---
+id: A-26004
 title: Hook Stage Assignment Rationale
-date: 2026-03-07
-tags:
-- git
-- governance
-options:
-  token_size: 926
-  id: A-26004
-  status: active
-  sources:
-  - S-26003
-  produces: []
-  type: analysis
-  version: 1.0.0
-  birth: '2026-03-07'
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
 description: The project uses three Git hook stages (`pre-commit`, `commit-msg`, `post-commit`)
   with different hooks assigned to each.
+tags:
+- git
+- governance
+date: 2026-03-07
+options:
+  type: analysis
+  birth: '2026-03-07'
+  version: 1.0.0
+  token_size: 926
+  status: active
+  sources:
+  - S-26003
+  produces: []
 ---
 # A-26004: Hook Stage Assignment Rationale
 

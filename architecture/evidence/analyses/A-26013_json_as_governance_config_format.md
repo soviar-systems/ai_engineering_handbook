@@ -1,5 +1,5 @@
-
 ---
+id: A-26013
 title: JSON as Governance Config Format — Migration from YAML
 authors:
 - name: Vadim Rudakov
@@ -14,11 +14,10 @@ tags:
 date: 2026-03-23
 options:
   type: analysis
-  birth: 2026-03-23
+  birth: '2026-03-23'
   version: 1.0.0
-  token_size: 1672
-  id: A-26013
   status: active
+  token_size: 1672
   produces:
   - ADR-26054
 ---

@@ -1,25 +1,25 @@
 ---
+id: A-26008
 title: 'Common Frontmatter Standard: Taxonomy Audit and Composable Block Design'
-date: 2026-03-09
-tags:
-- documentation
-- governance
-- architecture
-options:
-  id: A-26008
-  status: active
-  sources:
-  - A-26009
-  produces: []
-  type: analysis
-  version: 1.0.0
-  birth: '2026-03-09'
-  token_size: 4849
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
 description: A-26005 proposed a comprehensive document type taxonomy (~20 types, 7
   categories) with 8 universal frontmatter fields for every governed document.
+tags:
+- documentation
+- governance
+- architecture
+date: 2026-03-09
+options:
+  type: analysis
+  birth: '2026-03-09'
+  version: 1.0.0
+  status: active
+  token_size: 4849
+  sources:
+  - A-26009
+  produces: []
 ---
 # A-26008: Common Frontmatter Standard: Taxonomy Audit and Composable Block Design
 

@@ -1,21 +1,24 @@
 ---
+jupytext:
+  paired: open_webui_knowledge_base_storage_analysis.ipynb
+---
+
+---
 title: Open WebUI Knowledge Base Storage Analysis
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: 2026-05-03
 description: Analysis of how Open WebUI manages files and knowledge base storage,
   focusing on original file retrieval.
 tags:
 - architecture
 - context_management
+date: 2026-05-03
 options:
   type: guide
   birth: 2026-05-03
   version: 1.0.0
   token_size: 1125
-jupytext:
-  paired: open_webui_knowledge_base_storage_analysis.ipynb
 ---
 # Open WebUI Knowledge Base Storage Analysis
 

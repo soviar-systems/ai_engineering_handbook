@@ -1,15 +1,14 @@
-
 ---
 title: 'Qwen Code: Subagent Implementation Analysis'
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: '2026-05-02'
 description: Technical analysis of Qwen Code's hybrid subagent system and DashScope
   cache optimization
 tags:
 - agents
 - architecture
+date: '2026-05-02'
 options:
   type: guide
   birth: '2026-04-26'

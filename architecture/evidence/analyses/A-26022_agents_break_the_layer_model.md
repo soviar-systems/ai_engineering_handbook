@@ -1,5 +1,5 @@
-
 ---
+id: A-26022
 title: Agents Break the Layer Model — Repo Restructuring Decision
 authors:
 - name: Vadim Rudakov
@@ -17,7 +17,6 @@ options:
   birth: '2026-04-05'
   version: 1.0.0
   token_size: 1269
-  id: A-26022
   status: active
   sources:
   - S-26021

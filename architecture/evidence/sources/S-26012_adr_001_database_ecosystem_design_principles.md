@@ -1,19 +1,19 @@
 ---
+id: S-26012
 title: Database Ecosystem Design Principles
-description: Establishes shared design principles and technical contracts for database projects, including standardized connector usage, SQL building, schema definitions, and namespacing.
+authors:
+- name: Vadim Rudakov
+  email: rudakow.wadim@gmail.com
 date: 2026-03-17
+description: Establishes shared design principles and technical contracts for database projects, including standardized connector usage, SQL building, schema definitions, and namespacing.
 tags:
 - devops
 - architecture
 options:
-  id: S-26012
   model: human
   extracted_into: null
   type: source
   token_size: 2154
-authors:
-- name: Vadim Rudakov
-  email: rudakow.wadim@gmail.com
 ---
 
 # Database Ecosystem Design Principles

@@ -1,5 +1,5 @@
-
 ---
+id: A-26020
 title: AI-Native Development — Code as Primary Documentation
 authors:
 - name: Vadim Rudakov
@@ -13,11 +13,10 @@ tags:
 date: 2026-04-01
 options:
   type: analysis
-  birth: 2026-04-01
+  birth: '2026-04-01'
   version: 1.0.0
-  token_size: 2826
-  id: A-26020
   status: active
+  token_size: 2826
   sources: []
   produces: []
 ---

@@ -1,17 +1,16 @@
-
 ---
+id: S-26015
 title: 'Handbook Peer Review — Format as Architecture: Signal-to-Noise in Prompt Delivery'
-description: 'System prompt: `handbook_peer_reviewer.json` v0.2.3 (Principal Software Engineer, peer review).'
-date: 2026-03-25
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
+date: 2026-03-25
+description: 'System prompt: `handbook_peer_reviewer.json` v0.2.3 (Principal Software Engineer, peer review).'
 tags:
 - prompts
 - architecture
 options:
   token_size: 1891
-  id: S-26015
   model: claude-opus-4-6
   extracted_into: null
   type: source

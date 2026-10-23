@@ -1,15 +1,14 @@
-
 ---
 title: Skill Discovery Across AI Coding Platforms
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: '2026-05-02'
 description: How AI coding platforms discover, index, and load skills — mechanisms,
   directory layouts, and setup instructions
 tags:
 - context_management
 - architecture
+date: '2026-05-02'
 options:
   type: guide
   birth: '2026-04-10'

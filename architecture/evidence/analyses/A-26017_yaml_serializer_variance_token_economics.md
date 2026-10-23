@@ -1,5 +1,5 @@
-
 ---
+id: A-26017
 title: YAML Serializer Variance — Token Economics of Format Choice
 authors:
 - name: Vadim Rudakov
@@ -13,11 +13,10 @@ tags:
 date: 2026-03-27
 options:
   type: analysis
-  birth: 2026-03-27
+  birth: '2026-03-27'
   version: 1.1.0
-  token_size: 689
-  id: A-26017
   status: active
+  token_size: 689
   sources:
   - S-26018
   produces: []

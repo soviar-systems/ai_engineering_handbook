@@ -1,29 +1,28 @@
-
 ---
+id: A-26006
 title: Agent Runtime Architecture and RAG Infrastructure Decisions
-date: 2026-03-08
-tags:
-- architecture
-- context_management
-- model
-options:
-  token_size: 2925
-  id: A-26006
-  status: active
-  sources:
-  - S-26008
-  - S-26009
-  - S-26010
-  produces: []
-  type: analysis
-  version: 1.0.0
-  birth: '2026-03-08'
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
 description: The ecosystem roadmap (`misc/plan/implemented/plan_20260308_ecosystem_roadmap_vadocs_to_mentor.md`)
   defines a three-phase path from governance tooling (vadocs) to a production mentor
   agent.
+tags:
+- architecture
+- context_management
+- model
+date: 2026-03-08
+options:
+  type: analysis
+  birth: '2026-03-08'
+  version: 1.0.0
+  status: active
+  token_size: 2925
+  sources:
+  - S-26008
+  - S-26009
+  - S-26010
+  produces: []
 ---
 # A-26006: Agent Runtime Architecture and RAG Infrastructure Decisions
 

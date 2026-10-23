@@ -1,15 +1,14 @@
-
 ---
 title: OpenClaude Subagent Orchestration Analysis
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: 2026-04-26
 description: Technical analysis of the Coordinator pattern and asynchronous task management
   in OpenClaude
 tags:
 - architecture
 - agents
+date: 2026-04-26
 options:
   type: guide
   birth: 2026-04-26

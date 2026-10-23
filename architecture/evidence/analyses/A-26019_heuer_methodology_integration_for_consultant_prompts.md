@@ -1,5 +1,5 @@
-
 ---
+id: A-26019
 title: Heuer Methodology Integration for Consultant Prompts
 authors:
 - name: Vadim Rudakov
@@ -14,11 +14,10 @@ tags:
 date: 2026-03-29
 options:
   type: analysis
-  birth: 2026-03-29
+  birth: '2026-03-29'
   version: 1.0.0
-  token_size: 5923
-  id: A-26019
   status: active
+  token_size: 5923
   sources:
   - S-26019
   produces: []

@@ -12,17 +12,17 @@ title: 'Layer 3: Prompts-as-Infrastructure'
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: "2026-05-02"
 description: Overview of the Prompts-as-Infrastructure layer, describing the block-based
   architecture for scalable prompt engineering.
 tags:
 - prompts
 - architecture
+date: '2026-05-02'
 options:
   type: guide
-  birth: "2026-01-01"
-  version: "1.0.0"
-  token_size: 661
+  birth: '2026-01-01'
+  version: 1.0.0
+  token_size: 696
 ---
 # Layer 3: Prompts-as-Infrastructure
 
@@ -51,6 +51,8 @@ The [`prepare_prompt.py`](/tools/scripts/prepare_prompt.py) script acts as the c
 2. Merges the blocks into a single structure.
 3. Applies overrides from the manifest (Manifest values > Block values).
 4. Converts the resulting JSON to a clean, YAML-like format for LLM delivery.
+
+**Prompt Optimization:** To evolve prompts into empirical, high-performance skills, follow the [Skill Evolution Pipeline](/ai_agents/guides/skills/skill_evolution.md) in the agent guides.
 
 +++
 

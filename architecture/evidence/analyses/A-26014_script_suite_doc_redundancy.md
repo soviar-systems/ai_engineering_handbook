@@ -1,5 +1,5 @@
-
 ---
+id: A-26014
 title: Script Suite Documentation Redundancy — Triad to Dyad Evolution
 authors:
 - name: Vadim Rudakov
@@ -13,11 +13,10 @@ tags:
 date: 2026-03-23
 options:
   type: analysis
-  birth: 2026-03-23
+  birth: '2026-03-23'
   version: 1.0.0
-  token_size: 1265
-  id: A-26014
   status: active
+  token_size: 1265
   produces: []
 ---
 # A-26014: Script Suite Documentation Redundancy — Triad to Dyad Evolution

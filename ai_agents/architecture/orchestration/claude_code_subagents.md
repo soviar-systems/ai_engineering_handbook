@@ -1,16 +1,15 @@
-
 ---
 title: 'Claude Code: Subagent Implementation Analysis'
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: '2026-04-26'
 description: Technical analysis of the forked agent mechanism and subagent isolation
   in Claude Code
 tags:
 - agents
 - architecture
 - development
+date: '2026-04-26'
 options:
   type: guide
   birth: '2026-04-26'

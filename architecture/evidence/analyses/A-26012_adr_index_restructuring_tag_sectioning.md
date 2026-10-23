@@ -1,5 +1,5 @@
-
 ---
+id: A-26012
 title: ADR Index Restructuring — Two-Level Sectioning and Tag Vocabulary Audit
 authors:
 - name: Vadim Rudakov
@@ -14,11 +14,10 @@ tags:
 date: 2026-03-23
 options:
   type: analysis
-  birth: 2026-03-23
+  birth: '2026-03-23'
   version: 1.0.0
-  token_size: 1461
-  id: A-26012
   status: active
+  token_size: 1461
   produces: []
 ---
 # A-26012: ADR Index Restructuring — Two-Level Sectioning and Tag Vocabulary Audit

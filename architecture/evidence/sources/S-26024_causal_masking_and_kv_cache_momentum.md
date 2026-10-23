@@ -1,5 +1,5 @@
-
 ---
+id: S-26024
 title: Causal Masking and KV Cache Momentum
 authors:
 - name: Vadim Rudakov
@@ -14,7 +14,6 @@ tags:
 options:
   type: source
   token_size: 9322
-  id: S-26024
   model: Qwen3.5-Plus
   extracted_into: null
 ---

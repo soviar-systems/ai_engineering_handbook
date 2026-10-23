@@ -1,16 +1,16 @@
 ---
+id: A-26009
 title: 'Compass: A Realistic State of Agentic AI (2026)'
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: 2026-05-03
 description: Analysis of the 'Compass' report on agentic AI capabilities and benchmarks.
 tags:
 - agents
 - model
+date: 2026-05-03
 options:
   type: analysis
-  id: A-26009
   birth: '2026-02-12'
   version: 1.0.0
   status: active

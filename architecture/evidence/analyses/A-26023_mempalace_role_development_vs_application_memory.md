@@ -1,5 +1,5 @@
-
 ---
+id: A-26023
 title: MemPalace Role Clarification — Development Memory vs. Application Memory
 authors:
 - name: Vadim Rudakov
@@ -17,7 +17,6 @@ options:
   birth: '2026-04-08'
   version: 1.0.0
   token_size: 2132
-  id: A-26023
   status: active
   sources:
   - S-26022

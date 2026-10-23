@@ -1,10 +1,8 @@
-
 ---
 title: 'Stability in a Probabilistic Substrate: How Agents Fight LLM Drift'
 authors:
 - name: Vadim Rudakov
   email: rudakow.wadim@gmail.com
-date: '2026-04-08'
 description: How AI coding agents fight LLM hallucination and instruction non-compliance.
   Hard guarantees (tool denial, circuit breakers) vs soft techniques (HARD-GATE tags,
   rationalization tables) — with source code evidence.
@@ -12,6 +10,7 @@ tags:
 - architecture
 - agents
 - prompts
+date: '2026-04-08'
 options:
   version: 1.0.0
   birth: '2026-04-08'

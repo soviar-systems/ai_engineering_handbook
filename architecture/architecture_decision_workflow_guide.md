@@ -3,11 +3,9 @@ title: "Architecture Decision Workflow"
 authors:
   - name: Vadim Rudakov
     email: rudakow.wadim@gmail.com
-date: "2026-05-03"
 description: "Describes the full lifecycle of architectural decisions, from evidence gathering to ADR promotion and validation."
 tags: [architecture, governance, workflow]
----
----
+date: "2026-05-03"
 options:
   type: guide
   version: 1.1.0
