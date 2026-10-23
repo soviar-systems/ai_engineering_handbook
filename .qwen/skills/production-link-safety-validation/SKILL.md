@@ -12,7 +12,19 @@ When validating links or references (e.g., Markdown links, file imports, configu
 ## The Principle: Production Link Safety
 A reference is only considered "valid" if its target is **tracked by the Git index**. If a file exists on disk but is untracked, it must be treated as a broken link to force the developer to `git add` the target.
 
+## Diagnostic Loop: "False Positive" Broken Links
+If a validation script reports a broken link, but you have verified that the target file **exists on the filesystem**, do NOT assume the path is wrong or attempt to change it (e.g., converting absolute to relative paths).
+
+**Diagnostic Steps:**
+1. **Verify Existence**: Use `ls` or `read_file` to confirm the target file exists at the reported path.
+2. **Verify Tracking**: Run `git ls-files --error-unmatch <path>`.
+3. **Analyze Result**:
+   - If `git ls-files` returns an error (Exit 1), the file is untracked. This is the cause of the "Broken Link" error.
+   - **Action**: Run `git add <path>` to track the file. Do NOT modify the link in the source file.
+4. **Re-verify**: Run the validation script again to confirm the link is now valid.
+
 ## Implementation Strategy
+
 
 ### 1. The Git Primitive
 Use `git ls-files --error-unmatch <path>` to verify if a specific path is tracked by Git.

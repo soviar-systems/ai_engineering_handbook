@@ -5,9 +5,9 @@ Status: Implemented (2026-06-27)
 ## 0. Required Context
 The executing agent MUST read the following documents to understand the architectural constraints and the history of failures being addressed:
 - **Retrospectives:**
-    - `architecture/evidence/retrospective/R_26001_validation_deadlock.md`
-    - `architecture/evidence/retrospective/R_26002_link_validation_false_positives.md`
-    - `architecture/evidence/retrospective/R_26003_instruction_drift.md`
+    - `architecture/evidence/retrospective/R-26001_validation_deadlock.md`
+    - `architecture/evidence/retrospective/R-26002_link_validation_false_positives.md`
+    - `architecture/evidence/retrospective/R-26003_instruction_drift.md`
 - **Standards:**
     - `architecture/adr/adr_26045_ai_native_development_code_as_primary_documentation.md` — MUST be followed for all code and test implementation.
 
